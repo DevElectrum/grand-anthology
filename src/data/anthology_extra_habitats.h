@@ -342,3 +342,19 @@ ECOLOGY_ON_MAP(MAP_POKEMON_TOWER_6F, MURKROW)
 ECOLOGY_ON_MAP(MAP_SEAFOAM_ISLANDS_B3F, SNEASEL)
 ECOLOGY_ON_MAP(MAP_ROUTE12, YANMA)
 ECOLOGY_ON_MAP(MAP_SEAFOAM_ISLANDS_B4F, SWINUB)
+
+// P0 pre-first-Champion regional-form reconciliation. Galarian birds
+// already have Johto scripted fields; their Kanto home sources are optional
+// rare natural hunts, without replacing either canonical map encounters or
+// existing Johto statics. Paldean Wooper keeps its Hoenn Surf source and gets
+// its Johto native-regional path. Own-Tempo Rockruff is a distinct permanent
+// seed for the Dusk Lycanroc stone/clock branches. Alola-cap Pikachu is a
+// collectible hat form (not a hypothetical Alolan regional Pikachu).
+ECOLOGY_ON_MAP(MAP_ROUTE8, FARFETCHD_GALAR)
+ECOLOGY_ON_MAP(MAP_ROUTE11, MEOWTH_GALAR)
+ECOLOGY_ON_MAP(MAP_ROUTE22, ZAPDOS_GALAR)
+ECOLOGY_ON_MAP(MAP_SEAFOAM_ISLANDS_B1F, ARTICUNO_GALAR)
+ECOLOGY_ON_MAP(MAP_POKEMON_MANSION_1F, MOLTRES_GALAR)
+ECOLOGY_ON_MAP(MAP_ROUTE30, WOOPER_PALDEA)
+ECOLOGY_ON_MAP(MAP_ROUTE9, ROCKRUFF_OWN_TEMPO)
+ECOLOGY_ON_MAP(MAP_ROUTE6, PIKACHU_ALOLA)

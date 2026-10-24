@@ -174,9 +174,13 @@ for region in ("KANTO","JOHTO","HOENN"):
     # The National count intentionally collapses stable variants. Track the
     # separate acquisition sources of Alolan/Galarian/Hisuian/Paldean forms
     # before declaring the *forms* portion of P0 implemented.
+    # Galarian Zen Mode is a battle-only form transformation, not a valid
+    # independent wild catch; the runtime's field-stable filter rejects it.
+    battle_only_regional_forms = {"DARMANITAN_GALAR_ZEN"}
     regional_forms = sorted(mon for mon in all_declared_form_species
                             if re.search(r"_(?:ALOLA|GALAR|HISUI|PALDEA)(?:_|$)", mon)
-                            and species_dex.get(mon) in wanted)
+                            and species_dex.get(mon) in wanted
+                            and mon not in battle_only_regional_forms)
     absent_forms = [mon for mon in regional_forms if mon not in reach]
     print(f"{region}: {len(regional_forms) - len(absent_forms)}/{len(regional_forms)}"
           " regional form source candidates (not gameplay verification)")

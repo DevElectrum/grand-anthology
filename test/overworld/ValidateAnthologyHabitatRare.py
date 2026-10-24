@@ -77,7 +77,7 @@ assert "max = landMonsInfo->wildPokemon[0].maxLevel;" in dex
 # Safari/frontier/randomizer guard and source maps without replacing originals.
 extra_text = (root / "src/data/anthology_extra_habitats.h").read_text()
 extra = re.findall(r"^ECOLOGY_ON_MAP\((MAP_[A-Z0-9_]+), ([A-Z0-9_]+)\)$", extra_text, re.M)
-assert len(extra) == 302, (len(extra), "lost or unexpected habitat entries")
+assert len(extra) == 310, (len(extra), "lost or unexpected habitat entries")
 assert len({species for _map, species in extra[:113]}) == 113, "original 113 changed"
 assert len(set(extra)) == len(extra), "duplicate extra species within one map"
 # A postgame wild location must not be a required pre-Champion source. These
@@ -906,6 +906,29 @@ regional_form_habitats = {
 }
 assert len(regional_form_habitats) == 30
 assert regional_form_habitats <= set(extra)
+
+# Previously unobtainable in their home region: five Kanto Galarian
+# field-stable variants, a cap-wearing Pikachu, and Johto's Paldean Wooper.
+# Own-Tempo Rockruff is a distinct seed for dusk Lycanroc evolution.
+# Existing Johto Galarian bird scripted field encounters are not modified.
+pre_champion_form_reconciliation = {
+    ("MAP_ROUTE8", "FARFETCHD_GALAR"),
+    ("MAP_ROUTE11", "MEOWTH_GALAR"),
+    ("MAP_ROUTE22", "ZAPDOS_GALAR"),
+    ("MAP_SEAFOAM_ISLANDS_B1F", "ARTICUNO_GALAR"),
+    ("MAP_POKEMON_MANSION_1F", "MOLTRES_GALAR"),
+    ("MAP_ROUTE30", "WOOPER_PALDEA"),
+    ("MAP_ROUTE9", "ROCKRUFF_OWN_TEMPO"),
+    ("MAP_ROUTE6", "PIKACHU_ALOLA"),
+}
+assert len(pre_champion_form_reconciliation) == 8
+assert pre_champion_form_reconciliation <= set(extra), sorted(pre_champion_form_reconciliation - set(extra))
+# These are land habitats with protected primary rare-map tables.
+assert all(loc in {loc for loc, mon in mappings} for loc, mon in pre_champion_form_reconciliation)
+# Battle-form Zen Mode Galarian Darmanitan must *not* be a wild source.
+assert "DARMANITAN_GALAR_ZEN" not in {mon for loc, mon in extra}
+print("P0 8-region pre-Champion permanent forms and special seed habitat contracts PASS")
+
 
 # Six cross-generation families were incorrectly counted as pre-first-Champion
 # Kanto acquisitions because their parents were on Sevii islands 4-7, whose
