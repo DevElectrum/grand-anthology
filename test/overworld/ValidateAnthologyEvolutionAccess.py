@@ -177,3 +177,10 @@ for stone in set(regional_stone_overrides.values()):
     assert "ItemUseOutOfBattle_EvolutionStone" in item_data and ".pocket = POCKET_ITEMS" in item_data, stone
 need("src/pokemon.c", "case EVO_MODE_ITEM_USE:", "case EVO_ITEM:", "evolutions[i].param == evolutionItem")
 print(f"P0 region-inaccessible evolution repair: {len(found_regional)} purchasable alternate-form stone paths PASS")
+
+# Cubone also offers a disabled/legacy Totem branch after the new stone method.
+# Missing the separator compiles no C despite the source-level acquisition passing.
+cubone = source("src/data/pokemon/species_info/gen_1_families.h")
+assert re.search(
+    r"\\{EVO_ITEM, ITEM_DUSK_STONE, SPECIES_MAROWAK_ALOLA\\},\\s*\\{EVO_NONE, 0, SPECIES_MAROWAK_ALOLA_TOTEM\\}",
+    cubone), "Cubone's alternate evolution entries must be comma-delimited"
