@@ -18827,6 +18827,9 @@ static const struct LevelUpMove sDipplinLevelUpLearnset[] = {
     LEVEL_UP_MOVE(28, MOVE_SYRUP_BOMB),
     LEVEL_UP_MOVE(32, MOVE_DRAGON_PULSE),
     LEVEL_UP_MOVE(36, MOVE_RECOVER),
+    // No pre-League Dragon Cheer tutor is guaranteed: teach the move
+    // naturally so Dipplin can actually evolve into Hydrapple offline.
+    LEVEL_UP_MOVE(38, MOVE_DRAGON_CHEER),
     LEVEL_UP_MOVE(40, MOVE_ENERGY_BALL),
     LEVEL_UP_MOVE(44, MOVE_SUBSTITUTE),
     LEVEL_UP_END

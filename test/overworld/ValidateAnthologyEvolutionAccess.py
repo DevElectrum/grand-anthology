@@ -81,3 +81,32 @@ for shop in shops:
     assert not missing, (shop, "missing evolution items", sorted(missing))
     assert "ITEM_GIMMIGHOUL_COIN" in inventory, (shop, "Gholdengo coin supply absent")
 print(f"P0 offline evolution: {len(trade_edges)} trade routes and {len(evolution_items)} item types stocked in all regions PASS")
+
+
+# A move-based evolution is not practically reachable if its pre-evolution
+# cannot learn the requirement. Audit every such edge against the active
+# Gen 9 level-up set, rather than checking specific names or TM availability.
+learnset_config = source("include/config/pokemon.h")
+assert re.search(r"^#define\s+P_LVL_UP_LEARNSETS\s+GEN_LATEST\b", learnset_config, re.M)
+level_data = source("src/data/pokemon/level_up_learnsets/gen_9.h")
+level_sets = dict(re.findall(
+    r"static const struct LevelUpMove\s+(s[A-Za-z0-9_]+LevelUpLearnset)\[\]\s*=\s*\{(.*?)LEVEL_UP_END",
+    level_data, re.S))
+assert len(level_sets) >= 100, "Gen 9 level-up learnset parse failed"
+required_moves = []
+for family_file in family_files:
+    family_text = family_file.read_text(encoding="utf-8")
+    species_headers = list(re.finditer(r"^\s*\[(SPECIES_[A-Z0-9_]+)\]\s*=", family_text, re.M))
+    for index, match in enumerate(species_headers):
+        body = family_text[match.end():species_headers[index + 1].start() if index + 1 < len(species_headers) else len(family_text)]
+        moves = set(re.findall(r"\{IF_KNOWS_MOVE,\s*(MOVE_[A-Z0-9_]+)", body))
+        if not moves:
+            continue
+        selected = re.search(r"\.levelUpLearnset\s*=\s*(s[A-Za-z0-9_]+LevelUpLearnset)", body)
+        assert selected and selected.group(1) in level_sets, (match.group(1), "missing level-up learnset")
+        learned = set(re.findall(r"LEVEL_UP_MOVE\(\s*\d+\s*,\s*(MOVE_[A-Z0-9_]+)\s*\)", level_sets[selected.group(1)]))
+        for move in moves:
+            required_moves.append((match.group(1), move))
+            assert move in learned, (match.group(1), move, "evolution requirement not learned naturally")
+assert len(required_moves) >= 13, f"Move-gated evolution audit shrank: {len(required_moves)}"
+print(f"P0 move-based evolution: {len(required_moves)} offline naturally learnable requirements PASS")
