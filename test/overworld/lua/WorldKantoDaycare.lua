@@ -54,7 +54,11 @@ local function findObject(localId)
 end
 
 local function scriptRunning()
-  local ptr=F.r32(S.sGlobalScriptContext+S.ScriptCtx.scriptPtr)
+  -- Release LTO may internalize this file-local C static. If the symbol
+  -- cannot be resolved, do NOT certify a mere collision as dialogue.
+  local ctx=S.sGlobalScriptContext or 0
+  if ctx<0x02000000 or ctx>=0x02040000 then return false end
+  local ptr=F.r32(ctx+S.ScriptCtx.scriptPtr)
   return ptr>=0x08000000 and ptr<0x0A000000
 end
 
@@ -68,7 +72,7 @@ local function talkFrom(x,y,dir,label)
   F.press("A",2);F.idle(35)
   local opened=scriptRunning()
   F.check(label.." actual NPC interaction opens script",opened,
-    ("grp=%d map=%d"):format(F.grp(),F.mapn()))
+    ("grp=%d map=%d scriptContext=0x%08X"):format(F.grp(),F.mapn(),S.sGlobalScriptContext or 0))
   F.shot(label.."_dialogue")
   F.dismiss(24)
   return opened

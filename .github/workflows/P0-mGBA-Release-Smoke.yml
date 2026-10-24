@@ -282,33 +282,39 @@ jobs:
           done
           echo 'PASS: real GBA save/core reset/Continue retains all six Pokemon and campaign state'
 
-          # Real production-ROM field load and actor-interaction smoke.
-          # Do not call it breeding acceptance: depositing two compatible
-          # Pokémon, creating/hatching Phione and persistence still need
-          # their own genuine full-flow gameplay verification.
-          test/overworld/mgba-run.sh test/overworld/lua/WorldKantoDaycare.lua pokemonworld-release.gba
-          grep -q 'VERDICT WorldKantoDaycare: .* PASS' "$PW_OUT/WorldKantoDaycare.log" || {
-            echo 'FAIL: Kanto two-parent Route 5 NPC field/interaction smoke'
-            tail -n 100 "$PW_OUT/WorldKantoDaycare.log" || true
-            exit 1
-          }
-          test -f "$PW_OUT/WorldKantoDaycare.PASS"
-          echo 'PASS: Route 5 original caretaker and two breeding NPCs load and respond (not Egg acceptance)'
+          # Keep the late P0 acceptance probes independent. A new failure
+          # in one smoke must not hide the known Diancie navigational status
+          # or waste a complete optimized ROM build and emulator setup.
+          qa_failed=0
 
-          # Genuine anthology scripted-legendary overworld/battle start gate.
-          # This does not claim a completed catch/faint/save sequence.
-          test/overworld/mgba-run.sh test/overworld/lua/WorldDiancieStatic.lua pokemonworld-release.gba
-          grep -q 'VERDICT WorldDiancieStatic: .* PASS' "$PW_OUT/WorldDiancieStatic.log" || {
-            echo 'FAIL: Hoenn Diancie overworld/battle-start acceptance'
+          # Route 5 actors must spawn from a REAL exterior-to-interior warp.
+          # This validates object placement and dialogue only, not Egg output.
+          if test/overworld/mgba-run.sh test/overworld/lua/WorldKantoDaycare.lua pokemonworld-release.gba \
+            && grep -q 'VERDICT WorldKantoDaycare: .* PASS' "$PW_OUT/WorldKantoDaycare.log" \
+            && test -f "$PW_OUT/WorldKantoDaycare.PASS"; then
+            echo 'PASS: Kanto Route 5 breeding NPCs load via door and respond (not Egg acceptance)'
+          else
+            echo 'FAIL: Kanto Route 5 field/interaction smoke'
+            test -f "$PW_OUT/WorldKantoDaycare.log" && tail -n 100 "$PW_OUT/WorldKantoDaycare.log" || true
+            qa_failed=1
+          fi
+
+          # The Diancie fixture must reach the real StevensRoom map before
+          # its visible object or battle result can be attributed to gameplay.
+          if test/overworld/mgba-run.sh test/overworld/lua/WorldDiancieStatic.lua pokemonworld-release.gba \
+            && grep -q 'VERDICT WorldDiancieStatic: .* PASS' "$PW_OUT/WorldDiancieStatic.log" \
+            && test -f "$PW_OUT/WorldDiancieStatic.PASS" \
+            && grep -q 'Diancie is visible after Steven letter before Champion' "$PW_OUT/WorldDiancieStatic.log" \
+            && grep -q 'the real scripted Diancie battle opened' "$PW_OUT/WorldDiancieStatic.log" \
+            && grep -q 'opposing battle Pokemon is Diancie' "$PW_OUT/WorldDiancieStatic.log"; then
+            echo 'PASS: Diancie actual scripted object launches species-correct battle'
+          else
+            echo 'FAIL: Diancie fixture/overworld/battle start remains unverified'
             test -f "$PW_OUT/WorldDiancieStatic.log" && tail -n 150 "$PW_OUT/WorldDiancieStatic.log" || true
+            qa_failed=1
+          fi
+          if (( qa_failed != 0 )); then
+            echo 'FAIL: One or more independent late P0 mGBA acceptance probes failed'
             exit 1
-          }
-          test -f "$PW_OUT/WorldDiancieStatic.PASS"
-          for assertion in \
-            'Diancie is visible after Steven letter before Champion' \
-            'the real scripted Diancie battle opened' \
-            'opposing battle Pokemon is Diancie'; do
-            grep -q "$assertion" "$PW_OUT/WorldDiancieStatic.log"
-          done
-          echo 'PASS: the real Diancie object launches a species-correct wild battle'
+          fi
           # No upload-artifact step, no ROM, .sav or screenshots persisted.

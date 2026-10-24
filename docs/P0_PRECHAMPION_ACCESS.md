@@ -1,5 +1,11 @@
 # P0 before-first-Champion acquisition access audit
 
+### Follow-up mGBA probe evidence precision
+
+[`53aa59b` Gameplay Build #40066330963](https://github.com/DevElectrum/grand-anthology/actions/runs/40066330963) compiled the optimized game; its source job only failed on a stale literal comment assertion. [mGBA #40066331018](https://github.com/DevElectrum/grand-anthology/actions/runs/40066331018) generated the ROM and emulator but could not start suites because lean symbol export did not resolve an LTO-private script context. Fixes remove brittle test prose checks, recognize compiler-suffixed symbols, and fail closed if the context is unavailable. The live Route 5 exterior-door NPC test and actual Phione breeding/hatch remain **unverified**.
+
+
+
 ### Actual Kanto daycare mGBA diagnostic and staging correction
 
 [`d8a8cef` gameplay build](https://github.com/DevElectrum/grand-anthology/actions/runs/40061225603) passes optimized compilation, but its first mGBA NPC smoke in [run #40061225598](https://github.com/DevElectrum/grand-anthology/actions/runs/40061225598) was not valid gameplay evidence. Directly loading a modified flash save inside Route 5 kept World Transit ObjectEvent positions and local IDs; the test then lacked its release-mode `sGlobalScriptContext` symbol. The corrected smoke saves to Route 5 **exterior**, crosses the actual building door at (23,25), and only then checks spawning and dialogue. Its validation checks Kanto exterior and interior group/index numbers and the true exterior entrance. Re-check new mGBA logs before claiming the normally entered interior is functional; full breeding and Phione hatching remain unverified.

@@ -1,5 +1,11 @@
 # Pokémon Grand Anthology: scope and verification status
 
+## Next P0 smoke gate adjustment (24 October UTC)
+
+[`53aa59b` P0 gameplay build #40066330963](https://github.com/DevElectrum/grand-anthology/actions/runs/40066330963): **optimized compile passed**, while source validation failed only when checking an outdated test-comment phrase. [Release mGBA #40066331018](https://github.com/DevElectrum/grand-anthology/actions/runs/40066331018) compiled the game and mGBA itself, but halted while generating lean release symbols because the file-local `sGlobalScriptContext` was not found under its bare name. Consequently, neither run supplies new actual Route 5 NPC gameplay evidence. The next correction uses the actual exterior doorway, a stable source guard, and LTO-private alias lookup with fail-closed runtime interpretation. The mGBA workflow will also run the daycare and Diancie probes independently to avoid hiding results.
+
+
+
 ## Real daycare emulator test diagnosis (24 October UTC)
 
 The [`d8a8cef` optimized build #40061225603](https://github.com/DevElectrum/grand-anthology/actions/runs/40061225603) **passed**. [The paired emulator run #40061225598](https://github.com/DevElectrum/grand-anthology/actions/runs/40061225598) again **passed** title (37/37), Cheats (8/8), full-party gift+save (15/15), Johto Elm (34/34), Kanto Oak (34/34), Hoenn full-PC refusal (26/26), shiny odds (26/26), first hub boot (4/4) and all three region travel+save (27/27).

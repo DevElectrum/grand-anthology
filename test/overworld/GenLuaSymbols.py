@@ -499,7 +499,7 @@ def main():
         # LTO may internalize a static callback or the normal Start-wheel
         # pointer under a .lto_priv.N suffix. Require ONE exact-named clone:
         # never trust a prefix match or choose among ambiguous addresses.
-        if title_only and not ent and name in ("CB2_MainMenu", "sUsmState"):
+        if title_only and not ent and name in ("CB2_MainMenu", "sUsmState", "sGlobalScriptContext"):
             pattern = re.escape(name) + r"\.lto_priv\.[0-9]+"
             options = [(key, val) for key, val in syms.items()
                        if re.fullmatch(pattern, key)]
@@ -509,6 +509,15 @@ def main():
             elif len(options) > 1:
                 sys.exit(f"AMBIGUOUS LTO-private {name} symbols: {[key for key, _ in options]}")
         if not ent:
+            if title_only and name == "sGlobalScriptContext":
+                # An LTO toolchain may inline the private script context
+                # completely or remove its symbol. Keep the release build
+                # analyzable; the NPC smoke fails *closed* on zero but can
+                # still report actual doorway and ObjectEvent results.
+                print("WARN: sGlobalScriptContext not exported by optimized ELF; dialogue assertion will fail closed",
+                      file=sys.stderr)
+                lines.append("  sGlobalScriptContext = 0,  -- optimized out; NPC smoke cannot certify dialogue")
+                continue
             if name in OPTIONAL:
                 lines.append(f"  {name} = 0,  -- absent in this build")
                 continue
