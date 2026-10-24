@@ -78,6 +78,21 @@ source-level acquisition paths. The inherited validator filename
 `test/overworld/ValidateGen13.py` now enforces all-generation enablement rather than
 the original Gen 1–3-only rule. Source reachability is **not** an in-game catchability certificate.
 
+**P0 pre-Champion access repairs:** six Kanto families previously dependent on
+post-League Sevii Islands 4–7 now have mainland parent habitats (Aipom Route 16,
+Misdreavus Pokémon Tower 4F, Murkrow Pokémon Tower 6F, Sneasel Seafoam B3F,
+Yanma Route 12 and Swinub Seafoam B4F). The full Kanto/Johto/Hoenn National
+source audit now excludes clearly postgame maps. Original map habitats remain.
+
+Because this game does not contain playable Alola, Galar or Hisui, twelve
+region-locked *alternate-form evolutions* also have offline stone methods:
+Shiny Stone (Alolan Raichu, Galarian Weezing, Hisuian Sliggoo), Sun Stone
+(Alolan Exeggutor), Dusk Stone (Alolan Marowak, Hisuian Typhlosion or
+Samurott), Ice Stone (Galarian Mr. Mime, Hisuian Avalugg) and Dawn Stone
+(Hisuian Lilligant, Braviary or Decidueye). The ordinary versions still
+follow their original rules. All these stones are stocked in regional stores.
+These source changes still need representative emulator evolution testing.
+
 ## World Transit hub
 
 New games open with a unified Oak intro — gender, name, outfit picker, and a one-time **Hard

@@ -51,6 +51,17 @@ After the initial `20938787` handoff, the following **public-main** changes were
 
 **Next engineering work:** Check `63bea16` CI first, then group remaining P0 by actual pre-Champion gating or forms subsystem. Confirm real mart purchases and offline evolution for this batch, breeding and key-item-only form access (e.g. Rotom Catalog, Zygarde Cube, Reveal Glass) without assuming price-zero key items can be sold in regular shops. Audit save/faint/revisit for representative scripted battles, then run consolidated mGBA play acceptance. Keep 420 PC slots and all upstream notices; do not touch archived private repo.
 
+## Follow-up: pre-Champion P0 acquisition repairs (public main)
+
+**Latest gameplay commit:** [`23890d6674355bf0c8e47f132d02aa8f0aeabe65`](https://github.com/DevElectrum/grand-anthology/commit/23890d6674355bf0c8e47f132d02aa8f0aeabe65), following [`6c50040`](https://github.com/DevElectrum/grand-anthology/commit/6c50040bcc2242973038f8b1c1c057a3a7b1b8fd) and [validator fix `efabe71`](https://github.com/DevElectrum/grand-anthology/commit/efabe71e8115219d8828e6d06ec80de946d3642c).
+
+- Fixed 12 evolution branches that demanded `REGION_ALOLA`, `REGION_GALAR` or `REGION_HISUI` (all impossible from `GetCurrentRegion()` in this three-region game). Added distinct purchasable Evo Stone alternatives while leaving base evolutions and original branch mechanics intact. A new test enumerates all 12 `IF_REGION` cases, enforces the alternative, shops and runtime item-use mode. See [P0 access details](P0_PRECHAMPION_ACCESS.md).
+- Six Gen IV Kanto-owned evolution lines were counted due to base encounters on *post-Champion* Sevii islands 4–7. Added Aipom, Misdreavus, Murkrow, Sneasel, Yanma and Swinub on selected mainland maps, no native replacements, with DexNav capacity guards; ecology now 302 entries. Tightened the Python National source-audit blacklist for postgame islands, postgame Hoenn caves and Battle Frontier. Baseline static audit still remains optimistic because script-local guards, map passage and gameplay aren't proven.
+- [`63bea16` full gameplay build](https://github.com/DevElectrum/grand-anthology/actions/runs/40057275807) succeeded. **Source validation succeeded** for new [`23890d6` Gameplay Build](https://github.com/DevElectrum/grand-anthology/actions/runs/40058490395), with full compilation ongoing when recorded. [Same-SHA mGBA](https://github.com/DevElectrum/grand-anthology/actions/runs/40058490385) ongoing; expect possible previous Granite Cave fixture failure, not a Diancie object verdict. Do not confuse intermediate cancelled full builds with failed code.
+- Follow-on auditing confirmed the Alcremie `EVO_SPIN` has a real field-avatar input trigger in `src/field_control_avatar.c` calling `TrySpecialOverworldEvo`, and move-use evolution bookkeeping is present in `src/battle_move_resolution.c`. **These are code connections, not emulator acceptance.**
+
+**Next step:** continue real P0 availability/story-gate audit and repair grouped issues if found, then consolidated emulator proof for rare ecology, trade-stone and alternate-form evolutions, breeding, static catches and persist/revisit. Do not drift into gimmicks, PC growth, private repo or publication work.
+
 ## Collaboration and workflow precautions
 
 - Make changes and commits **only in `DevElectrum/grand-anthology:main`** unless the user directs otherwise. Do not import old refs, merges, issue artifacts or GitHub Actions outputs from private history.

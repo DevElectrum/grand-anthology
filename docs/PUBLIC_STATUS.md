@@ -42,7 +42,7 @@ distributed by this repository.
 
 ## Latest public P0 engineering (October 24 UTC)
 
-Three substantive implementation batches landed directly on public `main`:
+The initial three substantive implementation batches landed directly on public `main`:
 
 - [`2efe308`](https://github.com/DevElectrum/grand-anthology/commit/2efe30869ff851129018acd8204c2c8b4efbb646) and [`e66fa1b`](https://github.com/DevElectrum/grand-anthology/commit/e66fa1b48a385af64c12b386c43b02e84530e0ec): added offline Linking Cord evolutions for Karrablast/Shelmet; stocked missing Gen 6/9 evolution items and Gimmighoul Coins in all three regional department stores; added an all-generation trade/item source guard (30 trade targets and 44 item types).
 - [`44635fd`](https://github.com/DevElectrum/grand-anthology/commit/44635fd44b6c5924e30a2df3d5e638277fdfe1d5): Dipplin naturally learns Dragon Cheer at level 38 for offline Hydrapple evolution; validates 15 move-based evolution species against the configured Gen 9 level-up learnsets.
@@ -51,6 +51,15 @@ Three substantive implementation batches landed directly on public `main`:
 **Build verification distinction:** The [public gameplay build at `20938787`](https://github.com/DevElectrum/grand-anthology/actions/runs/40056497817) passed. Source-validation jobs for the intermediate P0 commits passed, but full optimized GBA builds on those intermediate SHAs were cancelled by the workflow's newer-commit concurrency setting. Check the [latest `63bea16` gameplay build](https://github.com/DevElectrum/grand-anthology/actions/runs/40057275807) for its final outcome rather than assuming a pass. The [mGBA run at `20938787`](https://github.com/DevElectrum/grand-anthology/actions/runs/40056497711) still failed in the Granite Cave doorway fixture after successfully testing title, regional party travel, save/Continue, and settings; no Diancie battle result is established.
 
 These repairs improve source-implemented accessibility, not verified end-to-end Pokédex completion. Remaining P0 includes early map/story gating, actual mart and evolution operations, breeding and static catch/faint/revisit save testing, key-item form mechanics, and consolidated emulator acceptance.
+
+
+### Pre-first-Champion access integration follow-up
+
+- [`6c50040`](https://github.com/DevElectrum/grand-anthology/commit/6c50040bcc2242973038f8b1c1c057a3a7b1b8fd) and [`efabe71`](https://github.com/DevElectrum/grand-anthology/commit/efabe71e8115219d8828e6d06ec80de946d3642c): preserved original level/region evolutions while adding purchasable evolution-stone alternatives for **12 formerly impossible Alola/Galar/Hisui evolution branches**. The latter commit repaired an over-escaped source-validator regex; source tests passed afterward. See [the access audit](P0_PRECHAMPION_ACCESS.md) for the complete mapping.
+- [`23890d6`](https://github.com/DevElectrum/grand-anthology/commit/23890d6674355bf0c8e47f132d02aa8f0aeabe65): placed **six Kanto evolution parent species** on mainland pre-League encounter maps rather than relying on Sevii Islands 4–7 (Aipom, Misdreavus, Murkrow, Sneasel, Yanma, Swinub). Expanded ecology entries **296 → 302**, retained original habitats/native encounters and validated DexNav slots. Updated the optimistic 1,025-source auditor to exclude four post-League Sevii islands, Desert Underpass, Artisan Cave, Marine/Terra Cave and the Battle Frontier in addition to earlier postgame maps.
+- **CI:** [`63bea16` gameplay build #40057275807](https://github.com/DevElectrum/grand-anthology/actions/runs/40057275807) fully passed. For [`23890d6` gameplay build #40058490395](https://github.com/DevElectrum/grand-anthology/actions/runs/40058490395), source validators **passed**, including the strengthened region/shop/ecology acquisition checks; optimized build was running when recorded. A separate [mGBA #40058490385](https://github.com/DevElectrum/grand-anthology/actions/runs/40058490385) started at that SHA; check its final outcome, and remember the existing Granite Cave navigation fixture problem.
+
+No single-species catch, evolution, save or story passage acceptance is established by those Python validators. Remaining practical P0 work: scrutinize scripts with internal post-Champion flags on otherwise accessible maps, verify actual purchase/evolution and rare encounter probabilities, consolidate emulator tests (including all three regions), check breeding and key-item-only form machinery, and correct issues uncovered. The source-level 1,025 total remains deliberately optimistic.
 
 ## Source history and attribution
 
