@@ -1,22 +1,32 @@
-# Next Astra: **READ ONLY, WAIT FOR DESIGN DISCUSSION** (24 October 2026)
+# Next Astra: Pokémon Grand Anthology, design-complete handoff (24 October 2026)
 
-Astra, this is the user's explicit handoff. **DO NOT START ANY WORK.** Your only job on entering this chat is to read the relevant files in the canonical public GitHub repo, understand the existing source and the corrected decisions below, give the user a concise summary, and **WAIT** for further discussion and instructions. **Do not edit files, commit, code, test, invoke CI, open PRs/issues, relocate Pokémon, or act on ideas**. The user wants questions and mutual agreement **before** large engineering changes. Earlier handoff paragraphs telling you to "continue implementation" are superseded.
+Astra, we're continuing **Pokémon Grand Anthology**. The canonical public repository is **DevElectrum/grand-anthology**, branch **main**. Do not access or modify the archived private DevElectrum/pokemon-grand-anthology repository or import private history.
 
-**Canonical repo:** [`DevElectrum/grand-anthology`](https://github.com/DevElectrum/grand-anthology), branch `main`. The historical private repository `DevElectrum/pokemon-grand-anthology` must **not** be opened, changed, merged or published.
+## First: read the repository and *our full discussion decisions* before suggesting implementation
 
-**Read these files directly from public GitHub first**, in order:
-1. `AGENTS.md`
-2. `docs/NEXT_ASTRA_HANDOFF.md` (the new first section supersedes old tasks)
-3. `docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md` (the location list the user requested in a file)
-4. `README.md`
-5. `FEATURES.md`
-6. `docs/PUBLIC_STATUS.md`
-7. `docs/P0_PRECHAMPION_ACCESS.md` (historic audit only)
+Read these **directly from GitHub**, in this order:
 
-**Newly settled design:** All 1,025 National species need to be legitimately obtainable **eventually across the complete Kanto/Johto/Hoenn adventure including postgame**; there is **NO requirement** for all of them before the first Champion. The previous pre-Champion fixation was an unwanted assistant assumption. Ordinary campaign/story gates should be respected. **Legendary and Mythical Pokémon should be static scripted encounters**, but don't assume they all must be late-game or require elaborate quests. **Ultra Beasts and Paradox Pokémon are NOT covered by the static-only request**: they are deliberately natural rare encounters. **Kartana in Viridian Forest was deliberately placed at the user's request, and Poipole on Route 1 is accepted.** Avoid deleting or "fixing" these. The user has **not** approved any encounter changes yet.
+1. AGENTS.md
+2. docs/NEXT_ASTRA_HANDOFF.md
+3. docs/NEXT_ASTRA_HANDOFF_2026-10-24_DESIGN_READY.md
+4. **docs/LEGENDARY_MYTHICAL_DESIGN_LEDGER_2026-10-24.md**: **read ALL sections, especially the later superseding decisions and delegated location closeout**. It records our extended Kanto → Johto → Hoenn discussion. Do not base decisions only on the ledger's earliest tentative tables.
+5. docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md: previous authored-source location inventory, NOT proof that every encounter is playable.
+6. docs/PREIMPLEMENTATION_DESIGN_AUDIT_2026-10-24.md: issues and reachability traps.
+7. README.md, FEATURES.md, docs/PUBLIC_STATUS.md, and the historical docs/P0_PRECHAMPION_ACCESS.md.
 
-**Audit issues for discussion only:** Five Legendary form/base species are also in supplemental **wild** habitat code: Groudon (Route 111), Kyogre (Seafloor Cavern Room 1), Galarian Zapdos (Route 22), Galarian Articuno (Seafoam B1F) and Galarian Moltres (Pokémon Mansion 1F). All have static sources too. A post-first-Hall-of-Fame rotation can put Legendary/Mythical species into every third qualifying wild encounter anywhere, or repeatedly substitute a player-chosen Research target. Discuss whether that shortcut should be kept, constrained or removed. Many scripted statics appear relatively early, but user has not objected to early **static** Pokémon or approved relocation. Full map/species inventory and limits are in the audit file.
+Then perform a **read-only review of the current public main source** to compare real scripts, maps, flags, wild/discovery/roamer mechanics, items, evolutions, abilities, form support and CI evidence with our decisions. Be precise about the gap between source-level placement, valid map traversal, actual gameplay and game-breaking conflicts. Do not claim testing not performed.
 
-**Existing project state, not a request to work:** 1,025/1,025 source paths are optimistic, not verified collection. The latest pre-handoff gameplay commit `10bf90d` [passed source validation and optimized ROM build](https://github.com/DevElectrum/grand-anthology/actions/runs/40066826520). [mGBA run](https://github.com/DevElectrum/grand-anthology/actions/runs/40066826492) passed nine broad gameplay suites, with two separate synthetic door navigation failures that never reached daycare/Diancie targets. Remaining P0 normally includes source/progression review, integration and playthrough acceptance, but **do none of it until explicitly requested**. Debug Warp-to-Map in `src/debug.c` is existing machinery; building a QA warp harness was only suggested, not authorized. PC expansion, Dynamax/Gigantamax, Tera and native port remain deferred. Public source only, never ROMs or private history.
+## Non-negotiable design
 
-**Your first response:** Confirm you have read the repo and audit, briefly surface the decisions/open questions, and invite discussion. Then stop. **Do not start coding or testing under any circumstance until the user explicitly says so.**
+- Three original-region adventures with one persistent trainer/team/PC. Casual progression; overpowered carryover accepted. All **1,025 species eventually obtainable including postgame**, not necessarily before one Champion.
+- Legendary/Mythical Pokémon primarily deliberately scripted static encounters, not random grass. Ultra Beasts and Paradox Pokémon remain rare natural wild Pokémon. Kartana in Viridian Forest and Poipole early are intentional. Preserve original story events and classic puzzles. Roaming beasts should become fixed statics; caught/defeated/fled event persistence must be safe.
+- **Our detailed locations/levels/dependencies have already been chosen** across Kanto Gen 1/4/7; Johto Gen 2/5/8; Hoenn Gen 3/6/9. See full ledger, especially the latest delegated choices for Kubfu, Tao Trio, box dragons, Hoopa permanent chamber, Deoxys ferry, and the Ogerpon hunt. Do not reopen settled questions without a concrete source conflict.
+- **Special mechanisms deferred until the end of Legendary/Mythical fixes:** Zacian+Zamazenta double battle with both awarded only after defeating both; separately catchable permanently Complete Zygarde near Littleroot post-Hoenn Champion; separately catchable permanently Stellar Terapagos in postgame Cave of Origin. Regular 10%/50% Zygarde and regular Gym-4 Terapagos are normal earlier implementation work. 50% Zygarde has pre-Champion usable Power Construct as a *temporary glimpse* of Complete; 10% never gets it.
+- Review/remove five Legendary wild supplemental habitats and fix the post-League discovery/Research bypass *without deleting intended Ultra Beast and Paradox wilds*. Keep original Regis puzzles, Rayquaza pre-Champion capture, Groudon/Kyogre after Rayquaza, Mewtwo only after Mew + Champion, Celebi and Zarude in Ilex Forest, Jirachi very early at Route 102 pond, and Ogerpon→Loyal Three→Pecharunt quest.
+- Implementation must be grouped by region/location with genuine source and representative runtime checks. Do not over-focus on synthetic doorway fixtures. No ROMs, save files or private predecessor history in public repo.
+
+## Scope of this handoff
+
+The maintainer authorized publishing the design ledger, preimplementation audit and handoff to GitHub. **That is documentation permission, NOT permission to begin implementing, editing game code or maps, running builds/CI/tests, opening issues/PRs or making unrelated commits.**
+
+**Your first task:** Read and understand the whole repository and ledger; give a concise, actionable region-by-region summary of code-vs-design discrepancies and proposed implementation batches. Explain any uncertainty. **Then stop and wait for explicit implementation approval.** Ask only if a real design conflict remains after reading.
