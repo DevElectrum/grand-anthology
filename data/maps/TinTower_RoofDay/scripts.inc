@@ -33,7 +33,7 @@ TinTower_RoofDay_EventScript_SetDay::
 	return
 
 TinTower_RoofDay_MapScript_HoohStory::
-	clearflag FLAG_HIDE_HO_OH
+	call TinTower_RoofDay_AnthologyHoOhGate
 	end
 
 TinTower_RoofDay_MapScript_HoohPostStoryGone::
@@ -43,12 +43,44 @@ TinTower_RoofDay_MapScript_HoohPostStoryGone::
 
 TinTower_RoofDay_MapScript_HoohPostStoryEncounter::
 	setflag FLAG_HIDE_TIN_TOWER_KIMONO_GIRLS
-	clearflag FLAG_HIDE_HO_OH
+	call TinTower_RoofDay_AnthologyHoOhGate
 	setobjectxyperm LOCALID_HO_OH, 10, 6
 	end
 
+@ Ho-Oh revived the three Legendary Beasts. It only reveals itself after
+@ Raikou, Entei, and Suicune have each been REGISTERED CAUGHT, regardless
+@ of whether any remains in the party or boxes. Previous KOs respawn safely.
+TinTower_RoofDay_AnthologyHoOhGate::
+	getcaughtmon SPECIES_HO_OH
+	goto_if_eq VAR_RESULT, TRUE, TinTower_RoofDay_AnthologyHideHoOh
+	goto_if_unset FLAG_RELEASED_BEASTS, TinTower_RoofDay_AnthologyHideHoOh
+	getcaughtmon SPECIES_RAIKOU
+	goto_if_ne VAR_RESULT, TRUE, TinTower_RoofDay_AnthologyHideHoOh
+	getcaughtmon SPECIES_ENTEI
+	goto_if_ne VAR_RESULT, TRUE, TinTower_RoofDay_AnthologyHideHoOh
+	getcaughtmon SPECIES_SUICUNE
+	goto_if_ne VAR_RESULT, TRUE, TinTower_RoofDay_AnthologyHideHoOh
+	clearflag FLAG_HIDE_HO_OH
+	return
+
+TinTower_RoofDay_AnthologyHideHoOh::
+	setflag FLAG_HIDE_HO_OH
+	return
+
+TinTower_RoofDay_EventScript_BeastsMissing::
+	msgbox TinTower_RoofDay_Text_BeastsMissing, MSGBOX_DEFAULT
+	releaseall
+	end
+
+TinTower_RoofDay_Text_BeastsMissing::
+	.string "The legendary rainbow is quiet.\\p"
+	.string "Find and catch the three beasts\\n"
+	.string "awakened beneath BURNED TOWER.$"
+
 TinTower_RoofDay_EventScript_TalkToKimono::
 	lockall
+	call TinTower_RoofDay_AnthologyHoOhGate
+	goto_if_set FLAG_HIDE_HO_OH, TinTower_RoofDay_EventScript_BeastsMissing
 	playbgm MUS_HG_KIMONO_GIRL_DANCE, TRUE
 	msgbox TinTower_RoofDay_Text_Kimono_Opening, MSGBOX_DEFAULT
 	closemessage
@@ -182,6 +214,8 @@ TinTower_RoofDay_EventScript_TalkToKimono::
 
 TinTower_RoofDay_EventScript_HoOh::
 	lockall
+	call TinTower_RoofDay_AnthologyHoOhGate
+	goto_if_set FLAG_HIDE_HO_OH, TinTower_RoofDay_EventScript_BeastsMissing
 	goto_if_eq VAR_COMPLETED_HO_OH, 4, TinTower_RoofDay_EventScript_HoOhPostgame
 	waitse
 	playmoncry SPECIES_HO_OH, CRY_MODE_ENCOUNTER

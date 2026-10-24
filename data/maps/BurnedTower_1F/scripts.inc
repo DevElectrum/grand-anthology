@@ -10,7 +10,6 @@ BurnedTower_1F_MapScripts::
 
 BurnedTower_1F_OnTransition:
 	call BurnedTower_1F_AnthologyFieldTransition
-	call BurnedTower_1F_AnthologyOnTransition 
 	end
 
 BurnedTower_1F_OnLoad::
@@ -220,49 +219,6 @@ BurnedTower_Text_RichardoBeaten:
 BurnedTower_Text_RichardoAfter:
 	.string "Maybe a life of crime isn't for\n"
 	.string "me…$"
-
-// Rare encounter locations near their original home regions.
-BurnedTower_1F_AnthologyOnTransition::
-	getcaughtmon SPECIES_HO_OH
-	call_if_eq VAR_RESULT, TRUE, BurnedTower_1F_AnthologyHideHoOh
-	call_if_ne VAR_RESULT, TRUE, BurnedTower_1F_AnthologyShowHoOh
-	return
-
-BurnedTower_1F_AnthologyHideHoOh::
-	setflag FLAG_HIDE_ANTHOLOGY_HO_OH
-	return
-
-BurnedTower_1F_AnthologyShowHoOh::
-	clearflag FLAG_HIDE_ANTHOLOGY_HO_OH
-	return
-
-BurnedTower_1F_EventScript_HoOh::
-	lock
-	faceplayer
-	playmoncry SPECIES_HO_OH, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_HO_OH, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, BurnedTower_1F_AnthologyHoOhRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, BurnedTower_1F_AnthologyHoOhRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, BurnedTower_1F_AnthologyHoOhResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, BurnedTower_1F_AnthologyHoOhResolved
-	release
-	end
-
-BurnedTower_1F_AnthologyHoOhResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_HO_OH
-	setflag FLAG_HIDE_ANTHOLOGY_HO_OH
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-BurnedTower_1F_AnthologyHoOhRetreated::
-	release
-	end
 
 // Optional new form or post-release roamer safety-net encounter.
 BurnedTower_1F_AnthologyFieldTransition::

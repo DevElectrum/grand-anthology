@@ -186,7 +186,7 @@ table = next(
     if isinstance(node, ast.Assign)
     and any(isinstance(t, ast.Name) and t.id == "_p0_new_statics" for t in node.targets)
 )
-assert len(table) == 87
+assert len(table) == 86
 for directory, prefix, name, species, x, y, suffix, multiple in table:
     scripts = blocks(directory)
     battle = prefix + "_EventScript_" + name
@@ -205,7 +205,7 @@ for directory, prefix, name, species, x, y, suffix, multiple in table:
             claimed = "FLAG_CAUGHT_ANTHOLOGY_" + suffix
             assert (claimed in state.flags) == (outcome == "B_OUTCOME_CAUGHT"), (
                 directory, species, outcome, "shared-National alternate capture")
-print("P0 all 87 current field object scripts: battle-faint/catch/flee/teleport paths source-interpreted PASS")
+print("P0 all 86 current field object scripts: battle-faint/catch/flee/teleport paths source-interpreted PASS")
 
 # The two Kubfu/three Galarian flags must not depend on the shared National entry.
 route42 = (ROOT / "data/maps/Route42/scripts.inc").read_text()
@@ -259,3 +259,24 @@ assert "FLAG_CAUGHT_CELEBI" in s.flags
 run(ilex, "IlexForest_EventScript_CelebiRematch", s)
 assert "FLAG_CAUGHT_CELEBI" in s.flags
 print("P0 representative scripted static lifecycle: KO/re-entry/flee/teleport/catch/save, static Johto beasts, Celebi, Galarian forms and Hoenn story gates PASS (source interpreter, not mGBA)")
+
+
+# Native Bell Tower roof is the *only* Johto Ho-Oh encounter. The Burned
+# Tower upstairs object would bypass the user's agreed caught-beast gate.
+assert "BurnedTower_1F_EventScript_HoOh" not in (ROOT / "data/maps/BurnedTower_1F/scripts.inc").read_text()
+tower = blocks("TinTower_RoofDay")
+for stage in (2, 4):
+    entry = ("TinTower_RoofDay_MapScript_HoohStory"
+             if stage == 2 else "TinTower_RoofDay_MapScript_HoohPostStoryEncounter")
+    state = Save(flags={"FLAG_RELEASED_BEASTS"}, variables={"VAR_COMPLETED_HO_OH": stage})
+    run(tower, entry, state)
+    assert "FLAG_HIDE_HO_OH" in state.flags, ("Ho-Oh shown with missing beasts", stage)
+    for mon in ("RAIKOU", "ENTEI", "SUICUNE"):
+        state.caught.add("SPECIES_" + mon)
+    run(tower, entry, state)
+    assert "FLAG_HIDE_HO_OH" not in state.flags, ("Ho-Oh stays hidden after 3 catches", stage)
+    state.caught.add("SPECIES_HO_OH")
+    run(tower, entry, state)
+    assert "FLAG_HIDE_HO_OH" in state.flags, ("Ho-Oh duplicate after caught", stage)
+assert "call TinTower_RoofDay_AnthologyHoOhGate" in (ROOT / "data/maps/TinTower_RoofDay/scripts.inc").read_text()
+print("P0 Ho-Oh: native rooftop only, caught trio prerequisite, early/postgame and already-caught guards PASS")

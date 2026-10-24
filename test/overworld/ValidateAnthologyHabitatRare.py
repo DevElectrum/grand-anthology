@@ -492,7 +492,6 @@ _p0_new_statics = (
 ("Route44","Route44","Kyurem","KYUREM",57,24,"KYUREM",False),
 ("Route44","Route44","Eternatus","ETERNATUS",8,17,"ETERNATUS",False),
 ("GoldenrodCity","GoldenrodCity","Genesect","GENESECT",36,25,"GENESECT",False),
-("BurnedTower_1F","BurnedTower_1F","HoOh","HO_OH",3,11,"HO_OH",False),
 ("GraniteCave_B2F","GraniteCave_B2F","ChienPao","CHIEN_PAO",15,19,"CHIEN_PAO",False),
 ("GraniteCave_B2F","GraniteCave_B2F","Zygarde","ZYGARDE",22,5,"ZYGARDE",False),
 ("Route120","Route120","Xerneas","XERNEAS",4,17,"XERNEAS",False),
@@ -514,7 +513,7 @@ _p0_new_statics = (
 )
 _p0_layouts = {x["id"]: x for x in json.loads((root / "data/layouts/layouts.json").read_text())["layouts"] if x}
 _p0_flags = (root / "include/constants/flags.h").read_text()
-assert len(_p0_new_statics)==87 and len({(s[0],s[4],s[5]) for s in _p0_new_statics})==87
+assert len(_p0_new_statics)==86 and len({(s[0],s[4],s[5]) for s in _p0_new_statics})==86
 for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
     _m=json.loads((root/"data/maps"/_dir/"map.json").read_text())
     _script=(root/"data/maps"/_dir/"scripts.inc").read_text()
