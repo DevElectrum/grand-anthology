@@ -182,5 +182,5 @@ print(f"P0 region-inaccessible evolution repair: {len(found_regional)} purchasab
 # Missing the separator compiles no C despite the source-level acquisition passing.
 cubone = source("src/data/pokemon/species_info/gen_1_families.h")
 assert re.search(
-    r"\\{EVO_ITEM, ITEM_DUSK_STONE, SPECIES_MAROWAK_ALOLA\\},\\s*\\{EVO_NONE, 0, SPECIES_MAROWAK_ALOLA_TOTEM\\}",
+    r"\{EVO_ITEM, ITEM_DUSK_STONE, SPECIES_MAROWAK_ALOLA\},\s*\{EVO_NONE, 0, SPECIES_MAROWAK_ALOLA_TOTEM\}",
     cubone), "Cubone's alternate evolution entries must be comma-delimited"
