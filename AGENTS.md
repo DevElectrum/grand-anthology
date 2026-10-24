@@ -1,3 +1,5 @@
+> **Current handoff override, 24 October 2026 (newer than the design-pause note below):** The maintainer explicitly authorized **a documentation-only repository update** to publish the [full design ledger](docs/LEGENDARY_MYTHICAL_DESIGN_LEDGER_2026-10-24.md), [pre-implementation design audit](docs/PREIMPLEMENTATION_DESIGN_AUDIT_2026-10-24.md), and [new handoff](docs/NEXT_ASTRA_HANDOFF_2026-10-24_DESIGN_READY.md). **The next Astra may read all public repo source to reconcile the design, but must WAIT for explicit approval before writing gameplay code, altering encounters/maps, running tests/builds/CI, or committing further engineering changes.** Earlier "do not edit docs / GitHub" instructions below refer to the superseded pre-publication discussion pause. See [prompt](docs/NEXT_ASTRA_PROMPT.md). Do not touch the private historical repo.
+
 # Grand Anthology public development instructions
 
 **Canonical repository:** `DevElectrum/grand-anthology`, branch `main`.
