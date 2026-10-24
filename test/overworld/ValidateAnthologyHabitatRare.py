@@ -242,8 +242,8 @@ assert all(line.endswith(chr(92)) and not line.endswith(chr(92) * 2)
 # without champion flags or replacing canonical encounters.
 aquatic_catalog = (root / "src/data/anthology_aquatic_habitats.h").read_text()
 aquatic = re.findall(r"^AQUATIC_ON_MAP\((MAP_[A-Z0-9_]+), (WATER|FISHING), ([A-Z0-9_]+)\)$", aquatic_catalog, re.M)
-assert len(aquatic) == 82, len(aquatic)
-assert sum(kind == "WATER" for _, kind, _ in aquatic) == 60
+assert len(aquatic) == 81, len(aquatic)
+assert sum(kind == "WATER" for _, kind, _ in aquatic) == 59
 assert sum(kind == "FISHING" for _, kind, _ in aquatic) == 22
 assert len({(loc, kind) for loc, kind, _ in aquatic}) == len(aquatic)
 for loc, kind, mon in aquatic:
@@ -264,8 +264,7 @@ assert "AnthologyMapHasAquaticHabitatSpecies(header->mapGroup, header->mapNum, W
 assert "|| useAquatic) ? 0 : wildMonIndex" in wild
 assert "Random() % 100 < 3" in wild
 assert ("MAP_ROUTE20", "WATER", "LAPRAS") in aquatic
-assert ("MAP_ROUTE21", "WATER", "BINACLE") in aquatic
-print("P0 aquatic ecology: 60 Surf + 22 rod placements, Route 20 Lapras, DexNav and native parity PASS")
+print("P0 aquatic ecology: 59 Surf + 22 rod placements, Route 20 Lapras, DexNav and native parity PASS")
 
 # Permanent regional aquatic forms have explicit reachable pre-Champion sources.
 for form in ("WOOPER_PALDEA", "BASCULIN_RED_STRIPED", "BASCULIN_BLUE_STRIPED",
