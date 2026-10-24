@@ -38,6 +38,16 @@ TinTower_RoofDay_MapScript_HoohStory::
 
 TinTower_RoofDay_MapScript_HoohPostStoryGone::
 	setflag FLAG_HIDE_TIN_TOWER_KIMONO_GIRLS
+	getcaughtmon SPECIES_HO_OH
+	goto_if_eq VAR_RESULT, TRUE, TinTower_RoofDay_MapScript_HoohAlreadyCaught
+	// Defeated, not caught: retry on the very next room visit. The native
+	// cinematic is already complete; keep the post-story encounter instead.
+	setvar VAR_COMPLETED_HO_OH, 4
+	call TinTower_RoofDay_AnthologyHoOhGate
+	setobjectxyperm LOCALID_HO_OH, 10, 6
+	end
+
+TinTower_RoofDay_MapScript_HoohAlreadyCaught::
 	setflag FLAG_HIDE_HO_OH
 	end
 

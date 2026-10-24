@@ -280,3 +280,17 @@ for stage in (2, 4):
     assert "FLAG_HIDE_HO_OH" in state.flags, ("Ho-Oh duplicate after caught", stage)
 assert "call TinTower_RoofDay_AnthologyHoOhGate" in (ROOT / "data/maps/TinTower_RoofDay/scripts.inc").read_text()
 print("P0 Ho-Oh: native rooftop only, caught trio prerequisite, early/postgame and already-caught guards PASS")
+
+
+# A fainted native rooftop Ho-Oh may be challenged on the next visit.
+done = {"SPECIES_RAIKOU", "SPECIES_ENTEI", "SPECIES_SUICUNE"}
+retry = Save(flags={"FLAG_RELEASED_BEASTS"}, caught=set(done),
+             variables={"VAR_COMPLETED_HO_OH": 3})
+run(tower, "TinTower_RoofDay_MapScript_HoohPostStoryGone", retry)
+assert retry.variables["VAR_COMPLETED_HO_OH"] == 4
+assert "FLAG_HIDE_HO_OH" not in retry.flags
+caught = Save(flags={"FLAG_RELEASED_BEASTS"}, caught=set(done) | {"SPECIES_HO_OH"},
+              variables={"VAR_COMPLETED_HO_OH": 3})
+run(tower, "TinTower_RoofDay_MapScript_HoohPostStoryGone", caught)
+assert "FLAG_HIDE_HO_OH" in caught.flags
+print("P0 native Ho-Oh after faint: immediate re-entry retry and permanent caught hide PASS")
