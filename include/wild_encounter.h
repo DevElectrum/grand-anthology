@@ -69,6 +69,7 @@ bool8 StandardWildEncounter_Debug(void);
 u32 CalculateChainFishingShinyRolls(void);
 void CreateWildMon(enum Species species, u8 level);
 bool8 WorldIsFieldStableDiscoverySpecies(enum Species species);
+bool8 WorldIsNaturalDiscoverySpecies(enum Species species);
 // Shared pre-Champion rare habitat lookup for natural fights and DexNav.
 enum Species AnthologyGetRareHabitatSpecies(enum WildPokemonArea area, const struct WildPokemonInfo *info);
 // Up to four supplements using spare grass DexNav icons on the current map.

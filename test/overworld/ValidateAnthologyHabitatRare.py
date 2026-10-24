@@ -30,7 +30,7 @@ assert len(placements) == 21
 for text in (
     "Random() % 100 < 2", "GetSafariZoneFlag()", "gSaveBlock2Ptr->randomizerWild",
     "distinct >= NUM_LAND_MONS_ENCOUNTER_SLOTS",
-    "WorldIsFieldStableDiscoverySpecies(rare)"):
+    "WorldIsNaturalDiscoverySpecies(rare)"):
     assert text in wild
 for text in (
     "AnthologyGetRareHabitatSpecies(WILD_AREA_LAND, info)",
@@ -77,7 +77,13 @@ assert "max = landMonsInfo->wildPokemon[0].maxLevel;" in dex
 # Safari/frontier/randomizer guard and source maps without replacing originals.
 extra_text = (root / "src/data/anthology_extra_habitats.h").read_text()
 extra = re.findall(r"^ECOLOGY_ON_MAP\((MAP_[A-Z0-9_]+), ([A-Z0-9_]+)\)$", extra_text, re.M)
-assert len(extra) == 313, (len(extra), "lost or unexpected habitat entries")
+assert len(extra) == 308, (len(extra), "lost or unexpected habitat entries")
+for forbidden in (("MAP_ROUTE22", "ZAPDOS_GALAR"),
+                  ("MAP_SEAFOAM_ISLANDS_B1F", "ARTICUNO_GALAR"),
+                  ("MAP_POKEMON_MANSION_1F", "MOLTRES_GALAR"),
+                  ("MAP_ROUTE111", "GROUDON"),
+                  ("MAP_SEAFLOOR_CAVERN_ROOM1", "KYOGRE")):
+    assert forbidden not in extra, ("forbidden wild Legendary habitat", forbidden)
 assert len({species for _map, species in extra[:113]}) == 113, "original 113 changed"
 assert len(set(extra)) == len(extra), "duplicate extra species within one map"
 # A postgame wild location must not be a required pre-Champion source. These

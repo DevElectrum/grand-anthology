@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Post-League all-generation discovery access: source guards and cycle mathematics.
+"""Post-League natural discovery access: source guards and cycle mathematics.
 
 This is a source/algorithm contract, not an in-emulator catchability or form
 legality certification. It does not claim battle-exclusive transformations
@@ -39,7 +39,22 @@ need(wild, "if (battles % 3 != 2)")
 need(wild, "result = 1 + (battles / 3) % (NUM_SPECIES - 1);")
 need(wild, "attempts < NUM_SPECIES - 1")
 need(wild, "GetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET)")
-need(wild, "WorldIsFieldStableDiscoverySpecies(result)")
+need(wild, "WorldIsNaturalDiscoverySpecies(result)")
+# Wild randomization deliberately keeps the broader field-stable pool.
+randomizer = wild.split("static enum Species WorldRandomizeWildSpecies")[1].split("enum Species AnthologyGetRareHabitatSpecies")[0]
+need(randomizer, "WorldIsFieldStableDiscoverySpecies(result)")
+# Excluded Legendaries cannot be introduced by post-League Research/rotation.
+natural = wild.split("bool8 WorldIsNaturalDiscoverySpecies")[1].split("// Supplemental ordinary species")[0]
+for guard in ("isRestrictedLegendary", "isSubLegendary", "isMythical",
+              "isUltraBeast", "isParadox", "SPECIES_ZARUDE",
+              "SPECIES_MELTAN", "SPECIES_PHIONE"):
+    need(natural, guard)
+postgame = wild.split("static enum Species WorldChoosePostLeagueDiscoverySpecies")[1].split("void CreateWildMon")[0]
+assert "WorldIsFieldStableDiscoverySpecies(result)" not in postgame
+assert postgame.count("WorldIsNaturalDiscoverySpecies(result)") == 2
+need(wild, "WorldIsNaturalDiscoverySpecies(rare)")
+need(wild, "WorldIsNaturalDiscoverySpecies(sAnthologyExtraHabitats[i].species)")
+need(wild, "WorldIsNaturalDiscoverySpecies(species)")
 stats = read("include/constants/game_stat.h")
 need(stats, "#define GAME_STAT_WORLD_DISCOVERY_TARGET      53")
 need(stats, "#define NUM_GAME_STATS                        64")
@@ -52,7 +67,7 @@ ui = read("src/debug.c")
 for guard in ("DebugAction_Discovery_EditTarget", "DebugAction_Discovery_HandleTarget",
               "DebugAction_Discovery_ClearTarget",
               "SetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET, target)",
-              "WorldIsFieldStableDiscoverySpecies(target)"):
+              "WorldIsNaturalDiscoverySpecies(target)"):
     need(ui, guard)
 
 # All assigned raw indices must appear in exactly one regular, uninterrupted
@@ -67,4 +82,4 @@ assert len(encounter_ids) == eligible_slots
 assert set(encounter_ids) == set(range(1, num_species))
 # No discovery effect in first two ordinary fights of each 3-battle group.
 assert [b for b in range(12) if b % 3 == 2] == [2, 5, 8, 11]
-print("P0 post-League discovery: ordinary-only hooks / protections / full-ID rotation PASS")
+print("P0 post-League natural discovery: lore filter, randomizer separation, hooks and cycle PASS")

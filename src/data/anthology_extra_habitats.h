@@ -343,28 +343,16 @@ ECOLOGY_ON_MAP(MAP_SEAFOAM_ISLANDS_B3F, SNEASEL)
 ECOLOGY_ON_MAP(MAP_ROUTE12, YANMA)
 ECOLOGY_ON_MAP(MAP_SEAFOAM_ISLANDS_B4F, SWINUB)
 
-// P0 pre-first-Champion regional-form reconciliation. Galarian birds
-// already have Johto scripted fields; their Kanto home sources are optional
-// rare natural hunts, without replacing either canonical map encounters or
-// existing Johto statics. Paldean Wooper keeps its Hoenn Surf source and gets
-// its Johto native-regional path. Own-Tempo Rockruff is a distinct permanent
-// seed for the Dusk Lycanroc stone/clock branches. Alola-cap Pikachu is a
-// collectible hat form (not a hypothetical Alolan regional Pikachu).
+// Pre-Champion regional-form access. Galarian birds have separate scripted
+// Legendary encounters, not wild grass habitats. Paldean Wooper retains its
+// rare natural source; Own-Tempo Rockruff and cap Pikachu are distinct forms.
 ECOLOGY_ON_MAP(MAP_ROUTE8, FARFETCHD_GALAR)
 ECOLOGY_ON_MAP(MAP_ROUTE11, MEOWTH_GALAR)
-ECOLOGY_ON_MAP(MAP_ROUTE22, ZAPDOS_GALAR)
-ECOLOGY_ON_MAP(MAP_SEAFOAM_ISLANDS_B1F, ARTICUNO_GALAR)
-ECOLOGY_ON_MAP(MAP_POKEMON_MANSION_1F, MOLTRES_GALAR)
 ECOLOGY_ON_MAP(MAP_ROUTE30, WOOPER_PALDEA)
 ECOLOGY_ON_MAP(MAP_ROUTE9, ROCKRUFF_OWN_TEMPO)
 ECOLOGY_ON_MAP(MAP_ROUTE6, PIKACHU_ALOLA)
 
-// Pre-Champion Hoenn continental-legendary habitats. Embedded Tower on Route47
-// is Johto-Champion-gated; Terra/Marine Cave are post-Hall-of-Fame; neither
-// should be the only positive source of Groudon or Kyogre. Keep all original
-// unique field objects untouched; these are late-journey optional natural hunts.
-ECOLOGY_ON_MAP(MAP_ROUTE111, GROUDON)
-ECOLOGY_ON_MAP(MAP_SEAFLOOR_CAVERN_ROOM1, KYOGRE)
+// Groudon and Kyogre remain scripted cave encounters after Rayquaza, not wild.
 
 // Klawf's inherited Steven's Cave home is behind Hoenn's Champion gate.
 // Route 115's cliffs supply a real early-to-mid Hoenn rocky habitat.

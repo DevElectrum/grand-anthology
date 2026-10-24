@@ -640,7 +640,7 @@ enum Species AnthologyGetRareHabitatSpecies(enum WildPokemonArea area, const str
 #include "data/anthology_rare_habitats.h"
 #undef RARE_ON_MAP
 
-    if (!WorldIsFieldStableDiscoverySpecies(rare))
+    if (!WorldIsNaturalDiscoverySpecies(rare))
         return SPECIES_NONE;
     for (i = 0; i < NUM_LAND_MONS_ENCOUNTER_SLOTS; i++)
     {
@@ -669,8 +669,8 @@ enum Species AnthologyGetRareHabitatSpecies(enum WildPokemonArea area, const str
 // statics, roamers, outbreaks, gifts and story battles bypass this hook.
 // This is a broad catchability path, not yet a finished targeted encounter UI.
 // Shared eligibility check for post-League encounter rotation and the
-// player Research target. Exclude battle-only transformations, not regional
-// variants or permanent alternate forms.
+// player Research target. The field-stability check here intentionally remains
+// broader than natural Research eligibility because randomizer uses it too.
 bool8 WorldIsFieldStableDiscoverySpecies(enum Species species)
 {
 #if ALL_REGIONS
@@ -721,6 +721,40 @@ bool8 WorldIsFieldStableDiscoverySpecies(enum Species species)
 #endif
 }
 
+// Eligibility for ordinary habitats and post-League Research is deliberately
+// narrower than seeded randomizer eligibility. Legendary/Mythical species use
+// authored statics unless natural populations make an existing wild habitat
+// lore-appropriate. This does not create new encounters for these exceptions.
+// Ultra Beasts and Paradox species are ordinary rare wildlife for this game.
+bool8 WorldIsNaturalDiscoverySpecies(enum Species species)
+{
+#if ALL_REGIONS
+    if (!WorldIsFieldStableDiscoverySpecies(species))
+        return FALSE;
+    if (gSpeciesInfo[species].isUltraBeast || gSpeciesInfo[species].isParadox)
+        return TRUE;
+    if (gSpeciesInfo[species].isRestrictedLegendary
+     || gSpeciesInfo[species].isSubLegendary
+     || gSpeciesInfo[species].isMythical)
+    {
+        switch (species)
+        {
+        // Known multi-individual populations: retain any legitimate existing
+        // habitats, but never add these to unrelated routes automatically.
+        case SPECIES_ZARUDE:
+        case SPECIES_PHIONE:
+        case SPECIES_MELTAN:
+            return TRUE;
+        default:
+            return FALSE;
+        }
+    }
+    return TRUE;
+#else
+    return FALSE;
+#endif
+}
+
 // Supplemental ordinary species that were missing from original grass tables.
 // These are separate from unique static encounters, fossil restoration and
 // fish-only habitats. The source catalog is a small, compile-time map index.
@@ -754,7 +788,7 @@ enum Species AnthologyGetExtraHabitatSpecies(enum WildPokemonArea area,
             continue;
         if (slot-- != 0)
             continue;
-        if (!WorldIsFieldStableDiscoverySpecies(sAnthologyExtraHabitats[i].species))
+        if (!WorldIsNaturalDiscoverySpecies(sAnthologyExtraHabitats[i].species))
             return SPECIES_NONE;
         // If any native time-of-day table acquires this species, prefer the
         // native encounter and avoid showing it twice in DexNav.
@@ -775,7 +809,7 @@ bool8 AnthologyMapHasHabitatSpecies(u8 mapGroup, u8 mapNum,
 {
 #if ALL_REGIONS
     u32 i, j, distinct = 0;
-    if (info == NULL || info->encounterRate == 0 || !WorldIsFieldStableDiscoverySpecies(species))
+    if (info == NULL || info->encounterRate == 0 || !WorldIsNaturalDiscoverySpecies(species))
         return FALSE;
     for (i = 0; i < NUM_LAND_MONS_ENCOUNTER_SLOTS; i++)
     {
@@ -846,7 +880,7 @@ static enum Species AnthologyFindAquaticHabitat(u8 mapGroup, u8 mapNum,
             break;
         }
     }
-    if (!WorldIsFieldStableDiscoverySpecies(species))
+    if (!WorldIsNaturalDiscoverySpecies(species))
         return SPECIES_NONE;
     size = (area == WILD_AREA_WATER) ? NUM_WATER_MONS_ENCOUNTER_SLOTS : NUM_FISHING_MONS_ENCOUNTER_SLOTS;
     for (i = 0; i < size; i++)
@@ -919,14 +953,14 @@ static enum Species WorldChoosePostLeagueDiscoverySpecies(enum Species original)
     // A chosen Research target is a real wild encounter, not a gift.
     // Invalid or uninitialized old-save values safely fall back to rotation.
     result = GetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET);
-    if (WorldIsFieldStableDiscoverySpecies(result))
+    if (WorldIsNaturalDiscoverySpecies(result))
         return result;
     result = 1 + (battles / 3) % (NUM_SPECIES - 1);
     for (attempts = 0; attempts < NUM_SPECIES - 1; attempts++)
     {
         // Battle-only forms need their respective battle mechanics; never
         // materialize those as permanent caught Pokémon.
-        if (WorldIsFieldStableDiscoverySpecies(result))
+        if (WorldIsNaturalDiscoverySpecies(result))
             return result;
         if (++result >= NUM_SPECIES)
             result = 1;

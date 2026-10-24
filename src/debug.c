@@ -3872,14 +3872,14 @@ static void DebugAction_Give_Decoration_SelectId(u8 taskId)
 // Select one of two unambiguous explicit states, then close the menu.
 // Save from the ordinary in-game Save icon to persist these v12 settings.
 // Research target editor: 0 rotates the roster, other IDs must be
-// enabled field-stable Pokémon. Only the reserved persistent stat changes.
+// enabled, lore-appropriate wild Pokémon. Only the reserved stat changes.
 static void DebugAction_Discovery_DrawTarget(u8 taskId)
 {
     enum Species species = (u16)gTasks[taskId].tInput;
     StringCopy(gStringVar2, gText_DigitIndicator[gTasks[taskId].tDigit]);
     if (species == SPECIES_NONE)
         StringCopy(gStringVar1, COMPOUND_STRING("Rotate all"));
-    else if (WorldIsFieldStableDiscoverySpecies(species))
+    else if (WorldIsNaturalDiscoverySpecies(species))
         StringCopy(gStringVar1, GetSpeciesName(species));
     else
         StringCopy(gStringVar1, COMPOUND_STRING("Unavailable"));
@@ -3899,7 +3899,7 @@ static void DebugAction_Discovery_EditTarget(u8 taskId)
 {
     u8 windowId;
     u32 target = GetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET);
-    if (target >= NUM_SPECIES || (target != SPECIES_NONE && !WorldIsFieldStableDiscoverySpecies(target)))
+    if (target >= NUM_SPECIES || (target != SPECIES_NONE && !WorldIsNaturalDiscoverySpecies(target)))
         target = SPECIES_NONE;
     ClearStdWindowAndFrame(gTasks[taskId].tWindowId, TRUE);
     RemoveWindow(gTasks[taskId].tWindowId);
@@ -3927,7 +3927,7 @@ static void DebugAction_Discovery_HandleTarget(u8 taskId)
     if (JOY_NEW(A_BUTTON))
     {
         enum Species target = (u16)gTasks[taskId].tInput;
-        if (target != SPECIES_NONE && !WorldIsFieldStableDiscoverySpecies(target))
+        if (target != SPECIES_NONE && !WorldIsNaturalDiscoverySpecies(target))
         {
             PlaySE(SE_PC_OFF);
             return;
