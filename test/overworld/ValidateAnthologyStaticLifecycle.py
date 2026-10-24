@@ -112,11 +112,11 @@ SITES = (
      "ARTICUNO_GALAR", "FLAG_CAUGHT_ANTHOLOGY_ARTICUNO_GALAR"),
     ("BurnedTower_1F", "BurnedTower_1F_AnthologyFieldTransition", "BurnedTower_1F_EventScript_GalarianMoltres",
      "MOLTRES_GALAR", "FLAG_CAUGHT_ANTHOLOGY_MOLTRES_GALAR"),
-    ("Route43", "Route43_AnthologyFieldTransition", "Route43_EventScript_RaikouReserve",
+    ("Route38", "Route38_AnthologyFieldTransition", "Route38_EventScript_RaikouReserve",
      "BEAST_RAIKOU", None),
     ("Route46", "Route46_AnthologyFieldTransition", "Route46_EventScript_EnteiReserve",
      "BEAST_ENTEI", None),
-    ("Route35", "Route35_AnthologyFieldTransition", "Route35_EventScript_SuicuneReserve",
+    ("LakeOfRage", "LakeOfRage_AnthologyFieldTransition", "LakeOfRage_EventScript_SuicuneReserve",
      "BEAST_SUICUNE", None),
     ("FieryPath", "FieryPath_PreLeagueOnTransition",
      "FieryPath_EventScript_GroudonPreLeague", "PRELEAGUE_GROUDON", None),
@@ -226,12 +226,24 @@ assert "setvar VAR_SOOTOPOLIS_CITY_STATE, 6" in gym
 roamer = (ROOT / "src/roamer.c").read_text()
 add = roamer.split("bool8 TryAddRoamer(")[1].split("void InitRoamer(")[0]
 assert "FLAG_GET_CAUGHT" in add and "ROAMER(i)->active && ROAMER(i)->species == species" in add
-for fn, ending in (("InitJohtoRoamer", "InitJohtoBeastRoamers"),
-                   ("InitJohtoBeastRoamers", "IsRoamerSpeciesActive")):
-    body = roamer.split("void " + fn + "(")[1].split(ending)[0]
-    assert "DeactivateAllRoamers();" not in body, "release erased unrelated roamer"
-assert "TryAddRoamer(SPECIES_ENTEI, 40);" in roamer
-assert "TryAddRoamer(SPECIES_RAIKOU, 40);" in roamer
+# The original awakening does not begin a mandatory roamer hunt.
+assert "special InitJohtoBeastRoamers" in (ROOT / "data/maps/BurnedTower_B1F/scripts.inc").read_text()
+fixed = roamer.split("void InitJohtoBeastRoamers(void)")[1].split("// Records that a roaming Pokemon was CAUGHT")[0]
+assert "RetireLegacyJohtoBeastRoamers();" in fixed
+assert "TryAddRoamer(SPECIES_ENTEI" not in roamer
+assert "TryAddRoamer(SPECIES_RAIKOU" not in roamer
+assert "if (IsJohtoRoamerSpecies(species))" in add
+assert "RetireLegacyJohtoBeastRoamers();" in roamer.split("bool8 TryStartRoamerEncounter(void)")[1]
+assert "void RespawnJohtoBeastRoamers(void)" in roamer
+assert "DeactivateAllRoamers();" not in fixed
+# Suicune only reveals after the Rocket signal is shut down (Mahogany state 14).
+lake = blocks("LakeOfRage")
+before = Save(flags={"FLAG_RELEASED_BEASTS"}, variables={"VAR_MAHOGANY_TOWN_STATE": 13})
+run(lake, "LakeOfRage_AnthologyFieldTransition", before)
+assert "FLAG_HIDE_ANTHOLOGY_BEAST_SUICUNE" in before.flags
+after = Save(flags={"FLAG_RELEASED_BEASTS"}, variables={"VAR_MAHOGANY_TOWN_STATE": 14})
+run(lake, "LakeOfRage_AnthologyFieldTransition", after)
+assert "FLAG_HIDE_ANTHOLOGY_BEAST_SUICUNE" not in after.flags
 
 # Ilex Forest: first story sets VAR_AZALEA_TOWN_STATE=10 once; subsequent
 # encounters use shrine rematch, not Kurt's introductory scene again.
@@ -243,4 +255,4 @@ run(ilex, "IlexForest_EventScript_CelebiRematch", s, "B_OUTCOME_CAUGHT")
 assert "FLAG_CAUGHT_CELEBI" in s.flags
 run(ilex, "IlexForest_EventScript_CelebiRematch", s)
 assert "FLAG_CAUGHT_CELEBI" in s.flags
-print("P0 representative scripted static lifecycle: KO/re-entry/flee/teleport/catch/save, Johto roamers, Celebi, Galarian forms and Hoenn story gates PASS (source interpreter, not mGBA)")
+print("P0 representative scripted static lifecycle: KO/re-entry/flee/teleport/catch/save, static Johto beasts, Celebi, Galarian forms and Hoenn story gates PASS (source interpreter, not mGBA)")

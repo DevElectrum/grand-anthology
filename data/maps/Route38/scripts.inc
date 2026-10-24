@@ -247,6 +247,7 @@ Route38_AnthologyThundurusRetreated::
 Route38_AnthologyFieldTransition::
 	call_if_set FLAG_CAUGHT_ANTHOLOGY_ZAPDOS_GALAR, Route38_FieldHideGalarianZapdos
 	call_if_unset FLAG_CAUGHT_ANTHOLOGY_ZAPDOS_GALAR, Route38_FieldShowGalarianZapdos
+	call Route38_FieldSyncRaikouReserve
 	return
 
 Route38_FieldHideGalarianZapdos::
@@ -286,5 +287,48 @@ Route38_FieldGalarianZapdosResolved::
 	end
 
 Route38_FieldGalarianZapdosRetreated::
+	release
+	end
+
+// Approved fixed Raikou encounter after the Burned Tower awakening.
+Route38_FieldSyncRaikouReserve::
+	goto_if_unset FLAG_RELEASED_BEASTS, Route38_FieldHideRaikouReserve
+	getcaughtmon SPECIES_RAIKOU
+	goto_if_eq VAR_RESULT, TRUE, Route38_FieldHideRaikouReserve
+	goto Route38_FieldShowRaikouReserve
+
+Route38_FieldHideRaikouReserve::
+	setflag FLAG_HIDE_ANTHOLOGY_BEAST_RAIKOU
+	return
+
+Route38_FieldShowRaikouReserve::
+	clearflag FLAG_HIDE_ANTHOLOGY_BEAST_RAIKOU
+	return
+
+Route38_EventScript_RaikouReserve::
+	lock
+	faceplayer
+	playmoncry SPECIES_RAIKOU, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_RAIKOU, 30
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route38_FieldRaikouReserveRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route38_FieldRaikouReserveRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route38_FieldRaikouReserveResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route38_FieldRaikouReserveResolved
+	release
+	end
+
+Route38_FieldRaikouReserveResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_BEAST_RAIKOU
+	setflag FLAG_HIDE_ANTHOLOGY_BEAST_RAIKOU
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route38_FieldRaikouReserveRetreated::
 	release
 	end

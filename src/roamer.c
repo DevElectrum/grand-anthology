@@ -6,12 +6,9 @@
 #include "random.h"
 #include "roamer.h"
 
-// Region-merge: the roamer can be in ANY map group. Its region is derived from its
-// species — the three Johto legendary beasts (Entei/Raikou/Suicune) roam the Johto
-// routes (which span several map groups in this merged build), while every other
-// roamer (Hoenn's Latios/Latias) uses the Hoenn table (all in map group 0). The
-// location tables store full MAP_* ids (group<<8 | num); for group-0 Hoenn maps the
-// full id equals the bare map number, so Hoenn behavior is byte-identical to before.
+// Existing roaming infrastructure is retained for non-beast legacy species.
+// Raikou, Suicune and Entei now use deliberate Johto statics. Do not clear
+// unrelated Hoenn roamer slots on saved games from earlier builds.
 
 enum
 {
@@ -120,6 +117,19 @@ static void SetRoamerLocationById(u32 idx, u16 mapId)
     sRoamerLocation[idx][MAP_NUM] = mapId & 0xFF;
 }
 
+// Older saves can contain released beasts. Expire only those entries, not
+// Hoenn Eon roamers; the new fixed catches use persisted Pokédex caught bits.
+static void RetireLegacyJohtoBeastRoamers(void)
+{
+    u32 i;
+
+    for (i = 0; i < ROAMER_COUNT; i++)
+    {
+        if (ROAMER(i)->active && IsJohtoRoamerSpecies(ROAMER(i)->species))
+            SetRoamerInactive(i);
+    }
+}
+
 void DeactivateAllRoamers(void)
 {
     u32 i;
@@ -202,6 +212,11 @@ bool8 TryAddRoamer(enum Species species, u8 level)
     u32 i;
     u8 index;
 
+    // The optional randomizer can affect normal encounters, but the normal
+    // story must never start the old Johto beast roaming subsystem.
+    if (IsJohtoRoamerSpecies(species))
+        return FALSE;
+
     // An alternate static encounter may already have caught this species.
     // The National Dex caught bit persists even after release or transfer.
     if (GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_GET_CAUGHT))
@@ -235,40 +250,19 @@ void InitRoamer(void)
         TryAddRoamer(SPECIES_LATIOS, 40);
 }
 
-// Legacy Johto single-beast entrypoint. Preserve other live roamers when
-// visiting regions out of order; TryAddRoamer handles duplicates and caught saves.
+// Retain the historical script special entrypoints for save/story ABI.
+// Awakened beasts are registered as seen, and become deliberate fixed hunts.
 void InitJohtoRoamer(void)
 {
-    enum Species species = (gSpecialVar_0x8004 == 0) ? SPECIES_RAIKOU : SPECIES_ENTEI;
-
-    GetSetPokedexFlag(SpeciesToNationalPokedexNum(SPECIES_ENTEI), FLAG_SET_SEEN);
-    GetSetPokedexFlag(SpeciesToNationalPokedexNum(SPECIES_RAIKOU), FLAG_SET_SEEN);
-    GetSetPokedexFlag(SpeciesToNationalPokedexNum(SPECIES_SUICUNE), FLAG_SET_SEEN);
-    TryAddRoamer(species, 40);
+    InitJohtoBeastRoamers();
 }
 
-// Release both beasts where slots are available. Never wipe an already-active
-// Hoenn roamer or reroll a previously released beast: one trainer/save crosses
-// all three regions. The Route 43/46 field backups cover exhausted slots.
 void InitJohtoBeastRoamers(void)
 {
     GetSetPokedexFlag(SpeciesToNationalPokedexNum(SPECIES_ENTEI), FLAG_SET_SEEN);
     GetSetPokedexFlag(SpeciesToNationalPokedexNum(SPECIES_RAIKOU), FLAG_SET_SEEN);
     GetSetPokedexFlag(SpeciesToNationalPokedexNum(SPECIES_SUICUNE), FLAG_SET_SEEN);
-    TryAddRoamer(SPECIES_ENTEI, 40);
-    TryAddRoamer(SPECIES_RAIKOU, 40);
-}
-
-static bool8 IsRoamerSpeciesActive(enum Species species)
-{
-    u32 i;
-
-    for (i = 0; i < ROAMER_COUNT; i++)
-    {
-        if (ROAMER(i)->active && ROAMER(i)->species == species)
-            return TRUE;
-    }
-    return FALSE;
+    RetireLegacyJohtoBeastRoamers();
 }
 
 // Records that a roaming Pokemon was CAUGHT (as opposed to defeated or fled from), so the
@@ -290,35 +284,10 @@ void MarkRoamerCaught(u32 roamerIndex)
     }
 }
 
-static void TryRespawnJohtoBeast(enum Species species, u16 caughtFlag, u8 level)
-{
-    // Still roaming: the encounter is unresolved and needs no help. Re-creating it would
-    // reroll its personality/IVs/shininess and wipe the damage the player has done to it.
-    if (IsRoamerSpeciesActive(species))
-        return;
-
-    // Already caught: resolved, so no respawn - league rematches are unlimited, and an
-    // unconditional respawn made the beasts farmable duplicates with a fresh shiny roll.
-    // The Pokedex check is the fallback for saves made before MarkRoamerCaught existed
-    // (the flag reads clear on those); the beasts have no other source in this build, so
-    // owning one means the player caught the roamer.
-    if (FlagGet(caughtFlag) || GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_GET_CAUGHT))
-        return;
-
-    // Unresolved (fainted, or never released): re-release it into a FREE roamer slot.
-    TryAddRoamer(species, level);
-}
-
-// Post-game beast respawn (Johto Hall of Fame rematch). Unlike InitJohtoBeastRoamers this
-// resolves Entei and Raikou individually and never deactivates anybody else's roamer slot,
-// so an active Hoenn Latios/Latias survives a league rematch (issue #133).
+// Hall-of-Fame rematches must not resurrect roaming beasts, even on old saves.
 void RespawnJohtoBeastRoamers(void)
 {
-    GetSetPokedexFlag(SpeciesToNationalPokedexNum(SPECIES_ENTEI), FLAG_SET_SEEN);
-    GetSetPokedexFlag(SpeciesToNationalPokedexNum(SPECIES_RAIKOU), FLAG_SET_SEEN);
-    GetSetPokedexFlag(SpeciesToNationalPokedexNum(SPECIES_SUICUNE), FLAG_SET_SEEN);
-    TryRespawnJohtoBeast(SPECIES_ENTEI, FLAG_CAUGHT_ENTEI, 40);
-    TryRespawnJohtoBeast(SPECIES_RAIKOU, FLAG_CAUGHT_RAIKOU, 40);
+    RetireLegacyJohtoBeastRoamers();
 }
 
 void UpdateLocationHistoryForRoamer(void)
@@ -428,6 +397,8 @@ bool8 TryStartRoamerEncounter(void)
 {
     u32 i;
 
+    // Old saves released Entei/Raikou before this static-only design.
+    RetireLegacyJohtoBeastRoamers();
     for (i = 0; i < ROAMER_COUNT; i++)
     {
         // Backup static catches must suppress their still-active roamers.

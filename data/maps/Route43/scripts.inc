@@ -4,7 +4,6 @@ Route43_MapScripts::
 	.byte 0
 
 Route43_MapScript_OnTransition::
-	call Route43_AnthologyFieldTransition
 	call_if_set FLAG_HIDE_ROUTE42_SUICUNE, Route42_MapScript_HideTrigger
 	end
 
@@ -143,49 +142,3 @@ Route43_TrainerTips:
     .string "Learn which types are strong and\n"
     .string "weak against your POKéMON's type.$"
 
-// Optional new form or post-release roamer safety-net encounter.
-Route43_AnthologyFieldTransition::
-	call Route43_FieldSyncRaikouReserve
-	return
-
-Route43_FieldSyncRaikouReserve::
-	goto_if_unset FLAG_RELEASED_BEASTS, Route43_FieldHideRaikouReserve
-	getcaughtmon SPECIES_RAIKOU
-	goto_if_eq VAR_RESULT, TRUE, Route43_FieldHideRaikouReserve
-	goto Route43_FieldShowRaikouReserve
-
-Route43_FieldHideRaikouReserve::
-	setflag FLAG_HIDE_ANTHOLOGY_BEAST_RAIKOU
-	return
-
-Route43_FieldShowRaikouReserve::
-	clearflag FLAG_HIDE_ANTHOLOGY_BEAST_RAIKOU
-	return
-
-Route43_EventScript_RaikouReserve::
-	lock
-	faceplayer
-	playmoncry SPECIES_RAIKOU, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_RAIKOU, 40
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route43_FieldRaikouReserveRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route43_FieldRaikouReserveRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route43_FieldRaikouReserveResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route43_FieldRaikouReserveResolved
-	release
-	end
-
-Route43_FieldRaikouReserveResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_BEAST_RAIKOU
-	setflag FLAG_HIDE_ANTHOLOGY_BEAST_RAIKOU
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route43_FieldRaikouReserveRetreated::
-	release
-	end

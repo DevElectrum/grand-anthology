@@ -4,7 +4,6 @@ Route35_MapScripts::
 	.byte 0
 
 Route35_OnTransition:
-	call Route35_AnthologyFieldTransition 
 	end	
 
 Route35_EventScript_CamperIvan::
@@ -192,49 +191,3 @@ Route35_Text_Sign:
 Route35_Text_Sign2:
 	.string "NATIONAL PARK GATE$"
 
-// Optional new form or post-release roamer safety-net encounter.
-Route35_AnthologyFieldTransition::
-	call Route35_FieldSyncSuicuneReserve
-	return
-
-Route35_FieldSyncSuicuneReserve::
-	goto_if_unset FLAG_RELEASED_BEASTS, Route35_FieldHideSuicuneReserve
-	getcaughtmon SPECIES_SUICUNE
-	goto_if_eq VAR_RESULT, TRUE, Route35_FieldHideSuicuneReserve
-	goto Route35_FieldShowSuicuneReserve
-
-Route35_FieldHideSuicuneReserve::
-	setflag FLAG_HIDE_ANTHOLOGY_BEAST_SUICUNE
-	return
-
-Route35_FieldShowSuicuneReserve::
-	clearflag FLAG_HIDE_ANTHOLOGY_BEAST_SUICUNE
-	return
-
-Route35_EventScript_SuicuneReserve::
-	lock
-	faceplayer
-	playmoncry SPECIES_SUICUNE, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_SUICUNE, 40
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route35_FieldSuicuneReserveRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route35_FieldSuicuneReserveRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route35_FieldSuicuneReserveResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route35_FieldSuicuneReserveResolved
-	release
-	end
-
-Route35_FieldSuicuneReserveResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_BEAST_SUICUNE
-	setflag FLAG_HIDE_ANTHOLOGY_BEAST_SUICUNE
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route35_FieldSuicuneReserveRetreated::
-	release
-	end
