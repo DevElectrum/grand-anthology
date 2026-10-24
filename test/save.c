@@ -1,0 +1,135 @@
+#include "global.h"
+#include "agb_flash.h"
+#include "load_save.h"
+#include "pokemon_storage_system.h"
+#include "save.h"
+#include "test/test.h"
+
+static u32 IndexOfByteNotEqual(const void *buf, u8 value, u32 size)
+{
+    const u8 *bytes = buf;
+    u32 i;
+
+    for (i = 0; i < size; i++)
+    {
+        if (bytes[i] != value)
+            return i;
+    }
+    return size;
+}
+
+static void WriteCraftedOutOfRangeIdSector(u16 flashSector)
+{
+    memset(&gSaveDataBuffer, 0xFF, sizeof(gSaveDataBuffer));
+    gSaveDataBuffer.id = 0xFFFF;
+    gSaveDataBuffer.signature = SECTOR_SIGNATURE;
+    gSaveDataBuffer.checksum = 0;
+    gSaveDataBuffer.counter = 0;
+    ASSUME(ProgramFlashSectorAndVerify(flashSector, (u8 *)&gSaveDataBuffer) == 0);
+}
+
+// Slot 1 with every logical id present and an odd counter so CopySaveSlotData
+// reads flash sectors 14-27 (save slot 2).
+static void WriteValidSlot1WithOddCounter(void)
+{
+    u32 i;
+
+    for (i = 0; i < NUM_SECTORS_PER_SLOT; i++)
+    {
+        memset(&gSaveDataBuffer, 0, sizeof(gSaveDataBuffer));
+        gSaveDataBuffer.id = i;
+        gSaveDataBuffer.signature = SECTOR_SIGNATURE;
+        gSaveDataBuffer.counter = 1;
+        gSaveDataBuffer.checksum = 0;
+        ASSUME(ProgramFlashSectorAndVerify(i, (u8 *)&gSaveDataBuffer) == 0);
+    }
+}
+
+// If you would like to ensure save compatibility, update the values below with those for your hack. You can find these through the debug menu.
+// Please note that this simple check is not 100% foolproof, but should be able to catch most unintended shifts.
+//
+// PKMN-World: these were upstream's placeholders (SaveBlock1 15568 / SaveBlock3 4) until 2026-07-24,
+// so two of the four assertions below failed and `make check` could never pass — the repo's only
+// automated layout tripwire protected nothing, and a permanently red suite meant the ~1,500
+// inherited battle tests gave no signal either. The values are now this fork's real sizes.
+//
+// Derived from `arm-none-eabi-nm --print-size pokemonworld.elf`, NOT hand-summed. Note that
+// gSaveblock1/2 and gPokemonStorage are declared through the *ASLR wrappers (include/load_save.h),
+// which append u8 aslr[SAVEBLOCK_MOVE_RANGE] = 128 bytes, so subtract 128 from what nm reports for
+// those three. gSaveblock3 is a bare struct, so its nm size is exact.
+//
+// This is the natural home for the frozen-layout invariant CLAUDE.md calls untouchable: it is
+// host-side, needs no emulator, and carries no save-safety risk. Any change here means a
+// SAVE_FORMAT_VERSION bump and a migration ladder step in src/load_save.c.
+// Updated again for save format v7 (2026-07-24): the bag/item-PC expansion grew SaveBlock1 by
+// 796 B and the two FREE_MYSTERY_* reclaims gave back more than that, so SaveBlock1 SHRANK
+// 15,836 -> 14,752. SaveBlock3 shrank 1,584 -> 1,232 because the 104-entry cleared-obstacle list
+// (313 B) became a 512-bit field + table hash (68 B). SaveBlock2 and PokemonStorage are
+// deliberately unchanged — the SaveBlock3 checksum reference was carved from SaveBlock2's
+// existing 0x94 filler rather than appended, so the block keeps its upstream size.
+// Updated for save format v9 (2026-08-05, issue #51 + the Johto trainer id split): SaveBlock3
+// grew 1,232 -> 1,264 because johtoTrainerFlags[32] was APPENDED to the tail of struct
+// RegionSave. Appended, not inserted — that is the whole point: every pinned offsetof in
+// src/load_save.c is unchanged, so a v7/v8 save still loads and the v8 -> v9 ladder step only has
+// to zero the new bank. SaveBlock1/2 and PokemonStorage are untouched; the new bank is the only
+// layout change in v9.
+#define T_SAVEBLOCK1_SIZE 14752
+#define T_SAVEBLOCK2_SIZE 3884
+#define T_SAVEBLOCK3_SIZE 1264
+#define T_POKEMONSTORAGE_SIZE 34144
+
+TEST("SaveBlock1 is backwards compatible")
+{
+    EXPECT_EQ(sizeof(struct SaveBlock1), T_SAVEBLOCK1_SIZE);
+}
+
+TEST("SaveBlock2 is backwards compatible")
+{
+    EXPECT_EQ(sizeof(struct SaveBlock2), T_SAVEBLOCK2_SIZE);
+}
+
+TEST("SaveBlock3 is backwards compatible")
+{
+    EXPECT_EQ(sizeof(struct SaveBlock3), T_SAVEBLOCK3_SIZE);
+}
+
+TEST("PokemonStorage is backwards compatible")
+{
+    EXPECT_EQ(sizeof(struct PokemonStorage), T_POKEMONSTORAGE_SIZE);
+}
+
+#undef T_SAVEBLOCK1_SIZE
+#undef T_SAVEBLOCK2_SIZE
+#undef T_SAVEBLOCK3_SIZE
+#undef T_POKEMONSTORAGE_SIZE
+
+// A sector with SECTOR_SIGNATURE and id 0xFFFF used to index locations[] and
+// 1 << id past gRamSaveSectorLocations (NUM_SECTORS_PER_SLOT == 14).
+TEST("LoadGameSave ignores flash sectors with out-of-range ids")
+{
+    u32 slot = 0;
+
+    PARAMETRIZE { slot = 0; } // GetSaveValidStatus + CopySaveSlotData on slot 1
+    PARAMETRIZE { slot = 1; } // GetSaveValidStatus + CopySaveSlotData on slot 2
+
+    if (!gFlashMemoryPresent)
+        CheckForFlashMemory();
+    ASSUME(gFlashMemoryPresent == TRUE);
+
+    ClearSaveData();
+    if (slot == 1)
+        WriteValidSlot1WithOddCounter();
+    WriteCraftedOutOfRangeIdSector(slot * NUM_SECTORS_PER_SLOT);
+    if (slot == 0)
+        WriteCraftedOutOfRangeIdSector(NUM_SECTORS_PER_SLOT);
+
+    memset(gSaveBlock1Ptr, 0xA5, sizeof(struct SaveBlock1));
+    memset(gSaveBlock2Ptr, 0x5A, sizeof(struct SaveBlock2));
+    memset(gPokemonStoragePtr, 0x3C, sizeof(struct PokemonStorage));
+
+    LoadGameSave(SAVE_NORMAL);
+
+    EXPECT_EQ(IndexOfByteNotEqual(gSaveBlock1Ptr, 0xA5, sizeof(struct SaveBlock1)), sizeof(struct SaveBlock1));
+    EXPECT_EQ(IndexOfByteNotEqual(gSaveBlock2Ptr, 0x5A, sizeof(struct SaveBlock2)), sizeof(struct SaveBlock2));
+    EXPECT_EQ(IndexOfByteNotEqual(gPokemonStoragePtr, 0x3C, sizeof(struct PokemonStorage)), sizeof(struct PokemonStorage));
+}

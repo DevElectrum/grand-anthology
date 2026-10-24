@@ -1,0 +1,108 @@
+# Fast playable-game regression gate for the P0/P1 Grand Anthology effort.
+# Separate from the native port. Never upload ROMs or saves.
+name: P0 Gameplay Build
+
+on:
+  push:
+    branches:
+      - experiment/native-linux
+      - main  # future reviewed public snapshot; source checks still required
+    paths:
+      - "Makefile"
+      - "config.mk"
+      - "src/**"
+      - "include/**"
+      - "data/**"
+      - "graphics/**"
+      - "test/overworld/**"
+      - "tools/audit_p0_acquisition.py"
+      - ".github/workflows/Gameplay-P0.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p0-gameplay-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate world, scripts, saves and party continuity
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: World source validators (no emulator required)
+        run: |
+          set -e
+          python3 tools/pack_latin_fonts.py --self-test
+          python3 test/overworld/ValidateBardPacking.py
+          python3 test/overworld/ValidatePartyContinuity.py
+          python3 test/overworld/ValidateStarterIsolation.py
+          python3 test/overworld/ValidateRegionalStarterOrder.py
+          python3 test/overworld/ValidateShinyOdds.py
+          python3 test/overworld/ValidateSeededWildRandomizer.py
+          python3 test/overworld/ValidateSeededTrainerRandomizer.py
+          python3 test/overworld/ValidateGlobalPcSearch.py
+          python3 test/overworld/ValidateSeededStaticRandomizer.py
+          python3 test/overworld/ValidateSeededGiftRandomizer.py
+          python3 test/overworld/ValidateSeededStarterRandomizer.py
+          python3 test/overworld/ValidatePlayerCheats.py
+          python3 test/overworld/ValidateFullPartyStarters.py
+          python3 test/overworld/ValidateScripts.py
+          python3 test/overworld/ValidateGen13.py
+          python3 test/overworld/ValidateAnthologyDexAndRewards.py
+          python3 tools/audit_p0_acquisition.py
+          python3 test/overworld/ValidateAnthologyHabitatRare.py
+          python3 test/overworld/ValidateAnthologyStaticLifecycle.py
+          python3 test/overworld/ValidateAnthologyNativeSlots.py
+          python3 test/overworld/ValidateAnthologyEvolutionAccess.py
+          python3 test/overworld/ValidateWorldDiscoveryEncounters.py
+          python3 test/overworld/ValidateZoneStructure.py
+          python3 test/overworld/SavePatch.py --check
+          python3 test/overworld/ValidateGrandVault.py
+          python3 test/overworld/ValidateGreedyGifts.py
+          python3 test/overworld/ValidateCelioGifts.py
+
+  gba:
+    name: Build optimized full-roster GBA ROM (no upload)
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install original game build toolchain
+        timeout-minutes: 25
+        run: |
+          set -e
+          # Ubuntu runner images sometimes include an inaccessible Microsoft
+          # apt feed (HTTP 403). None of this GBA build uses that feed. Disable
+          # only its runner-side source, leaving Ubuntu's official feeds intact.
+          for source in /etc/apt/sources.list.d/*; do
+            if [ -f "$source" ] && grep -q 'packages.microsoft.com' "$source"; then
+              sudo mv "$source" "$source.disabled"
+            fi
+          done
+          sudo apt-get update -o Acquire::Retries=5
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev libelf1 python3
+      - name: Build optimized production GBA game (no native title demo)
+        shell: bash
+        run: |
+          set -o pipefail
+          make release -j4 > "${RUNNER_TEMP}/gba-build.log" 2>&1 || {
+            echo "::error title=Pokémon World GBA build failed::See compiler/linker diagnostics below"
+            grep -n -E 'error:|Error |undefined reference|collect2:|ld:|No rule to make target' "${RUNNER_TEMP}/gba-build.log" | head -n 90 || true
+            tail -n 90 "${RUNNER_TEMP}/gba-build.log"
+            exit 1
+          }
+          echo "PASS: optimized real GBA ROM builds on experimental branch"
+          grep -A 4 -E '^Memory region|^ *ROM:' "${RUNNER_TEMP}/gba-build.log" | tail -n 18 || true
+          test -s pokemonworld-release.gba
+          du -h pokemonworld-release.gba
+          # Deliberately no actions/upload-artifact step and no ROM release.

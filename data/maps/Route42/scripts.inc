@@ -1,0 +1,425 @@
+.set LOCALID_ROUTE42_EUSINE, 19
+.set LOCALID_ROUTE42_SUICUNE, 17
+
+Route42_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, Route42_MapScript_OnTransition
+	map_script MAP_SCRIPT_ON_RESUME, SetTimeEncounters
+	.byte 0
+
+Route42_MapScript_OnTransition::
+	call Route42_AnthologyOnTransition
+	call_if_set FLAG_HIDE_ROUTE42_SUICUNE, Route42_MapScript_HideTrigger
+	end
+
+Route42_MapScript_HideTrigger::
+	setvar VAR_TEMP_0, 1
+	return
+
+Route42_EventScript_Suicune_Trigger::
+	lock
+	playmoncry SPECIES_SUICUNE, CRY_MODE_NORMAL
+	applymovement LOCALID_ROUTE42_SUICUNE, Route42_Movement_Suicune1
+	playse SE_LEDGE
+	waitse
+	playse SE_LEDGE
+	waitse
+	waitmovement 0
+	waitmoncry
+	playse SE_PIN
+	applymovement OBJ_EVENT_ID_PLAYER, Common_Movement_ExclamationMark
+	delay 60
+	applymovement LOCALID_ROUTE42_SUICUNE, Route42_Movement_Suicune2
+	playse SE_LEDGE
+	delay 30
+	playse SE_LEDGE
+	delay 30
+	playse SE_LEDGE
+	delay 30
+	playse SE_LEDGE
+	delay 30
+	waitmovement 0
+
+	playmoncry SPECIES_SUICUNE, CRY_MODE_NORMAL
+	applymovement LOCALID_ROUTE42_SUICUNE, Route42_Movement_Suicune3
+	applymovement OBJ_EVENT_ID_PLAYER, Route42_Movement_Player
+	playse SE_LEDGE
+	delay 60
+	playse SE_LEDGE
+	delay 30
+	playse SE_LEDGE
+	delay 30
+	playse SE_LEDGE
+	delay 30
+	playse SE_LEDGE
+	delay 30
+	playse SE_LEDGE
+	waitmovement LOCALID_ROUTE42_SUICUNE
+	waitmovement 0
+	delay 60
+	removeobject LOCALID_ROUTE42_SUICUNE
+	setflag FLAG_HIDE_ROUTE42_SUICUNE
+	clearflag FLAG_HIDE_ROUTE42_EUSINE
+	addobject LOCALID_ROUTE42_EUSINE
+	playse SE_EXIT
+	turnobject OBJ_EVENT_ID_PLAYER, DIR_EAST
+	applymovement LOCALID_ROUTE42_EUSINE, Route42_Movement_Eusine1
+	waitmovement 0
+	msgbox Route42_Text_EusineAdmireSuicune, MSGBOX_DEFAULT
+	closemessage
+	turnobject LOCALID_ROUTE42_EUSINE, DIR_WEST
+	msgbox Route42_Text_EusineJealous, MSGBOX_DEFAULT
+	turnobject LOCALID_ROUTE42_EUSINE, DIR_EAST
+	msgbox Route42_Text_EusineWontGiveUp, MSGBOX_DEFAULT
+	closemessage
+	applymovement LOCALID_ROUTE42_EUSINE, Route42_Movement_Eusine2
+	waitmovement 0
+	setflag FLAG_HIDE_ROUTE42_EUSINE
+	removeobject LOCALID_ROUTE42_EUSINE
+	setvar VAR_TEMP_0, 1
+	call_if_eq VAR_SUICUNE_ENCOUNTERS, 2, Route42_EventScript_DoneJohtoSuicune
+	release
+	end
+
+Route42_EventScript_DoneJohtoSuicune::
+	setvar VAR_SUICUNE_ENCOUNTERS, 3
+	return
+
+Route42_Movement_Suicune1:
+	jump_in_place_right_left
+	jump_in_place_right_left
+	step_end
+
+Route42_Movement_Suicune2:
+	jump_2_left
+	jump_2_left
+	jump_2_left
+	jump_2_up
+	step_end
+
+Route42_Movement_Suicune3:
+	jump_in_place_up
+	delay_2
+	face_up
+	jump_2_up
+	jump_2_right
+	jump_2_right
+	jump_2_right
+	jump_2_right
+	jump_2_right
+	step_end
+
+Route42_Movement_Player:
+	lock_facing_direction
+	delay_2
+	jump_2_up
+	unlock_facing_direction
+	step_end
+
+Route42_Movement_Eusine1:
+	walk_down
+	walk_down
+	walk_left
+	face_right
+	step_end
+
+Route42_Movement_Eusine2:
+	walk_fast_right
+	walk_fast_right
+	walk_fast_right
+	walk_fast_right
+	walk_fast_right
+	walk_fast_right
+	walk_fast_right
+	walk_fast_right
+	walk_fast_right
+	step_end
+
+Route42_Text_EusineAdmireSuicune:
+	.string "EUSINE: SUICUNE…\n"
+	.string "How brave it is!\p"
+	.string "How refreshing it is!\n"
+	.string "How beautiful it is!\p"
+	.string "And how quickly it moves!$"
+
+Route42_Text_EusineJealous:
+	.string "{PLAYER}!\p"
+	.string "You seem to be around where\n"
+	.string "SUICUNE would appear.\p"
+	.string "Well, that's OK.\l"
+	.string "My desire to search for\n"
+	.string "SUICUNE is far beyond yours…\p"
+	.string "My grandpa was… quite into\n"
+	.string "myths.\p"
+	.string "I've heard so many stories\n"
+	.string "about SUICUNE from him.$"
+
+Route42_Text_EusineWontGiveUp:
+	.string "SUICUNE…\n"
+	.string "I won't stop following you\l"
+	.string "until I've found out what\l"
+	.string "you're after…\p"
+	.string "You hear me!$"
+
+
+Route42_EventScript_Tully::
+	trainerbattle_single TRAINER_TULLY Route42_Text_FisherTullySeen, Route42_Text_FisherTullyBeaten
+	msgbox Route42_Text_FisherTullyAfter, MSGBOX_AUTOCLOSE
+	end
+
+Route42_EventScript_Ben::
+	trainerbattle_single TRAINER_BENJAMIN Route42_Text_HikerBenjaminSeen, Route42_Text_HikerBenjaminBeaten
+	msgbox Route42_Text_HikerBenjaminAfter, MSGBOX_AUTOCLOSE
+	end
+
+Route42_EventScript_Shane::
+	trainerbattle_single TRAINER_SHANE_JT Route42_Text_PokemaniacShaneSeen, Route42_Text_PokemaniacShaneBeaten
+	msgbox Route42_Text_PokemaniacShaneAfter, MSGBOX_AUTOCLOSE
+	end
+
+Route42_EventScript_Sign::
+	lock
+	msgbox Route42_Text_Sign1, MSGBOX_SIGN
+	closemessage
+	release
+	end
+
+Route42_EventScript_MortarSign::
+	lock
+	msgbox Route42_Text_MtMortarSign1, MSGBOX_SIGN
+	closemessage
+	release
+	end
+
+Route42_EventScript_Item_SuperPotion::
+	finditem ITEM_SUPER_POTION
+	end
+Route42_EventScript_Item_Mint::
+	finditem ITEM_MODEST_MINT
+	end
+Route42_EventScript_Item_UltraBall::
+	finditem ITEM_ULTRA_BALL
+	end
+
+Route42_Text_FisherTullySeen:
+	.string "Let me demonstrate the power\n"
+	.string "of the POKéMON I caught!$"
+
+Route42_Text_FisherTullyBeaten:
+	.string "What? That's not right.\n"
+	.string "I can't believe this!$"
+
+Route42_Text_FisherTullyAfter:
+	.string "I want to become the trainer\n"
+	.string "CHAMP using the POKéMON I\l"
+	.string "caught myself.\p"
+	.string "That's the best part of fishing!$"
+
+Route42_Text_HikerBenjaminSeen:
+	.string "Ah, it's good to be outside!\n"
+	.string "I feel so free!$"
+
+Route42_Text_HikerBenjaminBeaten:
+	.string "Gahahah! That was a good\n"
+	.string "battle!$"
+
+Route42_Text_HikerBenjaminAfter:
+	.string "Losing feels insignificant\n"
+	.string "if you look up at the big sky!$"
+
+Route42_Text_PokemaniacShaneSeen:
+	.string "HEY!\p"
+	.string "This is my secret place!\n"
+	.string "Get lost, you outsider!$"
+
+Route42_Text_PokemaniacShaneBeaten:
+	.string "I should have used my\n"
+	.string "MOON STONE…$"
+
+Route42_Text_PokemaniacShaneAfter:
+	.string "You're working on a POKéDEX?\p"
+	.string "Wow, you must know some\n"
+	.string "pretty rare POKéMON!\p"
+	.string "May I please see it?\n"
+	.string "Please?$"
+
+Route42_Text_Sign1:
+	.string "ROUTE 42\p"
+	.string "ECRUTEAK CITY - MAHOGANY TOWN$"
+
+Route42_Text_MtMortarSign1:
+	.string "MT.MORTAR\p"
+	.string "WATERFALL CAVE INSIDE$"
+
+// New static acquisition flags are independent of original Johto plot events.
+Route42_AnthologyOnTransition::
+	getcaughtmon SPECIES_TERRAKION
+	call_if_eq VAR_RESULT, TRUE, Route42_AnthologyHideTerrakion
+	call_if_ne VAR_RESULT, TRUE, Route42_AnthologyShowTerrakion
+	getcaughtmon SPECIES_KELDEO
+	call_if_eq VAR_RESULT, TRUE, Route42_AnthologyHideKeldeo
+	call_if_ne VAR_RESULT, TRUE, Route42_AnthologyShowKeldeo
+	call_if_set FLAG_CAUGHT_ANTHOLOGY_KUBFU_WEST, Route42_AnthologyHideKubfuWest
+	call_if_unset FLAG_CAUGHT_ANTHOLOGY_KUBFU_WEST, Route42_AnthologyShowKubfuWest
+	call_if_set FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST, Route42_AnthologyHideKubfuEast
+	call_if_unset FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST, Route42_AnthologyShowKubfuEast
+	return
+
+Route42_AnthologyHideTerrakion::
+	setflag FLAG_HIDE_ANTHOLOGY_TERRAKION
+	return
+
+Route42_AnthologyShowTerrakion::
+	clearflag FLAG_HIDE_ANTHOLOGY_TERRAKION
+	return
+
+// Defeated => map re-entry rematch. Caught => permanent for this site.
+// Flee/teleport => stays.
+Route42_EventScript_Terrakion::
+	lock
+	faceplayer
+	playmoncry SPECIES_TERRAKION, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_TERRAKION, 45
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route42_AnthologyTerrakionRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route42_AnthologyTerrakionRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route42_AnthologyTerrakionResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route42_AnthologyTerrakionResolved
+	release
+	end
+
+Route42_AnthologyTerrakionResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_TERRAKION
+	setflag FLAG_HIDE_ANTHOLOGY_TERRAKION
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route42_AnthologyTerrakionRetreated::
+	release
+	end
+
+Route42_AnthologyHideKeldeo::
+	setflag FLAG_HIDE_ANTHOLOGY_KELDEO
+	return
+
+Route42_AnthologyShowKeldeo::
+	clearflag FLAG_HIDE_ANTHOLOGY_KELDEO
+	return
+
+// Defeated => map re-entry rematch. Caught => permanent for this site.
+// Flee/teleport => stays.
+Route42_EventScript_Keldeo::
+	lock
+	faceplayer
+	playmoncry SPECIES_KELDEO, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_KELDEO, 45
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route42_AnthologyKeldeoRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route42_AnthologyKeldeoRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route42_AnthologyKeldeoResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route42_AnthologyKeldeoResolved
+	release
+	end
+
+Route42_AnthologyKeldeoResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_KELDEO
+	setflag FLAG_HIDE_ANTHOLOGY_KELDEO
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route42_AnthologyKeldeoRetreated::
+	release
+	end
+
+Route42_AnthologyHideKubfuWest::
+	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_WEST
+	return
+
+Route42_AnthologyShowKubfuWest::
+	clearflag FLAG_HIDE_ANTHOLOGY_KUBFU_WEST
+	return
+
+// Defeated => map re-entry rematch. Caught => permanent for this site.
+// Flee/teleport => stays.
+Route42_EventScript_KubfuWest::
+	lock
+	faceplayer
+	playmoncry SPECIES_KUBFU, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_KUBFU, 25
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route42_AnthologyKubfuWestRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route42_AnthologyKubfuWestRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route42_AnthologyKubfuWestCaught
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route42_AnthologyKubfuWestResolved
+	release
+	end
+
+Route42_AnthologyKubfuWestCaught::
+	setflag FLAG_CAUGHT_ANTHOLOGY_KUBFU_WEST
+	goto Route42_AnthologyKubfuWestResolved
+
+Route42_AnthologyKubfuWestResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_KUBFU_WEST
+	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_WEST
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route42_AnthologyKubfuWestRetreated::
+	release
+	end
+
+Route42_AnthologyHideKubfuEast::
+	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_EAST
+	return
+
+Route42_AnthologyShowKubfuEast::
+	clearflag FLAG_HIDE_ANTHOLOGY_KUBFU_EAST
+	return
+
+// Defeated => map re-entry rematch. Caught => permanent for this site.
+// Flee/teleport => stays.
+Route42_EventScript_KubfuEast::
+	lock
+	faceplayer
+	playmoncry SPECIES_KUBFU, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_KUBFU, 25
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route42_AnthologyKubfuEastRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route42_AnthologyKubfuEastRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route42_AnthologyKubfuEastCaught
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route42_AnthologyKubfuEastResolved
+	release
+	end
+
+Route42_AnthologyKubfuEastCaught::
+	setflag FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST
+	goto Route42_AnthologyKubfuEastResolved
+
+Route42_AnthologyKubfuEastResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_KUBFU_EAST
+	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_EAST
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route42_AnthologyKubfuEastRetreated::
+	release
+	end

@@ -1,0 +1,799 @@
+GAME_VERSION ?= EMERALD
+TITLE        ?= POKEMON WRLD
+GAME_CODE    ?= BPEE
+BUILD_NAME   ?= emerald
+MAP_VERSION  ?= emerald
+
+# ALL_REGIONS=1 : Emerald-base build that merges every region's maps (region merge).
+# Keeps GAME_VERSION=EMERALD (IS_FRLG=0) but stops mapjson from filtering out
+# non-Hoenn maps/layouts, and includes the FRLG map scripts via --defsym ALL_REGIONS=1.
+# Always-on: the game is always the unified 3-region build. Override with ALL_REGIONS=0
+# only for debugging the legacy single-region path.
+ALL_REGIONS  ?= 1
+
+ifeq (firered, $(or $(BUILD), $(MAKECMDGOALS)))
+  	GAME_VERSION 	:= FIRERED
+	TITLE       	:= POKEMON FIRE
+	GAME_CODE   	:= BPRE
+	BUILD_NAME  	:= firered
+	MAP_VERSION 	:= firered
+else
+ifeq (leafgreen, $(or $(BUILD), $(MAKECMDGOALS)))
+	GAME_VERSION 	:= LEAFGREEN
+	TITLE       	:= POKEMON LEAF
+	GAME_CODE   	:= BPGE
+	BUILD_NAME  	:= leafgreen
+	MAP_VERSION 	:= firered
+else
+ifeq ($(ALL_REGIONS),1)
+	MAP_VERSION 	:= allregions
+endif
+endif
+endif
+
+# GBA rom header
+MAKER_CODE  := 01
+REVISION    := 0
+KEEP_TEMPS  ?= 0
+
+# `File name`.gba
+FILE_NAME := pokemonworld
+BUILD_DIR := build
+
+# Executes the Test Runner System that checks that all mechanics work as expected
+TEST         ?= 0
+# Enables -fanalyzer C flag to analyze in depth potential UBs
+ANALYZE      ?= 0
+# Count unused warnings as errors. Used by RH-Hideout's repo
+UNUSED_ERROR ?= 0
+# Count deprecated warnings as errors. Used by RH-Hideout's repo
+DEPRECATED_ERROR ?= 0
+# Adds -Og and -g flags, which optimize the build for debugging and include debug info respectively
+DEBUG        ?= 0
+# Adds -flto flag, which increases link time but results in a more efficient binary (especially in audio processing)
+LTO          ?= 0
+# Makes an optimized build for release, also enabling NDEBUG macro and disabling other debugging features
+# Enables LTO by default, but can be changed in the config.mk file
+RELEASE      ?= 0
+
+ifeq (check,$(MAKECMDGOALS))
+  TEST := 1
+endif
+ifeq (debug,$(MAKECMDGOALS))
+  DEBUG := 1
+endif
+ifneq (,$(filter release tidyrelease,$(MAKECMDGOALS)))
+  RELEASE := 1
+endif
+
+include config.mk
+
+# Default make rule
+all: rom
+
+# Toolchain selection
+TOOLCHAIN := $(DEVKITARM)
+# don't use dkP's base_tools anymore
+# because the redefinition of $(CC) conflicts
+# with when we want to use $(CC) to preprocess files
+# thus, manually create the variables for the bin
+# files, or use arm-none-eabi binaries on the system
+# if dkP is not installed on this system
+ifneq (,$(TOOLCHAIN))
+  ifneq ($(wildcard $(TOOLCHAIN)/bin),)
+    export PATH := $(TOOLCHAIN)/bin:$(PATH)
+  endif
+endif
+
+PREFIX := arm-none-eabi-
+OBJCOPY := $(PREFIX)objcopy
+OBJDUMP := $(PREFIX)objdump
+NM := $(PREFIX)nm
+AS := $(PREFIX)as
+LD := $(PREFIX)ld
+
+EXE :=
+ifeq ($(OS),Windows_NT)
+  EXE := .exe
+endif
+
+CPP := $(PREFIX)cpp
+
+ifeq ($(RELEASE),1)
+	FILE_NAME := $(FILE_NAME)-release
+endif
+
+ROM_NAME := $(FILE_NAME).gba
+OBJ_DIR_NAME := $(BUILD_DIR)/$(BUILD_NAME)
+OBJ_DIR_NAME_TEST := $(BUILD_DIR)/$(BUILD_NAME)-test
+OBJ_DIR_NAME_DEBUG := $(BUILD_DIR)/$(BUILD_NAME)-debug
+OBJ_DIR_NAME_RELEASE := $(BUILD_DIR)/$(BUILD_NAME)-release
+ASSETS_DIR_NAME := $(BUILD_DIR)/assets
+
+ELF_NAME := $(ROM_NAME:.gba=.elf)
+MAP_NAME := $(ROM_NAME:.gba=.map)
+TESTELF := $(ROM_NAME:.gba=-test.elf)
+HEADLESSELF := $(ROM_NAME:.gba=-test-headless.elf)
+
+# Pick our active variables
+ROM := $(ROM_NAME)
+ifeq ($(TESTELF),$(MAKECMDGOALS))
+  TEST := 1
+endif
+ifeq ($(TEST), 0)
+  OBJ_DIR := $(OBJ_DIR_NAME)
+else
+  OBJ_DIR := $(OBJ_DIR_NAME_TEST)
+endif
+ifeq ($(DEBUG),1)
+  OBJ_DIR := $(OBJ_DIR_NAME_DEBUG)
+endif
+ifeq ($(RELEASE),1)
+  OBJ_DIR := $(OBJ_DIR_NAME_RELEASE)
+endif
+ELF := $(ROM:.gba=.elf)
+MAP := $(ROM:.gba=.map)
+SYM := $(ROM:.gba=.sym)
+
+# Commonly used directories
+C_SUBDIR = src
+ASM_SUBDIR = asm
+DATA_SRC_SUBDIR = src/data
+DATA_ASM_SUBDIR = data
+MID_SUBDIR = sound/songs/midi
+TEST_SUBDIR = test
+
+C_BUILDDIR = $(OBJ_DIR)/$(C_SUBDIR)
+ASM_BUILDDIR = $(OBJ_DIR)/$(ASM_SUBDIR)
+DATA_ASM_BUILDDIR = $(OBJ_DIR)/$(DATA_ASM_SUBDIR)
+MID_BUILDDIR = $(OBJ_DIR)/$(MID_SUBDIR)
+TEST_BUILDDIR = $(OBJ_DIR)/$(TEST_SUBDIR)
+
+SHELL := bash -o pipefail
+
+# Set flags for tools
+ASFLAGS := -mcpu=arm7tdmi -march=armv4t -meabi=5 --defsym MODERN=1 --defsym $(GAME_VERSION)=1 --defsym ALL_REGIONS=$(ALL_REGIONS)
+
+INCLUDE_DIRS := include
+INCLUDE_CPP_ARGS := $(INCLUDE_DIRS:%=-iquote %)
+INCLUDE_SCANINC_ARGS := $(INCLUDE_DIRS:%=-I %)
+
+ifeq ($(DEBUG),1)
+O_LEVEL ?= g
+else ifeq ($(RELEASE),1)
+# Shipping all 1-9 Pokémon families needs genuine -Os/LTO headroom.
+# Keep the cartridge region strictly 32 MiB; do not use the probe's 36M relink.
+O_LEVEL ?= s
+else
+O_LEVEL ?= 2
+endif
+CPPFLAGS := $(INCLUDE_CPP_ARGS) -Wno-trigraphs -DMODERN=1 -DTESTING=$(TEST) -D$(GAME_VERSION) -DALL_REGIONS=$(ALL_REGIONS) -std=gnu17
+ifeq ($(RELEASE),1)
+	override CPPFLAGS += -DRELEASE
+	ifeq ($(USE_LTO_ON_RELEASE),1)
+		LTO := 1
+	endif
+endif
+
+# Build stamp (issue #109) -- the version string src/main_menu.c paints on the main menu.
+#
+# `git describe --tags --always --dirty` already covers every case we care about:
+#   exact tag        -> "v1.4"
+#   commits past one -> "v1.4-87-g936e1a7c00"
+#   detached HEAD    -> same output; describe names the commit, not the branch
+#   shallow/tagless  -> --always degrades to the abbreviated hash
+#   uncommitted work -> --dirty appends "-dirty"
+# The -ef guard stops a source drop that happens to sit inside somebody else's
+# repository from being stamped with THAT repository's version (-ef compares
+# device/inode, so a symlinked checkout path still matches).
+# `tr -cd` drops the trailing newline and anything outside [A-Za-z0-9.-]: those are
+# the characters that are safe inside the single-quoted -D below AND that charmap.txt
+# has glyphs for. No git, or no repository at all, leaves PW_VERSION empty and no -D
+# is passed; src/main_menu.c then uses its own hardcoded fallback.
+PW_VERSION := $(shell test "$$(git -C "$(CURDIR)" rev-parse --show-toplevel 2>/dev/null)" -ef "$(CURDIR)" && git -C "$(CURDIR)" describe --tags --always --dirty 2>/dev/null | tr -cd 'A-Za-z0-9.-')
+
+ARMCC := $(PREFIX)gcc
+PATH_ARMCC := PATH="$(PATH)" $(ARMCC)
+CC1 := $(shell $(PATH_ARMCC) --print-prog-name=cc1) -quiet
+
+override CFLAGS += -mthumb -mthumb-interwork -O$(O_LEVEL) -mabi=apcs-gnu -mtune=arm7tdmi -march=armv4t -Wno-pointer-to-int-cast -std=gnu17 -Werror -Wall -Wno-strict-aliasing -Wno-attribute-alias -Woverride-init -Wnonnull -Wenum-conversion
+
+ifneq ($(LTO),0)
+  ifneq ($(TEST),1)
+    override CFLAGS += -flto=auto -fno-fat-lto-objects -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections
+  endif
+endif
+
+ifeq ($(ANALYZE),1)
+  override CFLAGS += -fanalyzer
+endif
+# Only throw an error for unused elements if its RH-Hideout's repo
+ifeq ($(UNUSED_ERROR),0)
+  ifneq ($(GITHUB_REPOSITORY_OWNER),rh-hideout)
+    override CFLAGS += -Wno-error=unused-variable -Wno-error=unused-const-variable -Wno-error=unused-parameter -Wno-error=unused-function -Wno-error=unused-but-set-parameter -Wno-error=unused-but-set-variable -Wno-error=unused-value -Wno-error=unused-local-typedefs
+  endif
+endif
+
+ifeq ($(DEPRECATED_ERROR),0)
+  ifneq ($(GITHUB_REPOSITORY_OWNER),rh-hideout)
+    override CFLAGS += -Wno-error=deprecated-declarations
+  endif
+endif
+
+LIBPATH := -L "$(dir $(shell $(PATH_ARMCC) -mthumb -print-file-name=libgcc.a))" -L "$(dir $(shell $(PATH_ARMCC) -mthumb -print-file-name=libnosys.a))" -L "$(dir $(shell $(PATH_ARMCC) -mthumb -print-file-name=libc.a))"
+LIB := $(LIBPATH) -lc -lnosys -lgcc -L../../libagbsyscall -lagbsyscall
+# Enable debug info if set
+ifeq ($(DINFO),1)
+  override CFLAGS += -g
+else
+  ifeq ($(DEBUG),1)
+    override CFLAGS += -g
+  endif
+endif
+
+ifeq ($(NOOPT),1)
+override CFLAGS := $(filter-out -O1 -Og -O2,$(CFLAGS))
+override CFLAGS += -O0
+endif
+
+# Variable filled out in other make files
+AUTO_GEN_TARGETS :=
+include make_tools.mk
+# Tool executables
+SMOLTM       := $(TOOLS_DIR)/compresSmol/compresSmolTilemap$(EXE)
+SMOL         := $(TOOLS_DIR)/compresSmol/compresSmol$(EXE)
+GFX          := $(TOOLS_DIR)/gbagfx/gbagfx$(EXE)
+WAV2AGB      := $(TOOLS_DIR)/wav2agb/wav2agb$(EXE)
+MID          := $(TOOLS_DIR)/mid2agb/mid2agb$(EXE)
+SCANINC      := $(TOOLS_DIR)/scaninc/scaninc$(EXE)
+PREPROC      := $(TOOLS_DIR)/preproc/preproc$(EXE)
+RAMSCRGEN    := $(TOOLS_DIR)/ramscrgen/ramscrgen$(EXE)
+FIX          := $(TOOLS_DIR)/gbafix/gbafix$(EXE)
+MAPJSON      := $(TOOLS_DIR)/mapjson/mapjson$(EXE)
+JSONPROC     := $(TOOLS_DIR)/jsonproc/jsonproc$(EXE)
+TRAINERPROC  := $(TOOLS_DIR)/trainerproc/trainerproc$(EXE)
+PATCHELF     := $(TOOLS_DIR)/patchelf/patchelf$(EXE)
+ifeq ($(shell uname),Darwin)
+    ROMTEST ?= $(shell command -v mgba-rom-test-mac 2>/dev/null || echo $(TOOLS_DIR)/mgba/mgba-rom-test-mac)
+    ROMTESTHYDRA := $(shell command -v mgba-rom-test-hydra 2>/dev/null || echo $(TOOLS_DIR)/mgba-rom-test-hydra/mgba-rom-test-hydra)
+else ifeq ($(shell uname),Linux)
+    ROMTEST ?= $(shell command -v mgba-rom-test 2>/dev/null || echo $(TOOLS_DIR)/mgba/mgba-rom-test)
+    ROMTESTHYDRA := $(shell command -v mgba-rom-test-hydra 2>/dev/null || echo $(TOOLS_DIR)/mgba-rom-test-hydra/mgba-rom-test-hydra)
+else
+    ROMTEST ?= $(TOOLS_DIR)/mgba/mgba-rom-test$(EXE)
+    ROMTESTHYDRA := $(TOOLS_DIR)/mgba-rom-test-hydra/mgba-rom-test-hydra$(EXE)
+endif
+
+# Learnset helper is a Python script
+LEARNSET_HELPERS_DIR := $(TOOLS_DIR)/learnset_helpers
+LEARNSET_HELPERS_DATA_DIR := $(LEARNSET_HELPERS_DIR)/porymoves_files
+LEARNSET_HELPERS_BUILD_DIR := $(LEARNSET_HELPERS_DIR)/build
+ALL_LEARNABLES_JSON := $(DATA_SRC_SUBDIR)/pokemon/all_learnables.json
+ALL_TUTORS_JSON := $(LEARNSET_HELPERS_BUILD_DIR)/all_tutors.json
+ALL_TEACHING_TYPES_JSON := $(LEARNSET_HELPERS_BUILD_DIR)/all_teaching_types.json
+
+# wild_encounters.h is generated by a Python script
+WILD_ENCOUNTERS_TOOL_DIR := $(TOOLS_DIR)/wild_encounters
+AUTO_GEN_TARGETS += $(DATA_SRC_SUBDIR)/wild_encounters.h
+
+MISC_TOOL_DIR := $(TOOLS_DIR)/misc
+AUTO_GEN_TARGETS +=  $(INCLUDE_DIRS)/constants/script_commands.h
+
+$(DATA_SRC_SUBDIR)/wild_encounters.h: $(DATA_SRC_SUBDIR)/wild_encounters.json $(WILD_ENCOUNTERS_TOOL_DIR)/wild_encounters_to_header.py $(INCLUDE_DIRS)/config/overworld.h $(INCLUDE_DIRS)/config/dexnav.h
+	python3 $(WILD_ENCOUNTERS_TOOL_DIR)/wild_encounters_to_header.py
+
+$(INCLUDE_DIRS)/constants/script_commands.h: $(MISC_TOOL_DIR)/make_scr_cmd_constants.py $(DATA_ASM_SUBDIR)/script_cmd_table.inc
+	python3  $(MISC_TOOL_DIR)/make_scr_cmd_constants.py
+
+PERL := perl
+
+MAKEFLAGS += --no-print-directory
+
+# Clear the default suffixes
+.SUFFIXES:
+# Don't delete intermediate files
+.SECONDARY:
+# Delete files that weren't built properly
+.DELETE_ON_ERROR:
+
+RULES_NO_SCAN += libagbsyscall clean clean-assets tidy tidymodern tidycheck tidyrelease generated clean-generated clean-teachables clean-teachables_intermediates
+.PHONY: all rom agbcc modern check validate obstacles debug release symbols
+.PHONY: $(RULES_NO_SCAN)
+
+infoshell = $(foreach line, $(shell $1 | sed "s/ /__SPACE__/g"), $(info $(subst __SPACE__, ,$(line))))
+
+# Check if we need to scan dependencies based on the chosen rule OR user preference
+NODEP ?= 0
+# Check if we need to pre-build tools and generate assets based on the chosen rule.
+SETUP_PREREQS ?= 1
+# Disable dependency scanning for rules that don't need it.
+ifneq (,$(MAKECMDGOALS))
+  ifeq (,$(filter-out $(RULES_NO_SCAN),$(MAKECMDGOALS)))
+    NODEP := 1
+    SETUP_PREREQS := 0
+  endif
+endif
+
+# Do NOT reach for .SHELLSTATUS here. It could not carry the result of either sub-make below,
+# and the guards that used it were inert on every platform for two independent reasons:
+#
+#   1. It is GNU Make >= 4.2 only. macOS ships 3.81, where it is never set at all -- and the
+#      `.SHELLSTATUS ?= 0` that used to sit here then pinned it to 0 permanently, so the
+#      `$(error ...)` could never fire.
+#   2. Even on 4.2+, $(shell) reports the exit status of the whole PIPELINE. Both commands end
+#      in `| sed`, which essentially always succeeds, so the status was 0 no matter what the
+#      sub-make did.
+#
+# The visible symptom was nasty: a failed `make tools` (typically gbagfx not finding png.h)
+# did not stop the build. `preproc` sorts after `gbagfx` in TOOL_NAMES so it was never built,
+# and the real first error scrolled away behind hundreds of
+# "tools/preproc/preproc: No such file or directory".
+#
+# Instead, carry the status inside the output: append a sentinel word only if the sub-make
+# exits 0, print every other word, and treat a missing sentinel as failure. Identical
+# behaviour on 3.81 and 4.x. stderr is folded in so the real error is printed in order.
+PW_SUBMAKE_OK := __PW_SUBMAKE_OK__
+
+ifeq ($(SETUP_PREREQS),1)
+  # If set on: Default target or a rule requiring a scan
+  # Forcibly execute `make tools` since we need them for what we are doing.
+  PW_TOOLS_OUT := $(shell { $(MAKE) -f make_tools.mk && echo $(PW_SUBMAKE_OK); } 2>&1 | sed "s/ /__SPACE__/g")
+  $(foreach line, $(filter-out $(PW_SUBMAKE_OK),$(PW_TOOLS_OUT)), $(info $(subst __SPACE__, ,$(line))))
+  ifeq (,$(filter $(PW_SUBMAKE_OK),$(PW_TOOLS_OUT)))
+    $(error Errors occurred while building tools. See error messages above for more details)
+  endif
+  # Oh and also generate mapjson sources before we use `SCANINC`.
+  PW_GEN_OUT := $(shell { $(MAKE) MAP_VERSION=$(MAP_VERSION) generated && echo $(PW_SUBMAKE_OK); } 2>&1 | sed "s/ /__SPACE__/g")
+  $(foreach line, $(filter-out $(PW_SUBMAKE_OK),$(PW_GEN_OUT)), $(info $(subst __SPACE__, ,$(line))))
+  ifeq (,$(filter $(PW_SUBMAKE_OK),$(PW_GEN_OUT)))
+    $(error Errors occurred while generating map-related sources. See error messages above for more details)
+  endif
+endif
+
+# Collect sources
+C_SRCS_IN := $(wildcard $(C_SUBDIR)/*.c $(C_SUBDIR)/*/*.c $(C_SUBDIR)/*/*/*.c)
+C_SRCS := $(foreach src,$(C_SRCS_IN),$(if $(findstring .inc.c,$(src)),,$(src)))
+C_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(C_SRCS))
+
+TEST_SRCS_IN := $(filter-out $(TEST_SUBDIR)/overworld/%,$(wildcard $(TEST_SUBDIR)/*.c $(TEST_SUBDIR)/*/*.c $(TEST_SUBDIR)/*/*/*.c))
+TEST_SRCS := $(foreach src,$(TEST_SRCS_IN),$(if $(findstring .inc.c,$(src)),,$(src)))
+TEST_OBJS := $(patsubst $(TEST_SUBDIR)/%.c,$(TEST_BUILDDIR)/%.o,$(TEST_SRCS))
+TEST_OBJS_REL := $(patsubst $(OBJ_DIR)/%,%,$(TEST_OBJS))
+
+C_ASM_SRCS := $(wildcard $(C_SUBDIR)/*.s $(C_SUBDIR)/*/*.s $(C_SUBDIR)/*/*/*.s)
+C_ASM_OBJS := $(patsubst $(C_SUBDIR)/%.s,$(C_BUILDDIR)/%.o,$(C_ASM_SRCS))
+
+ASM_SRCS := $(wildcard $(ASM_SUBDIR)/*.s)
+ASM_OBJS := $(patsubst $(ASM_SUBDIR)/%.s,$(ASM_BUILDDIR)/%.o,$(ASM_SRCS))
+
+DATA_ASM_SRCS := $(wildcard $(DATA_ASM_SUBDIR)/*.s)
+DATA_ASM_OBJS := $(patsubst $(DATA_ASM_SUBDIR)/%.s,$(DATA_ASM_BUILDDIR)/%.o,$(DATA_ASM_SRCS))
+
+MID_SRCS := $(wildcard $(MID_SUBDIR)/*.mid)
+MID_OBJS := $(patsubst $(MID_SUBDIR)/%.mid,$(MID_BUILDDIR)/%.o,$(MID_SRCS))
+
+OBJS     := $(C_OBJS) $(C_ASM_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS) $(MID_OBJS)
+OBJS_REL := $(patsubst $(OBJ_DIR)/%,%,$(OBJS))
+
+SUBDIRS  := $(sort $(dir $(OBJS) $(dir $(TEST_OBJS))))
+$(shell mkdir -p $(SUBDIRS))
+
+# Pretend rules that are actually flags defer to `make all`
+modern: all
+debug: all
+release: all
+# Uncomment the next line, and then comment the 4 lines after it to reenable agbcc.
+#agbcc: all
+agbcc:
+	@echo "'make agbcc' is deprecated as of pokeemerald-expansion 1.9 and will be removed in 1.10."
+	@echo "Search for 'agbcc: all' in Makefile to reenable agbcc."
+	@exit 1
+
+LD_SCRIPT_TEST := ld_script_test.ld
+
+$(OBJ_DIR)/ld_script_test.ld: $(LD_SCRIPT_TEST)
+	cd $(OBJ_DIR) && sed "s#tools/#../../tools/#g" ../../$(LD_SCRIPT_TEST) > ld_script_test.ld
+
+$(TESTELF): $(OBJ_DIR)/ld_script_test.ld $(OBJS) $(TEST_OBJS) libagbsyscall tools check-tools
+	@echo "cd $(OBJ_DIR) && $(LD) -T ld_script_test.ld -o ../../$@ <objects> <test-objects> <lib>"
+	@cd $(OBJ_DIR) && $(LD) $(TESTLDFLAGS) -T ld_script_test.ld -o ../../$@ $(OBJS_REL) $(TEST_OBJS_REL) $(LIB)
+	$(FIX) $@ -t"$(TITLE)" -c$(GAME_CODE) -m$(MAKER_CODE) -r$(REVISION) -d0 --silent
+	$(PATCHELF) $(TESTELF) gTestRunnerArgv "$(TESTS:%*=%)\0"
+
+ifeq ($(GITHUB_REPOSITORY_OWNER),rh-hideout)
+TEST_SKIP_IS_FAIL := \x01
+else
+TEST_SKIP_IS_FAIL := \x00
+endif
+
+check: $(TESTELF)
+	@cp $< $(HEADLESSELF)
+	$(PATCHELF) $(HEADLESSELF) gTestRunnerHeadless '\x01' gTestRunnerSkipIsFail "$(TEST_SKIP_IS_FAIL)"
+	$(ROMTESTHYDRA) $(ROMTEST) $(OBJCOPY) $(HEADLESSELF)
+
+# Gen 1-3 content rule (issue #30). Source-only, no build needed: it reads the tracked
+# .party files and wild_encounters.json, never the generated headers. A disabled-species
+# reference builds AND boots clean, then blue-screens at battle send-out, so this is the
+# only automated thing standing between a bad edit and a crash in play. Also run by the
+# .git/hooks/pre-push gate (tracked at test/overworld/hooks/pre-push; install via test/overworld/hooks/install.sh).
+#
+# ValidateScripts.py is the same shape of check for event scripts (issue #48). A script pointer
+# argument written as a bare integer (`pokemart 0`) assembles, links and boots clean, then faults
+# when the script runs — a playtest was the only thing that could find it. It derives the pointer
+# slots by expanding asm/macros/event.inc rather than hard-coding a command table, so it keeps
+# working when a macro gains an argument.
+#
+# ValidateOwMonPlacements.py covers map-placed overworld Pokemon (issue #49). Same failure shape
+# again: OBJ_EVENT_GFX_OW_MON lacks the OBJ_EVENT_MON bit, so 741 Johto mons built, linked and
+# booted while drawing whatever garbage was in the follower's dynamic tile and palette slots — and
+# a species with no OVERWORLD(...) entry renders as a Substitute doll rather than failing. Only
+# looking at the data catches either.
+#
+# ValidateMapEvents.py covers the object events themselves — who is standing there, whether the
+# sprite matches the role, whether the trainer behind it belongs to the team it claims. Same
+# failure shape a third time: Kurt was a Wailmer doll, four Pokemon Centers had two Nurse Joys and
+# Proton fought as a Team Magma admin, and every one of those built, linked and booted clean.
+# It carries a REVIEW tier with recorded baselines for the smells that are not yet at zero; see
+# its docstring, and `--report` to list them.
+#
+# ValidateMetatileBounds.py covers the blockdata itself (issue #93). `DrawMetatileAt` guards only
+# `metatileId > NUM_METATILES_TOTAL` and never the tileset's own length, so an id that is in range
+# for the 512/640 split but past the end of the tileset indexes .rodata and draws whatever symbol
+# the linker put next -- Johto Victory Road drew Secret Base blocks across 1989 of 1F's 2070 tiles
+# and nothing in the build, the link or the boot said a word. It also counts references to blank
+# (all-zero) metatiles, which is what caught the Mahogany Gym mis-wiring that a pure bounds check
+# went green over. Both tiers pin exact per-layout counts and fail in BOTH directions, so a fixed
+# map must have its number ratcheted down rather than leaving a stale exemption behind.
+#
+# ValidateTilesetPalettes.py covers the palette arrays behind those tilesets (issue #94). Fourth
+# time for the same failure shape, and the worst-instrumented one: `.palettes` is a bare
+# `const u16 (*)[16]`, so the ROW COUNT is discarded at the declaration and an array one row short
+# builds, links and boots identically to a correct one -- the loader just copies whatever .rodata
+# follows it into the BG palette buffer. The script recomputes the bound from the three readers
+# that exist (LoadPrimaryTilesetPalette, LoadSecondaryTilesetPalette, UpdateAltBgPalettes) rather
+# than trusting a remembered number: #94 itself asserted the loader copies slots 7..15, and it
+# copies 7..12. The 52 arrays that declare exactly 13 rows are CORRECT; do not pad them.
+validate:
+	python3 test/overworld/story-progress/run.py
+	python3 test/overworld/ValidateGen13.py
+	python3 test/overworld/ValidatePartyContinuity.py
+	python3 test/overworld/ValidateStarterIsolation.py
+	python3 test/overworld/ValidateShinyOdds.py
+	python3 test/overworld/ValidatePlayerCheats.py
+	python3 test/overworld/ValidateScripts.py
+	python3 test/overworld/ValidateOwMonPlacements.py
+	python3 test/overworld/ValidateMapEvents.py
+	python3 test/overworld/ValidateMetatileBounds.py
+	python3 test/overworld/GenObstacleTable.py --check
+	python3 test/overworld/SavePatch.py --check
+	python3 test/overworld/ValidateDoorAnims.py --max 0
+	python3 test/overworld/ValidateTilesetPalettes.py
+	python3 test/overworld/ValidateCelioGifts.py
+	python3 test/overworld/ValidateGreedyGifts.py
+	python3 test/overworld/ValidateRegionMap.py
+	python3 test/overworld/ValidateLanceMultiBattle.py
+	python3 test/overworld/ValidateZoneStructure.py
+
+# Regenerate the committed cut-tree / smashable-rock index table from data/maps/ (issue #16).
+# The outputs are COMMITTED, not build artifacts: the array index IS the save bit index, so the
+# table is save-layout-affecting data and belongs in review. `make validate` fails if it drifts.
+# Regenerating after a map edit that adds/removes an obstacle changes CLEARED_OBSTACLE_TABLE_HASH,
+# which makes every existing save's obstacles regrow once — intended, and self-healing.
+obstacles:
+	python3 test/overworld/GenObstacleTable.py
+
+# Regenerate the BizHawk/Lua test symbol table from the freshly built ELF. Addresses move every
+# rebuild, so the promoted suites in test/overworld/lua/ `require("symbols")` instead of hardcoding them.
+# The output is a build artifact (gitignored); commit test/overworld/GenLuaSymbols.py, not symbols.lua.
+#
+# These two MUST stay above the `rom:` rule. Prerequisites are expanded when the rule is READ, so
+# with the assignment below `rom:`, `$(LUA_SYMBOLS)` expanded to the empty string and the
+# prerequisite silently vanished — `make` reported success and left symbols.lua stale, which is
+# precisely the failure this was added to prevent.
+LUA_TESTDIR := test/overworld/lua
+LUA_SYMBOLS := $(LUA_TESTDIR)/symbols.lua
+
+# RELEASE builds do NOT generate the table (issue #124). Release enables LTO plus --gc-sections,
+# which drops the local symbols the generator requires (sSpritePaletteTags among them), so the
+# generator exits non-zero and takes the whole build down AFTER a perfectly good ROM has linked.
+# The Lua suites are a development tool aimed at the normal `make modern` ROM; a release ROM is
+# not what you debug against, so the right answer is to not ask for the table at all here.
+# `make symbols RELEASE=1` is still honoured — that is an explicit request, not a side effect.
+ifeq ($(RELEASE),1)
+ROM_LUA_SYMBOLS :=
+else
+ROM_LUA_SYMBOLS := $(LUA_SYMBOLS)
+endif
+
+# Other rules
+# symbols.lua is a prerequisite so `make -j12` alone keeps it fresh. It used to be reachable ONLY
+# via the standalone `make symbols` target, so the normal flow left it stale — and stale symbols
+# against a rebuilt ROM still boot and still report every test green, because gSaveblock3 is a
+# fixed EWRAM symbol. That pairing was the normal accident, not an edge case (issue #31).
+rom: $(ROM) $(ROM_LUA_SYMBOLS)
+
+syms: $(SYM)
+
+symbols: $(LUA_SYMBOLS)
+
+# Depends on the ROM as well as the ELF: the generator hashes the .gba so lib.new() can refuse to
+# run a suite against a ROM the symbol table was not generated from.
+#
+# Write to a temp file and rename only on success. A plain `> $@` truncates the previous table
+# before python3 even starts, so any generator failure left the Lua harness unrunnable until the
+# next good build (issue #124). .DELETE_ON_ERROR (see above) does not save us either — it only
+# removes a target it can see was rewritten; with the temp file $@'s mtime never moves, so a
+# failed run leaves the last known-good table exactly where it was.
+$(LUA_SYMBOLS): $(ELF) $(ROM) test/overworld/GenLuaSymbols.py
+	@mkdir -p $(LUA_TESTDIR)
+	python3 test/overworld/GenLuaSymbols.py $(ELF) $(NM) > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp; exit 1; }
+	@echo "wrote $@"
+
+clean: tidy clean-tools clean-check-tools clean-generated clean-assets
+	@$(MAKE) clean -C libagbsyscall
+
+clean-assets:
+	rm -rf $(ASSETS_DIR_NAME)
+	rm -f $(MID_SUBDIR)/*.s
+	rm -f $(DATA_ASM_SUBDIR)/layouts/layouts.inc $(DATA_ASM_SUBDIR)/layouts/layouts_table.inc
+	rm -f $(DATA_ASM_SUBDIR)/maps/connections.inc $(DATA_ASM_SUBDIR)/maps/events.inc $(DATA_ASM_SUBDIR)/maps/groups.inc $(DATA_ASM_SUBDIR)/maps/headers.inc $(DATA_SRC_SUBDIR)/map_group_count.h
+	rm -f .map_version
+	find sound -iname '*.bin' -exec rm {} +
+	find . \( -iname '*.1bpp' -o -iname '*.4bpp' -o -iname '*.8bpp' -o -iname '*.gbapal' -o -iname '*.lz' -o -iname '*.smol' -o -iname '*.fastSmol' -o -iname '*.smolTM' -o -iname '*.rl' -o -iname '*.latfont' -o -iname '*.hwjpnfont' -o -iname '*.fwjpnfont' \) -exec rm {} +
+	find $(DATA_ASM_SUBDIR)/maps \( -iname 'connections.inc' -o -iname 'events.inc' -o -iname 'header.inc' \) -exec rm {} +
+
+tidy: tidymodern tidycheck tidydebug tidyrelease
+
+tidymodern:
+	rm -f poke*.gba poke*.elf poke*.map
+	rm -rf $(OBJ_DIR_NAME)
+
+tidycheck:
+	rm -f $(TESTELF) $(HEADLESSELF)
+	rm -rf $(OBJ_DIR_NAME_TEST)
+
+tidydebug:
+	rm -rf $(OBJ_DIR_NAME_DEBUG)
+
+tidyrelease:
+ifeq ($(RELEASE),1)
+	rm -f $(ROM_NAME) $(ELF_NAME) $(MAP_NAME)
+else # Manually remove the release files on clean/tidy
+	rm -f $(FILE_NAME)-release.gba $(FILE_NAME)-release.elf $(FILE_NAME)-release.map
+endif
+	rm -rf $(OBJ_DIR_NAME_RELEASE)
+
+# Other rules
+include graphics_file_rules.mk
+include map_data_rules.mk
+include spritesheet_rules.mk
+include json_data_rules.mk
+include audio_rules.mk
+include trainer_rules.mk
+
+
+# Reconstruct all 12 32 KiB Latin fonts byte-for-byte from indexed 16-byte tiles.
+# This preserves character glyphs and their original layout with no EWRAM buffer.
+LATIN_FONT_VARIANTS := latin_small_narrow latin_small latin_narrow latin_short latin_normal latin_narrower latin_small_narrower latin_short_narrow latin_short_narrower latin_outlined latin_outlined_narrow latin_battle_ui_element
+LATIN_FONT_INPUTS := $(addprefix graphics/fonts/,$(addsuffix .latfont,$(LATIN_FONT_VARIANTS)))
+LATIN_FONT_PACK_DIR := $(ASSETS_DIR_NAME)/latin_font_pack
+LATIN_FONT_PACK_STAMP := $(LATIN_FONT_PACK_DIR)/stamp
+
+%.latfont: %.png
+	$(GFX) $< $@
+
+$(LATIN_FONT_PACK_STAMP): $(LATIN_FONT_INPUTS) tools/pack_latin_fonts.py
+	@mkdir -p $(LATIN_FONT_PACK_DIR)
+	python3 tools/pack_latin_fonts.py --output-dir $(LATIN_FONT_PACK_DIR) $(LATIN_FONT_INPUTS)
+	@touch $@
+
+$(C_BUILDDIR)/fonts.o: $(LATIN_FONT_PACK_STAMP)
+
+# NOTE: Tools must have been built prior (FIXME)
+# so you can't really call this rule directly
+generated: $(AUTO_GEN_TARGETS)
+	@: # Silence the "Nothing to be done for `generated'" message, which some people were confusing for an error.
+
+
+%.s:   ;
+%.png: ;
+%.pal: ;
+%.wav: ;
+
+%.1bpp:     %.png  ; $(GFX) $< $@
+%.4bpp:     %.png  ; $(GFX) $< $@
+%.8bpp:     %.png  ; $(GFX) $< $@
+%.gbapal:   %.pal  ; $(GFX) $< $@
+%.gbapal:   %.png  ; $(GFX) $< $@
+%.lz:       %      ; $(GFX) $< $@
+%.smolTM:   %      ; $(SMOLTM) $< $@
+%.fastSmol: %      ; $(SMOL) -w $< $@ false false false
+%.smol:     %      ; $(SMOL) -w $< $@
+%.rl:       %      ; $(GFX) $< $@
+
+clean-teachables_intermediates:
+	rm -f $(DATA_SRC_SUBDIR)/tutor_moves.h
+	rm -f $(DATA_SRC_SUBDIR)/pokemon/teachable_learnsets.h
+	@rm -Rf $(LEARNSET_HELPERS_BUILD_DIR)
+	@echo "rm -Rf <LEARNSET_HELPERS_BUILD_DIR>"
+
+clean-generated: clean-teachables_intermediates
+	@rm -f $(AUTO_GEN_TARGETS)
+	@echo "rm -f <AUTO_GEN_TARGETS>"
+
+clean-teachables: clean-teachables_intermediates
+	rm -f $(ALL_LEARNABLES_JSON)
+	@touch $(C_SUBDIR)/pokemon.c
+
+$(C_BUILDDIR)/librfu_intr.o: CFLAGS := -mthumb-interwork -O2 -mabi=apcs-gnu -mtune=arm7tdmi -march=armv4t -fno-toplevel-reorder -Wno-pointer-to-int-cast
+$(C_BUILDDIR)/berry_crush.o: override CFLAGS += -Wno-address-of-packed-member
+$(C_BUILDDIR)/agb_flash.o: override CFLAGS += -fno-toplevel-reorder
+$(C_BUILDDIR)/pokedex_plus_hgss.o: CFLAGS := -mthumb -mthumb-interwork -O2 -mabi=apcs-gnu -mtune=arm7tdmi -march=armv4t -Wno-pointer-to-int-cast -std=gnu17 -Werror -Wall -Wno-strict-aliasing -Wno-attribute-alias -Woverride-init
+# Annoyingly we can't turn this on just for src/data/trainers.h
+$(C_BUILDDIR)/data.o: CFLAGS += -fno-show-column -fno-diagnostics-show-caret
+
+# Needed for parity with pret
+$(C_BUILDDIR)/graphics.o: override CFLAGS += -Wno-missing-braces
+
+# Build stamp (issue #109). Only src/main_menu.c is given -DPW_VERSION, so a new commit
+# rebuilds exactly one object rather than every translation unit in the ROM. Nothing in
+# this Makefile fingerprints the compiler flags, though, so the define on its own would
+# never make anything out of date and the stamp would silently go stale; pw_version.stamp
+# is rewritten only when the string actually changes, and main_menu.o -- alone -- depends
+# on it. PW_VERSION empty (no git / no repository) means no -D at all and src/main_menu.c
+# falls back to its own hardcoded value.
+PW_VERSION_STAMP := $(OBJ_DIR)/pw_version.stamp
+
+.PHONY: pw_version_check
+pw_version_check: ;
+
+# The `rm -f` is not belt-and-braces: make 3.81 (what macOS ships) compares mtimes at
+# whole-second granularity, so a stamp rewritten in the same second as the previous
+# main_menu.o compile leaves the object looking up to date -- and because the stamp is
+# only rewritten when the string CHANGES, its mtime then stays frozen and no later
+# `make` recovers it. Deleting the object makes the rebuild independent of timestamps.
+$(PW_VERSION_STAMP): pw_version_check
+	@mkdir -p $(@D)
+	@{ [ -f $@ ] && [ "$$(cat $@)" = '$(PW_VERSION)' ]; } \
+	  || { echo '$(PW_VERSION)' > $@; rm -f $(C_BUILDDIR)/main_menu.o; }
+
+$(C_BUILDDIR)/main_menu.o: $(PW_VERSION_STAMP)
+ifneq ($(PW_VERSION),)
+$(C_BUILDDIR)/main_menu.o: override CPPFLAGS += -DPW_VERSION='"$(PW_VERSION)"'
+endif
+
+# Dependency rules (for the *.c & *.s sources to .o files)
+# Have to be explicit or else missing files won't be reported.
+$(C_BUILDDIR)/move_relearner.o: $(C_SUBDIR)/move_relearner.c $(DATA_SRC_SUBDIR)/tutor_moves.h
+$(C_BUILDDIR)/pokemon.o: $(C_SUBDIR)/pokemon.c $(DATA_SRC_SUBDIR)/pokemon/teachable_learnsets.h
+
+# As a side effect, they're evaluated immediately instead of when the rule is invoked.
+# It doesn't look like $(shell) can be deferred so there might not be a better way (Icedude_907: there is soon).
+
+$(C_BUILDDIR)/%.o: $(C_SUBDIR)/%.c
+ifneq ($(KEEP_TEMPS),1)
+	@echo "$(CC1) <flags> -o $@ $<"
+	@$(CPP) $(CPPFLAGS) $< | $(PREPROC) -i -g $(ASSETS_DIR_NAME) $< charmap.txt | $(CC1) $(CFLAGS) -o - - | cat - <(echo -e ".text\n\t.align\t2, 0") | $(AS) $(ASFLAGS) -o $@ -
+else
+	@$(CPP) $(CPPFLAGS) $< -o $(C_BUILDDIR)/$*.i
+	@$(PREPROC) -g $(ASSETS_DIR_NAME) $(C_BUILDDIR)/$*.i charmap.txt | $(CC1) $(CFLAGS) -o $(C_BUILDDIR)/$*.s
+	@echo -e ".text\n\t.align\t2, 0\n" >> $(C_BUILDDIR)/$*.s
+	$(AS) $(ASFLAGS) -o $@ $(C_BUILDDIR)/$*.s
+endif
+
+$(C_BUILDDIR)/%.d: $(C_SUBDIR)/%.c $(SCANINC)
+	$(SCANINC) -M $@ -g $(ASSETS_DIR_NAME) $(INCLUDE_SCANINC_ARGS) -I tools/agbcc/include $<
+
+ifneq ($(NODEP),1)
+-include $(ALL_TUTORS_JSON), $(ALL_TEACHING_TYPES_JSON),
+-include $(addprefix $(OBJ_DIR)/,$(C_SRCS:.c=.d))
+endif
+
+ifeq ($(TEST),1)
+$(TEST_BUILDDIR)/%.o: $(TEST_SUBDIR)/%.c
+	@echo "$(CC1) <flags> -o $@ $<"
+	@$(CPP) $(CPPFLAGS) $< | $(PREPROC) -i -g $(ASSETS_DIR_NAME) $< charmap.txt | $(CC1) $(CFLAGS) -o - - | cat - <(echo -e ".text\n\t.align\t2, 0") | $(AS) $(ASFLAGS) -o $@ -
+
+$(TEST_BUILDDIR)/%.d: $(TEST_SUBDIR)/%.c $(SCANINC)
+	$(SCANINC) -M $@ -g $(ASSETS_DIR_NAME) $(INCLUDE_SCANINC_ARGS) -I tools/agbcc/include $<
+
+ifneq ($(NODEP),1)
+-include $(addprefix $(OBJ_DIR)/,$(TEST_SRCS:.c=.d))
+endif
+endif
+
+$(ASM_BUILDDIR)/%.o: $(ASM_SUBDIR)/%.s
+	$(AS) $(ASFLAGS) -o $@ $<
+
+$(ASM_BUILDDIR)/%.d: $(ASM_SUBDIR)/%.s $(SCANINC)
+	$(SCANINC) -M $@ -g $(ASSETS_DIR_NAME) $(INCLUDE_SCANINC_ARGS) -I "" $<
+
+ifneq ($(NODEP),1)
+-include $(addprefix $(OBJ_DIR)/,$(ASM_SRCS:.s=.d))
+endif
+
+$(C_BUILDDIR)/%.o: $(C_SUBDIR)/%.s
+	$(PREPROC) $< charmap.txt | $(CPP) $(CPPFLAGS) $(INCLUDE_SCANINC_ARGS) - | $(PREPROC) -ie $< charmap.txt | $(AS) $(ASFLAGS) -o $@
+
+$(C_BUILDDIR)/%.d: $(C_SUBDIR)/%.s $(SCANINC)
+	$(SCANINC) -M $@ -g $(ASSETS_DIR_NAME) $(INCLUDE_SCANINC_ARGS) -I "" $<
+
+ifneq ($(NODEP),1)
+-include $(addprefix $(OBJ_DIR)/,$(C_ASM_SRCS:.s=.d))
+endif
+
+$(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s
+	$(PREPROC) -s $< charmap.txt | $(CPP) $(CPPFLAGS) $(INCLUDE_SCANINC_ARGS) - | $(PREPROC) -ie $< charmap.txt | $(AS) $(ASFLAGS) -o $@
+
+$(DATA_ASM_BUILDDIR)/%.d: $(DATA_ASM_SUBDIR)/%.s $(SCANINC)
+	$(SCANINC) -M $@ -g $(ASSETS_DIR_NAME) $(INCLUDE_SCANINC_ARGS) -I "" $<
+
+ifneq ($(NODEP),1)
+-include $(addprefix $(OBJ_DIR)/,$(DATA_ASM_SRCS:.s=.d))
+endif
+
+$(OBJ_DIR)/sym_bss.ld: sym_bss.txt
+	$(RAMSCRGEN) .bss $< ENGLISH > $@
+
+$(OBJ_DIR)/sym_common.ld: sym_common.txt $(C_OBJS) $(wildcard common_syms/*.txt)
+	$(RAMSCRGEN) COMMON $< ENGLISH -c $(C_BUILDDIR),common_syms > $@
+
+$(OBJ_DIR)/sym_ewram.ld: sym_ewram.txt
+	$(RAMSCRGEN) ewram_data $< ENGLISH > $@
+
+TEACHABLE_DEPS := $(ALL_LEARNABLES_JSON) $(INCLUDE_DIRS)/constants/tms_hms.h $(INCLUDE_DIRS)/config/pokemon.h $(DATA_SRC_SUBDIR)/pokemon/special_movesets.json $(INCLUDE_DIRS)/config/pokedex_plus_hgss.h $(LEARNSET_HELPERS_DIR)/make_teachables.py
+
+$(LEARNSET_HELPERS_BUILD_DIR):
+	@mkdir -p $@
+
+$(ALL_LEARNABLES_JSON):
+	python3 $(LEARNSET_HELPERS_DIR)/make_learnables.py $(LEARNSET_HELPERS_DATA_DIR) $@
+
+$(ALL_TUTORS_JSON): $(shell find data/ -type f -name '*.inc')  $(LEARNSET_HELPERS_DIR)/make_tutors.py | $(LEARNSET_HELPERS_BUILD_DIR)
+	python3 $(LEARNSET_HELPERS_DIR)/make_tutors.py $@
+
+$(ALL_TEACHING_TYPES_JSON): $(wildcard $(DATA_SRC_SUBDIR)/pokemon/species_info/*_families.h)  $(LEARNSET_HELPERS_DIR)/make_teaching_types.py | $(LEARNSET_HELPERS_BUILD_DIR)
+	python3 $(LEARNSET_HELPERS_DIR)/make_teaching_types.py $@
+
+$(DATA_SRC_SUBDIR)/pokemon/teachable_learnsets.h: $(TEACHABLE_DEPS) | $(ALL_TUTORS_JSON) $(ALL_TEACHING_TYPES_JSON)
+	python3 $(LEARNSET_HELPERS_DIR)/make_teachables.py $(LEARNSET_HELPERS_BUILD_DIR)
+
+$(DATA_SRC_SUBDIR)/tutor_moves.h: $(DATA_SRC_SUBDIR)/pokemon/special_movesets.json | $(ALL_TUTORS_JSON)
+	python3 $(LEARNSET_HELPERS_DIR)/make_teachables.py  --tutors $(LEARNSET_HELPERS_BUILD_DIR)
+
+# Linker script
+LD_SCRIPT := ld_script_modern.ld
+
+# Final rules
+
+libagbsyscall:
+	@$(MAKE) -C libagbsyscall TOOLCHAIN=$(TOOLCHAIN) MODERN=1
+
+# Enable LTO LDFLAGS if set
+ifneq ($(LTO),0)
+LDFLAGS := -march=armv4t -mabi=apcs-gnu -mcpu=arm7tdmi -Xlinker -Map=../../$(MAP) -Xlinker --print-memory-usage -Xassembler -meabi=5 -Xassembler -march=armv4t -Xassembler -mcpu=arm7tdmi -Xlinker --gc-sections
+LDFLAGS += -Xlinker -flto=auto
+$(ELF): $(LD_SCRIPT) $(OBJS) libagbsyscall
+	@echo "cd $(OBJ_DIR) && $(ARMCC) $(LDFLAGS) -T ../../$< -o ../../$@ <objs> <libs>"
+	+@cd $(OBJ_DIR) && $(ARMCC) $(LDFLAGS) -T ../../$< -o ../../$@ $(OBJS_REL) $(LIB)
+	$(FIX) $@ -t"$(TITLE)" -c$(GAME_CODE) -m$(MAKER_CODE) -r$(REVISION) --silent
+else
+# Output .map file, memory usage readout and gc sections to clean-up unused data
+LDFLAGS = -Map ../../$(MAP) --print-memory-usage --gc-sections
+$(ELF): $(LD_SCRIPT) $(OBJS) libagbsyscall
+	@cd $(OBJ_DIR) && $(LD) $(LDFLAGS) -T ../../$<  -o ../../$@ $(OBJS_REL) $(LIB) | cat
+	@echo "cd $(OBJ_DIR) && $(LD) $(LDFLAGS) -T ../../$< -o ../../$@ <objs> <libs> | cat"
+	$(FIX) $@ -t"$(TITLE)" -c$(GAME_CODE) -m$(MAKER_CODE) -r$(REVISION) --silent
+endif
+
+# Builds the rom from the elf file
+$(ROM): $(ELF)
+	$(OBJCOPY) -O binary $< $@
+	$(FIX) $@ -p --silent
+
+emerald: all
+firered: all
+leafgreen: all
+# Symbol file (`make syms`)
+$(SYM): $(ELF)
+	$(OBJDUMP) -t $< | sort -u | grep -E "^0[2389]" | $(PERL) -p -e 's/^(\w{8}) (\w).{6} \S+\t(\w{8}) (\S+)$$/\1 \2 \3 \4/g' > $@

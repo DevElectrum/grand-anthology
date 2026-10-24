@@ -1,0 +1,314 @@
+#include "global.h"
+#include "daycare.h"
+#include "event_data.h"
+#include "mail.h"
+#include "malloc.h"
+#include "party_menu.h"
+#include "pokemon.h"
+#include "regions.h"
+#include "test/overworld_script.h"
+#include "test/test.h"
+
+// We don't run the StoreSelectedPokemonInDaycare special because it relies on calling the
+// party select screen and the GetCursorSelectionMonId function, so we store directly to the struct.
+#define STORE_IN_DAYCARE_AND_GET_EGG()                                          \
+    StorePokemonInDaycare(&gParties[B_TRAINER_PLAYER][0], &gSaveBlock1Ptr->daycare.mons[0]);  \
+    StorePokemonInDaycare(&gParties[B_TRAINER_PLAYER][0], &gSaveBlock1Ptr->daycare.mons[1]);  \
+    RUN_OVERWORLD_SCRIPT( special GiveEggFromDaycare; );
+
+TEST("(Daycare) Pokémon generate Eggs of the lowest member of the evolutionary family")
+{
+    u32 parent = 0, offspring = 0;
+
+    PARAMETRIZE { parent = SPECIES_PIKACHU;   offspring = SPECIES_PICHU; }
+    PARAMETRIZE { parent = SPECIES_RAICHU;    offspring = SPECIES_PICHU; }
+    PARAMETRIZE { parent = SPECIES_VENUSAUR;  offspring = SPECIES_BULBASAUR; }
+    PARAMETRIZE { parent = SPECIES_BEAUTIFLY; offspring = SPECIES_WURMPLE; }
+    PARAMETRIZE { parent = SPECIES_DUSTOX;    offspring = SPECIES_WURMPLE; }
+    PARAMETRIZE { parent = SPECIES_GARDEVOIR; offspring = SPECIES_RALTS; }
+
+    ASSUME(IsSpeciesEnabled(parent) == TRUE);
+    ASSUME(IsSpeciesEnabled(offspring) == TRUE);
+
+    ZeroPlayerPartyMons();
+    VarSet(VAR_0x8000, parent);
+    RUN_OVERWORLD_SCRIPT(
+        givemon VAR_0x8000, 100, gender=MON_MALE;
+        givemon VAR_0x8000, 100, gender=MON_FEMALE;
+    );
+    STORE_IN_DAYCARE_AND_GET_EGG();
+
+    EXPECT_EQ(GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_SPECIES), offspring);
+}
+
+TEST("(Daycare) Male-only branched evolutions generate Eggs of the shared baby")
+{
+    u32 parent = 0;
+
+    PARAMETRIZE { parent = SPECIES_HITMONLEE; }
+    PARAMETRIZE { parent = SPECIES_HITMONCHAN; }
+    PARAMETRIZE { parent = SPECIES_HITMONTOP; }
+
+    ASSUME(IsSpeciesEnabled(parent) == TRUE);
+    ASSUME(IsSpeciesEnabled(SPECIES_TYROGUE) == TRUE);
+    ASSUME(IsSpeciesEnabled(SPECIES_DITTO) == TRUE);
+
+    ZeroPlayerPartyMons();
+    VarSet(VAR_0x8000, parent);
+    RUN_OVERWORLD_SCRIPT(
+        givemon VAR_0x8000, 100;
+        givemon SPECIES_DITTO, 100;
+    );
+    STORE_IN_DAYCARE_AND_GET_EGG();
+
+    EXPECT_EQ(GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_SPECIES), SPECIES_TYROGUE);
+}
+
+TEST("(Daycare) GetSpeciesPreEvolution keeps the first enabled predecessor")
+{
+    ASSUME(IsSpeciesEnabled(SPECIES_GHOLDENGO) == TRUE);
+    ASSUME(IsSpeciesEnabled(SPECIES_GIMMIGHOUL_CHEST) == TRUE);
+    ASSUME(IsSpeciesEnabled(SPECIES_GIMMIGHOUL_ROAMING) == TRUE);
+    EXPECT_LT(SPECIES_GIMMIGHOUL_CHEST, SPECIES_GIMMIGHOUL_ROAMING);
+    EXPECT_EQ(GetSpeciesPreEvolution(SPECIES_GHOLDENGO), SPECIES_GIMMIGHOUL_CHEST);
+}
+
+TEST("(Daycare) GetSpeciesPreEvolution skips disabled species")
+{
+    u32 species = 0;
+    enum Species pre;
+    u32 steps;
+
+    PARAMETRIZE { species = SPECIES_VENUSAUR; }
+    PARAMETRIZE { species = SPECIES_GHOLDENGO; }
+    PARAMETRIZE { species = SPECIES_NONE; }
+
+    pre = GetSpeciesPreEvolution(species);
+    if (!IsSpeciesEnabled(species))
+    {
+        EXPECT_EQ(pre, SPECIES_NONE);
+    }
+    else
+    {
+        for (steps = 0; pre != SPECIES_NONE && steps < 5; steps++)
+        {
+            EXPECT(IsSpeciesEnabled(pre) == TRUE);
+            species = pre;
+            pre = GetSpeciesPreEvolution(species);
+        }
+        EXPECT_EQ(pre, SPECIES_NONE);
+    }
+}
+
+TEST("(Daycare) Pokémon offspring species is based off the mother's species")
+{
+    u32 offspring = 0;
+    ASSUME(P_FAMILY_PIKACHU == TRUE);
+    ASSUME(P_GEN_2_CROSS_EVOS == TRUE);
+    ASSUME(P_FAMILY_RIOLU == TRUE);
+
+    ZeroPlayerPartyMons();
+    PARAMETRIZE { offspring = SPECIES_RIOLU; RUN_OVERWORLD_SCRIPT(givemon SPECIES_PIKACHU, 100, gender=MON_MALE;   givemon SPECIES_LUCARIO, 100, gender=MON_FEMALE, item=ITEM_NONE;     ); }
+    PARAMETRIZE { offspring = SPECIES_PICHU; RUN_OVERWORLD_SCRIPT(givemon SPECIES_PIKACHU, 100, gender=MON_FEMALE; givemon SPECIES_LUCARIO, 100, gender=MON_MALE;); }
+    STORE_IN_DAYCARE_AND_GET_EGG();
+
+    EXPECT_EQ(GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_SPECIES), offspring);
+}
+
+TEST("(Daycare) Pokémon can breed with Ditto if they don't belong to the Ditto or No Eggs Discovered group")
+{
+    u32 j = 0;
+    u32 parentSpecies = 0;
+    u32 seenGroups = 0;
+
+    ZeroPlayerPartyMons();
+    // One enabled species per egg group, not every species. Each case runs
+    // givemon + StorePokemonInDaycare + GiveEggFromDaycare; PARAMETRIZE over
+    // NUM_SPECIES parked that work on one hydra runner for ~8 minutes with no
+    // result line, and GitHub SIGTERM'd `make check` (PR #242 / master after #236).
+    for (j = 1; j < NUM_SPECIES; j++)
+    {
+        u32 group;
+        if (!IsSpeciesEnabled(j))
+            continue;
+        group = gSpeciesInfo[j].eggGroups[0];
+        if (group > EGG_GROUP_NO_EGGS_DISCOVERED)
+            continue;
+        if (seenGroups & (1u << group))
+            continue;
+        seenGroups |= (1u << group);
+        PARAMETRIZE { parentSpecies = j; }
+    }
+    VarSet(VAR_TEMP_C, parentSpecies);
+    RUN_OVERWORLD_SCRIPT(
+        givemon SPECIES_DITTO, 100; givemon VAR_TEMP_C, 100;
+    );
+    STORE_IN_DAYCARE_AND_GET_EGG();
+
+    if (gSpeciesInfo[parentSpecies].eggGroups[0] != EGG_GROUP_NO_EGGS_DISCOVERED
+     && gSpeciesInfo[parentSpecies].eggGroups[0] != EGG_GROUP_DITTO)
+        EXPECT_NE(GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_SPECIES), SPECIES_NONE);
+    else
+        EXPECT_EQ(GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_SPECIES), SPECIES_NONE);
+}
+
+TEST("(Daycare) Shellos' form is always based on the mother's form")
+{
+    u32 offspring = 0;
+    ASSUME(P_FAMILY_MEOWTH == TRUE);
+    ASSUME(P_ALOLAN_FORMS == TRUE);
+    ASSUME(P_GALARIAN_FORMS == TRUE);
+
+    ZeroPlayerPartyMons();
+    PARAMETRIZE { offspring = SPECIES_SHELLOS_WEST; RUN_OVERWORLD_SCRIPT(givemon SPECIES_SHELLOS_EAST, 1, gender=MON_MALE; givemon SPECIES_SHELLOS_WEST, 1, gender=MON_FEMALE, item=ITEM_NONE;     ); }
+    PARAMETRIZE { offspring = SPECIES_SHELLOS_WEST; RUN_OVERWORLD_SCRIPT(givemon SPECIES_SHELLOS_EAST, 1, gender=MON_MALE, item=ITEM_EVERSTONE; givemon SPECIES_SHELLOS_WEST, 1, gender=MON_FEMALE, item=ITEM_NONE;     ); }
+    PARAMETRIZE { offspring = SPECIES_SHELLOS_WEST; RUN_OVERWORLD_SCRIPT(givemon SPECIES_SHELLOS_EAST, 1, gender=MON_MALE; givemon SPECIES_SHELLOS_WEST, 1, gender=MON_FEMALE, item=ITEM_EVERSTONE;); }
+    PARAMETRIZE { offspring = SPECIES_SHELLOS_EAST; RUN_OVERWORLD_SCRIPT(givemon SPECIES_SHELLOS_WEST, 1, gender=MON_MALE; givemon SPECIES_SHELLOS_EAST, 1, gender=MON_FEMALE, item=ITEM_NONE;     ); }
+    PARAMETRIZE { offspring = SPECIES_SHELLOS_EAST; RUN_OVERWORLD_SCRIPT(givemon SPECIES_SHELLOS_WEST, 1, gender=MON_MALE, item=ITEM_EVERSTONE; givemon SPECIES_SHELLOS_EAST, 1, gender=MON_FEMALE, item=ITEM_NONE;     ); }
+    PARAMETRIZE { offspring = SPECIES_SHELLOS_EAST; RUN_OVERWORLD_SCRIPT(givemon SPECIES_SHELLOS_WEST, 1, gender=MON_MALE; givemon SPECIES_SHELLOS_EAST, 1, gender=MON_FEMALE, item=ITEM_EVERSTONE;); }
+    STORE_IN_DAYCARE_AND_GET_EGG();
+
+    EXPECT_EQ(GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_SPECIES), offspring);
+}
+
+TEST("(Daycare) Pokémon with regional forms give the correct offspring")
+{
+    u32 region = 0, offspring = 0, species1 = 0, item1 = 0, species2 = 0, item2 = 0;
+
+    ZeroPlayerPartyMons();
+
+    region = GetCurrentRegion();
+    if (region == REGION_ALOLA) {
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_ALOLA;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_ALOLA;  item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_ALOLA;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_ALOLA;  item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_ALOLA;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR;  item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR;  item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_ALOLA;  species1=SPECIES_DIGLETT;       item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR;  item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_DIGLETT;       item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR;  item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_PERRSERKER;    item1=ITEM_EVERSTONE; species2=SPECIES_PERSIAN;       item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH;        species1=SPECIES_PERRSERKER;    item1=ITEM_EVERSTONE; species2=SPECIES_PERSIAN;       item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH;        species1=SPECIES_PERSIAN_ALOLA; item1=ITEM_EVERSTONE; species2=SPECIES_PERSIAN;       item2=ITEM_EVERSTONE; }
+    } else if (region == REGION_GALAR) {
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_ALOLA;  item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_ALOLA;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_ALOLA;  item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR;  item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR;  item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_DIGLETT;       item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR;  item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_DIGLETT;       item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR;  item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_PERRSERKER;    item1=ITEM_EVERSTONE; species2=SPECIES_PERSIAN;       item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH;        species1=SPECIES_PERRSERKER;    item1=ITEM_EVERSTONE; species2=SPECIES_PERSIAN;       item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH;        species1=SPECIES_PERSIAN_ALOLA; item1=ITEM_EVERSTONE; species2=SPECIES_PERSIAN;       item2=ITEM_EVERSTONE; }
+    } else {
+        PARAMETRIZE { offspring=SPECIES_MEOWTH;        species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_ALOLA,  item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_ALOLA;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_ALOLA,  item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH;        species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR,  item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_MEOWTH;        item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR,  item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH;        species1=SPECIES_DIGLETT;       item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR,  item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_DIGLETT;       item1=ITEM_NONE;      species2=SPECIES_MEOWTH_GALAR,  item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH_GALAR;  species1=SPECIES_PERRSERKER;    item1=ITEM_EVERSTONE; species2=SPECIES_PERSIAN,       item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH;        species1=SPECIES_PERRSERKER;    item1=ITEM_EVERSTONE; species2=SPECIES_PERSIAN,       item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_MEOWTH;        species1=SPECIES_PERSIAN_ALOLA; item1=ITEM_EVERSTONE; species2=SPECIES_PERSIAN,       item2=ITEM_EVERSTONE; }
+    }
+
+    if (region == REGION_HISUI) {
+        PARAMETRIZE { offspring=SPECIES_SNEASEL_HISUI; species1=SPECIES_SNEASEL;       item1=ITEM_NONE;      species2=SPECIES_SNEASEL_HISUI, item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_SNEASEL;       species1=SPECIES_SNEASEL;       item1=ITEM_EVERSTONE; species2=SPECIES_SNEASEL_HISUI, item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_SNEASEL_HISUI; species1=SPECIES_SNEASEL;       item1=ITEM_NONE;      species2=SPECIES_SNEASEL_HISUI, item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_SNEASEL;       species1=SPECIES_SNEASLER;      item1=ITEM_EVERSTONE; species2=SPECIES_WEAVILE,       item2=ITEM_EVERSTONE; }
+    } else {
+        PARAMETRIZE { offspring=SPECIES_SNEASEL;       species1=SPECIES_SNEASEL;       item1=ITEM_NONE;      species2=SPECIES_SNEASEL_HISUI, item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_SNEASEL;       species1=SPECIES_SNEASEL;       item1=ITEM_EVERSTONE; species2=SPECIES_SNEASEL_HISUI, item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_SNEASEL_HISUI; species1=SPECIES_SNEASEL;       item1=ITEM_NONE;      species2=SPECIES_SNEASEL_HISUI, item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_SNEASEL;       species1=SPECIES_SNEASLER;      item1=ITEM_EVERSTONE; species2=SPECIES_WEAVILE,       item2=ITEM_EVERSTONE; }
+    }
+
+    if (region == REGION_PALDEA) {
+        PARAMETRIZE { offspring=SPECIES_WOOPER_PALDEA; species1=SPECIES_WOOPER;        item1=ITEM_NONE;      species2=SPECIES_WOOPER_PALDEA, item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_WOOPER;        species1=SPECIES_WOOPER;        item1=ITEM_EVERSTONE; species2=SPECIES_WOOPER_PALDEA, item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_WOOPER_PALDEA; species1=SPECIES_WOOPER;        item1=ITEM_NONE;      species2=SPECIES_WOOPER_PALDEA, item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_WOOPER;        species1=SPECIES_CLODSIRE;      item1=ITEM_EVERSTONE; species2=SPECIES_QUAGSIRE,      item2=ITEM_EVERSTONE; }
+    } else {
+        PARAMETRIZE { offspring=SPECIES_WOOPER;        species1=SPECIES_WOOPER;        item1=ITEM_NONE;      species2=SPECIES_WOOPER_PALDEA, item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_WOOPER;        species1=SPECIES_WOOPER;        item1=ITEM_EVERSTONE; species2=SPECIES_WOOPER_PALDEA, item2=ITEM_NONE;      }
+        PARAMETRIZE { offspring=SPECIES_WOOPER_PALDEA; species1=SPECIES_WOOPER;        item1=ITEM_NONE;      species2=SPECIES_WOOPER_PALDEA, item2=ITEM_EVERSTONE; }
+        PARAMETRIZE { offspring=SPECIES_WOOPER;        species1=SPECIES_CLODSIRE;      item1=ITEM_EVERSTONE; species2=SPECIES_QUAGSIRE,      item2=ITEM_EVERSTONE; }
+    }
+    ASSUME(IsSpeciesEnabled(species1) == TRUE);
+    ASSUME(IsSpeciesEnabled(species2) == TRUE);
+    ASSUME(IsSpeciesEnabled(offspring) == TRUE);
+
+    VarSet(VAR_0x8000, species1);
+    VarSet(VAR_0x8001, item1);
+    VarSet(VAR_0x8002, species2);
+    VarSet(VAR_0x8003, item2);
+
+    RUN_OVERWORLD_SCRIPT(givemon VAR_0x8000, 1, gender=MON_MALE,   item=VAR_0x8001;);
+    RUN_OVERWORLD_SCRIPT(givemon VAR_0x8002, 1, gender=MON_FEMALE, item=VAR_0x8003;);
+
+    STORE_IN_DAYCARE_AND_GET_EGG();
+
+    EXPECT_EQ(GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_SPECIES), offspring);
+}
+
+TEST("(Daycare) StorePokemonInDaycare copies in-range mail and clears the slot")
+{
+    u8 mailId = 0;
+    u16 heldItem = ITEM_ORANGE_MAIL;
+
+    ASSUME(ItemIsMail(ITEM_ORANGE_MAIL));
+    ASSUME(MAIL_COUNT > 0);
+
+    ZeroPlayerPartyMons();
+    ClearMail(&gSaveBlock1Ptr->mail[0]);
+    gSaveBlock1Ptr->mail[0].itemId = ITEM_ORANGE_MAIL;
+    gSaveBlock1Ptr->mail[0].words[0] = 0x1234;
+    memset(&gSaveBlock1Ptr->daycare.mons[0], 0, sizeof(struct DaycareMon));
+
+    RUN_OVERWORLD_SCRIPT(givemon SPECIES_WOBBUFFET, 5;);
+    SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_HELD_ITEM, &heldItem);
+    SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_MAIL, &mailId);
+
+    StorePokemonInDaycare(&gParties[B_TRAINER_PLAYER][0], &gSaveBlock1Ptr->daycare.mons[0]);
+
+    EXPECT_EQ(gSaveBlock1Ptr->daycare.mons[0].mail.message.itemId, ITEM_ORANGE_MAIL);
+    EXPECT_EQ(gSaveBlock1Ptr->daycare.mons[0].mail.message.words[0], 0x1234);
+    EXPECT_EQ(gSaveBlock1Ptr->mail[0].itemId, ITEM_NONE);
+    EXPECT_EQ(GetBoxMonData(&gSaveBlock1Ptr->daycare.mons[0].mon, MON_DATA_HELD_ITEM), ITEM_NONE);
+}
+
+TEST("(Daycare) StorePokemonInDaycare rejects out-of-range mailId")
+{
+    u32 mailId = 0;
+    u8 mailIdByte;
+    u16 heldItem = ITEM_ORANGE_MAIL;
+    u32 i;
+
+    // MAIL_COUNT is 16; MAIL_NONE is 0xFF. Cover the open range the issue called out.
+    PARAMETRIZE { mailId = MAIL_COUNT; }
+    PARAMETRIZE { mailId = MAIL_COUNT + 1; }
+    PARAMETRIZE { mailId = 127; }
+    PARAMETRIZE { mailId = MAIL_NONE - 1; }
+
+    ASSUME(ItemIsMail(ITEM_ORANGE_MAIL));
+    ASSUME(MAIL_NONE == 0xFF);
+    ASSUME(mailId >= MAIL_COUNT && mailId != MAIL_NONE);
+
+    ZeroPlayerPartyMons();
+    memset(&gSaveBlock1Ptr->daycare.mons[0], 0, sizeof(struct DaycareMon));
+    for (i = 0; i < MAIL_COUNT; i++)
+        ClearMail(&gSaveBlock1Ptr->mail[i]);
+    gSaveBlock1Ptr->mail[0].itemId = ITEM_RETRO_MAIL;
+    gSaveBlock1Ptr->mail[MAIL_COUNT - 1].itemId = ITEM_FAB_MAIL;
+
+    RUN_OVERWORLD_SCRIPT(givemon SPECIES_WOBBUFFET, 5;);
+    mailIdByte = mailId;
+    SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_HELD_ITEM, &heldItem);
+    SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_MAIL, &mailIdByte);
+
+    StorePokemonInDaycare(&gParties[B_TRAINER_PLAYER][0], &gSaveBlock1Ptr->daycare.mons[0]);
+
+    EXPECT_EQ(gSaveBlock1Ptr->mail[0].itemId, ITEM_RETRO_MAIL);
+    EXPECT_EQ(gSaveBlock1Ptr->mail[MAIL_COUNT - 1].itemId, ITEM_FAB_MAIL);
+    EXPECT_EQ(gSaveBlock1Ptr->daycare.mons[0].mail.message.itemId, ITEM_NONE);
+    EXPECT_EQ(GetBoxMonData(&gSaveBlock1Ptr->daycare.mons[0].mon, MON_DATA_HELD_ITEM), ITEM_NONE);
+}

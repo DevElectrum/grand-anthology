@@ -1,0 +1,220 @@
+{
+  "id": "MAP_MT_SILVER_OUTSIDE",
+  "name": "MtSilver_Outside",
+  "layout": "LAYOUT_MT_SILVER_OUTSIDE",
+  "music": "MUS_HG_LIGHTHOUSE",
+  "region_map_section": "MAPSEC_MT_SILVER",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_CITY",
+  "allow_cycling": true,
+  "allow_escaping": true,
+  "allow_running": false,
+  "show_map_name": true,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": [
+    {
+      "map": "MAP_ROUTE28",
+      "offset": 6,
+      "direction": "right"
+    }
+  ],
+  "object_events": [
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(URSARING)",
+      "x": 9,
+      "y": 26,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_NIGHT_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(GOLEM)",
+      "x": 34,
+      "y": 12,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(SKARMORY)",
+      "x": 8,
+      "y": 27,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_DAY_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(RAPIDASH)",
+      "x": 13,
+      "y": 8,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_SEQUENCE_DOWN_RIGHT_UP_LEFT",
+      "movement_range_x": 3,
+      "movement_range_y": 3,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_DAY_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(VENUSAUR)",
+      "x": 16,
+      "y": 8,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(DONPHAN)",
+      "x": 12,
+      "y": 11,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_SEQUENCE_UP_LEFT_DOWN_RIGHT",
+      "movement_range_x": 3,
+      "movement_range_y": 3,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_DAY_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(CHARIZARD)",
+      "x": 35,
+      "y": 26,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_NIGHT_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(GOLEM)",
+      "x": 9,
+      "y": 27,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_NIGHT_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(RAPIDASH)",
+      "x": 14,
+      "y": 17,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_NIGHT_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(VENUSAUR)",
+      "x": 15,
+      "y": 18,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_NIGHT_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(CHARIZARD)",
+      "x": 12,
+      "y": 10,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_SEQUENCE_RIGHT_UP_LEFT_DOWN",
+      "movement_range_x": 3,
+      "movement_range_y": 3,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_NIGHT_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(URSARING)",
+      "x": 12,
+      "y": 9,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_SEQUENCE_LEFT_DOWN_RIGHT_UP",
+      "movement_range_x": 3,
+      "movement_range_y": 3,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_NIGHT_POKEMON"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(GOLEM)",
+      "x": 24,
+      "y": 15,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NULL",
+      "flag": "FLAG_DAY_POKEMON"
+    }
+  ],
+  "warp_events": [
+    {
+      "x": 17,
+      "y": 7,
+      "elevation": 0,
+      "dest_map": "MAP_MT_SILVER_1F_WATERFALL_ROOM",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 25,
+      "y": 14,
+      "elevation": 0,
+      "dest_map": "MAP_MT_SILVER_POKEMON_CENTER",
+      "dest_warp_id": "0"
+    }
+  ],
+  "coord_events": [],
+  "bg_events": [
+    {
+      "type": "sign",
+      "x": 15,
+      "y": 9,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "MtSilver_Outside_EventScript_Sign"
+    }
+  ]
+}

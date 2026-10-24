@@ -1,0 +1,73 @@
+#ifndef GUARD_REGIONS_H
+#define GUARD_REGIONS_H
+
+#include "global.h"
+#include "constants/regions.h"
+
+struct ScriptContext;
+
+enum KantoSubRegion GetKantoSubregion(u32 mapSecId);
+
+static inline enum Region GetRegionForSectionId(u32 sectionId)
+{
+    // MAPSEC_SPECIAL_AREA is deliberately EXCLUDED from Kanto here — it tags only the
+    // region-agnostic FRLG link rooms. (KANTO_MAPSEC_END is defined INCLUSIVE of it for the
+    // map-name-popup discard range; the two intentionally differ.) Never assign a Kanto
+    // single-player map to MAPSEC_SPECIAL_AREA, or it will misclassify as REGION_HOENN.
+    if (sectionId >= KANTO_MAPSEC_START && sectionId < MAPSEC_SPECIAL_AREA)
+        return REGION_KANTO;
+    // Region merge (Johto port): Johto MAPSEC block sits at the enum tail.
+    if (sectionId >= JOHTO_MAPSEC_START && sectionId <= JOHTO_MAPSEC_END)
+        return REGION_JOHTO;
+    return REGION_HOENN;
+}
+
+static inline enum Region GetCurrentRegion(void)
+{
+    return GetRegionForSectionId(gMapHeader.regionMapSectionId);
+}
+
+// Region-switch (World Transit hub). gCurrentRegion is the explicit active-campaign
+// context the hub sets when travelling; GetCurrentRegion() above stays the map-derived
+// source of truth. See src/region_switch.c.
+extern enum Region gCurrentRegion;
+void SetCurrentRegion(enum Region region);
+
+// Hoenn Route 101: TRUE if either party or shared PC can accept Birch's
+// starter. Called before the rescue script mutates progression flags.
+void Route101_ScrCanReceiveStarter(struct ScriptContext *ctx);
+
+// Region-switch helpers (defined in src/region_switch.c).
+// World Transit travel preserves the carried party; it never deposits automatically.
+// IsNRegionChampion: TRUE once the player has cleared at least n regions' leagues.
+bool8 IsNRegionChampion(u8 n);
+void SyncDifficultyForRegion(enum Region region);
+bool8 IsRegionChampion(enum Region region);
+// Re-seed the volatile EWRAM gCurrentRegion from the current map on field load (skips the hub).
+void ResyncCurrentRegionFromMap(void);
+// Hub attendant destination gate: the target region's first badge alone unlocks its later
+// World Transit arrival point; before that, the attendant returns the player to their home.
+void RegionHub_ScrTargetHasFirstBadge(struct ScriptContext *ctx);
+// Refresh Johto's two day/night HIDE flags from the RTC. Called from both map loaders, from the
+// per-minute overworld tick, and on Continue. Returns TRUE if a flag moved, i.e. the objects
+// currently spawned no longer match the clock.
+bool32 UpdateJohtoDayNightFlags(void);
+// Latch/clear/run the object refresh that a flag move implies. TryRefresh runs every overworld
+// frame and is a single bool test unless a refresh is actually owed.
+void RequestJohtoDayNightRefresh(void);
+void ClearJohtoDayNightRefresh(void);
+void TryRefreshJohtoDayNightObjects(void);
+
+#if ALL_REGIONS
+// The active-campaign region: the region whose badges/obedience govern the traveling party.
+// This is the persisted SaveBlock2.currentRegion (mirrored at runtime by gCurrentRegion),
+// set at each hub gate-cross and restored on load. It is DISTINCT from GetCurrentRegion()
+// above, which derives the region of the map you are currently standing on (the two differ
+// only inside the hub). Prefer this accessor for "which campaign am I in" reads.
+static inline enum Region GetActiveRegion(void)
+{
+    return gCurrentRegion;
+}
+#endif // ALL_REGIONS
+
+#endif // GUARD_REGIONS_H

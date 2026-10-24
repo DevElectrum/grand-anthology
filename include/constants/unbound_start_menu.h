@@ -1,0 +1,24 @@
+#ifndef GUARD_CONSTANTS_UNBOUND_START_MENU_H
+#define GUARD_CONSTANTS_UNBOUND_START_MENU_H
+
+enum PACKED Usm_Icons {
+    USM_ICO_POKEDEX,
+    USM_ICO_PARTY,
+    USM_ICO_BAG,
+    USM_ICO_POKENAV,
+    USM_ICO_DEXNAV,
+    USM_ICO_TRAINER,
+    USM_ICO_QUESTS,
+    USM_ICO_SAVE,
+    USM_ICO_REST,
+    USM_ICO_OPTIONS,
+    USM_ICO_RETIRE,
+    USM_ICO_DEBUG,
+    // P0 player Cheats icon reuses the former developer-only numeric slot.
+    // Keep this alias and the 12-entry count: Usm_SavedItems lives in flash,
+    // and adding an actual enum slot here silently breaks save layout.
+    USM_ICO_CHEATS = USM_ICO_DEBUG,
+    USM_ICO_COUNT
+};
+
+#endif // GUARD_CONSTANTS_UNBOUND_START_MENU_H

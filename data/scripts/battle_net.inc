@@ -1,0 +1,428 @@
+@ Battle Net victory hook (issue #4 -> #5). Every leader / Elite Four / Champion REMATCH victory
+@ calls this with VAR_0x8004 = the trainer id that was just defeated (set by each of the 41 call
+@ sites; do NOT rely on post-battle globals -- ResetTrainerOpponentIds() makes them unreliable).
+@
+@ Issue #5 (Battle Net + Mega Economy P1) attaches the rewards HERE, not at the 41 sites:
+@   - TryBattleNetRematchReward self-gates on DIFFICULTY_HARD (the 5 Hoenn league sites also fire
+@     on FIRST clears) and looks the trainer up in sBattleNetRewards (src/battle_net.c).
+@   - Shards pay out on every qualifying win: VAR_0x8006 = shard item, VAR_0x8007 = count.
+@   - A signature mega stone drops once per leader: VAR_0x8008 (and VAR_0x8009 for the Kanto
+@     champion trio's Mewtwonite X/Y). The guard flag is set via ClaimBattleNetStone only AFTER a
+@     confirmed give, so a full bag leaves it reclaimable (the World Championship Cap idiom).
+@ Stays a call-safe subroutine ending in return; a no-op on the Hoenn first-clear paths.
+BattleNet_EventScript_OnLeaderRematchWin::
+	special TryBattleNetRematchReward
+	goto_if_eq VAR_RESULT, 0, BattleNet_EventScript_RewardDone
+	checkitemspace VAR_0x8006, VAR_0x8007
+	goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_ShardsForfeited
+	giveitem VAR_0x8006, VAR_0x8007
+BattleNet_EventScript_TryStone:
+	compare VAR_0x8008, ITEM_NONE
+	goto_if_eq BattleNet_EventScript_TryStone2
+	giveitem VAR_0x8008
+	goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_StonePending
+	setvar VAR_0x8005, 1
+	special ClaimBattleNetStone
+BattleNet_EventScript_TryStone2:
+	compare VAR_0x8009, ITEM_NONE
+	goto_if_eq BattleNet_EventScript_RewardDone
+	giveitem VAR_0x8009
+	goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_StonePending
+	setvar VAR_0x8005, 2
+	special ClaimBattleNetStone
+BattleNet_EventScript_RewardDone:
+	return
+
+BattleNet_EventScript_StonePending:
+	msgbox BattleNet_Text_StonePending, MSGBOX_DEFAULT
+	return
+
+@ Shards are forfeited, not held: owed-count state would need a SaveBlock field and v6 is frozen.
+@ The stone give below still runs -- it has its own pending/reclaim path.
+BattleNet_EventScript_ShardsForfeited:
+	msgbox BattleNet_Text_ShardsForfeited, MSGBOX_DEFAULT
+	goto BattleNet_EventScript_TryStone
+
+BattleNet_Text_ShardsForfeited:
+	.string "Your BAG is full, so today's SHARD\n"
+	.string "payout was forfeited.\p"
+	.string "Make room before your next rematch.$"
+
+BattleNet_Text_StonePending:
+	.string "The Battle Net is holding a MEGA STONE\n"
+	.string "for you, but your BAG is full.\p"
+	.string "Make room and win here again to claim it.$"
+
+@ ---------- The sim terminal (Scaling Type Trainer + Leader Sim) ----------
+@ ONE entry point, on all 50 maps: the wall terminal beside the storage PC on every
+@ POKéMON CENTER 1F, both League lobbies, One Island, the Battle Frontier centre and
+@ the hub. The three shapes this used to have -- a Johto floor NPC, two Hoenn/Kanto 2F
+@ counter attendants, and the hub's own console -- are gone with issue #59, and so are
+@ the 2Fs they stood on.
+@ Sim battles are Battle Tower-type: full EXP (issue #15), no money, no whiteout; the party is healed
+@ before and after every sim, so the simulation never strands a fainted party.
+@ DoBattleNetSimBattle returns VAR_RESULT 0 when it refused to launch (no battle-ready
+@ mon / empty pool) -- in that case there is NO battle, so the script must NOT waitstate.
+@ `lock`, not `lockall`. ScrCmd_lockall only unfreezes the follower behind
+@ FLAG_SAFE_FOLLOWER_MOVEMENT, which nothing sets in a Center lobby, so a follower
+@ would stand frozen through every terminal dialogue; ScrCmd_lock unfreezes it
+@ unconditionally. Never set FLAG_SAFE_FOLLOWER_MOVEMENT here -- this path enters a
+@ battle, and a non-linear exit would leak a global follower-movement permission into
+@ unrelated scripts. bg_event + `lock` + no `faceplayer` + `release` is the majority
+@ sign idiom in this repo, and it makes the shared TerminalBye exit correct for the
+@ sign form too.
+BattleNet_EventScript_Terminal::
+	lock
+	msgbox BattleNet_Text_TerminalIntro, MSGBOX_DEFAULT
+BattleNet_EventScript_TerminalMenu:
+	multichoice 0, 0, MULTI_BNET_SIM_MENU, FALSE
+	switch VAR_RESULT
+	case 0, BattleNet_EventScript_Scaling
+	case 1, BattleNet_EventScript_LeaderSim
+@ `release`, not `releaseall`, and it is now correct for a different reason than it used
+@ to be. It was `release` because the NPC forms entered through `lock` + `faceplayer` and
+@ only `release` clears the held movement `faceplayer` sets -- under `releaseall` the
+@ attendant stayed turned toward the player forever. There is no attendant any more, but
+@ the sign form enters through the same `lock`, so `release` is still the matching exit.
+BattleNet_EventScript_TerminalBye::
+	msgbox BattleNet_Text_TerminalBye, MSGBOX_DEFAULT
+	release
+	end
+
+@ Type picker subroutine: three 6-type pages in sBnetTypes order (src/battle_net.c).
+@ Out: VAR_RESULT = 1 and VAR_0x8005 = type ordinal 0..17, or VAR_RESULT = 0 (cancelled).
+@ In each page index 6 turns the page and anything higher (EXIT / B press) cancels.
+BattleNet_EventScript_PickType::
+	multichoice 0, 0, MULTI_BNET_TYPE_1, FALSE
+	goto_if_eq VAR_RESULT, 6, BattleNet_EventScript_PickType2
+	goto_if_ge VAR_RESULT, 7, BattleNet_EventScript_PickTypeCancel
+	copyvar VAR_0x8005, VAR_RESULT
+	setvar VAR_RESULT, 1
+	return
+BattleNet_EventScript_PickType2:
+	multichoice 0, 0, MULTI_BNET_TYPE_2, FALSE
+	goto_if_eq VAR_RESULT, 6, BattleNet_EventScript_PickType3
+	goto_if_ge VAR_RESULT, 7, BattleNet_EventScript_PickTypeCancel
+	copyvar VAR_0x8005, VAR_RESULT
+	addvar VAR_0x8005, 6
+	setvar VAR_RESULT, 1
+	return
+BattleNet_EventScript_PickType3:
+	multichoice 0, 0, MULTI_BNET_TYPE_3, FALSE
+	goto_if_eq VAR_RESULT, 6, BattleNet_EventScript_PickType
+	goto_if_ge VAR_RESULT, 7, BattleNet_EventScript_PickTypeCancel
+	copyvar VAR_0x8005, VAR_RESULT
+	addvar VAR_0x8005, 12
+	setvar VAR_RESULT, 1
+	return
+BattleNet_EventScript_PickTypeCancel:
+	setvar VAR_RESULT, 0
+	return
+
+@ Scaling Type Trainer: pick a type, fight 2-4 of it a few levels below the party
+@ average. Win: 1 BP + a 30% shard drop (checkitemspace-guarded like the rematch payout).
+@ Entry from the combined menu, so a cancelled type pick goes back to that menu.
+BattleNet_EventScript_Scaling::
+	call BattleNet_EventScript_PickType
+	goto_if_eq VAR_RESULT, 0, BattleNet_EventScript_TerminalMenu
+	call BattleNet_EventScript_ScalingRun
+	msgbox BattleNet_Text_AnotherMatch, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, YES, BattleNet_EventScript_Scaling
+	goto BattleNet_EventScript_TerminalBye
+
+@ One match, launch to payout. In: VAR_0x8005 = type ordinal from PickType.
+@ Shared by both entry points so the BP/shard payout has exactly one copy, while each
+@ caller keeps its own cancel and retry targets -- which is the whole point of the split.
+@ The Battle Frontier battle rooms drive a battle from inside a `call` the same way.
+BattleNet_EventScript_ScalingRun::
+	setvar VAR_0x8004, BNET_MODE_SCALING
+	special HealPlayerParty
+	special DoBattleNetSimBattle
+	goto_if_eq VAR_RESULT, 0, BattleNet_EventScript_SimCantStart
+	waitstate
+	special HealPlayerParty
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_ne VAR_RESULT, B_OUTCOME_WON, BattleNet_EventScript_ScalingLost
+	setvar VAR_0x8005, 1
+	special AddBattleNetPoints
+	@ VAR_RESULT = BP actually applied; 0 means the 9999 cap ate the award - say so.
+	goto_if_eq VAR_RESULT, 0, BattleNet_EventScript_ScalingWonCapped
+	msgbox BattleNet_Text_ScalingWon, MSGBOX_DEFAULT
+BattleNet_EventScript_ScalingShardRoll:
+	special GiveBattleNetRandomShard
+	compare VAR_0x8008, ITEM_NONE
+	goto_if_eq BattleNet_EventScript_ScalingDone
+	checkitemspace VAR_0x8008, 1
+	goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_ScalingShardForfeit
+	giveitem VAR_0x8008
+BattleNet_EventScript_ScalingDone:
+	return
+BattleNet_EventScript_ScalingWonCapped:
+	msgbox BattleNet_Text_ScalingWonCapped, MSGBOX_DEFAULT
+	goto BattleNet_EventScript_ScalingShardRoll
+BattleNet_EventScript_ScalingLost:
+	msgbox BattleNet_Text_SimBeatYou, MSGBOX_DEFAULT
+	return
+BattleNet_EventScript_ScalingShardForfeit:
+	msgbox BattleNet_Text_ShardDropForfeited, MSGBOX_DEFAULT
+	return
+BattleNet_EventScript_SimCantStart:
+	msgbox BattleNet_Text_SimCantStart, MSGBOX_DEFAULT
+	release
+	end
+
+@ Leader Sim: rerun any gym leader's HARD rematch as a simulation. BP only -- the
+@ shard/stone economy stays on the real gym visits (no couch-farming). Gated per
+@ region on that region's championship. The 24 per-leader stubs exist because a
+@ trainerbattle target is a compile-time constant.
+BattleNet_EventScript_LeaderSim::
+	setvar VAR_0x8004, BNET_MODE_SCALING
+	special CheckBattleNetRuleParty
+	goto_if_eq VAR_RESULT, 0, BattleNet_EventScript_SimCantStart
+BattleNet_EventScript_LeaderRegion:
+	multichoice 0, 0, MULTI_BNET_REGION, FALSE
+	switch VAR_RESULT
+	case 0, BattleNet_EventScript_LeaderHoenn
+	case 1, BattleNet_EventScript_LeaderJohto
+	case 2, BattleNet_EventScript_LeaderKanto
+	goto BattleNet_EventScript_TerminalBye
+
+BattleNet_EventScript_LeaderHoenn::
+	goto_if_unset FLAG_HOENN_CHAMPION, BattleNet_EventScript_LeaderNotChampion
+BattleNet_EventScript_LeaderHoenn1:
+	multichoice 0, 0, MULTI_BNET_LEADER_H1, FALSE
+	switch VAR_RESULT
+	case 0, BattleNet_EventScript_SimRoxanne
+	case 1, BattleNet_EventScript_SimBrawly
+	case 2, BattleNet_EventScript_SimWattson
+	case 3, BattleNet_EventScript_SimFlannery
+	case 4, BattleNet_EventScript_LeaderHoenn2
+	goto BattleNet_EventScript_LeaderRegion
+BattleNet_EventScript_LeaderHoenn2:
+	multichoice 0, 0, MULTI_BNET_LEADER_H2, FALSE
+	switch VAR_RESULT
+	case 0, BattleNet_EventScript_SimNorman
+	case 1, BattleNet_EventScript_SimWinona
+	case 2, BattleNet_EventScript_SimTateLiza
+	case 3, BattleNet_EventScript_SimJuan
+	case 4, BattleNet_EventScript_LeaderHoenn1
+	goto BattleNet_EventScript_LeaderRegion
+
+BattleNet_EventScript_LeaderJohto::
+	goto_if_unset FLAG_JOHTO_CHAMPION, BattleNet_EventScript_LeaderNotChampion
+BattleNet_EventScript_LeaderJohto1:
+	multichoice 0, 0, MULTI_BNET_LEADER_J1, FALSE
+	switch VAR_RESULT
+	case 0, BattleNet_EventScript_SimFalkner
+	case 1, BattleNet_EventScript_SimBugsy
+	case 2, BattleNet_EventScript_SimWhitney
+	case 3, BattleNet_EventScript_SimMorty
+	case 4, BattleNet_EventScript_LeaderJohto2
+	goto BattleNet_EventScript_LeaderRegion
+BattleNet_EventScript_LeaderJohto2:
+	multichoice 0, 0, MULTI_BNET_LEADER_J2, FALSE
+	switch VAR_RESULT
+	case 0, BattleNet_EventScript_SimChuck
+	case 1, BattleNet_EventScript_SimJasmine
+	case 2, BattleNet_EventScript_SimPryce
+	case 3, BattleNet_EventScript_SimClair
+	case 4, BattleNet_EventScript_LeaderJohto1
+	goto BattleNet_EventScript_LeaderRegion
+
+BattleNet_EventScript_LeaderKanto::
+	goto_if_unset FLAG_KANTO_CHAMPION, BattleNet_EventScript_LeaderNotChampion
+BattleNet_EventScript_LeaderKanto1:
+	multichoice 0, 0, MULTI_BNET_LEADER_K1, FALSE
+	switch VAR_RESULT
+	case 0, BattleNet_EventScript_SimBrock
+	case 1, BattleNet_EventScript_SimMisty
+	case 2, BattleNet_EventScript_SimSurge
+	case 3, BattleNet_EventScript_SimErika
+	case 4, BattleNet_EventScript_LeaderKanto2
+	goto BattleNet_EventScript_LeaderRegion
+BattleNet_EventScript_LeaderKanto2:
+	multichoice 0, 0, MULTI_BNET_LEADER_K2, FALSE
+	switch VAR_RESULT
+	case 0, BattleNet_EventScript_SimKoga
+	case 1, BattleNet_EventScript_SimBlaine
+	case 2, BattleNet_EventScript_SimSabrina
+	case 3, BattleNet_EventScript_SimGiovanni
+	case 4, BattleNet_EventScript_LeaderKanto1
+	goto BattleNet_EventScript_LeaderRegion
+
+BattleNet_EventScript_LeaderNotChampion:
+	msgbox BattleNet_Text_LeaderNotChampion, MSGBOX_DEFAULT
+	goto BattleNet_EventScript_LeaderRegion
+
+@ Pre-battle setup shared by all 24 stubs. VAR_TEMP_1 holds the difficulty to
+@ restore; safe because nothing else runs between setup and SimBattleResult
+@ (FLAG_BNET_NO_WHITEOUT keeps a loss from whiting out and reloading the map).
+BattleNet_EventScript_SimBattleSetup::
+	copyvar VAR_TEMP_1, VAR_DIFFICULTY
+	setvar VAR_DIFFICULTY, DIFFICULTY_HARD
+	setflag FLAG_BNET_NO_WHITEOUT
+	special HealPlayerParty
+	return
+
+@ Both win AND loss land here: with FLAG_BNET_NO_WHITEOUT set, a defeat returns to
+@ this script instead of whiting out, so the difficulty restore always runs.
+BattleNet_EventScript_SimBattleResult::
+	copyvar VAR_DIFFICULTY, VAR_TEMP_1
+	clearflag FLAG_BNET_NO_WHITEOUT
+	special HealPlayerParty
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_ne VAR_RESULT, B_OUTCOME_WON, BattleNet_EventScript_SimLost
+	setvar VAR_0x8005, 2
+	special AddBattleNetPoints
+	goto_if_eq VAR_RESULT, 0, BattleNet_EventScript_SimWonCapped
+	msgbox BattleNet_Text_SimWon, MSGBOX_DEFAULT
+	goto BattleNet_EventScript_SimAgain
+BattleNet_EventScript_SimWonCapped:
+	msgbox BattleNet_Text_SimWonCapped, MSGBOX_DEFAULT
+	goto BattleNet_EventScript_SimAgain
+BattleNet_EventScript_SimLost:
+	msgbox BattleNet_Text_SimBeatYou, MSGBOX_DEFAULT
+BattleNet_EventScript_SimAgain:
+	msgbox BattleNet_Text_AnotherMatch, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, YES, BattleNet_EventScript_LeaderRegion
+	goto BattleNet_EventScript_TerminalBye
+
+BattleNet_EventScript_SimRoxanne::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_ROXANNE_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimBrawly::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_BRAWLY_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimWattson::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_WATTSON_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimFlannery::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_FLANNERY_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimNorman::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_NORMAN_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimWinona::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_WINONA_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimTateLiza::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_TATE_AND_LIZA_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimJuan::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_JUAN_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+
+BattleNet_EventScript_SimFalkner::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_FALKNER_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimBugsy::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_BUGSY_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimWhitney::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_WHITNEY_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimMorty::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_MORTY_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimChuck::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_CHUCK_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimJasmine::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_JASMINE_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimPryce::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_PRYCE_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimClair::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_CLAIR_1, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+
+BattleNet_EventScript_SimBrock::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_LEADER_BROCK, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimMisty::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_LEADER_MISTY, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimSurge::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_LEADER_LT_SURGE, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimErika::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_LEADER_ERIKA, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimKoga::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_LEADER_KOGA, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimBlaine::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_LEADER_BLAINE, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimSabrina::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_LEADER_SABRINA, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+BattleNet_EventScript_SimGiovanni::
+	call BattleNet_EventScript_SimBattleSetup
+	trainerbattle_no_intro_no_reveal TRAINER_LEADER_GIOVANNI, BattleNet_Text_SimLossQuote
+	goto BattleNet_EventScript_SimBattleResult
+
+@ ---------- P3 texts ----------
+BattleNet_Text_TerminalIntro:
+	.string "BATTLE NET TERMINAL\n"
+	.string "READY.\p"
+	.string "Sim battles pay full EXP. No money\n"
+	.string "at stake, party restored after.$"
+BattleNet_Text_TerminalBye:
+	.string "LOGGING OFF.\n"
+	.string "The BATTLE NET thanks you!$"
+BattleNet_Text_SimCantStart:
+	.string "ERROR: no battle-ready POKéMON\n"
+	.string "detected in your party.$"
+BattleNet_Text_ScalingWon:
+	.string "SIMULATION COMPLETE - you win!\n"
+	.string "1 BATTLE POINT awarded.$"
+BattleNet_Text_ScalingWonCapped:
+	.string "SIMULATION COMPLETE - you win!\p"
+	.string "…but your BP CASE is maxed out\n"
+	.string "at 9,999. No BP added.$"
+BattleNet_Text_SimBeatYou:
+	.string "SIMULATION COMPLETE - the sim\n"
+	.string "takes this one. No BP this time.$"
+BattleNet_Text_ShardDropForfeited:
+	.string "A bonus SHARD popped out, but your\n"
+	.string "BAG is full. It was forfeited.$"
+BattleNet_Text_AnotherMatch:
+	.string "Run another simulation?$"
+BattleNet_Text_LeaderNotChampion:
+	.string "Only that region's CHAMPION may run\n"
+	.string "its LEADER SIMS.$"
+BattleNet_Text_SimWon:
+	.string "SIMULATION COMPLETE - you win!\n"
+	.string "2 BATTLE POINTS awarded.$"
+BattleNet_Text_SimWonCapped:
+	.string "SIMULATION COMPLETE - you win!\p"
+	.string "…but your BP CASE is maxed out\n"
+	.string "at 9,999. No BP added.$"
+BattleNet_Text_SimLossQuote:
+	.string "The simulation flickers off…\p"
+	.string "Better luck next run!$"

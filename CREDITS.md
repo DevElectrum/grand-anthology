@@ -1,0 +1,492 @@
+# Pokémon Grand Anthology: credits and upstream acknowledgments
+
+**This project is a modification, not the origin of the three-region game.**
+The entire original Pokémon World credit record is retained **without removing contributors**
+below. [Pokémon World](https://github.com/evilchinesefood/PKMN-World), led by **David A.**
+([@evilchinesefood](https://github.com/evilchinesefood)), provides the integrated Kanto,
+Johto, Hoenn and World Transit adventure. Additional original work belongs to
+[RHH / pokeemerald-expansion](https://github.com/rh-hideout/pokeemerald-expansion),
+[pret / pokeemerald](https://github.com/pret/pokeemerald),
+[Pokémon Heart & Soul](https://github.com/PokemonHnS-Development/pokemonHnS),
+and all the other people and communities recorded below.
+
+**Grand Anthology additions:** an independent hobby enthusiast sets direction,
+requirements and product choices. Much of its additional code, source integration,
+tests, documentation and iteration has been produced with OpenAI's **ChatGPT**.
+This acknowledgment is not a claim that ChatGPT or the maintainer created
+the original engine, regional art, dialogue, music, story or existing feature ports.
+
+Credits do not imply endorsement. Preserve each inherited copyright notice
+and file-specific license. This project's source publication is not a blanket
+license for Pokémon intellectual property, community artwork, or third-party code.
+
+---
+
+## Preserved Pokémon World credits (historical document)
+
+# Pokémon World — Credits
+
+**Pokémon World** is a GBA ROM hack built on
+[pokeemerald-expansion](https://github.com/rh-hideout/pokeemerald-expansion).
+It merges three complete regions — **Kanto, Johto, and Hoenn** — into one game,
+together with a curated set of features ported from several community projects.
+This file credits everyone whose work makes the project possible — the project
+lead, the base engine and its contributors, and the authors of every region and
+feature merged in from other ROM-hack bases.
+
+If you build on Pokémon World, please carry these credits forward, and credit
+**RHH (Rom Hacking Hideout)** for the underlying engine.
+
+---
+
+## Project lead
+
+- **David A.** ([@evilchinesefood](https://github.com/evilchinesefood)) — author and
+  lead developer of Pokémon World. Project integration, feature porting/merging,
+  configuration, and ongoing development.
+  Repo: [evilchinesefood/PKMN-World](https://github.com/evilchinesefood/PKMN-World).
+
+---
+
+## Base engine
+
+Pokémon World is built on:
+
+- **[pokeemerald-expansion](https://github.com/rh-hideout/pokeemerald-expansion)** by
+  **RHH (Rom Hacking Hideout)** and its many contributors — the feature-rich base that
+  provides modern battle mechanics, Pokémon, abilities, items, moves, and the bulk of
+  the quality-of-life systems. Pokémon World tracks upstream **1.16.4 dev** (master
+  `82598c4d88`, 2026-08-23; `EXPANSION_VERSION_MAJOR`/`MINOR`/`PATCH` in
+  `include/constants/expansion.h`).
+- **[pret/pokeemerald](https://github.com/pret/pokeemerald)** by **pret** — the original
+  Pokémon Emerald decompilation that pokeemerald-expansion (and therefore this project)
+  is built on top of.
+
+The full list of pokeemerald-expansion contributors is preserved in the
+[pokeemerald-expansion contributors](#pokeemerald-expansion-contributors) table below.
+
+Upstream work arrives here by merge, so several expansion authors also appear directly in this
+repository's own `git shortlog`. Four of them are not in the preserved table above, because it is
+a snapshot of upstream's own all-contributors file rather than a live roll of this repo. Their
+commits are in this build and are credited here:
+
+- **GGbond** — Orichalcum Pulse / Hadron Engine activation messages and ability flags, and
+  Commander edge cases with multi battles, switching and gimmicks
+  ([#10395](https://github.com/rh-hideout/pokeemerald-expansion/pull/10395),
+  [#10366](https://github.com/rh-hideout/pokeemerald-expansion/pull/10366),
+  [#10317](https://github.com/rh-hideout/pokeemerald-expansion/pull/10317))
+- **PhallenTree** — bounced moves not activating some effects, and Dragon Darts after-hit messages
+  ([#10386](https://github.com/rh-hideout/pokeemerald-expansion/pull/10386),
+  [#10315](https://github.com/rh-hideout/pokeemerald-expansion/pull/10315))
+- **Thales Castro** — single-target moves hitting all foes in the shared shadow animation, and a
+  duplicate CANCEL entry in the move relearner list
+  ([#10369](https://github.com/rh-hideout/pokeemerald-expansion/pull/10369),
+  [#10368](https://github.com/rh-hideout/pokeemerald-expansion/pull/10368))
+- **Andrew Strauss** — flicker when moving a Pokémon from box to party
+  ([#10313](https://github.com/rh-hideout/pokeemerald-expansion/pull/10313))
+
+**Alex** ([AlexOn1ine](https://github.com/AlexOn1ine)) and **Miriam**
+([miriamlefae](https://github.com/miriamlefae)) also appear in this repo's history and are already
+credited — Alex in the table above, Miriam as the author of the graphical start menu below.
+
+To regenerate this list after an upstream sync: `git shortlog -sn HEAD`.
+
+---
+
+## Merged-in regions, features & their sources
+
+Everything below is present in the shipped game, and all of it is enabled except where a
+section says otherwise (the quest engine was compiled out on 2026-07-27, and the map pop-up
+has several styles of which one is selected — see those sections). Credit goes to the original
+authors and the bases the content was ported from.
+
+### Johto region — PokemonHnS-Development/pokemonHnS
+
+The entire Johto campaign — 251 maps with layouts, tilesets, and event scripts,
+231 trainer parties, wild-encounter tables, the Johto town map, and the full story
+through the Johto League and Mt. Silver — was ported from
+**[PokemonHnS-Development/pokemonHnS](https://github.com/PokemonHnS-Development/pokemonHnS)**
+("Pokémon Heart & Soul"), a pokeemerald-based Johto remake.
+
+HnS is not merely an influence on this project's Johto content — it is its **upstream**.
+The Johto assets in the shipped ROM are HnS's own files, unmodified. Every Johto tileset
+that exists in both trees is md5-identical across all of its files — `johto_general`,
+`johto_building`, `ecruteak_city` (and its gym), `goldenrod` (and its station, game corner,
+department store and three underground sets), `burned_tower`, `whirl_islands`, the three
+`ruins_of_alph_*` sets, `national_park`, `ilex_forest`, `lighthouse`, `cave_ice`,
+`mt_silver_snow`, `johto_day_care`, and `mahogany_town_gym` — matching file for file even where
+this tree renamed the directory, as are the Johto region map in both its Poké Nav and Pokédex
+copies and the Johto door animations. (`johto_day_care` is HnS's `pokemon_day_care`, which HnS
+rebuilt as a 202-metatile Johto interior set; it is imported here under a new name because this
+tree also still ships the 68-metatile Hoenn `pokemon_day_care` that Route 117's day care needs.
+It backs the Goldenrod City Flower Shop and the Route 34 Day Care.
+`mahogany_town_gym` is the same story: it is HnS's `sootopolis_gym`, which HnS rebuilt from
+Hoenn's 122-metatile version into a 200-metatile set holding Pryce's ice-puzzle gym, and it is
+imported here under a new name because this tree still ships — and still needs — the original
+122-metatile `sootopolis_gym` for Sootopolis City Gym 1F and B1F. It backs the Mahogany Town
+Gym.)
+The Johto map scripts are near-identical, most differing from HnS's by only a handful of
+lines out of several hundred.
+
+- **The Pokémon Heart & Soul development team and contributors** — authors of the
+  Johto maps, scripts, data, engine pieces, and trainer portrait art this port is built from, including
+  the Ruins of Alph sliding-puzzle engine, the National Park Bug-Catching Contest
+  engine, and the Johto roamer routes.
+  - **Lil Dill** — HnS lead developer and game director.
+  - **TixoRebel**, **InfiniteBacon42**, **Exclsior**, **Phantonomy**, **DaniRainbow** —
+    HnS developers.
+
+#### Pass-through credits from Heart & Soul
+
+Because that art ships here unchanged, the credits HnS gives to its own sources are owed by
+this project too. The following is passed through from HnS's
+[credits section](https://github.com/PokemonHnS-Development/pokemonHnS#credits); where this
+list and theirs disagree, theirs is the authority, and it should be followed on to the
+original sources.
+
+- **Tilesets** — **Crystal Advance** (*Kertra*), **Ekat99**, **TheDeadHeroAlistair**, and the
+  **Johto Redrawn Team**. This is the art this project ships byte-for-byte.
+- **Johto badge sheet** — `graphics/trainer_card/johto/badges.png` (Zephyr through Rising, as
+  drawn on the trainer card's JOHTO page) is HnS's own `graphics/trainer_card/badges.png`,
+  re-encoded from 8-bit to 4-bit indexed with its palette and every pixel index preserved.
+- **Eusine art** — `graphics/trainers/front_pics/eusine.png` is HnS's own front pic, shipped
+  byte-for-byte. `graphics/object_events/pics/people/eusine.png` and
+  `graphics/object_events/palettes/eusine.pal` are HnS's overworld sprite and palette; the
+  sprite was re-encoded from 8-bit to 4-bit indexed with its palette and every pixel index
+  preserved, and the palette ships unchanged.
+- **Johto overworld cast** — the overworld sprites and palettes for the eight Johto gym
+  leaders, Will, Karen, Professor Elm, Kurt, the Kimono Girl, Janine, the four Team
+  Rocket executives, the Sage and the Firebreather are HnS's own
+  `graphics/object_events/pics/people/` and `graphics/object_events/palettes/` files. So are
+  the nine-frame walking sheets that replace this project's three-frame FRLG stills for
+  Brock, Misty, Lt. Surge, Erika, Sabrina, Blaine and Lance. Where HnS stores a sheet 8-bit
+  indexed it was re-encoded to 4-bit with its palette and every pixel index preserved —
+  `gbagfx` output from HnS's file and from ours is byte-identical. Every palette ships
+  unchanged.
+- **Johto trainer front pics** — `archer`, `ariana`, `petrel`, `proton`, `firebreather`,
+  `sage`, `sage_leader`, `kimono_girl` and `officer` in `graphics/trainers/front_pics/` are
+  HnS's own front pics, shipped byte-for-byte apart from the same lossless 8-bit-to-4-bit
+  re-encode where HnS stored them 8-bit.
+- **Mapping references** — **Crystal Advance** (*Kertra*), **Fire Gold** (*blackfragrant*),
+  and **SkidMarc25**, credited by HnS for the maps carried over here.
+- **Sprites** — **Cesare_CBass**, **AveonTrainer**, **PurpleZaffre**, and **BatimaTheBat**,
+  credited by HnS for the sprite art this port's Johto trainer and overworld graphics derive
+  from.
+- **Trainer and encounter design** — **Crystal Legacy** by **TSP (TheSmithPlays)**, cited by
+  HnS as the basis for the trainer teams and wild encounters that came across with the Johto
+  campaign.
+- **Surfing Pokémon overworlds** — **slawter666** and **wally-217**. Listed for completeness:
+  HnS's surfable-Pokémon overworld set is *not* currently shipped here (this project's surf
+  mount uses the expansion's own follower sprites via `OW_SURF_USES_MON_SPRITE`). If that art
+  is imported later, the credit is already in place.
+- **Engine lineage** — **Modern Emerald** by **resetes12**, the pokeemerald base HnS is built
+  on, and so the base the Johto content was originally authored against. (Pokémon World itself
+  sits on pokeemerald-expansion — see [Base engine](#base-engine) above.)
+
+#### Johto music — HG/SS ports by Heart & Soul
+
+Johto's music is HnS's own work and ships here byte-for-byte. The 59 `MUS_HG_*` tracks
+(`sound/songs/midi/mus_hg_*.mid`, song ids 610–668) are md5-identical to HnS's files, and
+they are driven by HnS's **`voicegroup229`** — the HG/SS instrument bank — imported whole
+along with its 47 key-split sub-voicegroups, its 30 `KeySplitTable*` tables, and the 195
+instrument samples they reference. Every sample is HnS's own `.aif`, converted to `.wav`
+only because this tree dropped `aif2pcm` when upstream pokeemerald-expansion moved to
+`wav2agb` (PR #2213); the converter was validated by reproducing all 156 of this tree's own
+`aif`→`wav` conversions byte-for-byte before it was pointed at HnS's files, and the GBA
+sample data it yields is identical to what `aif2pcm` produced.
+
+These are HnS's arrangements of Junichi Masuda's, Go Ichinose's and Morikazu Aoki's
+Game Boy Color originals as re-scored for Nintendo DS in *HeartGold* and *SoulSilver*;
+the underlying compositions are Nintendo/Creatures/GAME FREAK's.
+
+As further HnS content lands here — NPC sprites, the badge sheet — extend
+this block rather than starting a new one.
+
+### Kanto region — FRLG content (pret lineage)
+
+The Kanto campaign uses the FireRed/LeafGreen maps, scripts, and trainer data
+bundled with the base engine, wired in Pokémon World into a live, completable
+campaign (runtime region checks, real FRLG trainer parties, gym leaders, Elite
+Four, and Champion Gary).
+
+- **[pret/pokefirered](https://github.com/pret/pokefirered)** by **pret** — the
+  FireRed/LeafGreen decompilation the bundled Kanto content derives from.
+- **[evilchinesefood/PKMN-FireRedDavesVersion](https://github.com/evilchinesefood/PKMN-FireRedDavesVersion)**
+  — the project lead's own FireRed hack, used as the Kanto story reference and as
+  the source of the **six-outfit palette-swap customization system**. Its colours
+  are now authored separately for each Brendan/May sprite.
+
+### Sword/Shield UI suite — montmoguri/pokeemerald-expansion
+
+The full SwSh-style interface — party menu, summary screen, PC storage system, bag/item
+menu, message/name box, and the Gen 8 map-name popup (the `GEN_8` arm of
+`OW_POPUP_GENERATION`) — was ported from
+**[montmoguri/pokeemerald-expansion](https://github.com/montmoguri/pokeemerald-expansion)**.
+
+- **Montblanc** ([montmoguri](https://github.com/montmoguri)) — primary author of the
+  SwSh UI suite. The selective menu refresh and its pinned donor commits are recorded
+  in [the #328 port notes](test/overworld/swsh-refresh/README.md).
+- **ShantyTown** — author of **comfy_anim**; **Archie** — introduced the library to
+  Montblanc, per the donor's [Bag documentation](https://github.com/montmoguri/pokeemerald-expansion/wiki/Sword-%26-Shield-Bag-Menu).
+- **Kasen** — Bag multi-use support; **Zatsu** — visual feedback; **PCG** — playtesting.
+  Existing component credits, including **RavePossum**, remain applicable.
+- **LOuroboros** and **FosterProgramming** — additional contributions to the SwSh UI
+  branches in that repo.
+- Built on top of the **pokeemerald-expansion** menu/storage/overworld systems (RHH and
+  contributors, credited above).
+
+### Black/White battle UI — Mudskip / mudskipper13
+
+- **Mudskip / Mudskipper** ([mudskipper13](https://github.com/mudskipper13)) — BW demake battle interface code, artwork, and outlined fonts. Selectively adapted from [feature/bwBattleUI at `b798929811ec7d070616c7ef47e46cfc6a7f1501`](https://github.com/mudskipper13/pokeemerald/tree/b798929811ec7d070616c7ef47e46cfc6a7f1501), retaining World's engine, gameplay and SwSh menus.
+- Built on **RHH/pokeemerald-expansion** and **pret/pokeemerald**; their credits and inherited source/asset notices remain in place.
+- The pinned donor tree has **no explicit standalone license found** for this component. The author's [public feature listing](https://github.com/TeamAquasHideout/Team-Aquas-Asset-Repo/wiki/Feature-Branches#bw-battle-ui) documents its provenance; no blanket MIT/CC license is claimed.
+
+### Ambient pond ripples — OriginalGRE inspiration
+
+- **[OriginalGRE](https://github.com/OriginalGRE/pokeemerald-expansion/tree/ambient_pond_ripples)** — behavioral inspiration for occasional rings on still ponds and rainy puddles.
+- World's implementation is independent and uses the existing ripple artwork and animation. No donor code or new artwork was imported. World adds private palette ownership, independent cosmetic randomness, and resource reclamation that yields to gameplay sprites.
+
+### Quests system — PokemonSanFran/pokeemerald
+
+*(No longer in the shipped ROM: the engine was compiled out on 2026-07-27, having never
+had content authored. The port and its credits remain part of the project's history.)*
+
+The quest menu UI, quest script commands, start-menu hook, SaveBlock3 quest schema, and
+complex quest branching (`OW_QUEST_BRANCHING`) derive from the quest feature in
+**[PokemonSanFran/pokeemerald](https://github.com/PokemonSanFran/pokeemerald)**.
+
+- **psf / Pokémon San Fran** ([pkmnsnfrn](https://github.com/pkmnsnfrn) ·
+  [linktr.ee/pkmnsnfrn](https://linktr.ee/pkmnsnfrn)) — original author of the quests
+  feature (the "unbound-quest-menu" work).
+- **RubyRaven6** ([Ruby](https://github.com/RubyRaven6)) and **Evan** —
+  additional quest fixes and changes in that repo.
+- The quest menu itself derives from **FireRed** quest-menu code, **ported from FireRed
+  by ghoulslash** (per the attribution comment retained in `src/quests.c`). That lineage
+  traces back to the Pokémon Unbound / Complete FireRed Upgrade quest menu by
+  **[Skeli](https://github.com/Skeli789)**
+  ([Complete-Fire-Red-Upgrade](https://github.com/Skeli789/Complete-Fire-Red-Upgrade)).
+
+### comfy_anim shared animation library
+
+- **ShantyTown** — library author; **Archie** — introduced it to Montblanc.
+- **Montblanc** ([montmoguri](https://github.com/montmoguri)) — integrated the library
+  into the SwSh suite from which World's easing/spring animation layer was ported.
+  Attribution follows the donor's [Bag documentation](https://github.com/montmoguri/pokeemerald-expansion/wiki/Sword-%26-Shield-Bag-Menu).
+
+### ORAS key-item registration wheel (`I_KEY_ITEM_WHEEL`)
+
+- ORAS-style SELECT registration wheel allowing up to four key items registered to the
+  D-Pad. Mechanic from **Pokémon Omega Ruby / Alpha Sapphire**, implemented on the
+  pokeemerald-expansion item/registered-item system (RHH and contributors).
+
+### Pokevial refillable party-heal key item (`POKEVIAL_FEATURE`)
+
+- Refillable party-heal vial key item, integrated with the SwSh party menu. Implemented
+  on the pokeemerald-expansion item and party-menu systems (RHH and contributors).
+
+### QOL HM / field-move item gate (`QOL_FIELD_MOVES_ITEM_GATE`)
+
+- Minimal HM / field-move item-gate behavior, gating field moves behind item possession.
+  Implemented on the pokeemerald-expansion field-move system (RHH and contributors).
+
+### Unbound-inspired graphical start menu — miriamlefae/pokeemerald-expansion
+
+The graphical start menu (sprite-icon entries, player-rearrangeable icons, day/night
+compatible), enabled via `PW_GRAPHICAL_START_MENU`, was ported from
+**[miriamlefae/pokeemerald-expansion](https://github.com/miriamlefae/pokeemerald-expansion)**
+(branch [`feat/usm/upcoming`](https://github.com/miriamlefae/pokeemerald-expansion/tree/feat/usm/upcoming)).
+Credits per that branch's README:
+
+- **Miriam** ([miriamlefae](https://github.com/miriamlefae)) — author of the
+  graphical start menu branch.
+- **Hedara** ([hedara90](https://github.com/hedara90)) — the sprite utility
+  functions in `even_sprite.c`.
+- **Vol** — the original icon sprites (taken from Vol's start menu).
+- **Brendan** — testing, bug fixes (battle pyramid and Safari Zone), and the
+  debug + Safari Zone icon assets from Brendan's fork of the branch.
+
+---
+
+### Follower Pokémon & day/night lighting — aarant
+
+- **aarant** — author of the **Overworld and Follower Pokémon** feature branch
+  ([followers-expanded-id](https://github.com/aarant/pokeemerald/tree/followers-expanded-id))
+  that powers the HGSS-style walking Pokémon, and of the **day/night lighting
+  system** ([lighting-expanded-id](https://github.com/aarant/pokeemerald/tree/lighting-expanded-id))
+  used for time-of-day palettes and window lights.
+
+### HGSS-style Pokédex & overworld debug menu — TheXaman
+
+- **TheXaman** — author of the **HGSS-style Pokédex Plus**
+  (`tx_pokedexPlus_hgss`, the game's live dex UI in `src/pokedex_plus_hgss.c`) and
+  the **overworld debug system** (`tx_debug_system`, `src/debug.c`) used throughout
+  development.
+
+### Additional feature branches
+
+- **ghoulslash** — **NPC followers** (`follow_me`), **obtained-item descriptions**,
+  and **saveblock cleansing** (in addition to the FireRed quest-menu port credited
+  under the Quests system above).
+- **BSBob** — **BW-style map pop-ups** (`bsbob_map_popups`, hosted by
+  [ravepossum](https://github.com/ravepossum/pokeemerald)). The Gen 5 pop-up arm is in the
+  tree; the shipped configuration selects the Gen 8 style
+  (`OW_POPUP_GENERATION GEN_8`, `include/config/overworld.h`).
+- **SBird1337** — **dynamic multichoice** (`dynmulti`).
+- **DizzyEggg** — **nature colors** on the summary screen (`nature_color`).
+
+### Bundled build tools
+
+- **YamaArashi** and the **pret** tool authors — the bundled build toolchain
+  (`gbagfx`, `scaninc`, `bin2c`, `preproc`, and friends; MIT — license files
+  retained in `tools/`), plus **gbafix** (GPLv3, `tools/gbafix/COPYING`).
+
+## Other Credits
+
+### Mega Evolution Overworld Sprite Credits
+
+- [princess-phoenix](https://www.deviantart.com/princess-phoenix)
+- [larryturbo](https://www.deviantart.com/larryturbo)
+- [kidkatt](https://www.deviantart.com/kidkatt)
+
+## Resources
+
+- [Sugimori Palettes and Sprites](https://www.pokecommunity.com/showthread.php?t=336945)
+- [DS Style Gen VI Sprites](https://www.pokecommunity.com/showthread.php?t=314422)
+- [Gen VII and Beyond Sprites](https://www.pokecommunity.com/showthread.php?t=368703)
+- Some icons ripped from [Pokemon Gaia](https://www.pokecommunity.com/showthread.php?t=326118)
+- [Data Files](https://www.pokecommunity.com/showthread.php?t=417909)
+- [Complete FireRed Upgrade](https://github.com/Skeli789/Complete-Fire-Red-Upgrade)
+- [pokeemerald](https://github.com/pret/pokeemerald/)
+
+---
+
+## pokeemerald-expansion contributors
+
+The table below is the upstream
+[pokeemerald-expansion](https://github.com/rh-hideout/pokeemerald-expansion) all-contributors
+list, preserved verbatim as required attribution for the RHH team. It follows the
+[all-contributors](https://github.com/all-contributors/allcontributors.org) specification
+([emoji key](https://allcontributors.org/en/reference/emoji-key/)).
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/AgustinGDLV"><img src="https://avatars.githubusercontent.com/u/103095241?v=4?s=100" width="100px;" alt="AgustinGDLV"/><br /><sub><b>AgustinGDLV</b></sub></a><br /><a href="#maintenance-AgustinGDLV" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=AgustinGDLV" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/AlexOn1ine"><img src="https://avatars.githubusercontent.com/u/93446519?v=4?s=100" width="100px;" alt="Alex"/><br /><sub><b>Alex</b></sub></a><br /><a href="#maintenance-AlexOn1ine" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=AlexOn1ine" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Bassoonian"><img src="https://avatars.githubusercontent.com/u/16993385?v=4?s=100" width="100px;" alt="Bassoonian"/><br /><sub><b>Bassoonian</b></sub></a><br /><a href="#maintenance-Bassoonian" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Bassoonian" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/DizzyEggg"><img src="https://avatars.githubusercontent.com/u/16259973?v=4?s=100" width="100px;" alt="DizzyEggg"/><br /><sub><b>DizzyEggg</b></sub></a><br /><a href="#maintenance-DizzyEggg" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=DizzyEggg" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ghoulslash"><img src="https://avatars.githubusercontent.com/u/41651341?v=4?s=100" width="100px;" alt="ghoulslash"/><br /><sub><b>ghoulslash</b></sub></a><br /><a href="#maintenance-ghoulslash" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=ghoulslash" title="Code">💻</a> <a href="#design-ghoulslash" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/hedara90"><img src="https://avatars.githubusercontent.com/u/149414898?v=4?s=100" width="100px;" alt="hedara90"/><br /><sub><b>hedara90</b></sub></a><br /><a href="#maintenance-hedara90" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=hedara90" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.martin-griffin.com/"><img src="https://avatars.githubusercontent.com/u/838573?v=4?s=100" width="100px;" alt="Martin Griffin"/><br /><sub><b>Martin Griffin</b></sub></a><br /><a href="#maintenance-mrgriffin" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=mrgriffin" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Pawkkie"><img src="https://avatars.githubusercontent.com/u/61265402?v=4?s=100" width="100px;" alt="Pawkkie"/><br /><sub><b>Pawkkie</b></sub></a><br /><a href="#maintenance-Pawkkie" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Pawkkie" title="Code">💻</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Pawkkie" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SBird1337"><img src="https://avatars.githubusercontent.com/u/3799173?v=4?s=100" width="100px;" alt="Philipp AUER"/><br /><sub><b>Philipp AUER</b></sub></a><br /><a href="#maintenance-SBird1337" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=SBird1337" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/tertu-m"><img src="https://avatars.githubusercontent.com/u/836640?v=4?s=100" width="100px;" alt="tertu"/><br /><sub><b>tertu</b></sub></a><br /><a href="#maintenance-tertu-m" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=tertu-m" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://linktr.ee/pkmnsnfrn"><img src="https://avatars.githubusercontent.com/u/77138753?v=4?s=100" width="100px;" alt="psf"/><br /><sub><b>psf</b></sub></a><br /><a href="#maintenance-pkmnsnfrn" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=pkmnsnfrn" title="Code">💻</a> <a href="#projectManagement-pkmnsnfrn" title="Project Management">📆</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/wiz1989"><img src="https://avatars.githubusercontent.com/u/80073265?v=4?s=100" width="100px;" alt="wiz1989"/><br /><sub><b>wiz1989</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=wiz1989" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/PCG06"><img src="https://avatars.githubusercontent.com/u/75729017?v=4?s=100" width="100px;" alt="PCG"/><br /><sub><b>PCG</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=PCG06" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kittenchilly"><img src="https://avatars.githubusercontent.com/u/23617175?v=4?s=100" width="100px;" alt="kittenchilly"/><br /><sub><b>kittenchilly</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=kittenchilly" title="Code">💻</a> <a href="#research-kittenchilly" title="Research">🔬</a> <a href="#data-kittenchilly" title="Data">🔣</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ExpoSeed"><img src="https://avatars.githubusercontent.com/u/43502820?v=4?s=100" width="100px;" alt="ExpoSeed"/><br /><sub><b>ExpoSeed</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=ExpoSeed" title="Code">💻</a> <a href="#maintenance-ExpoSeed" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/pulls?q=is%3Apr+reviewed-by%3AExpoSeed" title="Reviewed Pull Requests">👀</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LinathanZel"><img src="https://avatars.githubusercontent.com/u/35115312?v=4?s=100" width="100px;" alt="Linathan"/><br /><sub><b>Linathan</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=LinathanZel" title="Code">💻</a> <a href="#userTesting-LinathanZel" title="User Testing">📓</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/AsparagusEduardo"><img src="https://avatars.githubusercontent.com/u/2904965?v=4?s=100" width="100px;" alt="Eduardo Quezada"/><br /><sub><b>Eduardo Quezada</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=AsparagusEduardo" title="Code">💻</a> <a href="#data-AsparagusEduardo" title="Data">🔣</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=AsparagusEduardo" title="Documentation">📖</a> <a href="#infra-AsparagusEduardo" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-AsparagusEduardo" title="Maintenance">🚧</a> <a href="#projectManagement-AsparagusEduardo" title="Project Management">📆</a> <a href="#promotion-AsparagusEduardo" title="Promotion">📣</a> <a href="#research-AsparagusEduardo" title="Research">🔬</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/pulls?q=is%3Apr+reviewed-by%3AAsparagusEduardo" title="Reviewed Pull Requests">👀</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=AsparagusEduardo" title="Tests">⚠️</a> <a href="#tutorial-AsparagusEduardo" title="Tutorials">✅</a> <a href="#userTesting-AsparagusEduardo" title="User Testing">📓</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/khbsd"><img src="https://avatars.githubusercontent.com/u/26092020?v=4?s=100" width="100px;" alt="khbsd"/><br /><sub><b>khbsd</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=khbsd" title="Documentation">📖</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=khbsd" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Cafeei"><img src="https://avatars.githubusercontent.com/u/46283144?v=4?s=100" width="100px;" alt="Cafe"/><br /><sub><b>Cafe</b></sub></a><br /><a href="#design-Cafeei" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/agsmgmaster64"><img src="https://avatars.githubusercontent.com/u/67435611?v=4?s=100" width="100px;" alt="agsmgmaster64"/><br /><sub><b>agsmgmaster64</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=agsmgmaster64" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/RubyRaven6"><img src="https://avatars.githubusercontent.com/u/178652077?v=4?s=100" width="100px;" alt="Ruby"/><br /><sub><b>Ruby</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=RubyRaven6" title="Code">💻</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=RubyRaven6" title="Documentation">📖</a> <a href="#tool-RubyRaven6" title="Tools">🔧</a> <a href="#tutorial-RubyRaven6" title="Tutorials">✅</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mudskipper13"><img src="https://avatars.githubusercontent.com/u/105766191?v=4?s=100" width="100px;" alt="mudskipper13"/><br /><sub><b>mudskipper13</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=mudskipper13" title="Code">💻</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=mudskipper13" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/surskitty"><img src="https://avatars.githubusercontent.com/u/1383512?v=4?s=100" width="100px;" alt="surskitty"/><br /><sub><b>surskitty</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=surskitty" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/grintoul1"><img src="https://avatars.githubusercontent.com/u/166724814?v=4?s=100" width="100px;" alt="grintoul"/><br /><sub><b>grintoul</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=grintoul1" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/bassforte123"><img src="https://avatars.githubusercontent.com/u/130828119?v=4?s=100" width="100px;" alt="bassforte123"/><br /><sub><b>bassforte123</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=bassforte123" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/iriv24"><img src="https://avatars.githubusercontent.com/u/40581123?v=4?s=100" width="100px;" alt="iriv24"/><br /><sub><b>iriv24</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=iriv24" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Bivurnum"><img src="https://avatars.githubusercontent.com/u/147376167?v=4?s=100" width="100px;" alt="Bivurnum"/><br /><sub><b>Bivurnum</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Bivurnum" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Emiliasky"><img src="https://avatars.githubusercontent.com/u/48217459?v=4?s=100" width="100px;" alt="Emilia Daelman"/><br /><sub><b>Emilia Daelman</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Emiliasky" title="Code">💻</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Emiliasky" title="Tests">⚠️</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ravepossum"><img src="https://avatars.githubusercontent.com/u/145081120?v=4?s=100" width="100px;" alt="RavePossum"/><br /><sub><b>RavePossum</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=ravepossum" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/fakuzatsu"><img src="https://avatars.githubusercontent.com/u/118256341?v=4?s=100" width="100px;" alt="Zatsu"/><br /><sub><b>Zatsu</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=fakuzatsu" title="Code">💻</a> <a href="#design-fakuzatsu" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/poetahto"><img src="https://avatars.githubusercontent.com/u/11669335?v=4?s=100" width="100px;" alt="poetahto"/><br /><sub><b>poetahto</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=poetahto" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/lordraindance2"><img src="https://avatars.githubusercontent.com/u/47706100?v=4?s=100" width="100px;" alt="lordraindance2"/><br /><sub><b>lordraindance2</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=lordraindance2" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/pablopenna"><img src="https://avatars.githubusercontent.com/u/11214682?v=4?s=100" width="100px;" alt="Pablo Pena"/><br /><sub><b>Pablo Pena</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=pablopenna" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://tustin2121.github.io/"><img src="https://avatars.githubusercontent.com/u/794812?v=4?s=100" width="100px;" alt="tustin2121"/><br /><sub><b>tustin2121</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=tustin2121" title="Documentation">📖</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=tustin2121" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Ddaretrogamer"><img src="https://avatars.githubusercontent.com/u/131238004?v=4?s=100" width="100px;" alt="Phantonomy"/><br /><sub><b>Phantonomy</b></sub></a><br /><a href="#design-Ddaretrogamer" title="Design">🎨</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://metin2.dev/index.php"><img src="https://avatars.githubusercontent.com/u/42327659?v=4?s=100" width="100px;" alt="Enrico Drago"/><br /><sub><b>Enrico Drago</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Syreldar" title="Documentation">📖</a> <a href="#userTesting-Syreldar" title="User Testing">📓</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Pyredrid"><img src="https://avatars.githubusercontent.com/u/8324784?v=4?s=100" width="100px;" alt="Pyredrid"/><br /><sub><b>Pyredrid</b></sub></a><br /><a href="#userTesting-Pyredrid" title="User Testing">📓</a> <a href="#maintenance-Pyredrid" title="Maintenance">🚧</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Pyredrid" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mvit"><img src="https://avatars.githubusercontent.com/u/128863?v=4?s=100" width="100px;" alt="mv"/><br /><sub><b>mv</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=mvit" title="Code">💻</a> <a href="#design-mvit" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Mother-Of-Dragons"><img src="https://avatars.githubusercontent.com/u/31101124?v=4?s=100" width="100px;" alt="Avara"/><br /><sub><b>Avara</b></sub></a><br /><a href="#data-Mother-Of-Dragons" title="Data">🔣</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Doesnty"><img src="https://avatars.githubusercontent.com/u/6163136?v=4?s=100" width="100px;" alt="Doesnty"/><br /><sub><b>Doesnty</b></sub></a><br /><a href="#design-Doesnty" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/FosterProgramming"><img src="https://avatars.githubusercontent.com/u/178871164?v=4?s=100" width="100px;" alt="FosterProgramming"/><br /><sub><b>FosterProgramming</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=FosterProgramming" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Squeetz"><img src="https://avatars.githubusercontent.com/u/21145213?v=4?s=100" width="100px;" alt="Squeetz"/><br /><sub><b>Squeetz</b></sub></a><br /><a href="#maintenance-Squeetz" title="Maintenance">🚧</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ghostyboyy97"><img src="https://avatars.githubusercontent.com/u/106448956?v=4?s=100" width="100px;" alt="ghostyboyy97"/><br /><sub><b>ghostyboyy97</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=ghostyboyy97" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://hashtagmarky.github.io"><img src="https://avatars.githubusercontent.com/u/143505183?v=4?s=100" width="100px;" alt="Marky"/><br /><sub><b>Marky</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=HashtagMarky" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MandL27"><img src="https://avatars.githubusercontent.com/u/10366615?v=4?s=100" width="100px;" alt="MandL27"/><br /><sub><b>MandL27</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=MandL27" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/cawtds"><img src="https://avatars.githubusercontent.com/u/38510667?v=4?s=100" width="100px;" alt="cawtds"/><br /><sub><b>cawtds</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=cawtds" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/fdeblasio"><img src="https://avatars.githubusercontent.com/u/35279583?v=4?s=100" width="100px;" alt="Frank DeBlasio"/><br /><sub><b>Frank DeBlasio</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=fdeblasio" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://vriska.dev"><img src="https://avatars.githubusercontent.com/u/8355305?v=4?s=100" width="100px;" alt="leo60228"/><br /><sub><b>leo60228</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=leo60228" title="Documentation">📖</a> <a href="#data-leo60228" title="Data">🔣</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/shachar700"><img src="https://avatars.githubusercontent.com/u/48739719?v=4?s=100" width="100px;" alt="shachar700"/><br /><sub><b>shachar700</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=shachar700" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://purrfectdoodle.com"><img src="https://avatars.githubusercontent.com/u/105788407?v=4?s=100" width="100px;" alt="Eva"/><br /><sub><b>Eva</b></sub></a><br /><a href="#design-purrfectdoodle" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/amiosi"><img src="https://avatars.githubusercontent.com/u/44352097?v=4?s=100" width="100px;" alt="amiosi"/><br /><sub><b>amiosi</b></sub></a><br /><a href="#data-amiosi" title="Data">🔣</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mrdollsteak"><img src="https://avatars.githubusercontent.com/u/5975698?v=4?s=100" width="100px;" alt="mrdollsteak"/><br /><sub><b>mrdollsteak</b></sub></a><br /><a href="#data-mrdollsteak" title="Data">🔣</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/TheXaman"><img src="https://avatars.githubusercontent.com/u/48356183?v=4?s=100" width="100px;" alt="TheXaman"/><br /><sub><b>TheXaman</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=TheXaman" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ZnogyroP"><img src="https://avatars.githubusercontent.com/u/20970593?v=4?s=100" width="100px;" alt="ZnogyroP"/><br /><sub><b>ZnogyroP</b></sub></a><br /><a href="#design-ZnogyroP" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/luckytyphlosion"><img src="https://avatars.githubusercontent.com/u/10688458?v=4?s=100" width="100px;" alt="luckytyphlosion"/><br /><sub><b>luckytyphlosion</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=luckytyphlosion" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ShinyDragonHunter"><img src="https://avatars.githubusercontent.com/u/32826900?v=4?s=100" width="100px;" alt="Josh"/><br /><sub><b>Josh</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=ShinyDragonHunter" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Gamer2020"><img src="https://avatars.githubusercontent.com/u/6243575?v=4?s=100" width="100px;" alt="Gamer2020"/><br /><sub><b>Gamer2020</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Gamer2020" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SonikkuA-DatH"><img src="https://avatars.githubusercontent.com/u/58025603?v=4?s=100" width="100px;" alt="SonikkuA-DatH"/><br /><sub><b>SonikkuA-DatH</b></sub></a><br /><a href="#design-SonikkuA-DatH" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://jaizu.moe"><img src="https://avatars.githubusercontent.com/u/18596778?v=4?s=100" width="100px;" alt="Jaizu"/><br /><sub><b>Jaizu</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Jaizu" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/miriamlefae"><img src="https://avatars.githubusercontent.com/u/206095739?v=4?s=100" width="100px;" alt="Miriam"/><br /><sub><b>Miriam</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=miriamlefae" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Skeli789"><img src="https://avatars.githubusercontent.com/u/17243618?v=4?s=100" width="100px;" alt="Skeli"/><br /><sub><b>Skeli</b></sub></a><br /><a href="#design-Skeli789" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://hufford.io"><img src="https://avatars.githubusercontent.com/u/8021794?v=4?s=100" width="100px;" alt="Josh Hufford"/><br /><sub><b>Josh Hufford</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=ostomachion" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Kasenn"><img src="https://avatars.githubusercontent.com/u/115586266?v=4?s=100" width="100px;" alt="Kasenn"/><br /><sub><b>Kasenn</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Kasenn" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SabataLunar"><img src="https://avatars.githubusercontent.com/u/26584469?v=4?s=100" width="100px;" alt="SabataLunar"/><br /><sub><b>SabataLunar</b></sub></a><br /><a href="#design-SabataLunar" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/PacFire"><img src="https://avatars.githubusercontent.com/u/108960850?v=4?s=100" width="100px;" alt="PacFire"/><br /><sub><b>PacFire</b></sub></a><br /><a href="#design-PacFire" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ChrispyChris27"><img src="https://avatars.githubusercontent.com/u/173648816?v=4?s=100" width="100px;" alt="ChrispyChris27"/><br /><sub><b>ChrispyChris27</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=ChrispyChris27" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LogicalLlama"><img src="https://avatars.githubusercontent.com/u/248230900?v=4?s=100" width="100px;" alt="LogicalLlama"/><br /><sub><b>LogicalLlama</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/issues?q=author%3ALogicalLlama" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/KnightGallade"><img src="https://avatars.githubusercontent.com/u/189022270?v=4?s=100" width="100px;" alt="KnightGallade"/><br /><sub><b>KnightGallade</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/issues?q=author%3AKnightGallade" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/luuma"><img src="https://avatars.githubusercontent.com/u/31407427?v=4?s=100" width="100px;" alt="luuma"/><br /><sub><b>luuma</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=luuma" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/DragonScaledEmma"><img src="https://avatars.githubusercontent.com/u/220702264?v=4?s=100" width="100px;" alt="Emma"/><br /><sub><b>Emma</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/issues?q=author%3ADragonScaledEmma" title="Bug reports">🐛</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Gammel2013"><img src="https://avatars.githubusercontent.com/u/160730477?v=4?s=100" width="100px;" alt="gammel2013"/><br /><sub><b>gammel2013</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/issues?q=author%3Agammel2013" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/BluSunrize"><img src="https://avatars.githubusercontent.com/u/4106382?v=4?s=100" width="100px;" alt="blusunrize"/><br /><sub><b>blusunrize</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/issues?q=author%3Ablusunrize" title="Bug reports">🐛</a> <a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=blusunrize" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jtebbe"><img src="https://avatars.githubusercontent.com/u/15947257?v=4?s=100" width="100px;" alt="jtebbe"/><br /><sub><b>jtebbe</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=jtebbe" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Liamjd14"><img src="https://avatars.githubusercontent.com/u/175732139?v=4?s=100" width="100px;" alt="Liam"/><br /><sub><b>Liam</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Liamjd14" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Gastly92"><img src="https://avatars.githubusercontent.com/u/262681076?v=4?s=100" width="100px;" alt="Gastly92"/><br /><sub><b>Gastly92</b></sub></a><br /><a href="https://github.com/rh-hideout/pokeemerald-expansion/commits?author=Gastly92" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/montmoguri"><img src="https://avatars.githubusercontent.com/u/202215938?v=4?s=100" width="100px;" alt="Montblanc"/><br /><sub><b>Montblanc</b></sub></a><br /><a href="#design-montmoguri" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Black-Fragrant"><img src="https://avatars.githubusercontent.com/u/105663910?v=4?s=100" width="100px;" alt="Black-Fragrant"/><br /><sub><b>Black-Fragrant</b></sub></a><br /><a href="#design-Black-Fragrant" title="Design">🎨</a></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td align="center" size="13px" colspan="7">
+        <img src="https://raw.githubusercontent.com/all-contributors/all-contributors-cli/1b8533af435da9854653492b1327a23a4dbd0a10/assets/logo-small.svg">
+          <a href="https://all-contributors.js.org/docs/en/bot/usage">Add your contributions</a>
+        </img>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/allcontributors.org) specification. Contributions of any kind welcome!
