@@ -92,8 +92,14 @@ for path in (ROOT/"data/maps").glob("*/map.json"):
 
 # These are post-League areas. Sky Pillar is NOT: the Sootopolis crisis
 # advances VAR_SKY_PILLAR_STATE to 2/3 and unlocks Rayquaza before Champion.
-POSTGAME = ("CERULEAN_CAVE","MT_SILVER","BIRTH_ISLAND",
-            "FARAWAY_ISLAND","NAVEL_ROCK","SOUTHERN_ISLAND")
+# These areas are inaccessible until after a regional Champion or otherwise
+# depend on postgame tickets/story. Never count them as the only required
+# pre-first-Champion sources, even if their encounter tables exist in source.
+POSTGAME = ("CERULEAN_CAVE", "MT_SILVER", "BIRTH_ISLAND",
+            "FARAWAY_ISLAND", "NAVEL_ROCK", "SOUTHERN_ISLAND",
+            "FOUR_ISLAND", "FIVE_ISLAND", "SIX_ISLAND", "SEVEN_ISLAND",
+            "DESERT_UNDERPASS", "ARTISAN_CAVE", "MARINE_CAVE",
+            "TERRA_CAVE", "BATTLE_FRONTIER")
 def preleague(loc):
     return loc in regions and regions[loc] in ("KANTO","JOHTO","HOENN") and not any(v in loc for v in POSTGAME)
 

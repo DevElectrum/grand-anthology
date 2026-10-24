@@ -77,7 +77,7 @@ assert "max = landMonsInfo->wildPokemon[0].maxLevel;" in dex
 # Safari/frontier/randomizer guard and source maps without replacing originals.
 extra_text = (root / "src/data/anthology_extra_habitats.h").read_text()
 extra = re.findall(r"^ECOLOGY_ON_MAP\((MAP_[A-Z0-9_]+), ([A-Z0-9_]+)\)$", extra_text, re.M)
-assert len(extra) == 296, (len(extra), "lost or unexpected habitat entries")
+assert len(extra) == 302, (len(extra), "lost or unexpected habitat entries")
 assert len({species for _map, species in extra[:113]}) == 113, "original 113 changed"
 assert len(set(extra)) == len(extra), "duplicate extra species within one map"
 # A postgame wild location must not be a required pre-Champion source. These
@@ -906,3 +906,18 @@ regional_form_habitats = {
 }
 assert len(regional_form_habitats) == 30
 assert regional_form_habitats <= set(extra)
+
+# Six cross-generation families were incorrectly counted as pre-first-Champion
+# Kanto acquisitions because their parents were on Sevii islands 4-7, whose
+# FRLG postgame access needs a Champion. Mainland sources must remain present.
+sevii_mainland_relief = {
+    ("MAP_ROUTE16", "AIPOM"),
+    ("MAP_POKEMON_TOWER_4F", "MISDREAVUS"),
+    ("MAP_POKEMON_TOWER_6F", "MURKROW"),
+    ("MAP_SEAFOAM_ISLANDS_B3F", "SNEASEL"),
+    ("MAP_ROUTE12", "YANMA"),
+    ("MAP_SEAFOAM_ISLANDS_B4F", "SWINUB"),
+}
+assert sevii_mainland_relief <= set(extra), sorted(sevii_mainland_relief - set(extra))
+assert all(not any(x in loc for x in ("FOUR_ISLAND", "FIVE_ISLAND", "SIX_ISLAND", "SEVEN_ISLAND")) for loc, mon in sevii_mainland_relief)
+print(f"P0 pre-Champion Kanto Sevii relief: {len(sevii_mainland_relief)} mainland parent sources guarded")
