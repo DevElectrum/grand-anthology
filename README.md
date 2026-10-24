@@ -68,6 +68,8 @@ The public `main` branch contains meaningful new source-level work, but **source
 
 **Current acquisition design (24 October 2026):** all 1,025 National species should be legitimately obtainable **eventually during the full Kanto / Johto / Hoenn adventure, including postgame**, without mandatory online trades. They do **not** all have to be available before the first Champion; ordinary story and postgame gates are fine. Legendary and Mythical Pokémon are intended as scripted statics, while Ultra Beasts and Paradox Pokémon are deliberately rare natural encounters. See the [source location audit](docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md). Source paths and gameplay remain unverified in part.
 
+**Approved regional Legendary/Mythical encounter design (24 October 2026):** The [full discussion ledger](docs/LEGENDARY_MYTHICAL_DESIGN_LEDGER_2026-10-24.md) records Kanto, Johto and Hoenn decisions, including capture dependencies, early encounters and deferred special form mechanics. Start with the [current design-ready handoff](docs/NEXT_ASTRA_HANDOFF_2026-10-24_DESIGN_READY.md) and [preimplementation design audit](docs/PREIMPLEMENTATION_DESIGN_AUDIT_2026-10-24.md). These are **design specifications, not proof that they have been implemented or play-tested**.
+
 For an accessible summary of scope, source evidence and unverified gameplay, see the [public development status](docs/PUBLIC_STATUS.md). Development can resume from the [public next-Astra engineering handoff](docs/NEXT_ASTRA_HANDOFF.md); private historical notes and branches are not part of this repository.
 
 ## Development status and verification
