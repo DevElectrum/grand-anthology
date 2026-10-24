@@ -73,8 +73,8 @@ TinTower_RoofDay_EventScript_BeastsMissing::
 	end
 
 TinTower_RoofDay_Text_BeastsMissing::
-	.string "The legendary rainbow is quiet.\\p"
-	.string "Find and catch the three beasts\\n"
+	.string "The legendary rainbow is quiet.\p"
+	.string "Find and catch the three beasts\n"
 	.string "awakened beneath BURNED TOWER.$"
 
 TinTower_RoofDay_EventScript_TalkToKimono::
