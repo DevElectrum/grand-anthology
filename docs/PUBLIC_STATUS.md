@@ -1,3 +1,5 @@
+> **Design correction and development pause, 24 October 2026:** The current requirement is eventual access to all 1,025 species across the *complete three-region adventure, including postgame*, **not before the first Champion**. Original story gates may remain intact. Legendary and Mythical Pokémon should be static encounters; Ultra Beasts and Paradox Pokémon are intentionally natural rare encounters. The source-location [audit](LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md) identifies exceptions pending discussion. **No new gameplay work is authorized until user discussion.** Any older pre-Champion requirement or "resume immediately" below is historical and superseded.
+
 # Pokémon Grand Anthology: scope and verification status
 
 ## Last exact optimized and mGBA results (24 October UTC)

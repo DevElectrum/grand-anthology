@@ -1,3 +1,19 @@
+## **CURRENT STOP-AND-DISCUSS HANDOFF: 24 October 2026 (overrides older action plans below)**
+
+**STATUS: DOCUMENTATION / DESIGN REVIEW ONLY. DO NOT START WORK.** The user requested an explicit pause so the next Astra can read the repository, the [Legendary/Mythical location audit](LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md), and these design decisions, then **wait for discussion and authorization**. Do **not** implement, rebalance, relocate species, alter scripts, create tasks/issues/PRs, commit anything, run test or build suites, or launch CI. Do not assume old instructions below to "continue P0 engineering" are presently authorized. Reading source/documents and answering questions is allowed. No new gameplay code has been changed as part of this handoff.
+
+**Corrected P0 acquisition rule:** All **1,025 National species** should be legitimately obtainable **eventually during the entire three-region adventure, including postgame**, without needing unavailable online trades. We previously misinterpreted this as all 1,025 before defeating a **first** Champion and made source code additions, audits, alternate evolutions and early rare placements to maximize that metric. This was *not* intended as an ironclad early availability rule. Preserve sensible natural story and late-area progression. The former "1,025/1,025 pre-Champion" audit is **historical/optimistic only**, no longer an implementation target.
+
+**Newly clarified special-Pokémon rule:** **Legendary and Mythical Pokémon should be scripted **static encounters**, not ordinary random grass encounters.** They do **not** require an elaborate bespoke quest or post-Champion lock merely for being special. **Ultra Beasts and Paradox Pokémon are expressly exempt**: they count as rare *natural* Pokémon, even on early maps. **Kartana in Viridian Forest was specifically chosen by the user. Poipole on Route 1 is fine.** Do not silently remove or move either. Nothing else should be altered without explicit discussion.
+
+**Read-only audit results needing discussion:** [`docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md`](LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md) lists **94 distinct National Legendary/Mythical species across Gen 1–9** and their authored locations/methods; it identifies **five supplemental wild Legendary entries** (Groudon Route 111, Kyogre Seafloor Cavern Room 1, Galarian Zapdos Route 22, Galarian Articuno Seafoam B1F, Galarian Moltres Pokémon Mansion 1F), plus a **post-League every-third-wild-battle discovery system** whose whitelist includes Legendary/Mythical species. All remain in source until the user decides. The audit is source-level, not exhaustive playthrough proof; static event accessibility/gates may be unverified.
+
+**Questions to bring to discussion, not to decide alone:** How to treat those five wild Legendary duplicates and the post-League universal wild-discovery shortcut; whether already-authored early static encounters are acceptable; and how to prioritize remaining P0 integration versus consolidated gameplay testing. The current live optimized build and nine broad emulated gameplay suites passed, but source-level all-species closure does not establish real in-game collection. The two late daycare/Diancie synthetic warp tests failed **before entering their target rooms**. A test-only debug map warp is **only a proposal**, not authorized engineering. Existing debug Warp-to-Map machinery can be reviewed but not modified now.
+
+**Critical handoff instruction:** **Read `AGENTS.md`, this handoff, `docs/NEXT_ASTRA_PROMPT.md`, `docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md`, `README.md`, `FEATURES.md`, `docs/PUBLIC_STATUS.md`, `docs/P0_PRECHAMPION_ACCESS.md`. Summarize what you understand and WAIT for the user to discuss decisions. Do not start implementing anything.**
+
+---
+
 # Next Astra: Grand Anthology after the PUBLIC source cutover
 
 ## Most recent validated public-main CI, 24 October UTC

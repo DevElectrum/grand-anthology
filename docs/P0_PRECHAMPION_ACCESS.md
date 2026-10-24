@@ -1,3 +1,5 @@
+> **Historical document, superseded design target (24 October 2026).** This records the previously pursued *1,025 species before first Champion* audit, which the user clarified was an overly restrictive assistant assumption. **The active requirement is eventual legitimate obtainability during the complete Kanto/Johto/Hoenn adventure, including postgame.** Existing late-game gates are not automatically defects. The user has requested discussion before any new implementation. See [the read-only Legendary/Mythical audit](LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md) and [current handoff](NEXT_ASTRA_HANDOFF.md).
+
 # P0 before-first-Champion acquisition access audit
 
 ### Final evidence from the synthetic Route 5 entrance smoke

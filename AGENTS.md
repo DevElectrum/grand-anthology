@@ -8,13 +8,13 @@ private repository and its original `master`.
 
 ## Goal
 
+**Current override (24 October 2026): DESIGN DISCUSSION PAUSE.** Read this file, `docs/NEXT_ASTRA_HANDOFF.md` and `docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md`, then wait for the user. Do not write code, relocate encounters, run tests, or commit additional changes before explicit user approval. Older implementation-first instructions below describe future workflow, not present authorization.
+
 Build an easy, casual, approachable single-trainer Pokémon GBA adventure
 covering the inherited Kanto, Johto and Hoenn campaigns. Do not pretend it
-covers nine regions. National species reachability across 1,025 IDs has
-optimistic static source evidence; practical pre-Champion acquisition and
-actual in-game catch/evolution/save acceptance are **not complete**.
+covers nine regions. All 1,025 National Pokédex species should be obtainable **eventually across the complete adventure including postgame**, not necessarily before the first Champion. Source-level 1,025 path evidence is optimistic; actual in-game acquisition/integration acceptance is **not complete**.
 
-Prioritize substantial P0 implementation in sensible grouped batches,
+**Only after discussion and express user go-ahead**, prioritize substantial P0 implementation in sensible grouped batches,
 then consolidated gameplay verification. Commit meaningful changes and
 review existing tests; don't stall on individual encounter test cases.
 Original 420-slot storage remains for now. Optional later gimmicks and

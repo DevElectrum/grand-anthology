@@ -1,3 +1,5 @@
+> **24 October 2026 design correction:** All 1,025 species need to be obtainable *eventually during the entire three-region adventure including postgame*, not before the first Champion. Legendary/Mythical Pokémon should be static; Ultra Beasts/Paradox Pokémon remain rare natural encounters (including the intentionally placed Kartana in Viridian Forest and accepted Poipole on Route 1). Previous "pre-Champion" references below describe historical code additions, not current design requirements. See [source location audit](docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md). Development is paused pending discussion.
+
 # Features
 
 **Pokémon Grand Anthology** is an experimental extension of

@@ -66,7 +66,7 @@ The public `main` branch contains meaningful new source-level work, but **source
 | **Collection and evolution** | Regional Pokédex work, fossil sources, special-form acquisition and practical offline evolution methods are under development or audit. |
 | **Player convenience** | Source work includes selectable shiny odds and gameplay options such as randomization, editing and cheats. Individual channels and complete save behavior still need consolidated validation. |
 
-The aim is for all National species to be obtainable **before defeating a first Champion**, without trades or online services. This is a **design requirement**, not a claim that all progression gates and form/evolution requirements already work. Some original and new mechanics remain unfinished or unverified.
+**Current acquisition design (24 October 2026):** all 1,025 National species should be legitimately obtainable **eventually during the full Kanto / Johto / Hoenn adventure, including postgame**, without mandatory online trades. They do **not** all have to be available before the first Champion; ordinary story and postgame gates are fine. Legendary and Mythical Pokémon are intended as scripted statics, while Ultra Beasts and Paradox Pokémon are deliberately rare natural encounters. See the [source location audit](docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md). Source paths and gameplay remain unverified in part.
 
 For an accessible summary of scope, source evidence and unverified gameplay, see the [public development status](docs/PUBLIC_STATUS.md). Development can resume from the [public next-Astra engineering handoff](docs/NEXT_ASTRA_HANDOFF.md); private historical notes and branches are not part of this repository.
 
@@ -78,7 +78,7 @@ Source-only publication occurred on October 23, 2026 (October 24 UTC), from a si
 
 At the documented **October 23, 2026** source milestone, the acquisition audit reported **1,025/1,025 optimistic National species paths** (Kanto 346, Johto 352, Hoenn 327). The source-validator portion of the recorded private development CI run passed. This is an inventory of possible code paths, **not** a successful in-emulator living or completed Pokédex.
 
-The remaining work includes verifying forms and alternate evolutions, eliminating real post-Champion access gates, reconciling settings and gameplay integration, and then running representative end-to-end emulator tests for encounters, catching, fainting, revisits, breeding, regional travel, saving and reloading. At development commit `45dc98d9`, the optimized full-ROM build passed. A later genuine mGBA test at `5667f5f` fixed the earlier missing-symbol error but exposed an actual Diancie visibility and field-spawn failure after Save/Continue. A subsequent repair is under emulator review; this encounter is **not** accepted until the repaired build passes. Other representative regional-travel and save tests passed. Independently verify the exact published source snapshot.
+The remaining work includes verifying forms and alternate evolutions, verifying eventual obtainability while preserving legitimate post-Champion access gates, reconciling settings and gameplay integration, and then running representative end-to-end emulator tests for encounters, catching, fainting, revisits, breeding, regional travel, saving and reloading. At development commit `45dc98d9`, the optimized full-ROM build passed. A later genuine mGBA test at `5667f5f` fixed the earlier missing-symbol error but exposed an actual Diancie visibility and field-spawn failure after Save/Continue. A subsequent repair is under emulator review; this encounter is **not** accepted until the repaired build passes. Other representative regional-travel and save tests passed. Independently verify the exact published source snapshot.
 
 A provisional internal engineering-readiness percentage exists in the tracker, but it is **not** advertised here as a measure of playable completeness.
 
@@ -150,7 +150,7 @@ This is a **plan, not a promised schedule**. The [current project scope](docs/PU
 <details>
 <summary><strong>P0: finish the playable core</strong></summary>
 
-- Finish practical pre-first-Champion acquisition routes for every National species.
+- Finish legitimate full-adventure acquisition routes for every National species, including postgame. Do not force all 1,025 before a first Champion.
 - Reconcile meaningful permanent forms, branch evolutions, offline requirements and story gates.
 - Complete essential player options and preserve original campaigns and regional continuity.
 - Perform consolidated emulator acceptance for catching, encounter persistence, breeding, fossils, Pokédex rewards, travel and saves.
