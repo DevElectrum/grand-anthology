@@ -964,8 +964,8 @@ assert '"STEVENS_CAVE"' in (root / "tools/audit_p0_acquisition.py").read_text()
 print("P0 #950 Klawf: pre-Champion Route 115 relocation plus excluded Steven's Cave guard PASS")
 
 
-// Approved optional Legendary prerequisites are checked on each map entry;
-// caught Dex bits matter, not whether the Pokémon is still in the party.
+# Approved optional Legendary prerequisites are checked on each map entry;
+# caught Dex bits matter, not whether the Pokémon is still in the party.
 _regi = (root / "data/maps/RockTunnel_B1F_Frlg/scripts.inc").read_text()
 _regi_gate = _regi.split("RockTunnel_B1F_AnthologyOnTransition::")[1].split("RockTunnel_B1F_AnthologyOtherStatics::")[0]
 for _name in ("REGIROCK", "REGICE", "REGISTEEL"):
