@@ -5028,7 +5028,8 @@ const struct SpeciesInfo gSpeciesInfoGen8[] =
                                 {EVO_SPIN, SPIN_EITHER, SPECIES_ALCREMIE_RIBBON_RAINBOW_SWIRL,
                                 CONDITIONS({IF_HOLD_ITEM, ITEM_RIBBON_SWEET},
                                            {IF_TIME, TIME_EVENING})}
-                        )
+                        
+                                ,{EVO_ITEM, ITEM_SHINY_STONE, SPECIES_ALCREMIE_STRAWBERRY_VANILLA_CREAM})
     },
 
 #define ALCREMIE_MISC_INFO(color)                                               \
@@ -5469,7 +5470,8 @@ const struct SpeciesInfo gSpeciesInfoGen8[] =
         .levelUpLearnset = sSnomLevelUpLearnset,
         .teachableLearnset = sSnomTeachableLearnset,
         .eggMoveLearnset = sSnomEggMoveLearnset,
-        .evolutions = EVOLUTION({EVO_LEVEL, 0, SPECIES_FROSMOTH, CONDITIONS({IF_MIN_FRIENDSHIP, FRIENDSHIP_EVO_THRESHOLD},{IF_TIME, TIME_NIGHT})}),
+        .evolutions = EVOLUTION({EVO_LEVEL, 0, SPECIES_FROSMOTH, CONDITIONS({IF_MIN_FRIENDSHIP, FRIENDSHIP_EVO_THRESHOLD},{IF_TIME, TIME_NIGHT})}
+                                ,{EVO_ITEM, ITEM_ICE_STONE, SPECIES_FROSMOTH}),
     },
 
     [SPECIES_FROSMOTH] =

@@ -2359,7 +2359,8 @@ const struct SpeciesInfo gSpeciesInfoGen1[] =
         .eggMoveLearnset = sRattataAlolaEggMoveLearnset,
         .formSpeciesIdTable = sRattataFormSpeciesIdTable,
         .evolutions = EVOLUTION({EVO_LEVEL, 20, SPECIES_RATICATE_ALOLA, CONDITIONS({IF_TIME, TIME_NIGHT})},
-                                {EVO_NONE, 0, SPECIES_RATICATE_ALOLA_TOTEM}),
+                                {EVO_NONE, 0, SPECIES_RATICATE_ALOLA_TOTEM}
+                                ,{EVO_ITEM, ITEM_MOON_STONE, SPECIES_RATICATE_ALOLA}),
     },
 
     [SPECIES_RATICATE_ALOLA] =

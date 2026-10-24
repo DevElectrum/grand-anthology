@@ -28,7 +28,7 @@ need("src/data/pokemon/species_info/gen_5_families.h",
      "{EVO_LEVEL, 52, SPECIES_KINGAMBIT, CONDITIONS({IF_HOLD_ITEM, ITEM_LEADERS_CREST})}",
      "IF_KNOWS_MOVE, MOVE_WAVE_CRASH")
 need("src/data/pokemon/species_info/gen_2_families.h",
-     "{EVO_ITEM, ITEM_PEAT_BLOCK, SPECIES_URSALUNA, CONDITIONS({IF_TIME, TIME_NIGHT})}")
+     "{EVO_ITEM, ITEM_PEAT_BLOCK, SPECIES_URSALUNA}")
 need("src/data/pokemon/species_info/gen_1_families.h", "{EVO_LEVEL, 30, SPECIES_SIRFETCHD}")
 need("include/config/battle.h", "#define B_BATTLE_BOND               GEN_8")
 pokedex = source("src/pokedex.c").split("bool16 HasAllMons(void)")[1].split("static void ResetOtherVideoRegisters")[0]
@@ -184,3 +184,42 @@ cubone = source("src/data/pokemon/species_info/gen_1_families.h")
 assert re.search(
     r"\{EVO_ITEM, ITEM_DUSK_STONE, SPECIES_MAROWAK_ALOLA\},\s*\{EVO_NONE, 0, SPECIES_MAROWAK_ALOLA_TOTEM\}",
     cubone), "Cubone's alternate evolution entries must be comma-delimited"
+
+
+# P0 practical clock/weather-independent acquisition alternatives.
+# The original day/night/weather/friendship/spin routes remain available.
+# These purchasable, ordinary evolution-stone options are intentionally optional.
+time_weather_alternatives = {
+    "RATTATA_ALOLA": (1, {"MOON_STONE": "RATICATE_ALOLA"}, "IF_TIME, TIME_NIGHT"),
+    "SNEASEL_HISUI": (2, {"DAWN_STONE": "SNEASLER"}, "IF_NOT_TIME, TIME_NIGHT"),
+    "LINOONE_GALAR": (3, {"DUSK_STONE": "OBSTAGOON"}, "IF_TIME, TIME_NIGHT"),
+    "AMAURA": (6, {"ICE_STONE": "AURORUS"}, "IF_TIME, TIME_NIGHT"),
+    "SLIGGOO": (6, {"SHINY_STONE": "GOODRA"}, "IF_WEATHER, WEATHER_RAIN"),
+    "SLIGGOO_HISUI": (6, {"SHINY_STONE": "GOODRA_HISUI"}, "IF_WEATHER, WEATHER_FOG"),
+    "ROCKRUFF": (7, {"SUN_STONE": "LYCANROC_MIDDAY", "MOON_STONE": "LYCANROC_MIDNIGHT"}, "IF_TIME, TIME_NIGHT"),
+    "ROCKRUFF_OWN_TEMPO": (7, {"DUSK_STONE": "LYCANROC_DUSK"}, "IF_TIME, TIME_EVENING"),
+    "COSMOEM": (7, {"SUN_STONE": "SOLGALEO", "MOON_STONE": "LUNALA"}, "IF_TIME, TIME_NIGHT"),
+    "SNOM": (8, {"ICE_STONE": "FROSMOTH"}, "IF_MIN_FRIENDSHIP, FRIENDSHIP_EVO_THRESHOLD"),
+    "GREAVARD": (9, {"DUSK_STONE": "HOUNDSTONE"}, "IF_TIME, TIME_NIGHT"),
+    "MILCERY": (8, {"SHINY_STONE": "ALCREMIE_STRAWBERRY_VANILLA_CREAM"}, "EVO_SPIN"),
+}
+definitions = source("src/data/items.h")
+fallback_count = 0
+for parent, (generation, variants, original_condition) in time_weather_alternatives.items():
+    family = source(f"src/data/pokemon/species_info/gen_{generation}_families.h")
+    assert f"[SPECIES_{parent}] =" in family, parent
+    body = family.split(f"[SPECIES_{parent}] =", 1)[1].split("\n    [SPECIES_", 1)[0]
+    assert original_condition in body, (parent, "lost original method")
+    for item, target in variants.items():
+        assert f"{{EVO_ITEM, ITEM_{item}, SPECIES_{target}}}" in body, (parent, item, target)
+        item_body = definitions.split(f"[ITEM_{item}] =", 1)[1].split("\n    },", 1)[0]
+        assert ".fieldUseFunc = ItemUseOutOfBattle_EvolutionStone" in item_body, item
+        assert ".pocket = POCKET_ITEMS" in item_body, item
+        for mart in shops:
+            assert f".2byte ITEM_{item}" in source(mart), (mart, item)
+        fallback_count += 1
+assert fallback_count == 14, fallback_count
+ursaring = source("src/data/pokemon/species_info/gen_2_families.h").split("[SPECIES_URSARING] =", 1)[1].split("\n    [SPECIES_", 1)[0]
+assert "{EVO_ITEM, ITEM_PEAT_BLOCK, SPECIES_URSALUNA}" in ursaring
+assert "ITEM_PEAT_BLOCK, SPECIES_URSALUNA, CONDITIONS({IF_TIME" not in ursaring
+print(f"P0 offline clock/weather evolution: {fallback_count} stone routes plus all-hours Ursaluna PASS")
