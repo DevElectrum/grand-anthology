@@ -266,3 +266,20 @@ for marker in ("GetDaycareCompatibilityScore", "SPECIES_MANAPHY",
 assert "SPECIES_DITTO" in daycare_code
 assert "MON_EGG_GROUPS(EGG_GROUP_WATER_1, EGG_GROUP_FAIRY)" in source("src/data/pokemon/species_info/gen_4_families.h")
 print("P0 Kanto Route 5: original one-mon caretaker + two-parent egg/breeding services source contract PASS")
+
+
+# Keep the actual optimized emulator NPC smoke connected to the release gate
+# whenever Kanto or shared daycare scripts or state change.
+daycare_smoke = source("test/overworld/lua/WorldKantoDaycare.lua")
+release_smoke = source(".github/workflows/P0-mGBA-Release-Smoke.yml")
+for token in ("gMapGroup_IndoorRoute5_Frlg", "GROUP, MAP=51,0",
+              "real flash save", "breeding_lady", "egg_collector"):
+    assert token in daycare_smoke, token
+for path in ("data/maps/Route5_PokemonDayCare_Frlg/map.json",
+             "data/maps/Route5_PokemonDayCare_Frlg/scripts.inc",
+             "test/overworld/lua/WorldKantoDaycare.lua"):
+    assert f'"{path}"' in release_smoke, path
+assert "test/overworld/mgba-run.sh test/overworld/lua/WorldKantoDaycare.lua" in release_smoke
+assert "gSaveBlock3Ptr->region.route5DayCareMon" in daycare_code
+assert "TryProduceOrHatchEgg(&gSaveBlock1Ptr->daycare)" in daycare_code
+print("P0 Kanto breeding: separate classic/shared daycare saves and release-ROM mGBA smoke guard PASS")

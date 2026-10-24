@@ -60,6 +60,15 @@ on:
       - "test/overworld/lua/WorldFirstBoot.lua"
       - "test/overworld/lua/WorldRegionPartyTravel.lua"
       - "test/overworld/lua/WorldDiancieStatic.lua"
+      # Kanto Route 5 now supplies two-parent breeding before the first
+      # Champion, in addition to its separate classic one-mon caretaker.
+      - "data/maps/Route5_PokemonDayCare_Frlg/map.json"
+      - "data/maps/Route5_PokemonDayCare_Frlg/scripts.inc"
+      - "data/maps/Route34_DayCare/scripts.inc"
+      - "data/scripts/day_care_frlg.inc"
+      - "src/daycare.c"
+      - "test/overworld/ValidateAnthologyEvolutionAccess.py"
+      - "test/overworld/lua/WorldKantoDaycare.lua"
   workflow_dispatch:
 
 permissions:
@@ -272,6 +281,20 @@ jobs:
             grep -q "$assertion" "$PW_OUT/WorldRegionPartyTravel.log"
           done
           echo 'PASS: real GBA save/core reset/Continue retains all six Pokemon and campaign state'
+
+          # Real production-ROM field load and actor-interaction smoke.
+          # Do not call it breeding acceptance: depositing two compatible
+          # Pokémon, creating/hatching Phione and persistence still need
+          # their own genuine full-flow gameplay verification.
+          test/overworld/mgba-run.sh test/overworld/lua/WorldKantoDaycare.lua pokemonworld-release.gba
+          grep -q 'VERDICT WorldKantoDaycare: .* PASS' "$PW_OUT/WorldKantoDaycare.log" || {
+            echo 'FAIL: Kanto two-parent Route 5 NPC field/interaction smoke'
+            tail -n 100 "$PW_OUT/WorldKantoDaycare.log" || true
+            exit 1
+          }
+          test -f "$PW_OUT/WorldKantoDaycare.PASS"
+          echo 'PASS: Route 5 original caretaker and two breeding NPCs load and respond (not Egg acceptance)'
+
           # Genuine anthology scripted-legendary overworld/battle start gate.
           # This does not claim a completed catch/faint/save sequence.
           test/overworld/mgba-run.sh test/overworld/lua/WorldDiancieStatic.lua pokemonworld-release.gba

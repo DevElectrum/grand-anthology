@@ -1,6 +1,17 @@
 # Next Astra: Grand Anthology after the PUBLIC source cutover
 
 
+## Latest real mGBA evidence + Kanto breeding acceptance target (24 October UTC)
+
+The [mGBA release run #40060366495](https://github.com/DevElectrum/grand-anthology/actions/runs/40060366495) from [\`f971217\`](https://github.com/DevElectrum/grand-anthology/commit/f971217f898af09fd58a178fbaf1f20a82d629ac) **compiled the real optimized game and reached emulator tests**. **All broad release suites passed**: title 37/37, cheats 8/8, global gift Save/Continue 15/15, Elm 34/34, Oak 34/34, Birch full-PC refusal 26/26, shiny odds 26/26, fresh hub 4/4, three-region party roundtrip and Save/Continue 27/27. **Diancie 5/6 failed exactly at the previously documented Granite Cave north-arrow warp**. The fixture remained on map 24/7 rather than entering Steven's room 24/10; no Diancie object or battle outcome was reached. Do not misreport this as a broken Diancie encounter.
+
+The [Kanto Route 5 breeding NPC commit \`f07dff1\`](https://github.com/DevElectrum/grand-anthology/commit/f07dff10f557f93afd30dd82c87edb3ec9453170) **passed BOTH source checks and complete optimized compilation** in [P0 Gameplay Build #40060800408](https://github.com/DevElectrum/grand-anthology/actions/runs/40060800408); This run is green; evaluate the newer daycare mGBA job separately. The original Route 5 FRLG daycare NPC persists with separate \`SaveBlock3.route5DayCareMon\`, while the two new optional breeders point at the same \`SaveBlock1.daycare\` used by Johto/Hoenn. A new [WorldKantoDaycare.lua](../test/overworld/lua/WorldKantoDaycare.lua) production-ROM smoke stages a disposable flash Save/Continue into Route 5, checks all three active original/map NPCs and attempts both breeding dialogue interactions. It **does not** verify Egg creation or Phione hatching. The P0 mGBA workflow now triggers on relevant daycare files and runs this smoke **before** the already known failing Diancie navigation fixture.
+
+**Next-Astra priority:** inspect exact optimized build and mGBA outcomes of these latest commits. Fix any real Route 5 NPC geometry/interaction bug if the new mGBA smoke exposes one. If all broad features pass except Diancie, advance grouped practical acquisition, source-gate and evolution/capture tests; do not spend an entire session retuning the Diancie warp. Later consolidated genuine Kanto Manaphy+Ditto deposit → egg → hatch → Save/Continue and per-region statics/rare catches must be proved before P0 acceptance. Preserve source-only public distribution.
+
+
+
+
 ## Kanto daycare breeding implementation and CI evidence (24 October UTC)
 
 The strict gate-audit and last Klawf repair commit [\`f971217\`](https://github.com/DevElectrum/grand-anthology/commit/f971217f898af09fd58a178fbaf1f20a82d629ac) **passed both source checks and full optimized ROM build** in [P0 Gameplay Build #40060366422](https://github.com/DevElectrum/grand-anthology/actions/runs/40060366422). The separate [mGBA run #40060366495](https://github.com/DevElectrum/grand-anthology/actions/runs/40060366495) was still running at the initial checkpoint; query its true final status.

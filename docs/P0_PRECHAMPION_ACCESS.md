@@ -1,6 +1,13 @@
 # P0 before-first-Champion acquisition access audit
 
 
+### Scope of the follow-up Kanto daycare emulator check
+
+A production-ROM \`WorldKantoDaycare.lua\` smoke is now included in the mGBA release pipeline after the broad party/travel smoke. It checks the interior's three original/generated map actors through a disposable real flash Save/Continue and tests direct interaction with each breeding NPC. This is deliberately narrower than two compatible parent deposits, accumulated Egg-generation steps, man pickup, Phione hatch and Save/Continue. Those complete breeding assertions remain pending and must not be inferred from this smoke. The inherited FRLG one-parent service uses the separate saved \`SaveBlock3.route5DayCareMon\`; the new couple uses the shared \`SaveBlock1.daycare\` used by Johto/Hoenn.
+
+
+
+
 ## Kanto breeding accessibility repair (October 24 UTC)
 
 The classic FRLG Route 5 daycare raises **one** Pokémon and cannot produce Eggs. Its original two-parent Four Island daycare is gated behind the Kanto League. This is material for the Kanto-origin pre-first-Champion path to **Phione**, which specifically requires breeding a **Manaphy** with Ditto; simply listing Manaphy as a source does not complete a playable Phione breeding route.

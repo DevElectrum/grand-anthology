@@ -1,6 +1,15 @@
 # Pokémon Grand Anthology: scope and verification status
 
 
+## Production emulator check and daycare smoke (24 October UTC)
+
+The [optimized \`f971217\` gameplay build #40060366422](https://github.com/DevElectrum/grand-anthology/actions/runs/40060366422) **passed both jobs**. [Real mGBA run #40060366495](https://github.com/DevElectrum/grand-anthology/actions/runs/40060366495) then passed title (37/37), graphical Cheats (8/8), full-party gift+save (15/15), Elm (34/34), Oak (34/34), Birch storage refusal (26/26), shiny options (26/26), first hub boot (4/4), and complete three-region travel+save continuity (27/27). The overall emulator run **failed only at the last Diancie navigation test (5/6)**: the temporary fixture did not leave Granite Cave 1F for Steven's Room. No battle occurred, so this says nothing about Diancie's encounter implementation.
+
+The later [Kanto Route 5 two-parent breeding change \`f07dff1\`](https://github.com/DevElectrum/grand-anthology/commit/f07dff10f557f93afd30dd82c87edb3ec9453170) **passed source validations and optimized compilation** in [P0 Gameplay Build #40060800408](https://github.com/DevElectrum/grand-anthology/actions/runs/40060800408), but still needs real map interaction. A new production-ROM [Kanto daycare mGBA smoke](../test/overworld/lua/WorldKantoDaycare.lua), wired into [P0 mGBA Release Smoke](../.github/workflows/P0-mGBA-Release-Smoke.yml), loads the interior via disposable battery Save/Continue and verifies the classic NPC plus the added two-parent lady/man are instantiated and reachable. This is **not** evidence of a hatched Phione or true breeding compatibility. Check its new exact commit/run before claiming an emulator PASS.
+
+
+
+
 ## Kanto pre-League daycare implementation update (24 October UTC)
 
 [Gameplay Build #40060366422](https://github.com/DevElectrum/grand-anthology/actions/runs/40060366422) **passed both source validators and optimized production GBA compilation** at \`f971217\`, including the Champion-locked map audit, 313 supplemental ecology placements and restored optimistic 1,025/1,025 National access graph. This build is not an emulator gameplay proof.
