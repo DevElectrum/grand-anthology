@@ -358,3 +358,10 @@ ECOLOGY_ON_MAP(MAP_POKEMON_MANSION_1F, MOLTRES_GALAR)
 ECOLOGY_ON_MAP(MAP_ROUTE30, WOOPER_PALDEA)
 ECOLOGY_ON_MAP(MAP_ROUTE9, ROCKRUFF_OWN_TEMPO)
 ECOLOGY_ON_MAP(MAP_ROUTE6, PIKACHU_ALOLA)
+
+// Pre-Champion Hoenn continental-legendary habitats. Embedded Tower on Route47
+// is Johto-Champion-gated; Terra/Marine Cave are post-Hall-of-Fame; neither
+// should be the only positive source of Groudon or Kyogre. Keep all original
+// unique field objects untouched; these are late-journey optional natural hunts.
+ECOLOGY_ON_MAP(MAP_ROUTE111, GROUDON)
+ECOLOGY_ON_MAP(MAP_SEAFLOOR_CAVERN_ROOM1, KYOGRE)

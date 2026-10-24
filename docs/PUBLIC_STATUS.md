@@ -1,5 +1,15 @@
 # Pokémon Grand Anthology: scope and verification status
 
+## Current P0 engineering addition: 24 October UTC (supersedes older CI caveats below)
+
+The corrected Cubone evolution comma build at [`6baa615`, CI #40058999139](https://github.com/DevElectrum/grand-anthology/actions/runs/40058999139) **passed source validation and the full optimized GBA build**. This resolves the earlier reported compiler blocker.
+
+On public `main`, the next acquisition implementation batches include [14 optional stone evolutions and unrestricted Peat Block for Ursaluna](https://github.com/DevElectrum/grand-anthology/commit/4f693f815fe32a985a113772b4b56d4fe8bbaf42), plus [eight additional pre-first-Champion regional-form/seed habitats](https://github.com/DevElectrum/grand-anthology/commit/c223458e4b8680b9138e2f138d2377c88e4a920d). A subsequent gate-aware source pass excludes **Embedded Tower**, **Meteor Falls Steven's Cave** and **Altering Cave** from purported pre-Champion routes, and introduces optional Hoenn **Groudon (Route 111)** and **Kyogre (Seafloor Cavern Room 1)** habitats. The supplemental ecology catalog is now **312** map-species entries. Original habitats, story objects and NPC statics remain in place.
+
+The corresponding code-specific source validators and optimized CI/mGBA outcomes must be checked on their **exact commit**, not inferred from earlier green runs. The previous optimistic 1,025/1,025 source graph still does **not** demonstrate legitimate first-Champion in-game acquisition, proper rare spawn distribution, evolution-item use, breeding, static lifecycle, save/revisit or complete three-region story access. The [technical gate audit](P0_PRECHAMPION_ACCESS.md) and [handoff](NEXT_ASTRA_HANDOFF.md) explain the remaining acceptance work.
+
+
+
 **Status (October 24, 2026): Public experimental source on `main`.**
 The *source repository* is public. It is not a finished playable game, ROM distribution or promise of availability.
 

@@ -90,7 +90,9 @@ for path in (ROOT/"data/maps").glob("*/map.json"):
     regions[m["id"]]=r
     map_path[path.parent.name]=m["id"]
 
-# These are post-League areas. Sky Pillar is NOT: the Sootopolis crisis
+# These are post-League areas, including Champion-locked entrances at
+# Route 47 (Embedded Tower), Meteor Falls (Steven's Cave), and Route 103
+# (Altering Cave). Sky Pillar is NOT: the Sootopolis crisis
 # advances VAR_SKY_PILLAR_STATE to 2/3 and unlocks Rayquaza before Champion.
 # These areas are inaccessible until after a regional Champion or otherwise
 # depend on postgame tickets/story. Never count them as the only required
@@ -99,7 +101,8 @@ POSTGAME = ("CERULEAN_CAVE", "MT_SILVER", "BIRTH_ISLAND",
             "FARAWAY_ISLAND", "NAVEL_ROCK", "SOUTHERN_ISLAND",
             "FOUR_ISLAND", "FIVE_ISLAND", "SIX_ISLAND", "SEVEN_ISLAND",
             "DESERT_UNDERPASS", "ARTISAN_CAVE", "MARINE_CAVE",
-            "TERRA_CAVE", "BATTLE_FRONTIER")
+            "TERRA_CAVE", "BATTLE_FRONTIER",
+            "EMBEDDED_TOWER", "STEVENS_CAVE", "ALTERING_CAVE")
 def preleague(loc):
     return loc in regions and regions[loc] in ("KANTO","JOHTO","HOENN") and not any(v in loc for v in POSTGAME)
 

@@ -77,7 +77,7 @@ assert "max = landMonsInfo->wildPokemon[0].maxLevel;" in dex
 # Safari/frontier/randomizer guard and source maps without replacing originals.
 extra_text = (root / "src/data/anthology_extra_habitats.h").read_text()
 extra = re.findall(r"^ECOLOGY_ON_MAP\((MAP_[A-Z0-9_]+), ([A-Z0-9_]+)\)$", extra_text, re.M)
-assert len(extra) == 310, (len(extra), "lost or unexpected habitat entries")
+assert len(extra) == 312, (len(extra), "lost or unexpected habitat entries")
 assert len({species for _map, species in extra[:113]}) == 113, "original 113 changed"
 assert len(set(extra)) == len(extra), "duplicate extra species within one map"
 # A postgame wild location must not be a required pre-Champion source. These
@@ -944,3 +944,21 @@ sevii_mainland_relief = {
 assert sevii_mainland_relief <= set(extra), sorted(sevii_mainland_relief - set(extra))
 assert all(not any(x in loc for x in ("FOUR_ISLAND", "FIVE_ISLAND", "SIX_ISLAND", "SEVEN_ISLAND")) for loc, mon in sevii_mainland_relief)
 print(f"P0 pre-Champion Kanto Sevii relief: {len(sevii_mainland_relief)} mainland parent sources guarded")
+
+
+# The source auditor excludes three real Champion-gated areas:
+# Embedded Tower (Route 47), Steven's Cave (Meteor Falls) and
+# Altering Cave (Route 103). The original Terra/Marine Caves are also postgame.
+# These two Hoenn ecological alternatives restore a natural pre-Champion
+# route for the continental legendaries without changing their old statics.
+pre_champion_continental_legendary_habitats = {
+    ("MAP_ROUTE111", "GROUDON"),
+    ("MAP_SEAFLOOR_CAVERN_ROOM1", "KYOGRE"),
+}
+assert pre_champion_continental_legendary_habitats <= set(extra)
+assert all(m in {loc for loc, species in mappings}
+           for m, species in pre_champion_continental_legendary_habitats)
+audit = (root / "tools/audit_p0_acquisition.py").read_text()
+for postleague_only in ("EMBEDDED_TOWER", "STEVENS_CAVE", "ALTERING_CAVE"):
+    assert '"' + postleague_only + '"' in audit, postleague_only
+print("P0 Groudon/Kyogre before first Champion: late Hoenn land habitats and locked-map audit guards PASS")

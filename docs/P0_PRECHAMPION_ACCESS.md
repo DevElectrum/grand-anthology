@@ -1,5 +1,17 @@
 # P0 before-first-Champion acquisition access audit
 
+## October 24 follow-up: real-time, form and Champion-gate repairs
+
+The [first new acquisition batch](https://github.com/DevElectrum/grand-anthology/commit/4f693f815fe32a985a113772b4b56d4fe8bbaf42) retains ordinary level/time/weather/spin methods while adding **14 purchasable-stone alternatives** across 12 evolution parents: Alolan Rattata, Hisuian Sneasel, Galarian Linoone, Amaura, both Sliggoo forms, both Rockruff variants, Cosmoem (two branches), Snom, Greavard and Milcery. Peat Block also works on Ursaring independent of night. The explicit sources and item usability are checked by `ValidateAnthologyEvolutionAccess.py`. This does not verify party evolution animations or used-item consumption in mGBA.
+
+The [second batch](https://github.com/DevElectrum/grand-anthology/commit/c223458e4b8680b9138e2f138d2377c88e4a920d) introduced eight geographically meaningful supplemental habitats: Galarian Farfetch'd (Kanto Route 8), Galarian Meowth (Kanto Route 11), Galarian Zapdos (Kanto Route 22), Galarian Articuno (Seafoam B1F), Galarian Moltres (Pokémon Mansion 1F), Paldean Wooper (Johto Route 30), Own-Tempo Rockruff (Kanto Route 9) and Alola-cap Pikachu (Kanto Route 6). Original Johto Galarian-bird statics and Hoenn Paldean Wooper Surf remain. Source guards check natural land map requirements, unique slots, default/native tables and DexNav capacity. Galarian Darmanitan's Zen form is a *battle-only* transformation, not a collectible wild form, so the optimistic regional-form report now excludes it.
+
+A third gated-map audit identified three erroneously *countable* pre-Champion areas: **Embedded Tower** (Johto Champion flag at Route 47), **Meteor Falls Steven's Cave** (Hoenn Champion entrance metatiles), and **Altering Cave** (Route 103 opens only after Hoenn Champion). They are now blacklisted from `tools/audit_p0_acquisition.py`'s pre-Champion source closure. In particular, **Groudon** and **Kyogre** were otherwise represented by postgame Terra/Marine Caves or Champion-gated Embedded Tower; they now have rare supplemental Hoenn natural hunts on **Route 111** and in **Seafloor Cavern Room 1**, respectively. The new ecology total is **312** (up from 302); it is still a source catalog, not recorded catches.
+
+The corrected Cubone syntax regression was conclusively build-verified at [P0 Gameplay Build #40058999139](https://github.com/DevElectrum/grand-anthology/actions/runs/40058999139): **both validation and optimized ROM compilation passed**. The 14-stone batch source validation passed at [#40059747896](https://github.com/DevElectrum/grand-anthology/actions/runs/40059747896); its optimized build was later superseded. The eight-form batch source validator passed at [#40060011972](https://github.com/DevElectrum/grand-anthology/actions/runs/40060011972). **Verify the final code commit's exact optimized build and mGBA workflow before making stronger claims**. Real capture/egg/evolution, story passage, save/reload and encounter persistence acceptance remain open.
+
+
+
 **Scope:** source repairs on public `DevElectrum/grand-anthology:main`, October 24, 2026. A source route is not proof of legitimate playthrough acquisition.
 
 ## Twelve unreachable inherited regional evolution branches

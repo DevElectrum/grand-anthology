@@ -1,5 +1,19 @@
 # Next Astra: Grand Anthology after the PUBLIC source cutover
 
+## Newest Oct 24 checkpoint: grouped gameplay acquisition and gate corrections
+
+Continue only on **public `DevElectrum/grand-anthology:main`**. Do not modify/merge the historical private repository. Inspect live `main` HEAD and exact CI checks at handoff time.
+
+- [`4f693f8`](https://github.com/DevElectrum/grand-anthology/commit/4f693f815fe32a985a113772b4b56d4fe8bbaf42) adds **14** optional stone evolution branches for 12 parents, retaining original special clock/weather/spin mechanisms; Peat Block Ursaluna also drops night-only restriction. `ValidateAnthologyEvolutionAccess.py` source-checked this batch, but a complete release build was superseded by the next push.
+- [`c223458`](https://github.com/DevElectrum/grand-anthology/commit/c223458e4b8680b9138e2f138d2377c88e4a920d) adds **eight** regional-form/rare-seed Kanto/Johto habitats (Galarian Farfetch'd/Meowth/birds, Paldean Wooper, Own-Tempo Rockruff and Alola-cap Pikachu); its [P0 gameplay source validators #40060011972](https://github.com/DevElectrum/grand-anthology/actions/runs/40060011972) passed. `DARMANITAN_GALAR_ZEN` is explicitly excluded from the collectible-form audit because Zen Mode is a battle-only form.
+- Latest bundled gate-fix changes exclude **Embedded Tower**, **Meteor Falls Steven's Cave** and **Altering Cave** from the pre-Champion source closure. They are locked by Johto/Hoenn Champion flags in map scripts. Adds first-Champion Hoenn natural sources for **Groudon** (Route 111) and **Kyogre** (Seafloor Cavern Room 1), preserving the original postgame script objects. Ecology grows **302 → 310 → 312**.
+- The old [Cubone syntax fix on `6baa615` passed optimized CI #40058999139](https://github.com/DevElectrum/grand-anthology/actions/runs/40058999139); both full build and validators were green. **Look up the latest new-gameplay-sha P0 Gameplay Build and P0 mGBA Release Smoke** before claiming complete optimized compilation or emulator acceptance. New code commits deliberately trigger both CI pipelines. The existing mGBA Diancie test cannot reach Steven's Room from Granite Cave; it does not demonstrate a defective Diancie object.
+- Keep the core design: Kanto/Johto/Hoenn only, one saved trainer/party/PC, casual difficulty, 420 PC slots for now. No living-Dex completeness claims, ROM distribution, native Linux, storage expansion, Gigantamax or Terastallization.
+
+**Next engineering:** Finish reviewing internal story flags, map connectivity, special encounter prerequisites, breeding egg sources, expensive rare odds and permanent-form paths. **Then run consolidated mGBA gameplay**, representing all three regional departures, genuine catches, item/time/weather evolutions, daycare egg generation/hatching (including Manaphy→Phione), static catch/faint/revisit/reload and shared-party continuity. Do not sink cycles into a single Diancie fixture before broad implementation is done. Track source-test evidence separately from optimized-build and actual emulated gameplay outcomes.
+
+
+
 **Read this first before editing. Updated October 23, 2026 (US Central), October 24 UTC.**
 
 ## CURRENT HANDOFF CHECKPOINT: gameplay repair and C build unblock (Oct 24 UTC)
