@@ -365,3 +365,7 @@ ECOLOGY_ON_MAP(MAP_ROUTE6, PIKACHU_ALOLA)
 // unique field objects untouched; these are late-journey optional natural hunts.
 ECOLOGY_ON_MAP(MAP_ROUTE111, GROUDON)
 ECOLOGY_ON_MAP(MAP_SEAFLOOR_CAVERN_ROOM1, KYOGRE)
+
+// Klawf's inherited Steven's Cave home is behind Hoenn's Champion gate.
+// Route 115's cliffs supply a real early-to-mid Hoenn rocky habitat.
+ECOLOGY_ON_MAP(MAP_ROUTE115, KLAWF)

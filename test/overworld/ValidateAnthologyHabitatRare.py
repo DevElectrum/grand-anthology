@@ -77,7 +77,7 @@ assert "max = landMonsInfo->wildPokemon[0].maxLevel;" in dex
 # Safari/frontier/randomizer guard and source maps without replacing originals.
 extra_text = (root / "src/data/anthology_extra_habitats.h").read_text()
 extra = re.findall(r"^ECOLOGY_ON_MAP\((MAP_[A-Z0-9_]+), ([A-Z0-9_]+)\)$", extra_text, re.M)
-assert len(extra) == 312, (len(extra), "lost or unexpected habitat entries")
+assert len(extra) == 313, (len(extra), "lost or unexpected habitat entries")
 assert len({species for _map, species in extra[:113]}) == 113, "original 113 changed"
 assert len(set(extra)) == len(extra), "duplicate extra species within one map"
 # A postgame wild location must not be a required pre-Champion source. These
@@ -962,3 +962,10 @@ audit = (root / "tools/audit_p0_acquisition.py").read_text()
 for postleague_only in ("EMBEDDED_TOWER", "STEVENS_CAVE", "ALTERING_CAVE"):
     assert '"' + postleague_only + '"' in audit, postleague_only
 print("P0 Groudon/Kyogre before first Champion: late Hoenn land habitats and locked-map audit guards PASS")
+
+# The source graph must not count the Champion-gated Steven's Cave
+# Klawf record as the sole pre-Champion path for National #950.
+assert ("MAP_ROUTE115", "KLAWF") in set(extra)
+assert ("MAP_METEOR_FALLS_STEVENS_CAVE", "KLAWF") in set(extra)
+assert '"STEVENS_CAVE"' in (root / "tools/audit_p0_acquisition.py").read_text()
+print("P0 #950 Klawf: pre-Champion Route 115 relocation plus excluded Steven's Cave guard PASS")
