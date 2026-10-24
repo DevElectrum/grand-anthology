@@ -35,6 +35,22 @@ At the exact *initial public source commit* `27703e9d`:
 4. After real P0 implementation and targeted fixes, run wider Kanto/Johto/Hoenn gameplay acceptance, save/reload, encounters, forms, settings, persistence and region continuity. Report **what was actually demonstrated**, not source reachability.
 5. Keep the original **420-slot PC** for now; storage enlargement and Dynamax/Gigantamax/Terastallization are deferred. Native Linux port and unrelated infrastructure features are not current priority.
 
+
+## Implementation update: three P0 gameplay batches on public main
+
+After the initial `20938787` handoff, the following **public-main** changes were committed:
+
+| Commit | Working feature | Verification boundary |
+|---|---|---|
+| [`2efe308`](https://github.com/DevElectrum/grand-anthology/commit/2efe30869ff851129018acd8204c2c8b4efbb646) | Karrablast and Shelmet Linking Cord evolution routes; Sachet, Whipped Dream, Auspicious/Malicious Armor and Gimmighoul Coins in all Kanto/Johto/Hoenn department stores | Code scan: all 30 trade edges have offline item routes; all 44 item-evolution types stocked per region |
+| [`e66fa1b`](https://github.com/DevElectrum/grand-anthology/commit/e66fa1b48a385af64c12b386c43b02e84530e0ec) | Correct escaping in evolution-source test | The source-validation CI job passed on a later commit; these are still not emulator assertions |
+| [`44635fd`](https://github.com/DevElectrum/grand-anthology/commit/44635fd44b6c5924e30a2df3d5e638277fdfe1d5) | Dipplin learns required Dragon Cheer at level 38; move-based evolution source guard checks all 15 cases | Intermediate source-validation job passed; full build superseded |
+| [`63bea16`](https://github.com/DevElectrum/grand-anthology/commit/63bea1646b91a055175cf09ca75d302dbbfe320f) | 17 Arceus Plates, 17 Silvally Memories, 4 Oricorio Nectars in shared hub store and a buyability source guard | Latest gameplay-build run [`40057275807`](https://github.com/DevElectrum/grand-anthology/actions/runs/40057275807) was running when recorded; verify final result |
+
+**Freshly confirmed emulator baseline:** [mGBA `20938787` #40056497711](https://github.com/DevElectrum/grand-anthology/actions/runs/40056497711) finished **FAIL** at the *same Granite Cave doorway navigation*. Before that failure it logged `WorldShinyOdds: 26/26 PASS`, `WorldFirstBoot: 4/4 PASS`, and `WorldRegionPartyTravel: 27/27 PASS`. Do not call Diancie's spawn broken: the emulator never entered its room. Do not repeatedly rebuild that fixture at the expense of feature implementation.
+
+**Next engineering work:** Check `63bea16` CI first, then group remaining P0 by actual pre-Champion gating or forms subsystem. Confirm real mart purchases and offline evolution for this batch, breeding and key-item-only form access (e.g. Rotom Catalog, Zygarde Cube, Reveal Glass) without assuming price-zero key items can be sold in regular shops. Audit save/faint/revisit for representative scripted battles, then run consolidated mGBA play acceptance. Keep 420 PC slots and all upstream notices; do not touch archived private repo.
+
 ## Collaboration and workflow precautions
 
 - Make changes and commits **only in `DevElectrum/grand-anthology:main`** unless the user directs otherwise. Do not import old refs, merges, issue artifacts or GitHub Actions outputs from private history.
