@@ -143,6 +143,9 @@ for directory, transition, battle, suffix, form_capture in SITES:
         run(scripts, transition, state)
         assert hide in state.flags, (directory, "beasts before release")
         state.flags.add("FLAG_RELEASED_BEASTS")
+        if suffix == "BEAST_SUICUNE":
+            # Rocket generator is shut down at Mahogany state 14.
+            state.variables["VAR_MAHOGANY_TOWN_STATE"] = 14
     if suffix.startswith("PRELEAGUE_"):
         state.variables["VAR_SOOTOPOLIS_CITY_STATE"] = 5
         run(scripts, transition, state)
