@@ -48,3 +48,36 @@ for item in ("SCROLL_OF_DARKNESS", "SCROLL_OF_WATERS"):
 for item in ["FIRE_STONE","WATER_STONE","THUNDER_STONE","LEAF_STONE","MOON_STONE","SUN_STONE","SHINY_STONE","DAWN_STONE","ICE_STONE","METAL_COAT","KINGS_ROCK","DRAGON_SCALE","UP_GRADE","DUBIOUS_DISC","PRISM_SCALE","DEEP_SEA_TOOTH","DEEP_SEA_SCALE","ELECTIRIZER","MAGMARIZER","PROTECTOR","REAPER_CLOTH","RAZOR_CLAW","RAZOR_FANG","LINKING_CORD","OVAL_STONE","TART_APPLE","SWEET_APPLE","SYRUPY_APPLE","GALARICA_CUFF","GALARICA_WREATH","PEAT_BLOCK","BLACK_AUGURITE","METAL_ALLOY","SCROLL_OF_DARKNESS","SCROLL_OF_WATERS","STRAWBERRY_SWEET","LOVE_SWEET","BERRY_SWEET","CLOVER_SWEET","FLOWER_SWEET","STAR_SWEET","RIBBON_SWEET","CRACKED_POT","CHIPPED_POT","UNREMARKABLE_TEACUP","MASTERPIECE_TEACUP"]:
     assert f".2byte ITEM_{item}" in source(shops[1]), item
 print("P0 Goldenrod pre-League complete evolutionary item supplies and purchasable Kubfu scrolls PASS")
+
+
+# P0 offline-acquisition contract: a trade-specific evolution with no EVO_ITEM
+# alternative strands its National species when link features are disabled.
+# Parse every enabled family, not just a hand-picked Karrablast/Shelmet example.
+import re
+family_files = sorted((ROOT / "src/data/pokemon/species_info").glob("gen_*_families.h"))
+assert len(family_files) == 9, "Incomplete generation family registry"
+trade_edges = []
+evolution_items = set()
+for family_file in family_files:
+    family_text = family_file.read_text(encoding="utf-8")
+    species_headers = list(re.finditer(r"^\\s*\\[(SPECIES_[A-Z0-9_]+)\\]\\s*=", family_text, re.M))
+    assert species_headers, family_file
+    for index, match in enumerate(species_headers):
+        body = family_text[match.end():species_headers[index + 1].start() if index + 1 < len(species_headers) else len(family_text)]
+        item_edges = re.findall(r"\\{EVO_ITEM,\\s*(ITEM_[A-Z0-9_]+),\\s*(SPECIES_[A-Z0-9_]+)", body)
+        evolution_items.update(item for item, _target in item_edges)
+        for target in re.findall(r"\\{EVO_TRADE,\\s*[^,]+,\\s*(SPECIES_[A-Z0-9_]+)", body):
+            trade_edges.append((match.group(1), target))
+            assert any(item_target == target for _item, item_target in item_edges), (
+                family_file.name, match.group(1), target, "no offline item evolution")
+
+assert len(trade_edges) >= 30, f"Trade-edge audit unexpectedly shrank: {len(trade_edges)}"
+for shop in shops:
+    inventory = set(re.findall(r"\\.2byte\\s+(ITEM_[A-Z0-9_]+)", source(shop)))
+    # The same item is named Upgrade / Up-Grade in different generations.
+    if "ITEM_UP_GRADE" in inventory:
+        inventory.add("ITEM_UPGRADE")
+    missing = evolution_items - inventory
+    assert not missing, (shop, "missing evolution items", sorted(missing))
+    assert "ITEM_GIMMIGHOUL_COIN" in inventory, (shop, "Gholdengo coin supply absent")
+print(f"P0 offline evolution: {len(trade_edges)} trade routes and {len(evolution_items)} item types stocked in all regions PASS")

@@ -61,6 +61,11 @@ LilycoveCity_DepartmentStore_2F_Pokemart1:
 	.2byte ITEM_RAZOR_CLAW
 	.2byte ITEM_RAZOR_FANG
 	.2byte ITEM_LINKING_CORD
+	@ Offline evolution access for all generations.
+	.2byte ITEM_SACHET
+	.2byte ITEM_WHIPPED_DREAM
+	.2byte ITEM_AUSPICIOUS_ARMOR
+	.2byte ITEM_MALICIOUS_ARMOR
 	@ Anthology ability and special evolution items.
 	.2byte ITEM_ABILITY_CAPSULE
 	.2byte ITEM_ABILITY_PATCH

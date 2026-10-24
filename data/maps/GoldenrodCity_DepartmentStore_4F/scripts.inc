@@ -50,6 +50,12 @@ GoldenrodDeptStore4_Pokemart_FeathersAndMints::
 	.2byte ITEM_RAZOR_CLAW
 	.2byte ITEM_RAZOR_FANG
 	.2byte ITEM_LINKING_CORD
+	@ Offline evolution access for all generations.
+	.2byte ITEM_SACHET
+	.2byte ITEM_WHIPPED_DREAM
+	.2byte ITEM_AUSPICIOUS_ARMOR
+	.2byte ITEM_MALICIOUS_ARMOR
+	.2byte ITEM_GIMMIGHOUL_COIN
 	.2byte ITEM_OVAL_STONE
 	.2byte ITEM_TART_APPLE
 	.2byte ITEM_SWEET_APPLE
