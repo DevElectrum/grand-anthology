@@ -427,7 +427,7 @@ _p0_new_statics = (
 ("PowerPlant_Frlg","PowerPlant","TapuKoko","TAPU_KOKO",8,12,"TAPU_KOKO",False),
 ("PowerPlant_Frlg","PowerPlant","Zeraora","ZERAORA",37,11,"ZERAORA",False),
 ("MtMoon_1F_Frlg","MtMoon_1F","CosmogMoon","COSMOG",10,3,"COSMOG_MOON",True),
-("MtMoon_1F_Frlg","MtMoon_1F","Marshadow","MARSHADOW",31,8,"MARSHADOW",False),
+("SaffronCity_Dojo_Frlg","SaffronCity_Dojo","Marshadow","MARSHADOW",6,7,"MARSHADOW",False),
 ("SeafoamIslands_1F_Frlg","SeafoamIslands_1F","CosmogSeafoam","COSMOG",16,11,"COSMOG_SEAFOAM",True),
 ("BurnedTower_B1F","BurnedTower_B1F","Spectrier","SPECTRIER",8,12,"SPECTRIER",False),
 ("MtMoon_B1F_Frlg","MtMoon_B1F","Cresselia","CRESSELIA",13,17,"CRESSELIA",False),
@@ -474,7 +474,7 @@ _p0_new_statics = (
 ("PokemonMansion_1F_Frlg","PokemonMansion_1F","Mew","MEW",8,18,"MEW",False),
 ("PokemonMansion_1F_Frlg","PokemonMansion_1F","TypeNull","TYPE_NULL",31,22,"TYPE_NULL",False),
 ("IndigoPlateau_Exterior_Frlg","IndigoPlateau_Exterior","Arceus","ARCEUS",11,17,"ARCEUS",False),
-("MtMoon_B1F_Frlg","MtMoon_B1F","Necrozma","NECROZMA",43,3,"NECROZMA",False),
+("CeruleanCave_2F_Frlg","CeruleanCave_2F","Necrozma","NECROZMA",20,12,"NECROZMA",False),
 ("ViridianForest_Frlg","ViridianForest","Shaymin","SHAYMIN",49,56,"SHAYMIN",False),
 ("Route5_Frlg","Route5","TapuBulu","TAPU_BULU",30,23,"TAPU_BULU",False),
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","Giratina","GIRATINA",16,5,"GIRATINA",False),
@@ -525,7 +525,7 @@ for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
     assert _obj["graphics_id"]==f"OBJ_EVENT_GFX_SPECIES({_species})"
     assert _obj["local_id"]=="LOCALID_ANTHOLOGY_"+_suffix and _obj["flag"]==_hide
     assert "#define "+_hide+" " in _p0_flags
-    assert (f"call {_p}_AnthologyOnTransition" in _script or f"call {_p}_BigBatchOnTransition" in _script or f"call {_p}_SecondBatchOnTransition" in _script or f"call {_p}_AnthologyFieldTransition" in _script or f"call {_p}_PreLeagueOnTransition" in _script or f"map_script MAP_SCRIPT_ON_TRANSITION, {_p}_AnthologyOnTransition" in _script)
+    assert (f"call {_p}_AnthologyOnTransition" in _script or f"map_script MAP_SCRIPT_ON_TRANSITION, {_p}_AnthologyOnTransition" in _script or f"call {_p}_BigBatchOnTransition" in _script or f"call {_p}_SecondBatchOnTransition" in _script or f"call {_p}_AnthologyFieldTransition" in _script or f"call {_p}_PreLeagueOnTransition" in _script or f"map_script MAP_SCRIPT_ON_TRANSITION, {_p}_AnthologyOnTransition" in _script)
     _part=_script.split(f"{_p}_EventScript_{_n}::")[1].split(f"{_p}_Anthology{_n}Retreated::")[0].split(f"{_p}_BigBatch{_n}Retreated::")[0].split(f"{_p}_SecondBatch{_n}Retreated::")[0].split(f"{_p}_Field{_n}Retreated::")[0]
     for _token in (f"seteventmon SPECIES_{_species}","BattleSetup_StartLegendaryBattle",
                    "GetBattleOutcome","B_OUTCOME_CAUGHT","B_OUTCOME_WON",
@@ -988,3 +988,17 @@ for _required in ("FLAG_BADGE01_GET", "FLAG_BADGE02_GET"):
 assert "FLAG_DELIVERED_STEVEN_LETTER" in _diancie_transition
 assert "seteventmon SPECIES_DIANCIE, 18" in _diancie
 print("P0 approved legendary gates: Regis, creation trio, Kanto Champion, Diancie letter+badges PASS")
+
+# Koichi must actually be beaten. The Dojo's visible scene variable is set
+# before his battle, so checking it here would show Marshadow too early.
+_dojo = (root / "data/maps/SaffronCity_Dojo_Frlg/scripts.inc").read_text()
+assert "checktrainerflag TRAINER_BLACK_BELT_KOICHI" in _dojo
+assert "goto_if EQUAL, SaffronCity_Dojo_AnthologyMarshadowAfterMaster" in _dojo
+assert "call SaffronCity_Dojo_AnthologyRevealMarshadowNow" in _dojo
+assert "SaffronCity_Dojo_EventScript_HitmonleeBall::" in _dojo
+assert "SaffronCity_Dojo_EventScript_HitmonchanBall::" in _dojo
+assert "seteventmon SPECIES_MARSHADOW, 38" in _dojo
+_necro = (root / "data/maps/CeruleanCave_2F_Frlg/scripts.inc").read_text()
+assert "seteventmon SPECIES_NECROZMA, 65" in _necro
+assert "CeruleanCave_2F_AnthologyOnTransition::" in _necro
+print("Kanto Dojo Marshadow requires true Koichi victory; Cerulean Cave Necrozma static PASS")

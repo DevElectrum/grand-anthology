@@ -1,2 +1,51 @@
 CeruleanCave_2F_Frlg_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, CeruleanCave_2F_OnTransition
 	.byte 0
+
+CeruleanCave_2F_OnTransition::
+	call CeruleanCave_2F_AnthologyOnTransition
+	end
+
+CeruleanCave_2F_AnthologyOnTransition::
+	getcaughtmon SPECIES_NECROZMA
+	call_if_eq VAR_RESULT, TRUE, CeruleanCave_2F_AnthologyHideNecrozma
+	call_if_ne VAR_RESULT, TRUE, CeruleanCave_2F_AnthologyShowNecrozma
+	return
+
+// Post-Kanto-Champion Cerulean Cave 2F legendary encounter.
+
+CeruleanCave_2F_AnthologyHideNecrozma::
+	setflag FLAG_HIDE_ANTHOLOGY_NECROZMA
+	return
+
+CeruleanCave_2F_AnthologyShowNecrozma::
+	clearflag FLAG_HIDE_ANTHOLOGY_NECROZMA
+	return
+
+CeruleanCave_2F_EventScript_Necrozma::
+	lock
+	faceplayer
+	playmoncry SPECIES_NECROZMA, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_NECROZMA, 65
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, CeruleanCave_2F_AnthologyNecrozmaRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, CeruleanCave_2F_AnthologyNecrozmaRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, CeruleanCave_2F_AnthologyNecrozmaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, CeruleanCave_2F_AnthologyNecrozmaResolved
+	release
+	end
+
+CeruleanCave_2F_AnthologyNecrozmaResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_NECROZMA
+	setflag FLAG_HIDE_ANTHOLOGY_NECROZMA
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+CeruleanCave_2F_AnthologyNecrozmaRetreated::
+	release
+	end

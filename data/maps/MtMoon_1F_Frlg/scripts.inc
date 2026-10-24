@@ -144,9 +144,6 @@ MtMoon_1F_Text_BrockHelpsExcavateFossils::
 MtMoon_1F_AnthologyOnTransition::
 	call_if_set FLAG_CAUGHT_ANTHOLOGY_COSMOG_MOON, MtMoon_1F_AnthologyHideCosmogMoon
 	call_if_unset FLAG_CAUGHT_ANTHOLOGY_COSMOG_MOON, MtMoon_1F_AnthologyShowCosmogMoon
-	getcaughtmon SPECIES_MARSHADOW
-	call_if_eq VAR_RESULT, TRUE, MtMoon_1F_AnthologyHideMarshadow
-	call_if_ne VAR_RESULT, TRUE, MtMoon_1F_AnthologyShowMarshadow
 	return
 
 MtMoon_1F_AnthologyHideCosmogMoon::
@@ -190,39 +187,3 @@ MtMoon_1F_AnthologyCosmogMoonRetreated::
 	release
 	end
 
-MtMoon_1F_AnthologyHideMarshadow::
-	setflag FLAG_HIDE_ANTHOLOGY_MARSHADOW
-	return
-
-MtMoon_1F_AnthologyShowMarshadow::
-	clearflag FLAG_HIDE_ANTHOLOGY_MARSHADOW
-	return
-
-// Caught: permanently gone. Fainted: returns on re-entry. Run: stays here.
-MtMoon_1F_EventScript_Marshadow::
-	lock
-	faceplayer
-	playmoncry SPECIES_MARSHADOW, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_MARSHADOW, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMoon_1F_AnthologyMarshadowRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMoon_1F_AnthologyMarshadowRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_1F_AnthologyMarshadowResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMoon_1F_AnthologyMarshadowResolved
-	release
-	end
-
-MtMoon_1F_AnthologyMarshadowResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_MARSHADOW
-	setflag FLAG_HIDE_ANTHOLOGY_MARSHADOW
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-MtMoon_1F_AnthologyMarshadowRetreated::
-	release
-	end

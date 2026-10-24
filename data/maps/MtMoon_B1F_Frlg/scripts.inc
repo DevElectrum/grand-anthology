@@ -18,9 +18,6 @@ MtMoon_B1F_AnthologyOnTransition::
 	getcaughtmon SPECIES_PALKIA
 	call_if_eq VAR_RESULT, TRUE, MtMoon_B1F_AnthologyHidePalkia
 	call_if_ne VAR_RESULT, TRUE, MtMoon_B1F_AnthologyShowPalkia
-	getcaughtmon SPECIES_NECROZMA
-	call_if_eq VAR_RESULT, TRUE, MtMoon_B1F_AnthologyHideNecrozma
-	call_if_ne VAR_RESULT, TRUE, MtMoon_B1F_AnthologyShowNecrozma
 	return
 
 MtMoon_B1F_AnthologyHideCresselia::
@@ -137,40 +134,3 @@ MtMoon_B1F_AnthologyPalkiaRetreated::
 	release
 	end
 
-// Additional lunar/psychic encounter in a separate warp-connected alcove.
-
-MtMoon_B1F_AnthologyHideNecrozma::
-	setflag FLAG_HIDE_ANTHOLOGY_NECROZMA
-	return
-
-MtMoon_B1F_AnthologyShowNecrozma::
-	clearflag FLAG_HIDE_ANTHOLOGY_NECROZMA
-	return
-
-MtMoon_B1F_EventScript_Necrozma::
-	lock
-	faceplayer
-	playmoncry SPECIES_NECROZMA, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_NECROZMA, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMoon_B1F_AnthologyNecrozmaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMoon_B1F_AnthologyNecrozmaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B1F_AnthologyNecrozmaResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMoon_B1F_AnthologyNecrozmaResolved
-	release
-	end
-
-MtMoon_B1F_AnthologyNecrozmaResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_NECROZMA
-	setflag FLAG_HIDE_ANTHOLOGY_NECROZMA
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-MtMoon_B1F_AnthologyNecrozmaRetreated::
-	release
-	end
