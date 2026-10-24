@@ -1,12 +1,12 @@
-# This workflow exercises the actual original GBA release ROM inside mGBA,
-# including lossless title-art decompression in VRAM. Never publish ROMs/saves.
+# Public main branch: actual optimized GBA source build, then mGBA integration.
+# The user intentionally published a WIP source repository; red mGBA is allowed.
+# Test generated ROMs only in ephemeral runner space. No ROM/save artifacts.
 name: P0 mGBA Release Smoke
 
 on:
   push:
     branches:
-      - experiment/native-linux
-      - main  # future reviewed release-candidate snapshot
+      - main
     paths:
       - ".github/workflows/P0-mGBA-Release-Smoke.yml"
       - "src/main_menu.c"

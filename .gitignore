@@ -39,9 +39,8 @@ porymap.user.cfg
 prefabs.json
 .vscode/
 
-# Private / dev-only — never commit to the public repo
+# Private / dev-only (public AGENTS.md is intentionally tracked)
 CLAUDE.md
-AGENTS.md
 GEMINI.md
 .claude/
 .omc/
@@ -81,8 +80,10 @@ __pycache__
 # Pokemon World working plans (reviews/features/done) — kept local, not tracked
 .plans/
 
-# Engineering audit/budget records (E5/E6/E7) and SDD scratch — kept local, not tracked
-docs/
+# Public docs/ contains tracked contributor guidance and source-status handoffs.
+# Keep only explicitly private/local documentation directories out of Git.
+docs/private/
+docs/local/
 .superpowers/
 
 # Local dev/migration tooling — renamed with a leading dot and kept local, not tracked

@@ -56,7 +56,7 @@ Grand Anthology's intended continuous adventure uses **one trainer, party, bag, 
 
 ## What Grand Anthology adds
 
-The active development branch contains meaningful new source-level work, but **source integration is not proof of a playable or complete feature**.
+The public `main` branch contains meaningful new source-level work, but **source integration is not proof of a playable or complete feature**.
 
 | Area | Current evidence or scope |
 | --- | --- |
@@ -68,11 +68,13 @@ The active development branch contains meaningful new source-level work, but **s
 
 The aim is for all National species to be obtainable **before defeating a first Champion**, without trades or online services. This is a **design requirement**, not a claim that all progression gates and form/evolution requirements already work. Some original and new mechanics remain unfinished or unverified.
 
-For an accessible summary of scope, source evidence and unverified gameplay, see the [public development status](docs/PUBLIC_STATUS.md). Detailed engineering handoffs remain private development records.
+For an accessible summary of scope, source evidence and unverified gameplay, see the [public development status](docs/PUBLIC_STATUS.md). Development can resume from the [public next-Astra engineering handoff](docs/NEXT_ASTRA_HANDOFF.md); private historical notes and branches are not part of this repository.
 
 ## Development status and verification
 
-**Status: active experimental development; no Grand Anthology release is declared complete.**
+**Status: public experimental source on `main`, with no completed Grand Anthology game or ROM release declared.**
+
+Source-only publication occurred on October 23, 2026 (October 24 UTC), from a single clean-history initial commit. The [public CI workflows](https://github.com/DevElectrum/grand-anthology/actions) provide source/build and actual emulator feedback; they are **development checks, not a playable-game guarantee**. The initial optimized source/build and validation jobs passed; the initial full mGBA smoke failed on a Granite Cave doorway navigation assertion before reaching the Diancie encounter. It does not prove a Diancie spawning defect.
 
 At the documented **October 23, 2026** source milestone, the acquisition audit reported **1,025/1,025 optimistic National species paths** (Kanto 346, Johto 352, Hoenn 327). The source-validator portion of the recorded private development CI run passed. This is an inventory of possible code paths, **not** a successful in-emulator living or completed Pokédex.
 

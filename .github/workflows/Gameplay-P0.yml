@@ -1,21 +1,26 @@
-# Fast playable-game regression gate for the P0/P1 Grand Anthology effort.
-# Separate from the native port. Never upload ROMs or saves.
+# Public main branch: source validations and local optimized GBA compilation.
+# Experimental WIP. A failing build is a development signal, not a ROM release.
+# Never upload ROMs, saves, private logs or screenshots.
 name: P0 Gameplay Build
 
 on:
   push:
     branches:
-      - experiment/native-linux
-      - main  # future reviewed public snapshot; source checks still required
+      - main
     paths:
       - "Makefile"
+      - "*.mk"
+      - "asm/**"
+      - "constants/**"
       - "config.mk"
       - "src/**"
       - "include/**"
       - "data/**"
       - "graphics/**"
+      - "sound/**"
+      - "libagbsyscall/**"
       - "test/overworld/**"
-      - "tools/audit_p0_acquisition.py"
+      - "tools/**"
       - ".github/workflows/Gameplay-P0.yml"
   workflow_dispatch:
 
@@ -101,7 +106,7 @@ jobs:
             tail -n 90 "${RUNNER_TEMP}/gba-build.log"
             exit 1
           }
-          echo "PASS: optimized real GBA ROM builds on experimental branch"
+          echo "PASS: optimized real GBA ROM builds on public main (not published)"
           grep -A 4 -E '^Memory region|^ *ROM:' "${RUNNER_TEMP}/gba-build.log" | tail -n 18 || true
           test -s pokemonworld-release.gba
           du -h pokemonworld-release.gba

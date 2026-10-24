@@ -1,7 +1,7 @@
 # Pokémon Grand Anthology: scope and verification status
 
-**Status (October 24, 2026): Experimental source development.**
-Not a finished game, public release, or promise of availability.
+**Status (October 24, 2026): Public experimental source on `main`.**
+The *source repository* is public. It is not a finished playable game, ROM distribution or promise of availability.
 
 ## What this project is building
 
@@ -17,8 +17,8 @@ are outside the current scope.
 |---|---|
 | National species | The October 23 static acquisition audit recognized **1,025/1,025 optimistic source paths** (regional distribution Kanto 346, Johto 352, Hoenn 327) at development code `45dc98d9`. This includes encounters, gifts, evolution and breeding **references**; it does **not** prove all are genuinely obtainable before the first Champion. |
 | Specials and forms | Source has many scripted encounters and habitats, but save/revisit/catch/faint and permanent-form graph acceptance is incomplete. |
-| GBA build | The optimized full-roster GBA build has passed at previous development commits. A public WIP source snapshot is not a promise that every commit builds; CI may be red while development continues. |
-| Emulator verification | Targeted regional starter, party, cross-region travel and flash-save tests have previously passed; other tests, including Diancie field/battle integration, have exposed unresolved failures. This is active game development, not a completion gate for making clearly labeled source available. |
+| GBA build | Initial [public main source/build CI](https://github.com/DevElectrum/grand-anthology/actions/runs/40055403327) passed both source validators and an optimized local ROM build (without distributing its output). Future WIP commits may have red CI. |
+| Emulator verification | The first [public mGBA run](https://github.com/DevElectrum/grand-anthology/actions/runs/40055403335) passed title, starter, save and 27/27 party/region travel checks, but failed 5/6 in `WorldDiancieStatic` while traversing the Granite Cave north-arrow doorway: it never entered Steven's room. This has **not yet tested** the actual Diancie object or battle. Public-source availability is unrelated to this WIP test result. |
 | PC storage | **420 slots (14 boxes × 30)** currently. A living collection of all 1,025 distinct species cannot fit at once; storage expansion is deferred until other gameplay is complete. Releasing a Pokémon should not erase the Pokédex caught record. |
 | Gameplay readiness | Internally tracked provisional P0 readiness remains **37%**. This number is not a public playability certification, and actual campaign-wide acceptance is outstanding. |
 
