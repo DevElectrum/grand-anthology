@@ -487,6 +487,9 @@ def main():
               # overworld object and battle species. Export these release
               # globals explicitly: normal WANT is not used by --title.
               "gObjectEvents", "gBattleMons",
+              # Actual overworld script callback state, needed to distinguish
+              # a responsive daycare NPC from merely colliding with its tile.
+              "sGlobalScriptContext",
               "gPokemonStoragePtr", "sUsmState"] if title_only else WANT
     syms = load_syms(elf, nm)
 

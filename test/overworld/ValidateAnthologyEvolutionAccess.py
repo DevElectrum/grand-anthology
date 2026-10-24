@@ -282,4 +282,23 @@ for path in ("data/maps/Route5_PokemonDayCare_Frlg/map.json",
 assert "test/overworld/mgba-run.sh test/overworld/lua/WorldKantoDaycare.lua" in release_smoke
 assert "gSaveBlock3Ptr->region.route5DayCareMon" in daycare_code
 assert "TryProduceOrHatchEgg(&gSaveBlock1Ptr->daycare)" in daycare_code
+# A direct flash-save relocation from World Transit to the *interior* loads
+# stale serialized hub ObjectEvents. Stage outside and walk the real door.
+map_groups = json.loads(source("data/maps/map_groups.json"))
+outdoor_group = next(i for i, group in enumerate(map_groups["group_order"])
+                     if "Route5_Frlg" in map_groups[group])
+indoor_group = next(i for i, group in enumerate(map_groups["group_order"])
+                    if "Route5_PokemonDayCare_Frlg" in map_groups[group])
+assert outdoor_group == 37 and indoor_group == 51
+assert map_groups[map_groups["group_order"][outdoor_group]].index("Route5_Frlg") == 23
+assert map_groups[map_groups["group_order"][indoor_group]].index("Route5_PokemonDayCare_Frlg") == 0
+outside = json.loads(source("data/maps/Route5_Frlg/map.json"))
+assert any(w["x"] == 23 and w["y"] == 25 and
+           w["dest_map"] == "MAP_ROUTE5_POKEMON_DAY_CARE"
+           for w in outside["warp_events"])
+assert "stageAtRoute5Door()" in daycare_smoke
+assert "real Route 5 daycare door loads live map NPC templates" in daycare_smoke
+release_symbols = source("test/overworld/GenLuaSymbols.py")
+assert '"sGlobalScriptContext"' in release_symbols.split("if title_only else WANT")[0].split("wanted = ")[-1]
+
 print("P0 Kanto breeding: separate classic/shared daycare saves and release-ROM mGBA smoke guard PASS")

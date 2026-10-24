@@ -1,5 +1,13 @@
 # Next Astra: Grand Anthology after the PUBLIC source cutover
 
+## October 24 real-mGBA daycare fixture failure and correction
+
+The [full P0 Gameplay Build #40061225603](https://github.com/DevElectrum/grand-anthology/actions/runs/40061225603) at `d8a8cef` **PASSED both source checks and optimized compilation**. Its paired [release mGBA #40061225598](https://github.com/DevElectrum/grand-anthology/actions/runs/40061225598) passed the nine existing broad title/cheat/party-gift/Oak/Elm/Birch-refusal/shiny/first-boot/three-region continuity suites, but **failed in the newly added WorldKantoDaycare fixture** before reaching the older Diancie test. The temporary Save/Continue had been relocated **directly inside Route 5's daycare**, leaving the old World Transit ObjectEvents at coordinates (13,10)/(14,10) and without a third actor, exactly the stale-object-template pitfall warned about by the Diancie fixture. The smoke also referenced `S.sGlobalScriptContext`, missing from the lean `--title` Lua symbol profile, causing a Lua error. Neither observation proves an actual Route 5 NPC spawn bug in normal travel.
+
+**Corrective implementation:** stage the disposable flash Save/Continue **outside the Route 5 house** (map group 37, index 23), then walk through its real exterior doorstep warp at (23,25) into the daycare interior (group 51, index 0). Only assert the three new/live map NPCs after that actual world transition. Export the existing `sGlobalScriptContext` global into release Lua symbols to distinguish script interaction from mere tile collision. The acquisition validator now checks the pair of map-group IDs, correct exterior doorway warp and release-symbol contract. **Wait for exact corrected commit's CI and mGBA outcome before claiming success.** A further obstruction might indicate genuine wrong actor placement; use emulator results to decide. The old Diancie warp remains a separate issue, not evidence of Diancie broken battle code.
+
+
+
 
 ## Latest real mGBA evidence + Kanto breeding acceptance target (24 October UTC)
 

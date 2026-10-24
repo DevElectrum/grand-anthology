@@ -1,5 +1,13 @@
 # Pokémon Grand Anthology: scope and verification status
 
+## Real daycare emulator test diagnosis (24 October UTC)
+
+The [`d8a8cef` optimized build #40061225603](https://github.com/DevElectrum/grand-anthology/actions/runs/40061225603) **passed**. [The paired emulator run #40061225598](https://github.com/DevElectrum/grand-anthology/actions/runs/40061225598) again **passed** title (37/37), Cheats (8/8), full-party gift+save (15/15), Johto Elm (34/34), Kanto Oak (34/34), Hoenn full-PC refusal (26/26), shiny odds (26/26), first hub boot (4/4) and all three region travel+save (27/27).
+
+The new daycare smoke failed at a **test-fixture setup flaw**: rewriting the saved map to inside Route 5 daycare left the previous World Transit overworld NPC object pool intact, so IDs 1/2 referred to hub actors and ID 3 was missing. A missing script context symbol in the lean release Lua symbol set then crashed the test. The corrected smoke stages **outside Route 5** and enters its door through regular GBA input; the symbol exporter is extended to include the actual script pointer. The original failure does **not** establish that normally-entered daycare NPCs are broken. Current actual game Egg pickup/hatching and successful field NPC interaction still need mGBA proof.
+
+
+
 
 ## Production emulator check and daycare smoke (24 October UTC)
 
