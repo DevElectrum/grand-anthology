@@ -158,22 +158,22 @@ regional_stone_overrides = {
 found_regional = set()
 for family_file in family_files:
     family_text = family_file.read_text(encoding="utf-8")
-    headers = list(re.finditer(r"^\\s*\\[(SPECIES_[A-Z0-9_]+)\\]\\s*=", family_text, re.M))
+    headers = list(re.finditer(r"^\s*\[(SPECIES_[A-Z0-9_]+)\]\s*=", family_text, re.M))
     for index, match in enumerate(headers):
         body = family_text[match.end():headers[index + 1].start() if index + 1 < len(headers) else len(family_text)]
         gated = re.findall(
-            r"\\{EVO_(?:LEVEL|ITEM)[^\\n]*SPECIES_([A-Z0-9_]+),\\s*CONDITIONS\\([^\\n]*\\{IF_REGION,\\s*REGION_(?:ALOLA|GALAR|HISUI)\\}", body)
+            r"\{EVO_(?:LEVEL|ITEM)[^\n]*SPECIES_([A-Z0-9_]+),\s*CONDITIONS\([^\n]*\{IF_REGION,\s*REGION_(?:ALOLA|GALAR|HISUI)\}", body)
         for target in gated:
             assert target in regional_stone_overrides, (match.group(1), target, "unhandled inaccessible regional evolution")
             stone = regional_stone_overrides[target]
-            assert re.search(r"\\{EVO_ITEM,\\s*ITEM_" + stone + r",\\s*SPECIES_" + target + r"\\s*\\}", body), (match.group(1), target, stone)
+            assert re.search(r"\{EVO_ITEM,\s*ITEM_" + stone + r",\s*SPECIES_" + target + r"\s*\}", body), (match.group(1), target, stone)
             found_regional.add(target)
 assert found_regional == set(regional_stone_overrides), sorted(set(regional_stone_overrides) - found_regional)
 for shop in shops:
-    available = set(re.findall(r"\\.2byte\\s+ITEM_([A-Z0-9_]+)", source(shop)))
+    available = set(re.findall(r"\.2byte\s+ITEM_([A-Z0-9_]+)", source(shop)))
     assert set(regional_stone_overrides.values()) <= available, (shop, "missing regional-form evolution stones")
 for stone in set(regional_stone_overrides.values()):
-    item_data = source("src/data/items.h").split(f"[ITEM_{stone}] =", 1)[1].split("\\n    },", 1)[0]
+    item_data = source("src/data/items.h").split(f"[ITEM_{stone}] =", 1)[1].split("\n    },", 1)[0]
     assert "ItemUseOutOfBattle_EvolutionStone" in item_data and ".pocket = POCKET_ITEMS" in item_data, stone
 need("src/pokemon.c", "case EVO_MODE_ITEM_USE:", "case EVO_ITEM:", "evolutions[i].param == evolutionItem")
 print(f"P0 region-inaccessible evolution repair: {len(found_regional)} purchasable alternate-form stone paths PASS")
