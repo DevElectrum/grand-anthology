@@ -2,6 +2,35 @@
 
 **Read this first before editing. Updated October 23, 2026 (US Central), October 24 UTC.**
 
+## CURRENT HANDOFF CHECKPOINT: gameplay repair and C build unblock (Oct 24 UTC)
+
+**Primary live branch:** public `DevElectrum/grand-anthology:main`. **Latest gameplay/test repair before this documentation update:** [`6baa615e2413cdaf827523e49256fb133335cd39`](https://github.com/DevElectrum/grand-anthology/commit/6baa615e2413cdaf827523e49256fb133335cd39). The previous code fix was [`5156d50`](https://github.com/DevElectrum/grand-anthology/commit/5156d50bcc71fd2539014f5558a55502224a1df7). Inspect live `main` before modifying anything; do not use an old SHA as a branch target. The shorter [next-Astra prompt](NEXT_ASTRA_PROMPT.md) is maintained alongside this handoff.
+
+### Completed P0 acquisition implementation
+
+- [`2efe308`](https://github.com/DevElectrum/grand-anthology/commit/2efe30869ff851129018acd8204c2c8b4efbb646): all 30 trade-evolution paths have local offline item alternatives and all 44 item-evolution types are supplied regionally. Source audit only, not battle acceptance.
+- [`44635fd`](https://github.com/DevElectrum/grand-anthology/commit/44635fd44b6c5924e30a2df3d5e638277fdfe1d5): Dragon Cheer at level 38 on Dipplin; source guard for 15 move-requisite evolutions.
+- [`63bea16`](https://github.com/DevElectrum/grand-anthology/commit/63bea1646b91a055175cf09ca75d302dbbfe320f): 17 Arceus Plates, 17 Silvally Memories and four Oricorio Nectars stocked in World Transit.
+- [`6c50040`](https://github.com/DevElectrum/grand-anthology/commit/6c50040bcc2242973038f8b1c1c057a3a7b1b8fd), [`efabe71`](https://github.com/DevElectrum/grand-anthology/commit/efabe71e8115219d8828e6d06ec80de946d3642c): alternate, locally purchasable evolution stones for 12 inherited Alola/Galar/Hisui-only branches and validator escaping repair. The three playable regions never set those foreign `IF_REGION` predicates. Preserve ordinary base-form evolutions.
+- [`23890d6`](https://github.com/DevElectrum/grand-anthology/commit/23890d6674355bf0c8e47f132d02aa8f0aeabe65): six formerly post-Champion Sevii-locked Kanto evolution parents gained mainland pre-League ecology: Aipom, Misdreavus, Murkrow, Sneasel, Yanma, Swinub. Extra-habitat entries now total **302**, and the source audit excludes additional clearly post-League maps. See [detailed pre-Champion access audit](P0_PRECHAMPION_ACCESS.md).
+
+### Critical CI distinction and corrective action
+
+- The fully optimized [`63bea16` P0 Gameplay Build #40057275807](https://github.com/DevElectrum/grand-anthology/actions/runs/40057275807) **PASSED**.
+- The [`23890d6` Gameplay Build #40058490395](https://github.com/DevElectrum/grand-anthology/actions/runs/40058490395) **FAILED compilation**, although the independent **source-validation job PASSED**. The [same-SHA mGBA run #40058490385](https://github.com/DevElectrum/grand-anthology/actions/runs/40058490385) **FAILED before launching gameplay**, at compilation. This is **not** a new Diancie/encounter verdict.
+- Exact compiler error: `src/data/pokemon/species_info/gen_1_families.h:13697:370: error: expected '}' before '{' token`. In Cubone's `EVOLUTION(...)`, the new Dusk Stone Alolan Marowak branch lacked the **comma before the following Totem `EVO_NONE` branch**.
+- [`5156d50`](https://github.com/DevElectrum/grand-anthology/commit/5156d50bcc71fd2539014f5558a55502224a1df7) adds the missing comma and a source assertion; [`6baa615`](https://github.com/DevElectrum/grand-anthology/commit/6baa615e2413cdaf827523e49256fb133335cd39) repairs that assertion's raw-regex escaping. **Recheck the latest CI at HEAD before declaring this fixed in the optimized build.** [`6baa615` Gameplay Build #40058999139](https://github.com/DevElectrum/grand-anthology/actions/runs/40058999139) had been queued at this checkpoint. Note that the workflow cancels superseded earlier runs; a cancellation is not a failing compile.
+- Earlier [mGBA #40056497711](https://github.com/DevElectrum/grand-anthology/actions/runs/40056497711) did execute title, first boot, region-party continuity and save/Continue and then stopped at Granite Cave north-arrow navigation. It never entered Steven's Room, and therefore cannot establish Diancie's actual spawn behavior. Do not get stuck on this one fixture.
+
+### Next-Astra priority, ordered
+
+1. **Check latest public-main P0 Gameplay Build first.** If the `6baa615` optimized build fails, inspect the new compiler logs and correct the remaining source error(s), then rerun CI. Keep all fixes on public `main`; no ROM or save artifacts.
+2. **Continue substantive P0 practical pre-first-Champion acquisition gating audit across all three regions**, grouping fixes. Check scripts with hidden Champion flags on accessible maps, map/warp/habitat access, native + rare + ecology + aquatic rolls, trade/item/move/stones, breeding and alternate forms. The `tools/audit_p0_acquisition.py` **1,025/1,025** result is an *optimistic source closure*, not an accepted runtime catchability certificate. Prioritize real blockers rather than extra docs or per-species fixtures.
+3. **After substantial implementation**, consolidate emulator testing for regional access, shops, species captures, evolution branches, breeding, catches/faints/revisits, Save/Continue and party continuity. Fix the Granite Cave navigation fixture when testing Diancie, distinguishing warp behavior from encounter behavior.
+4. Maintain easy/casual gameplay, three-region Kanto/Johto/Hoenn scope, **420 PC slots**, and defer Dynamax/Gigantamax/Terastallization, PC expansion, native Linux port, and public release claims. Preserve upstream authorship/credits/notices; never touch the private precursor repository.
+
+This section supersedes earlier time-stamped CI descriptions below. No runtime proof of all 1,025 is claimed.
+
 ## Canonical repository, branch and intent
 
 - **PUBLIC active repository:** [`DevElectrum/grand-anthology`](https://github.com/DevElectrum/grand-anthology)

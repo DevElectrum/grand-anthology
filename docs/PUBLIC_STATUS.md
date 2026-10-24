@@ -3,6 +3,14 @@
 **Status (October 24, 2026): Public experimental source on `main`.**
 The *source repository* is public. It is not a finished playable game, ROM distribution or promise of availability.
 
+## Latest development checkpoint (October 24, 2026 UTC)
+
+P0 practical-access work continued with [12 Alola/Galar/Hisui region-gated evolution repairs](https://github.com/DevElectrum/grand-anthology/commit/6c50040bcc2242973038f8b1c1c057a3a7b1b8fd), [the accompanying source-validator fix](https://github.com/DevElectrum/grand-anthology/commit/efabe71e8115219d8828e6d06ec80de946d3642c), and [six mainland Kanto species placements](https://github.com/DevElectrum/grand-anthology/commit/23890d6674355bf0c8e47f132d02aa8f0aeabe65) that no longer rely exclusively on late Sevii island availability. Ecology catalog expanded from 296 to **302**, and the National source auditor excludes additional known post-Champion maps. Details: [pre-Champion access audit](P0_PRECHAMPION_ACCESS.md).
+
+**CI caveat:** [P0 Gameplay Build #40058490395](https://github.com/DevElectrum/grand-anthology/actions/runs/40058490395) and [mGBA #40058490385](https://github.com/DevElectrum/grand-anthology/actions/runs/40058490385) failed at the same **C compiler syntax error**, not at an emulator encounter: a missing comma in the Cubone Alolan Marowak evolution table. [`5156d50`](https://github.com/DevElectrum/grand-anthology/commit/5156d50bcc71fd2539014f5558a55502224a1df7) corrected the separator and [`6baa615`](https://github.com/DevElectrum/grand-anthology/commit/6baa615e2413cdaf827523e49256fb133335cd39) fixed the regression assertion escaping. **The corrected optimized build must be confirmed** on [the latest build #40058999139](https://github.com/DevElectrum/grand-anthology/actions/runs/40058999139), which was queued when this note was written. [Build #40057275807](https://github.com/DevElectrum/grand-anthology/actions/runs/40057275807) is the last confirmed complete optimized build success at the time of writing.
+
+This is an **implementation and source/CI status**, not evidence of in-game before-first-Champion access to every National species. Consolidated emulator acceptance remains to be done after the implementation batches. See [next-Astra handoff](NEXT_ASTRA_HANDOFF.md) for the priority sequence and verified boundaries.
+
 ## What this project is building
 
 Grand Anthology modifies [Pokémon World](https://github.com/evilchinesefood/PKMN-World)
