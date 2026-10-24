@@ -60,20 +60,20 @@ trade_edges = []
 evolution_items = set()
 for family_file in family_files:
     family_text = family_file.read_text(encoding="utf-8")
-    species_headers = list(re.finditer(r"^\\s*\\[(SPECIES_[A-Z0-9_]+)\\]\\s*=", family_text, re.M))
+    species_headers = list(re.finditer(r"^\s*\[(SPECIES_[A-Z0-9_]+)\]\s*=", family_text, re.M))
     assert species_headers, family_file
     for index, match in enumerate(species_headers):
         body = family_text[match.end():species_headers[index + 1].start() if index + 1 < len(species_headers) else len(family_text)]
-        item_edges = re.findall(r"\\{EVO_ITEM,\\s*(ITEM_[A-Z0-9_]+),\\s*(SPECIES_[A-Z0-9_]+)", body)
+        item_edges = re.findall(r"\{EVO_ITEM,\s*(ITEM_[A-Z0-9_]+),\s*(SPECIES_[A-Z0-9_]+)", body)
         evolution_items.update(item for item, _target in item_edges)
-        for target in re.findall(r"\\{EVO_TRADE,\\s*[^,]+,\\s*(SPECIES_[A-Z0-9_]+)", body):
+        for target in re.findall(r"\{EVO_TRADE,\s*[^,]+,\s*(SPECIES_[A-Z0-9_]+)", body):
             trade_edges.append((match.group(1), target))
             assert any(item_target == target for _item, item_target in item_edges), (
                 family_file.name, match.group(1), target, "no offline item evolution")
 
 assert len(trade_edges) >= 30, f"Trade-edge audit unexpectedly shrank: {len(trade_edges)}"
 for shop in shops:
-    inventory = set(re.findall(r"\\.2byte\\s+(ITEM_[A-Z0-9_]+)", source(shop)))
+    inventory = set(re.findall(r"\.2byte\s+(ITEM_[A-Z0-9_]+)", source(shop)))
     # The same item is named Upgrade / Up-Grade in different generations.
     if "ITEM_UP_GRADE" in inventory:
         inventory.add("ITEM_UPGRADE")
