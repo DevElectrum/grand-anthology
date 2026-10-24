@@ -1,4 +1,5 @@
-@ Handled by data/scripts/day_care.inc
+@ Classic one-mon caretaker handled by data/scripts/day_care_frlg.inc
+@ Two-parent companion NPCs forward to shared Johto daycare interactions
 
 Route5_PokemonDayCare_Frlg_MapScripts::
 	.byte 0
@@ -63,3 +64,17 @@ Route5_PokemonDayCare_Text_YouveGotNoRoomForIt::
 
 Route5_PokemonDayCare_Text_DontHaveEnoughMoney::
 	.string "You don't have enough money.$"
+
+@ P0: Kanto now has its own ordinary pre-Champion two-parent breeding access.
+@ Preserve the original single-mon FRLG caretaker in this same building.
+@ The other two NPCs reuse Johto's working *shared* two-parent daycare
+@ interactions, including the pending-egg and retrieval flow. These do not
+@ create a second save bank or duplicate egg-generation code.
+@ The Johto retrieval animation is already disabled, so no map-specific
+@ LOCALID or unwalkable back-room tile is required on Route 5.
+Route5_PokemonDayCare_EventScript_BreedingLady::
+	goto Route34_DayCare_EventScript_DaycareWoman
+
+Route5_PokemonDayCare_EventScript_BreedingMan::
+	goto Route34_EventScript_DaycareMan
+

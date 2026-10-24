@@ -223,3 +223,46 @@ ursaring = source("src/data/pokemon/species_info/gen_2_families.h").split("[SPEC
 assert "{EVO_ITEM, ITEM_PEAT_BLOCK, SPECIES_URSALUNA}" in ursaring
 assert "ITEM_PEAT_BLOCK, SPECIES_URSALUNA, CONDITIONS({IF_TIME" not in ursaring
 print(f"P0 offline clock/weather evolution: {fallback_count} stone routes plus all-hours Ursaluna PASS")
+
+
+# P0 Kanto before-first-Champion breeding: vanilla Route 5 supported only
+# one Pokemon, while its FRLG two-parent Four Island facility is post-League.
+# A breeding couple now uses the existing shared Johto/Hoenn two-parent
+# daycare save, compatibility, egg and pickup scripts in Kanto Route 5.
+# The original one-mon training NPC must remain available side-by-side.
+import json
+kanto_daycare_path = "data/maps/Route5_PokemonDayCare_Frlg/map.json"
+kanto_daycare = json.loads(source(kanto_daycare_path))
+assert kanto_daycare["region"] == "REGION_KANTO"
+assert kanto_daycare["id"] == "MAP_ROUTE5_POKEMON_DAY_CARE"
+expected_daycare_scripts = {
+    "Route5_PokemonDayCare_EventScript_DaycareMan",
+    "Route5_PokemonDayCare_EventScript_BreedingLady",
+    "Route5_PokemonDayCare_EventScript_BreedingMan",
+}
+assert {obj["script"] for obj in kanto_daycare["object_events"]} == expected_daycare_scripts
+assert len(kanto_daycare["object_events"]) == 3
+assert len({(obj["x"],obj["y"]) for obj in kanto_daycare["object_events"]}) == 3
+assert all(warp["dest_map"] == "MAP_ROUTE5" for warp in kanto_daycare["warp_events"])
+entry = source("data/maps/Route5_PokemonDayCare_Frlg/scripts.inc")
+need("data/maps/Route5_PokemonDayCare_Frlg/scripts.inc",
+     "Route5_PokemonDayCare_EventScript_BreedingLady::",
+     "goto Route34_DayCare_EventScript_DaycareWoman",
+     "Route5_PokemonDayCare_EventScript_BreedingMan::",
+     "goto Route34_EventScript_DaycareMan")
+assert "FLAG_KANTO_CHAMPION" not in entry
+johto = source("data/maps/Route34_DayCare/scripts.inc")
+need("data/maps/Route34_DayCare/scripts.inc",
+     "Route34_DayCare_EventScript_DaycareWoman::",
+     "Route34_EventScript_DaycareMan::",
+     "special StoreSelectedPokemonInDaycare",
+     "special GiveEggFromDaycare",
+     "specialvar VAR_RESULT, GetDaycareState",
+     "specialvar VAR_RESULT, TakePokemonFromDaycare")
+daycare_code = source("src/daycare.c")
+for marker in ("GetDaycareCompatibilityScore", "SPECIES_MANAPHY",
+               "eggSpecies = SPECIES_PHIONE", "gSaveBlock1Ptr->daycare"):
+    assert marker in daycare_code, marker
+assert "SPECIES_DITTO" in daycare_code
+assert "MON_EGG_GROUPS(EGG_GROUP_WATER_1, EGG_GROUP_FAIRY)" in source("src/data/pokemon/species_info/gen_4_families.h")
+print("P0 Kanto Route 5: original one-mon caretaker + two-parent egg/breeding services source contract PASS")

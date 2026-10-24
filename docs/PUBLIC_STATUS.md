@@ -1,5 +1,14 @@
 # Pokémon Grand Anthology: scope and verification status
 
+
+## Kanto pre-League daycare implementation update (24 October UTC)
+
+[Gameplay Build #40060366422](https://github.com/DevElectrum/grand-anthology/actions/runs/40060366422) **passed both source validators and optimized production GBA compilation** at \`f971217\`, including the Champion-locked map audit, 313 supplemental ecology placements and restored optimistic 1,025/1,025 National access graph. This build is not an emulator gameplay proof.
+
+The classic **Kanto Route 5 daycare** previously had only a single-Pokémon raising service; the region's normal two-parent FRLG breeding route was on post-Champion Four Island. The interior now includes two optional breeding NPCs that reuse the proven Johto two-parent daycare script handlers, beside the untouched FRLG trainer service. This makes Kanto Manaphy+Ditto→Phione breeding **source-wired before the first Champion** without adding save/party/PC fields. Kanto object approach and actual Egg generation, hatch and persistence still require consolidated mGBA verification. See [detailed P0 pre-Champion audit](P0_PRECHAMPION_ACCESS.md) and [handoff](NEXT_ASTRA_HANDOFF.md).
+
+
+
 ## Current P0 engineering addition: 24 October UTC (supersedes older CI caveats below)
 
 The corrected Cubone evolution comma build at [`6baa615`, CI #40058999139](https://github.com/DevElectrum/grand-anthology/actions/runs/40058999139) **passed source validation and the full optimized GBA build**. This resolves the earlier reported compiler blocker.

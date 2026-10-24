@@ -1,5 +1,16 @@
 # P0 before-first-Champion acquisition access audit
 
+
+## Kanto breeding accessibility repair (October 24 UTC)
+
+The classic FRLG Route 5 daycare raises **one** Pokémon and cannot produce Eggs. Its original two-parent Four Island daycare is gated behind the Kanto League. This is material for the Kanto-origin pre-first-Champion path to **Phione**, which specifically requires breeding a **Manaphy** with Ditto; simply listing Manaphy as a source does not complete a playable Phione breeding route.
+
+Kanto Route 5's existing interior now contains an optional **two-person breeding service** alongside the original FRLG one-parent caretaker. The new lady/man forward into the established Johto **shared** two-parent daycare scripts: compatible pair deposit/retrieval, earned Egg pickup, rejection/full-party safeguards and the usual save-backed storage. No new breeding implementation, save structure, PC slots or party schema are introduced. The legacy one-parent caretaker remains functional. The Route 5 entrance is part of ordinary pre-Champion Kanto travel.
+
+\`ValidateAnthologyEvolutionAccess.py\` now checks the two new NPC event objects, wrapper links to Johto's working handlers, unmodified original caretaker, Kanto location and exits, absence of a Kanto-Champion gate, and the source wiring for the Manaphy+Ditto→Phione breeding branch. **This is source wiring, not an mGBA-confirmed Egg or newly-hatched Phione.** Map object approach tiles, dialog deposit/pickup, actual compatibility, save/reload and birth remain in the consolidated emulator acceptance queue.
+
+
+
 ## October 24 follow-up: real-time, form and Champion-gate repairs
 
 The [first new acquisition batch](https://github.com/DevElectrum/grand-anthology/commit/4f693f815fe32a985a113772b4b56d4fe8bbaf42) retains ordinary level/time/weather/spin methods while adding **14 purchasable-stone alternatives** across 12 evolution parents: Alolan Rattata, Hisuian Sneasel, Galarian Linoone, Amaura, both Sliggoo forms, both Rockruff variants, Cosmoem (two branches), Snom, Greavard and Milcery. Peat Block also works on Ursaring independent of night. The explicit sources and item usability are checked by `ValidateAnthologyEvolutionAccess.py`. This does not verify party evolution animations or used-item consumption in mGBA.

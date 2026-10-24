@@ -1,5 +1,16 @@
 # Next Astra: Grand Anthology after the PUBLIC source cutover
 
+
+## Kanto daycare breeding implementation and CI evidence (24 October UTC)
+
+The strict gate-audit and last Klawf repair commit [\`f971217\`](https://github.com/DevElectrum/grand-anthology/commit/f971217f898af09fd58a178fbaf1f20a82d629ac) **passed both source checks and full optimized ROM build** in [P0 Gameplay Build #40060366422](https://github.com/DevElectrum/grand-anthology/actions/runs/40060366422). The separate [mGBA run #40060366495](https://github.com/DevElectrum/grand-anthology/actions/runs/40060366495) was still running at the initial checkpoint; query its true final status.
+
+The next functional P0 batch corrects Kanto **two-parent breeding before Champion**. Old Route 5 FRLG daycare supports only single Pokémon training; Kanto Four Island breeding is post-League. To make Manaphy+Ditto→Phione locally actionable, added a breeding lady and man inside \`data/maps/Route5_PokemonDayCare_Frlg/map.json\` next to the original caretaker, with tiny cross-region wrappers to the existing **Johto daycare** scripts in \`data/maps/Route34_DayCare/scripts.inc\`. The shared \`gSaveBlock1Ptr->daycare\` state and compatible Egg pickup need no new save fields. \`ValidateAnthologyEvolutionAccess.py\` covers this source topology.
+
+**Exact next checks:** inspect latest P0 Gameplay Build on the new breeding commit and latest P0 mGBA smoke. If the new building objects have collision/interaction problems, fix the layout/position as a functional batch; do not claim the Phione Egg was produced without an mGBA deposit/compatibility/Egg/hatch test. Continue grouped story and unique-event access auditing and consolidate real gameplay proof after implementation. Do not alter or import private history, distribute ROM/saves, expand 420 PC storage, or switch focus to native Linux/gimmicks.
+
+
+
 ## Newest Oct 24 checkpoint: grouped gameplay acquisition and gate corrections
 
 Continue only on **public `DevElectrum/grand-anthology:main`**. Do not modify/merge the historical private repository. Inspect live `main` HEAD and exact CI checks at handoff time.
