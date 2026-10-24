@@ -142,11 +142,22 @@ RockTunnel_B1F_Text_WinstonPostBattle::
 	.string "I'm an artist, not a fighter.\n"
 	.string "I'll go home to draw.$"
 
-// Independent pre-League encounters; preserve original local puzzle/story.
+// Regigigas requires all three Hoenn Regis registered caught, not in party.
 RockTunnel_B1F_AnthologyOnTransition::
+	getcaughtmon SPECIES_REGIROCK
+	goto_if_ne VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyRegigigasLocked
+	getcaughtmon SPECIES_REGICE
+	goto_if_ne VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyRegigigasLocked
+	getcaughtmon SPECIES_REGISTEEL
+	goto_if_ne VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyRegigigasLocked
 	getcaughtmon SPECIES_REGIGIGAS
 	call_if_eq VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyHideRegigigas
 	call_if_ne VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyShowRegigigas
+	goto RockTunnel_B1F_AnthologyOtherStatics
+
+RockTunnel_B1F_AnthologyRegigigasLocked::
+	setflag FLAG_HIDE_ANTHOLOGY_REGIGIGAS
+RockTunnel_B1F_AnthologyOtherStatics::
 	getcaughtmon SPECIES_UXIE
 	call_if_eq VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyHideUxie
 	call_if_ne VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyShowUxie

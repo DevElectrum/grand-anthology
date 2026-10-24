@@ -186,8 +186,15 @@ IndigoPlateau_Exterior_Movement_OakExitBuilding::
 	walk_down
 	step_end
 
-// Independent pre-League encounters; preserve original local puzzle/story.
+// The post-Champion creation-trio hunt must be completed before Arceus.
 IndigoPlateau_Exterior_AnthologyOnTransition::
+	goto_if_unset FLAG_KANTO_CHAMPION, IndigoPlateau_Exterior_AnthologyHideArceus
+	getcaughtmon SPECIES_DIALGA
+	goto_if_ne VAR_RESULT, TRUE, IndigoPlateau_Exterior_AnthologyHideArceus
+	getcaughtmon SPECIES_PALKIA
+	goto_if_ne VAR_RESULT, TRUE, IndigoPlateau_Exterior_AnthologyHideArceus
+	getcaughtmon SPECIES_GIRATINA
+	goto_if_ne VAR_RESULT, TRUE, IndigoPlateau_Exterior_AnthologyHideArceus
 	getcaughtmon SPECIES_ARCEUS
 	call_if_eq VAR_RESULT, TRUE, IndigoPlateau_Exterior_AnthologyHideArceus
 	call_if_ne VAR_RESULT, TRUE, IndigoPlateau_Exterior_AnthologyShowArceus

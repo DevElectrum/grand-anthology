@@ -3,12 +3,14 @@ GraniteCave_StevensRoom_MapScripts::
 	map_script MAP_SCRIPT_ON_LOAD, GraniteCave_StevensRoom_OnTransition
 	.byte 0
 
-@ Steven's original letter/TM story takes priority; Diancie appears only
-@ after the player has delivered his letter and remains until caught.
+@ Steven's original letter/TM story takes priority; Diancie appears after
+@ the letter and both Roxanne's and Brawly's badges, until caught.
 GraniteCave_StevensRoom_OnTransition::
 	getcaughtmon SPECIES_DIANCIE
 	goto_if_eq VAR_RESULT, TRUE, GraniteCave_StevensRoom_HideDiancie
 	goto_if_unset FLAG_DELIVERED_STEVEN_LETTER, GraniteCave_StevensRoom_HideDiancie
+	goto_if_unset FLAG_BADGE01_GET, GraniteCave_StevensRoom_HideDiancie
+	goto_if_unset FLAG_BADGE02_GET, GraniteCave_StevensRoom_HideDiancie
 	clearflag FLAG_HIDE_ANTHOLOGY_DIANCIE
 	end
 
@@ -52,8 +54,11 @@ GraniteCave_StevensRoom_EventScript_Steven::
 	end
 
 GraniteCave_StevensRoom_RevealDiancieAfterLetter::
+	goto_if_unset FLAG_BADGE01_GET, GraniteCave_StevensRoom_RevealDiancieTooEarly
+	goto_if_unset FLAG_BADGE02_GET, GraniteCave_StevensRoom_RevealDiancieTooEarly
 	clearflag FLAG_HIDE_ANTHOLOGY_DIANCIE
 	addobject LOCALID_ANTHOLOGY_DIANCIE
+GraniteCave_StevensRoom_RevealDiancieTooEarly::
 	return
 
 GraniteCave_StevensRoom_EventScript_StevenExitNorth::
@@ -150,7 +155,7 @@ GraniteCave_StevensRoom_EventScript_Diancie::
 	faceplayer
 	playmoncry SPECIES_DIANCIE, CRY_MODE_ENCOUNTER
 	waitmoncry
-	seteventmon SPECIES_DIANCIE, 45
+	seteventmon SPECIES_DIANCIE, 18
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	specialvar VAR_RESULT, GetBattleOutcome

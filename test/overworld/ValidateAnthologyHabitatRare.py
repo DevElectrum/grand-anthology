@@ -962,3 +962,30 @@ assert ("MAP_ROUTE115", "KLAWF") in set(extra)
 assert ("MAP_METEOR_FALLS_STEVENS_CAVE", "KLAWF") in set(extra)
 assert '"STEVENS_CAVE"' in (root / "tools/audit_p0_acquisition.py").read_text()
 print("P0 #950 Klawf: pre-Champion Route 115 relocation plus excluded Steven's Cave guard PASS")
+
+
+// Approved optional Legendary prerequisites are checked on each map entry;
+// caught Dex bits matter, not whether the Pokémon is still in the party.
+_regi = (root / "data/maps/RockTunnel_B1F_Frlg/scripts.inc").read_text()
+_regi_gate = _regi.split("RockTunnel_B1F_AnthologyOnTransition::")[1].split("RockTunnel_B1F_AnthologyOtherStatics::")[0]
+for _name in ("REGIROCK", "REGICE", "REGISTEEL"):
+    assert "getcaughtmon SPECIES_" + _name in _regi_gate
+assert "RockTunnel_B1F_AnthologyRegigigasLocked::" in _regi_gate
+assert "setflag FLAG_HIDE_ANTHOLOGY_REGIGIGAS" in _regi_gate
+
+_arceus = (root / "data/maps/IndigoPlateau_Exterior_Frlg/scripts.inc").read_text()
+_arceus_gate = _arceus.split("IndigoPlateau_Exterior_AnthologyOnTransition::")[1].split("IndigoPlateau_Exterior_AnthologyHideArceus::")[0]
+assert "goto_if_unset FLAG_KANTO_CHAMPION" in _arceus_gate
+for _name in ("DIALGA", "PALKIA", "GIRATINA"):
+    assert "getcaughtmon SPECIES_" + _name in _arceus_gate
+    assert "goto_if_ne VAR_RESULT, TRUE, IndigoPlateau_Exterior_AnthologyHideArceus" in _arceus_gate
+
+_diancie = (root / "data/maps/GraniteCave_StevensRoom/scripts.inc").read_text()
+_diancie_transition = _diancie.split("GraniteCave_StevensRoom_OnTransition::")[1].split("GraniteCave_StevensRoom_HideDiancie::")[0]
+_diancie_steven = _diancie.split("GraniteCave_StevensRoom_RevealDiancieAfterLetter::")[1].split("GraniteCave_StevensRoom_EventScript_StevenExitNorth::")[0]
+for _required in ("FLAG_BADGE01_GET", "FLAG_BADGE02_GET"):
+    assert "goto_if_unset " + _required in _diancie_transition
+    assert "goto_if_unset " + _required in _diancie_steven
+assert "FLAG_DELIVERED_STEVEN_LETTER" in _diancie_transition
+assert "seteventmon SPECIES_DIANCIE, 18" in _diancie
+print("P0 approved legendary gates: Regis, creation trio, Kanto Champion, Diancie letter+badges PASS")
