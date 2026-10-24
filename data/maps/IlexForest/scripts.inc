@@ -20,6 +20,7 @@ IlexForest_OnTransition:
 	getcaughtmon SPECIES_CELEBI
 	call_if_eq VAR_RESULT, TRUE, IlexForest_EventScript_Shrine_Caught
 	call IlexForest_EventScript_SyncSecondCelebi
+	call IlexForest_AnthologyOnTransition
 	end	
 
 @ Celebi, Kurt and the post-game second Celebi are spawned by script - the shrine cutscene
@@ -880,3 +881,48 @@ IlexForest_Text_Kimono_Girl4:
 
 IlexForest_Text_Kimono_Girl5:
 	.string "See you.$"
+
+@ Zarude inhabits forest troops. This local rare individual is deliberately
+@ discoverable as a static and is independent of Celebi's shrine story.
+IlexForest_AnthologyOnTransition::
+	getcaughtmon SPECIES_ZARUDE
+	call_if_eq VAR_RESULT, TRUE, IlexForest_AnthologyHideZarude
+	call_if_ne VAR_RESULT, TRUE, IlexForest_AnthologyShowZarude
+	return
+
+IlexForest_AnthologyHideZarude::
+	setflag FLAG_HIDE_ANTHOLOGY_ZARUDE
+	return
+
+IlexForest_AnthologyShowZarude::
+	clearflag FLAG_HIDE_ANTHOLOGY_ZARUDE
+	return
+
+IlexForest_EventScript_Zarude::
+	lock
+	faceplayer
+	playmoncry SPECIES_ZARUDE, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_ZARUDE, 20
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, IlexForest_AnthologyZarudeRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, IlexForest_AnthologyZarudeRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IlexForest_AnthologyZarudeResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, IlexForest_AnthologyZarudeResolved
+	release
+	end
+
+IlexForest_AnthologyZarudeResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_ZARUDE
+	setflag FLAG_HIDE_ANTHOLOGY_ZARUDE
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+IlexForest_AnthologyZarudeRetreated::
+	release
+	end
+

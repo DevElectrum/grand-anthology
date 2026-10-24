@@ -322,9 +322,6 @@ Route36_BigBatchOnTransition::
 	getcaughtmon SPECIES_VIRIZION
 	call_if_eq VAR_RESULT, TRUE, Route36_BigBatchHideVirizion
 	call_if_ne VAR_RESULT, TRUE, Route36_BigBatchShowVirizion
-	getcaughtmon SPECIES_ZARUDE
-	call_if_eq VAR_RESULT, TRUE, Route36_BigBatchHideZarude
-	call_if_ne VAR_RESULT, TRUE, Route36_BigBatchShowZarude
 	call_if_set FLAG_CAUGHT_ANTHOLOGY_CALYREX_NORTH, Route36_BigBatchHideCalyrexNorth
 	call_if_unset FLAG_CAUGHT_ANTHOLOGY_CALYREX_NORTH, Route36_BigBatchShowCalyrexNorth
 	call_if_set FLAG_CAUGHT_ANTHOLOGY_CALYREX_SOUTH, Route36_BigBatchHideCalyrexSouth
@@ -364,42 +361,6 @@ Route36_BigBatchVirizionResolved::
 	end
 
 Route36_BigBatchVirizionRetreated::
-	release
-	end
-
-Route36_BigBatchHideZarude::
-	setflag FLAG_HIDE_ANTHOLOGY_ZARUDE
-	return
-
-Route36_BigBatchShowZarude::
-	clearflag FLAG_HIDE_ANTHOLOGY_ZARUDE
-	return
-
-Route36_EventScript_Zarude::
-	lock
-	faceplayer
-	playmoncry SPECIES_ZARUDE, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_ZARUDE, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route36_BigBatchZarudeRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route36_BigBatchZarudeRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route36_BigBatchZarudeResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route36_BigBatchZarudeResolved
-	release
-	end
-
-Route36_BigBatchZarudeResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_ZARUDE
-	setflag FLAG_HIDE_ANTHOLOGY_ZARUDE
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route36_BigBatchZarudeRetreated::
 	release
 	end
 

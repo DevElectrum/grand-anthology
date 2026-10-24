@@ -483,7 +483,7 @@ _p0_new_statics = (
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","Heatran","HEATRAN",9,27,"HEATRAN",False),
 ("VermilionCity_Frlg","VermilionCity","Meltan","MELTAN",35,15,"MELTAN",False),
 ("Route36","Route36","Virizion","VIRIZION",36,15,"VIRIZION",False),
-("Route36","Route36","Zarude","ZARUDE",64,19,"ZARUDE",False),
+("IlexForest","IlexForest","Zarude","ZARUDE",48,19,"ZARUDE",False),
 ("Route36","Route36","CalyrexNorth","CALYREX",23,15,"CALYREX_NORTH",True),
 ("Route36","Route36","CalyrexSouth","CALYREX",36,26,"CALYREX_SOUTH",True),
 ("Route45","Route45","Reshiram","RESHIRAM",10,83,"RESHIRAM",False),
