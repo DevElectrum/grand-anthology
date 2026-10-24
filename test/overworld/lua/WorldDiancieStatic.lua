@@ -105,6 +105,39 @@ local function where()
   local x,y=F.pos()
   return ("map=%d/%d pos=(%d,%d) ow=%s"):format(F.grp(),F.mapn(),x,y,tostring(F.ow()))
 end
+-- Distinguish a broken ROM warp from an invalid synthetic Save/Continue.
+-- Source map data alone cannot prove the *live* MapHeader was restored.
+local function liveWarpState()
+  local events=F.r32(S.gMapHeader+4)
+  if events==0 then return false,false,false,"gMapHeader.events is NULL" end
+  local count=F.r8(events+1)
+  local list=F.r32(events+8)
+  local found=false
+  if count<=32 and list~=0 then
+    for i=0,count-1 do
+      local ptr=list+8*i
+      if F.rs16(ptr)==5 and F.rs16(ptr+2)==10 and F.r8(ptr+4)==3
+          and F.r8(ptr+6)==MAP and F.r8(ptr+7)==GROUP then
+        found=true
+      end
+    end
+  end
+  local avatar=nil
+  for i=0,15 do
+    local addr=S.gObjectEvents+i*S.ObjectEvent.stride
+    if (F.r8(addr)&1)~=0 and F.r8(addr+8)==255 then avatar=addr;break end
+  end
+  if not avatar then
+    return found,false,false,("events=0x%X count=%d warps=0x%X; no player"):format(events,count,list)
+  end
+  local elev=F.r8(avatar+11)>>4
+  local behavior=F.r8(avatar+30)
+  local facing=F.r16(avatar+24)&0xF
+  local detail=("events=0x%X count=%d warps=0x%X elevation=%d behavior=%d facing=%d avatarflags=0x%02X")
+    :format(events,count,list,elev,behavior,facing,F.r8(S.gPlayerAvatar))
+  return found,behavior==101,elev==3 and facing==2,detail
+end
+
 local function waitBattle()
   for i=1,1100 do
     if i%10==0 then F.press("A",2) end
@@ -148,6 +181,13 @@ F.run(function()
   F.check("turned north without leaving Granite Cave warp tile",
     (xTurn==5 and yTurn==10) or F.mapn()==MAP,where())
   if F.mapn()==CAVE_1F and (xTurn~=5 or yTurn~=10) then F.finish();return end
+  if F.mapn()==CAVE_1F then
+    local hasWarp,isArrow,playerReady,detail=liveWarpState()
+    F.check("runtime map header has real Steven-room warp",hasWarp,detail)
+    F.check("runtime player tile has north-arrow metatile behavior",isArrow,detail)
+    F.check("runtime player faces north at cave elevation three",playerReady,detail)
+    if not (hasWarp and isArrow and playerReady) then F.finish();return end
+  end
   local entered = F.mapn()==MAP
   for _=1,90 do
     if entered then break end
