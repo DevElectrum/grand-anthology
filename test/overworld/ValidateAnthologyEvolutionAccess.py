@@ -110,3 +110,26 @@ for family_file in family_files:
             assert move in learned, (match.group(1), move, "evolution requirement not learned naturally")
 assert len(required_moves) >= 13, f"Move-gated evolution audit shrank: {len(required_moves)}"
 print(f"P0 move-based evolution: {len(required_moves)} offline naturally learnable requirements PASS")
+
+
+# The shared World Transit shop must sell ordinary equipment for stable
+# alternate forms across all three regions. Key items and temporary battle
+# transformations have separate event/gimmick requirements.
+forms = source("src/data/pokemon/form_change_tables.h")
+plate_items = set(re.findall(
+    r"\{FORM_CHANGE_ITEM_HOLD,\s*SPECIES_ARCEUS_\w+,\s*(ITEM_[A-Z0-9_]+_PLATE)", forms))
+memory_items = set(re.findall(
+    r"\{FORM_CHANGE_ITEM_HOLD,\s*SPECIES_SILVALLY_\w+,\s*(ITEM_[A-Z0-9_]+_MEMORY)", forms))
+nectar_items = set(re.findall(
+    r"\{FORM_CHANGE_ITEM_USE,\s*SPECIES_ORICORIO_\w+,\s*(ITEM_[A-Z0-9_]+_NECTAR)", forms))
+assert (len(plate_items), len(memory_items), len(nectar_items)) == (17, 17, 4)
+hub_shop = source("data/maps/RegionHub/scripts.inc").split("RegionHub_Items::", 1)[1].split("pokemartlistend", 1)[0]
+hub_stock = set(re.findall(r"\.2byte\s+(ITEM_[A-Z0-9_]+)", hub_shop))
+form_requirements = plate_items | memory_items | nectar_items
+assert form_requirements <= hub_stock, sorted(form_requirements - hub_stock)
+form_item_definitions = source("src/data/items.h")
+for item in form_requirements:
+    item_entry = form_item_definitions.split(f"[{item}] =", 1)[1].split("\n    },", 1)[0]
+    assert ".pocket = POCKET_ITEMS" in item_entry, item
+    assert re.search(r"\.price\s*=\s*(?:1000|300),", item_entry), item
+print(f"P0 permanent form supplies: {len(form_requirements)} buyable hub item paths PASS")

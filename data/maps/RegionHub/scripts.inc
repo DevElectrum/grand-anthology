@@ -547,6 +547,48 @@ RegionHub_Items::
 	.2byte ITEM_FULL_HEAL
 	.2byte ITEM_MAX_REPEL
 	.2byte ITEM_TOWN_MAP
+	@ Accessible permanent form equipment for the unified three-region party.
+	@ Arceus type plates (battle gimmick crystals are intentionally deferred).
+	.2byte ITEM_FIST_PLATE
+	.2byte ITEM_SKY_PLATE
+	.2byte ITEM_TOXIC_PLATE
+	.2byte ITEM_STONE_PLATE
+	.2byte ITEM_EARTH_PLATE
+	.2byte ITEM_INSECT_PLATE
+	.2byte ITEM_SPOOKY_PLATE
+	.2byte ITEM_IRON_PLATE
+	.2byte ITEM_FLAME_PLATE
+	.2byte ITEM_SPLASH_PLATE
+	.2byte ITEM_MEADOW_PLATE
+	.2byte ITEM_ZAP_PLATE
+	.2byte ITEM_MIND_PLATE
+	.2byte ITEM_ICICLE_PLATE
+	.2byte ITEM_DRACO_PLATE
+	.2byte ITEM_DREAD_PLATE
+	.2byte ITEM_PIXIE_PLATE
+	@ Silvally RKS Memories.
+	.2byte ITEM_FIGHTING_MEMORY
+	.2byte ITEM_FLYING_MEMORY
+	.2byte ITEM_POISON_MEMORY
+	.2byte ITEM_GROUND_MEMORY
+	.2byte ITEM_ROCK_MEMORY
+	.2byte ITEM_BUG_MEMORY
+	.2byte ITEM_GHOST_MEMORY
+	.2byte ITEM_STEEL_MEMORY
+	.2byte ITEM_FIRE_MEMORY
+	.2byte ITEM_WATER_MEMORY
+	.2byte ITEM_GRASS_MEMORY
+	.2byte ITEM_ELECTRIC_MEMORY
+	.2byte ITEM_PSYCHIC_MEMORY
+	.2byte ITEM_ICE_MEMORY
+	.2byte ITEM_DRAGON_MEMORY
+	.2byte ITEM_DARK_MEMORY
+	.2byte ITEM_FAIRY_MEMORY
+	@ Oricorio's four usable form nectars.
+	.2byte ITEM_RED_NECTAR
+	.2byte ITEM_YELLOW_NECTAR
+	.2byte ITEM_PINK_NECTAR
+	.2byte ITEM_PURPLE_NECTAR
 	pokemartlistend
 
 @ Harbor Master (KeyItemAudit S3a): championship-gated event tickets. Each give ALSO sets
