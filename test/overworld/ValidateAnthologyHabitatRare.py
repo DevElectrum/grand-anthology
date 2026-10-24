@@ -505,7 +505,7 @@ _p0_new_statics = (
 ("Route40","Route40","GalarianArticuno","ARTICUNO_GALAR",9,2,"ARTICUNO_GALAR",True),
 ("BurnedTower_1F","BurnedTower_1F","GalarianMoltres","MOLTRES_GALAR",7,6,"MOLTRES_GALAR",True),
 ("Route38","Route38","RaikouReserve","RAIKOU",27,22,"BEAST_RAIKOU",False),
-("Route46","Route46","EnteiReserve","ENTEI",10,32,"BEAST_ENTEI",False),
+("MtMortar_2F","MtMortar_2F","EnteiReserve","ENTEI",10,13,"BEAST_ENTEI",False),
 ("LakeOfRage","LakeOfRage","SuicuneReserve","SUICUNE",35,38,"BEAST_SUICUNE",False),
 ("FieryPath","FieryPath","GroudonPreLeague","GROUDON",20,20,"PRELEAGUE_GROUDON",False),
 ("Route125","Route125","KyogrePreLeague","KYOGRE",56,7,"PRELEAGUE_KYOGRE",False),

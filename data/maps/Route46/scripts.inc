@@ -80,53 +80,6 @@ Route46_Text_Sign:
 	.string "ROUTE 46\n"
 	.string "MOUNTAIN RD. AHEAD$"
 
-// Optional new form or post-release roamer safety-net encounter.
+// Keep original Route 46 story transition; Entei now waits inside Mt. Mortar.
 Route46_AnthologyTransition::
-	call Route46_AnthologyFieldTransition
 	goto Route29_OnTransition
-
-Route46_AnthologyFieldTransition::
-	call Route46_FieldSyncEnteiReserve
-	return
-
-Route46_FieldSyncEnteiReserve::
-	goto_if_unset FLAG_RELEASED_BEASTS, Route46_FieldHideEnteiReserve
-	getcaughtmon SPECIES_ENTEI
-	goto_if_eq VAR_RESULT, TRUE, Route46_FieldHideEnteiReserve
-	goto Route46_FieldShowEnteiReserve
-
-Route46_FieldHideEnteiReserve::
-	setflag FLAG_HIDE_ANTHOLOGY_BEAST_ENTEI
-	return
-
-Route46_FieldShowEnteiReserve::
-	clearflag FLAG_HIDE_ANTHOLOGY_BEAST_ENTEI
-	return
-
-Route46_EventScript_EnteiReserve::
-	lock
-	faceplayer
-	playmoncry SPECIES_ENTEI, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_ENTEI, 40
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route46_FieldEnteiReserveRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route46_FieldEnteiReserveRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route46_FieldEnteiReserveResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route46_FieldEnteiReserveResolved
-	release
-	end
-
-Route46_FieldEnteiReserveResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_BEAST_ENTEI
-	setflag FLAG_HIDE_ANTHOLOGY_BEAST_ENTEI
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route46_FieldEnteiReserveRetreated::
-	release
-	end

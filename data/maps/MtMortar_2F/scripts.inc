@@ -4,6 +4,7 @@ MtMortar_2F_MapScripts::
 	.byte 0
 
 MtMortar_2F_OnTransition: 
+	call MtMortar_2F_AnthologyFieldTransition
 	end
 
 MtMortar_2F_EventScript_Item_Iron::
@@ -48,3 +49,51 @@ MtMortar_2F_Text_SupernerdHughAfter:
 	.string "Have you seen a trainer who\n"
 	.string "has a SLOWPOKE that can use\l"
 	.string "STRENGTH?$"
+
+// Entei's fixed encounter lies inside Mt. Mortar beyond the mountain approach.
+// The Burned Tower awakening is required; no artificial badge threshold.
+MtMortar_2F_AnthologyFieldTransition::
+	call MtMortar_2F_FieldSyncEnteiReserve
+	return
+
+MtMortar_2F_FieldSyncEnteiReserve::
+	goto_if_unset FLAG_RELEASED_BEASTS, MtMortar_2F_FieldHideEnteiReserve
+	getcaughtmon SPECIES_ENTEI
+	goto_if_eq VAR_RESULT, TRUE, MtMortar_2F_FieldHideEnteiReserve
+	goto MtMortar_2F_FieldShowEnteiReserve
+
+MtMortar_2F_FieldHideEnteiReserve::
+	setflag FLAG_HIDE_ANTHOLOGY_BEAST_ENTEI
+	return
+
+MtMortar_2F_FieldShowEnteiReserve::
+	clearflag FLAG_HIDE_ANTHOLOGY_BEAST_ENTEI
+	return
+
+MtMortar_2F_EventScript_EnteiReserve::
+	lock
+	faceplayer
+	playmoncry SPECIES_ENTEI, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_ENTEI, 40
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMortar_2F_FieldEnteiReserveRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMortar_2F_FieldEnteiReserveRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMortar_2F_FieldEnteiReserveResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMortar_2F_FieldEnteiReserveResolved
+	release
+	end
+
+MtMortar_2F_FieldEnteiReserveResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_BEAST_ENTEI
+	setflag FLAG_HIDE_ANTHOLOGY_BEAST_ENTEI
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+MtMortar_2F_FieldEnteiReserveRetreated::
+	release
+	end

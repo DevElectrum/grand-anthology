@@ -114,7 +114,7 @@ SITES = (
      "MOLTRES_GALAR", "FLAG_CAUGHT_ANTHOLOGY_MOLTRES_GALAR"),
     ("Route38", "Route38_AnthologyFieldTransition", "Route38_EventScript_RaikouReserve",
      "BEAST_RAIKOU", None),
-    ("Route46", "Route46_AnthologyFieldTransition", "Route46_EventScript_EnteiReserve",
+    ("MtMortar_2F", "MtMortar_2F_AnthologyFieldTransition", "MtMortar_2F_EventScript_EnteiReserve",
      "BEAST_ENTEI", None),
     ("LakeOfRage", "LakeOfRage_AnthologyFieldTransition", "LakeOfRage_EventScript_SuicuneReserve",
      "BEAST_SUICUNE", None),
