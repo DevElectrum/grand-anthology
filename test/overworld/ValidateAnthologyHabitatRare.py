@@ -342,7 +342,12 @@ for invariant in ("stageSaveAtGraniteCaveEntrance()", "S.SaveBlock1.mapGroup",
                   "real overworld north-arrow warp entered Steven room",
                   "F.press(\"Up\",1)",
                    "turned north without leaving Granite Cave warp tile",
-                   "F.press(\"Up\",2)",
+                   "local entered = F.mapn()==MAP",
+                   "for _=1,90 do",
+                   "F.press(\"Up\",1)",
+                   "FLAG_STONE_BADGE=0x94F",
+                   "FLAG_KNUCKLE_BADGE=0x950",
+                   "disposable Save/Continue retained both required badges",
                   "the real scripted Diancie battle opened"):
     assert invariant in diancie_smoke, invariant
 print("P0 Diancie release smoke: actual flash Save/Continue fixture, no dev menu")

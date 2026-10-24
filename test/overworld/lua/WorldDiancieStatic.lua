@@ -1,6 +1,6 @@
 -- Optimized GBA/mGBA scripted-legendary battle START smoke.
 -- Uses the actual Granite Cave Steven room and overworld object interaction.
--- Seeds only post-letter story flags and a legal party in disposable RAM.
+-- Seeds post-letter + two-badge story flags and a legal party in disposable RAM.
 -- Catch/faint/revisit/save acceptance is NOT asserted by this suite.
 local here=(debug.getinfo(1,"S").source:sub(2)):match("^(.*[/\\])") or ""
 package.path=here.."?.lua;"..package.path
@@ -11,6 +11,9 @@ local GROUP, MAP=24,10 -- gMapGroup_Dungeons/GraniteCave_StevensRoom
 local CAVE_1F=7 -- same group, entry map; enter Steven's room by its actual warp
 local SPECIES_DIANCIE=719
 local FLAG_DELIVERED_STEVEN_LETTER=0xBD
+-- Hoenn's Stone/Knuckle badges: SYSTEM_FLAGS 0x948 plus 7/8, respectively.
+local FLAG_STONE_BADGE=0x94F
+local FLAG_KNUCKLE_BADGE=0x950
 local FLAG_HIDE_GRANITE_CAVE_STEVEN=0x341
 local FLAG_HIDE_DIANCIE=0xDD4
 
@@ -117,6 +120,8 @@ F.run(function()
   seedParty()
   F.check("legitimate battle precondition: nonempty party",F.r8(S.gPartiesCount)==1)
   setFlag(FLAG_DELIVERED_STEVEN_LETTER,true)
+  setFlag(FLAG_STONE_BADGE,true)
+  setFlag(FLAG_KNUCKLE_BADGE,true)
   setFlag(FLAG_HIDE_GRANITE_CAVE_STEVEN,true)
   setFlag(FLAG_HIDE_DIANCIE,true) -- map transition must reconcile it
   local continued,reason=stageSaveAtGraniteCaveEntrance()
@@ -133,25 +138,32 @@ F.run(function()
   F.check("entered Granite Cave north-arrow doorway tile",
     reachedDoor and xDoor==5 and yDoor==10 and F.mapn()==CAVE_1F,where())
   if not reachedDoor or xDoor~=5 or yDoor~=10 then F.finish();return end
-  -- On the north-arrow tile, first TURN without walking. F.face("Up")
-  -- holds the direction for four frames; it can already walk us off the
-  -- tile before the warp input is checked, creating a false negative.
-  -- A one-frame tap plus a release completes the turn in place.
+  -- This tile is MB_NORTH_ARROW_WARP. The southern neighbour (5,11)
+  -- is solid cave wall; approach is from (5,9), then face north *while
+  -- standing on the arrow*. A two-frame tap is not a reliable held-D-pad
+  -- field input: hold Up through a complete field-control interval.
   F.press("Up",1)
   F.idle(16)
   local xTurn,yTurn=F.pos()
   F.check("turned north without leaving Granite Cave warp tile",
     (xTurn==5 and yTurn==10) or F.mapn()==MAP,where())
   if F.mapn()==CAVE_1F and (xTurn~=5 or yTurn~=10) then F.finish();return end
-  if F.mapn()==CAVE_1F then F.press("Up",2) end
+  local entered = F.mapn()==MAP
+  for _=1,90 do
+    if entered then break end
+    F.press("Up",1)
+    if F.mapn()==MAP then entered=true end
+  end
   F.idle(350)
   F.check("real overworld north-arrow warp entered Steven room",
-    F.ow() and F.grp()==GROUP and F.mapn()==MAP,where())
+    entered and F.ow() and F.grp()==GROUP and F.mapn()==MAP,where())
   if F.mapn()~=MAP or not F.ow() then F.finish();return end
   F.check("disposable Save/Continue retained Steven's delivered letter",
     getFlag(FLAG_DELIVERED_STEVEN_LETTER))
+  F.check("disposable Save/Continue retained both required badges",
+    getFlag(FLAG_STONE_BADGE) and getFlag(FLAG_KNUCKLE_BADGE))
   F.check("save/reload restored eligible player party",F.r8(S.gPartiesCount)==1)
-  F.check("Diancie is visible after Steven letter before Champion",
+  F.check("Diancie is visible after Steven letter and two badges before Champion",
     not getFlag(FLAG_HIDE_DIANCIE),where())
   local obj,x,y=staticObject()
   F.check("Diancie species object spawned at canonical tile",
