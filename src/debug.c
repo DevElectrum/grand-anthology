@@ -3879,7 +3879,7 @@ static void DebugAction_Discovery_DrawTarget(u8 taskId)
     StringCopy(gStringVar2, gText_DigitIndicator[gTasks[taskId].tDigit]);
     if (species == SPECIES_NONE)
         StringCopy(gStringVar1, COMPOUND_STRING("Rotate all"));
-    else if (WorldIsNaturalDiscoverySpecies(species))
+    else if (WorldIsPostLeagueResearchSpecies(species))
         StringCopy(gStringVar1, GetSpeciesName(species));
     else
         StringCopy(gStringVar1, COMPOUND_STRING("Unavailable"));
@@ -3899,7 +3899,7 @@ static void DebugAction_Discovery_EditTarget(u8 taskId)
 {
     u8 windowId;
     u32 target = GetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET);
-    if (target >= NUM_SPECIES || (target != SPECIES_NONE && !WorldIsNaturalDiscoverySpecies(target)))
+    if (target >= NUM_SPECIES || (target != SPECIES_NONE && !WorldIsPostLeagueResearchSpecies(target)))
         target = SPECIES_NONE;
     ClearStdWindowAndFrame(gTasks[taskId].tWindowId, TRUE);
     RemoveWindow(gTasks[taskId].tWindowId);
@@ -3927,7 +3927,7 @@ static void DebugAction_Discovery_HandleTarget(u8 taskId)
     if (JOY_NEW(A_BUTTON))
     {
         enum Species target = (u16)gTasks[taskId].tInput;
-        if (target != SPECIES_NONE && !WorldIsNaturalDiscoverySpecies(target))
+        if (target != SPECIES_NONE && !WorldIsPostLeagueResearchSpecies(target))
         {
             PlaySE(SE_PC_OFF);
             return;

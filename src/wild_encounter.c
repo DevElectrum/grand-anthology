@@ -755,6 +755,22 @@ bool8 WorldIsNaturalDiscoverySpecies(enum Species species)
 #endif
 }
 
+// Post-League Research substitutes into unrelated routes, so its pool excludes
+// all Legendary/Mythical species, including those with natural populations.
+// An authored local habitat may separately allow those lore exceptions.
+bool8 WorldIsPostLeagueResearchSpecies(enum Species species)
+{
+#if ALL_REGIONS
+    if (!WorldIsNaturalDiscoverySpecies(species))
+        return FALSE;
+    return !gSpeciesInfo[species].isRestrictedLegendary
+        && !gSpeciesInfo[species].isSubLegendary
+        && !gSpeciesInfo[species].isMythical;
+#else
+    return FALSE;
+#endif
+}
+
 // Supplemental ordinary species that were missing from original grass tables.
 // These are separate from unique static encounters, fossil restoration and
 // fish-only habitats. The source catalog is a small, compile-time map index.
@@ -953,14 +969,14 @@ static enum Species WorldChoosePostLeagueDiscoverySpecies(enum Species original)
     // A chosen Research target is a real wild encounter, not a gift.
     // Invalid or uninitialized old-save values safely fall back to rotation.
     result = GetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET);
-    if (WorldIsNaturalDiscoverySpecies(result))
+    if (WorldIsPostLeagueResearchSpecies(result))
         return result;
     result = 1 + (battles / 3) % (NUM_SPECIES - 1);
     for (attempts = 0; attempts < NUM_SPECIES - 1; attempts++)
     {
         // Battle-only forms need their respective battle mechanics; never
         // materialize those as permanent caught Pokémon.
-        if (WorldIsNaturalDiscoverySpecies(result))
+        if (WorldIsPostLeagueResearchSpecies(result))
             return result;
         if (++result >= NUM_SPECIES)
             result = 1;
