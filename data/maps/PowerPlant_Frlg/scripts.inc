@@ -122,9 +122,6 @@ PowerPlant_AnthologyOnTransition::
 	getcaughtmon SPECIES_TAPU_KOKO
 	call_if_eq VAR_RESULT, TRUE, PowerPlant_AnthologyHideTapuKoko
 	call_if_ne VAR_RESULT, TRUE, PowerPlant_AnthologyShowTapuKoko
-	getcaughtmon SPECIES_MAGEARNA
-	call_if_eq VAR_RESULT, TRUE, PowerPlant_AnthologyHideMagearna
-	call_if_ne VAR_RESULT, TRUE, PowerPlant_AnthologyShowMagearna
 	getcaughtmon SPECIES_ZERAORA
 	call_if_eq VAR_RESULT, TRUE, PowerPlant_AnthologyHideZeraora
 	call_if_ne VAR_RESULT, TRUE, PowerPlant_AnthologyShowZeraora
@@ -164,43 +161,6 @@ PowerPlant_AnthologyTapuKokoResolved::
 	end
 
 PowerPlant_AnthologyTapuKokoRetreated::
-	release
-	end
-
-PowerPlant_AnthologyHideMagearna::
-	setflag FLAG_HIDE_ANTHOLOGY_MAGEARNA
-	return
-
-PowerPlant_AnthologyShowMagearna::
-	clearflag FLAG_HIDE_ANTHOLOGY_MAGEARNA
-	return
-
-// Caught: permanently gone. Fainted: returns on re-entry. Run: stays here.
-PowerPlant_EventScript_Magearna::
-	lock
-	faceplayer
-	playmoncry SPECIES_MAGEARNA, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_MAGEARNA, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PowerPlant_AnthologyMagearnaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PowerPlant_AnthologyMagearnaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PowerPlant_AnthologyMagearnaResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PowerPlant_AnthologyMagearnaResolved
-	release
-	end
-
-PowerPlant_AnthologyMagearnaResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_MAGEARNA
-	setflag FLAG_HIDE_ANTHOLOGY_MAGEARNA
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-PowerPlant_AnthologyMagearnaRetreated::
 	release
 	end
 

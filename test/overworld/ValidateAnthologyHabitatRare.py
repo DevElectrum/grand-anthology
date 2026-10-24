@@ -424,7 +424,6 @@ print("P0 cave statics: real collision/elevation tilemap coordinates PASS")
 import struct as _anthology_struct
 _p0_new_statics = (
 ("PowerPlant_Frlg","PowerPlant","TapuKoko","TAPU_KOKO",8,12,"TAPU_KOKO",False),
-("PowerPlant_Frlg","PowerPlant","Magearna","MAGEARNA",40,12,"MAGEARNA",False),
 ("PowerPlant_Frlg","PowerPlant","Zeraora","ZERAORA",37,11,"ZERAORA",False),
 ("MtMoon_1F_Frlg","MtMoon_1F","CosmogMoon","COSMOG",10,3,"COSMOG_MOON",True),
 ("MtMoon_1F_Frlg","MtMoon_1F","Marshadow","MARSHADOW",31,8,"MARSHADOW",False),
@@ -475,13 +474,13 @@ _p0_new_statics = (
 ("PokemonMansion_1F_Frlg","PokemonMansion_1F","TypeNull","TYPE_NULL",31,22,"TYPE_NULL",False),
 ("IndigoPlateau_Exterior_Frlg","IndigoPlateau_Exterior","Arceus","ARCEUS",11,17,"ARCEUS",False),
 ("MtMoon_B1F_Frlg","MtMoon_B1F","Necrozma","NECROZMA",43,3,"NECROZMA",False),
-("Route5_Frlg","Route5","Shaymin","SHAYMIN",16,5,"SHAYMIN",False),
+("ViridianForest_Frlg","ViridianForest","Shaymin","SHAYMIN",49,56,"SHAYMIN",False),
 ("Route5_Frlg","Route5","TapuBulu","TAPU_BULU",30,23,"TAPU_BULU",False),
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","Giratina","GIRATINA",16,5,"GIRATINA",False),
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","Darkrai","DARKRAI",31,20,"DARKRAI",False),
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","TapuLele","TAPU_LELE",22,37,"TAPU_LELE",False),
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","Heatran","HEATRAN",9,27,"HEATRAN",False),
-("PokemonMansion_1F_Frlg","PokemonMansion_1F","Meltan","MELTAN",2,25,"MELTAN",False),
+("VermilionCity_Frlg","VermilionCity","Meltan","MELTAN",35,15,"MELTAN",False),
 ("Route36","Route36","Virizion","VIRIZION",36,15,"VIRIZION",False),
 ("Route36","Route36","Zarude","ZARUDE",64,19,"ZARUDE",False),
 ("Route36","Route36","CalyrexNorth","CALYREX",23,15,"CALYREX_NORTH",True),
@@ -507,7 +506,6 @@ _p0_new_statics = (
 ("Route43","Route43","RaikouReserve","RAIKOU",19,7,"BEAST_RAIKOU",False),
 ("Route46","Route46","EnteiReserve","ENTEI",10,32,"BEAST_ENTEI",False),
 ("Route35","Route35","SuicuneReserve","SUICUNE",31,22,"BEAST_SUICUNE",False),
-("PokemonMansion_1F_Frlg","PokemonMansion_1F","MewtwoPreLeague","MEWTWO",33,4,"PRELEAGUE_MEWTWO",False),
 ("FieryPath","FieryPath","GroudonPreLeague","GROUDON",20,20,"PRELEAGUE_GROUDON",False),
 ("Route125","Route125","KyogrePreLeague","KYOGRE",56,7,"PRELEAGUE_KYOGRE",False),
 ("Route124","Route124","IronCrown","IRON_CROWN",59,40,"IRON_CROWN",False),
@@ -515,7 +513,7 @@ _p0_new_statics = (
 )
 _p0_layouts = {x["id"]: x for x in json.loads((root / "data/layouts/layouts.json").read_text())["layouts"] if x}
 _p0_flags = (root / "include/constants/flags.h").read_text()
-assert len(_p0_new_statics)==89 and len({(s[0],s[4],s[5]) for s in _p0_new_statics})==89
+assert len(_p0_new_statics)==87 and len({(s[0],s[4],s[5]) for s in _p0_new_statics})==87
 for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
     _m=json.loads((root/"data/maps"/_dir/"map.json").read_text())
     _script=(root/"data/maps"/_dir/"scripts.inc").read_text()

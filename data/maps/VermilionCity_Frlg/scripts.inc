@@ -22,6 +22,7 @@ VermilionCity_Movement_ExitSSAnne::
 
 VermilionCity_OnTransition::
 	setworldmapflag FLAG_WORLD_MAP_VERMILION_CITY
+	call VermilionCity_AnthologyOnTransition
 	call_if_set FLAG_TALKED_TO_OAKS_AIDE_IN_VERMILION, VermilionCity_EventScript_HideOaksAide
 	end
 
@@ -462,4 +463,49 @@ VermilionCity_Text_Route2AideHasPackageForYou::
 	.string "ROUTE 2, {PLAYER}.\p"
 	.string "If you're in the ROUTE 2 area,\n"
 	.string "please look for him.$"
+
+
+// A small metal Pokémon among the construction works near Machop.
+// Multi-location acquisition batch: preserve canonical map scripts.
+VermilionCity_AnthologyOnTransition::
+	getcaughtmon SPECIES_MELTAN
+	call_if_eq VAR_RESULT, TRUE, VermilionCity_AnthologyHideMeltan
+	call_if_ne VAR_RESULT, TRUE, VermilionCity_AnthologyShowMeltan
+	return
+
+VermilionCity_AnthologyHideMeltan::
+	setflag FLAG_HIDE_ANTHOLOGY_MELTAN
+	return
+
+VermilionCity_AnthologyShowMeltan::
+	clearflag FLAG_HIDE_ANTHOLOGY_MELTAN
+	return
+
+VermilionCity_EventScript_Meltan::
+	lock
+	faceplayer
+	playmoncry SPECIES_MELTAN, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_MELTAN, 15
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, VermilionCity_AnthologyMeltanRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, VermilionCity_AnthologyMeltanRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, VermilionCity_AnthologyMeltanResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, VermilionCity_AnthologyMeltanResolved
+	release
+	end
+
+VermilionCity_AnthologyMeltanResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_MELTAN
+	setflag FLAG_HIDE_ANTHOLOGY_MELTAN
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+VermilionCity_AnthologyMeltanRetreated::
+	release
+	end
 

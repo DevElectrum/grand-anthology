@@ -143,20 +143,6 @@
       "flag": "FLAG_HIDE_ANTHOLOGY_TAPU_KOKO"
     },
     {
-      "local_id": "LOCALID_ANTHOLOGY_MAGEARNA",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(MAGEARNA)",
-      "x": 40,
-      "y": 12,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "PowerPlant_EventScript_Magearna",
-      "flag": "FLAG_HIDE_ANTHOLOGY_MAGEARNA"
-    },
-    {
       "local_id": "LOCALID_ANTHOLOGY_ZERAORA",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(ZERAORA)",
       "x": 37,

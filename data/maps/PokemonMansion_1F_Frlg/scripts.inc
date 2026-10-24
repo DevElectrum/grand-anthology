@@ -8,8 +8,6 @@ PokemonMansion_1F_OnLoad::
 	end
 
 PokemonMansion_1F_OnTransition::
-	call PokemonMansion_1F_PreLeagueOnTransition
-	call PokemonMansion_1F_BigBatchOnTransition
 	call PokemonMansion_1F_AnthologyOnTransition
 	setworldmapflag FLAG_WORLD_MAP_POKEMON_MANSION_1F
 	end
@@ -140,88 +138,3 @@ PokemonMansion_1F_AnthologyTypeNullRetreated::
 	release
 	end
 
-// Multi-location acquisition batch: preserve canonical map scripts.
-PokemonMansion_1F_BigBatchOnTransition::
-	getcaughtmon SPECIES_MELTAN
-	call_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_BigBatchHideMeltan
-	call_if_ne VAR_RESULT, TRUE, PokemonMansion_1F_BigBatchShowMeltan
-	return
-
-PokemonMansion_1F_BigBatchHideMeltan::
-	setflag FLAG_HIDE_ANTHOLOGY_MELTAN
-	return
-
-PokemonMansion_1F_BigBatchShowMeltan::
-	clearflag FLAG_HIDE_ANTHOLOGY_MELTAN
-	return
-
-PokemonMansion_1F_EventScript_Meltan::
-	lock
-	faceplayer
-	playmoncry SPECIES_MELTAN, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_MELTAN, 25
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PokemonMansion_1F_BigBatchMeltanRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PokemonMansion_1F_BigBatchMeltanRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_BigBatchMeltanResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PokemonMansion_1F_BigBatchMeltanResolved
-	release
-	end
-
-PokemonMansion_1F_BigBatchMeltanResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_MELTAN
-	setflag FLAG_HIDE_ANTHOLOGY_MELTAN
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-PokemonMansion_1F_BigBatchMeltanRetreated::
-	release
-	end
-
-// Alternate before-first-Champion capture source. Native legendary story,
- // puzzle and optional post-League site remain in their original maps.
-PokemonMansion_1F_PreLeagueOnTransition::
-	getcaughtmon SPECIES_MEWTWO
-	goto_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_PreLeagueMEWTWOHide
-	goto PokemonMansion_1F_PreLeagueMEWTWOShow
-
-PokemonMansion_1F_PreLeagueMEWTWOHide::
-	setflag FLAG_HIDE_ANTHOLOGY_PRELEAGUE_MEWTWO
-	return
-
-PokemonMansion_1F_PreLeagueMEWTWOShow::
-	clearflag FLAG_HIDE_ANTHOLOGY_PRELEAGUE_MEWTWO
-	return
-
-PokemonMansion_1F_EventScript_MewtwoPreLeague::
-	lock
-	faceplayer
-	playmoncry SPECIES_MEWTWO, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_MEWTWO, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PokemonMansion_1F_PreLeagueMEWTWORetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PokemonMansion_1F_PreLeagueMEWTWORetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_PreLeagueMEWTWOResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PokemonMansion_1F_PreLeagueMEWTWOResolved
-	release
-	end
-
-PokemonMansion_1F_PreLeagueMEWTWOResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_PRELEAGUE_MEWTWO
-	setflag FLAG_HIDE_ANTHOLOGY_PRELEAGUE_MEWTWO
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-PokemonMansion_1F_PreLeagueMEWTWORetreated::
-	release
-	end

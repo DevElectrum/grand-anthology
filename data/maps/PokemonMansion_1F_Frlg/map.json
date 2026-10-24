@@ -113,34 +113,6 @@
       "trainer_sight_or_berry_tree_id": "0",
       "script": "PokemonMansion_1F_EventScript_TypeNull",
       "flag": "FLAG_HIDE_ANTHOLOGY_TYPE_NULL"
-    },
-    {
-      "local_id": "LOCALID_ANTHOLOGY_MELTAN",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(MELTAN)",
-      "x": 2,
-      "y": 25,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "PokemonMansion_1F_EventScript_Meltan",
-      "flag": "FLAG_HIDE_ANTHOLOGY_MELTAN"
-    },
-    {
-      "local_id": "LOCALID_ANTHOLOGY_PRELEAGUE_MEWTWO",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(MEWTWO)",
-      "x": 33,
-      "y": 4,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "PokemonMansion_1F_EventScript_MewtwoPreLeague",
-      "flag": "FLAG_HIDE_ANTHOLOGY_PRELEAGUE_MEWTWO"
     }
   ],
   "warp_events": [

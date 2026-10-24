@@ -14,10 +14,18 @@ CeruleanCave_B1F_EventScript_TryRemoveMewtwo::
 	return
 
 CeruleanCave_B1F_OnTransition::
+	getcaughtmon SPECIES_MEW
+	goto_if_ne VAR_RESULT, TRUE, CeruleanCave_B1F_NativeMEWTWOBlocked
 	getcaughtmon SPECIES_MEWTWO
 	call_if_eq VAR_RESULT, TRUE, CeruleanCave_B1F_NativeMEWTWOCaught
 	call_if_ne VAR_RESULT, TRUE, CeruleanCave_B1F_NativeMEWTWOUncaught
 	end
+
+// The original cave remains locked behind the Kanto postgame/Celio quest.
+// Within it, Mewtwo is discoverable only after Mew is registered caught.
+CeruleanCave_B1F_NativeMEWTWOBlocked::
+	setflag FLAG_HIDE_MEWTWO
+	return
 
 CeruleanCave_B1F_EventScript_ShowMewtwo::
 	clearflag FLAG_HIDE_MEWTWO

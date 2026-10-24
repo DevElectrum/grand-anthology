@@ -118,8 +118,6 @@ SITES = (
      "BEAST_ENTEI", None),
     ("Route35", "Route35_AnthologyFieldTransition", "Route35_EventScript_SuicuneReserve",
      "BEAST_SUICUNE", None),
-    ("PokemonMansion_1F_Frlg", "PokemonMansion_1F_PreLeagueOnTransition",
-     "PokemonMansion_1F_EventScript_MewtwoPreLeague", "PRELEAGUE_MEWTWO", None),
     ("FieryPath", "FieryPath_PreLeagueOnTransition",
      "FieryPath_EventScript_GroudonPreLeague", "PRELEAGUE_GROUDON", None),
     ("Route125", "Route125_PreLeagueOnTransition",
@@ -136,7 +134,7 @@ for directory, transition, battle, suffix, form_capture in SITES:
     species = {
         "BEAST_RAIKOU": "RAIKOU", "BEAST_ENTEI": "ENTEI",
         "BEAST_SUICUNE": "SUICUNE",
-        "PRELEAGUE_MEWTWO": "MEWTWO", "PRELEAGUE_GROUDON": "GROUDON",
+        "PRELEAGUE_GROUDON": "GROUDON",
         "PRELEAGUE_KYOGRE": "KYOGRE", "JOHTO_GLASTRIER": "GLASTRIER",
     }.get(suffix, suffix)
     state = Save()
@@ -145,7 +143,7 @@ for directory, transition, battle, suffix, form_capture in SITES:
         run(scripts, transition, state)
         assert hide in state.flags, (directory, "beasts before release")
         state.flags.add("FLAG_RELEASED_BEASTS")
-    if suffix.startswith("PRELEAGUE_") and species != "MEWTWO":
+    if suffix.startswith("PRELEAGUE_"):
         state.variables["VAR_SOOTOPOLIS_CITY_STATE"] = 5
         run(scripts, transition, state)
         assert hide in state.flags, (directory, "early Hoenn story")

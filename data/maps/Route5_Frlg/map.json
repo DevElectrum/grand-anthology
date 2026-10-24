@@ -42,20 +42,6 @@
       "flag": "0"
     },
     {
-      "local_id": "LOCALID_ANTHOLOGY_SHAYMIN",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(SHAYMIN)",
-      "x": 16,
-      "y": 5,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "Route5_EventScript_Shaymin",
-      "flag": "FLAG_HIDE_ANTHOLOGY_SHAYMIN"
-    },
-    {
       "local_id": "LOCALID_ANTHOLOGY_TAPU_BULU",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(TAPU_BULU)",
       "x": 30,

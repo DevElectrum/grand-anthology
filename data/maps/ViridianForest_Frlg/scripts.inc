@@ -4,6 +4,7 @@ ViridianForest_Frlg_MapScripts::
 
 ViridianForest_OnTransition::
 	setworldmapflag FLAG_WORLD_MAP_VIRIDIAN_FOREST
+	call ViridianForest_AnthologyOnTransition
 	end
 
 ViridianForest_EventScript_Youngster::
@@ -167,4 +168,48 @@ ViridianForest_Text_WeakenMonsBeforeCapture::
 ViridianForest_Text_LeavingViridianForest::
 	.string "LEAVING VIRIDIAN FOREST\n"
 	.string "PEWTER CITY AHEAD$"
+
+
+// Before Brock: a one-time static encounter in the forest, not Route 5.
+ViridianForest_AnthologyOnTransition::
+	getcaughtmon SPECIES_SHAYMIN
+	call_if_eq VAR_RESULT, TRUE, ViridianForest_AnthologyHideShaymin
+	call_if_ne VAR_RESULT, TRUE, ViridianForest_AnthologyShowShaymin
+	return
+
+ViridianForest_AnthologyHideShaymin::
+	setflag FLAG_HIDE_ANTHOLOGY_SHAYMIN
+	return
+
+ViridianForest_AnthologyShowShaymin::
+	clearflag FLAG_HIDE_ANTHOLOGY_SHAYMIN
+	return
+
+ViridianForest_EventScript_Shaymin::
+	lock
+	faceplayer
+	playmoncry SPECIES_SHAYMIN, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_SHAYMIN, 10
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, ViridianForest_AnthologyShayminRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, ViridianForest_AnthologyShayminRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, ViridianForest_AnthologyShayminResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, ViridianForest_AnthologyShayminResolved
+	release
+	end
+
+ViridianForest_AnthologyShayminResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_SHAYMIN
+	setflag FLAG_HIDE_ANTHOLOGY_SHAYMIN
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+ViridianForest_AnthologyShayminRetreated::
+	release
+	end
 

@@ -118,10 +118,11 @@ SilphCo_7F_Movement_RivalExitBottom::
 SilphCo_7F_EventScript_LaprasGuy::
 	lock
 	faceplayer
+	goto_if_lt VAR_MAP_SCENE_SILPH_CO_7F, 1, SilphCo_7F_EventScript_WaitForRival
 	goto_if_set FLAG_GOT_LAPRAS_FROM_SILPH, SilphCo_7F_EventScript_AlreadyGotLapras
 	msgbox SilphCo_7F_Text_HaveMonForSavingUs
-	setvar VAR_TEMP_1, SPECIES_LAPRAS
-	givemon SPECIES_LAPRAS, 25
+	setvar VAR_TEMP_1, SPECIES_MAGEARNA
+	givemon SPECIES_MAGEARNA, 25
 	goto_if_eq VAR_RESULT, 0, SilphCo_7F_EventScript_ReceiveLaprasParty
 	goto_if_eq VAR_RESULT, 1, SilphCo_7F_EventScript_ReceiveLaprasPC
 	goto_if_eq VAR_RESULT, 2, Common_EventScript_NoMoreRoomForPokemon
@@ -134,7 +135,7 @@ SilphCo_7F_EventScript_ReceiveLaprasParty::
 	message SilphCo_7F_Text_ObtainedLaprasFromEmployee
 	waitmessage
 	waitfanfare
-	bufferspeciesname STR_VAR_1, SPECIES_LAPRAS
+	bufferspeciesname STR_VAR_1, SPECIES_MAGEARNA
 	msgbox gText_NicknameThisPokemon, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, SilphCo_7F_EventScript_EndReceiveLapras
 	call Common_EventScript_GetGiftMonPartySlot
@@ -148,7 +149,7 @@ SilphCo_7F_EventScript_ReceiveLaprasPC::
 	message SilphCo_7F_Text_ObtainedLaprasFromEmployee
 	waitmessage
 	waitfanfare
-	bufferspeciesname STR_VAR_1, SPECIES_LAPRAS
+	bufferspeciesname STR_VAR_1, SPECIES_MAGEARNA
 	msgbox gText_NicknameThisPokemon, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, SilphCo_7F_EventScript_LaprasTransferredToPC
 	call Common_EventScript_NameReceivedBoxMon
@@ -164,6 +165,11 @@ SilphCo_7F_EventScript_EndReceiveLapras::
 	textcolor NPC_TEXT_COLOR_MALE
 	msgbox SilphCo_7F_Text_ExplainLapras
 	setflag FLAG_GOT_LAPRAS_FROM_SILPH
+	release
+	end
+
+SilphCo_7F_EventScript_WaitForRival::
+	msgbox SilphCo_7F_Text_WaitForRival
 	release
 	end
 
@@ -242,19 +248,20 @@ SilphCo_7F_Text_HaveMonForSavingUs::
 	.string "I want you to have this POKéMON\n"
 	.string "for saving us.$"
 
+SilphCo_7F_Text_WaitForRival::
+	.string "Our staff are still trapped by\n"
+	.string "TEAM ROCKET! Please help us!$"
+
 SilphCo_7F_Text_ObtainedLaprasFromEmployee::
-	.string "{PLAYER} obtained a LAPRAS from\n"
+	.string "{PLAYER} obtained MAGEARNA from\n"
 	.string "the SILPH employee!$"
 
 SilphCo_7F_Text_ExplainLapras::
-	.string "It's a LAPRAS.\n"
-	.string "It's a very intelligent POKéMON.\p"
+	.string "It's MAGEARNA, an artificial\n"
+	.string "POKéMON built with great care.\p"
 	.string "We kept it in our lab, but it will\n"
 	.string "be much better off with you.\p"
-	.string "I think you will be a good TRAINER\n"
-	.string "for LAPRAS!\p"
-	.string "It's a good swimmer.\n"
-	.string "It'll give you a lift across water!$"
+	.string "Please look after it!$"
 
 SilphCo_7F_Text_RocketBossWentToBoardroom::
 	.string "TEAM ROCKET's BOSS went to the\n"
