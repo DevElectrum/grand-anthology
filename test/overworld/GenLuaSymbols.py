@@ -486,7 +486,7 @@ def main():
               # Real scripted static encounter smoke inspects the actual
               # overworld object and battle species. Export these release
               # globals explicitly: normal WANT is not used by --title.
-              "gObjectEvents", "gBattleMons",
+              "gObjectEvents", "gBattleMons", "gMapHeader", "gPlayerAvatar",
               # Actual overworld script callback state, needed to distinguish
               # a responsive daycare NPC from merely colliding with its tile.
               "sGlobalScriptContext",
