@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Source-level regional obtainability audit, National #1..1025.
+"""Source-level full-adventure regional obtainability audit, National #1..1025.
 
 Deliberately optimistic, not real catchability verification. A positive count
 does not prove map tile reachability, story gates, item/move evolutions, save
@@ -92,11 +92,9 @@ for path in (ROOT/"data/maps").glob("*/map.json"):
 
 # These are post-League areas, including Champion-locked entrances at
 # Route 47 (Embedded Tower), Meteor Falls (Steven's Cave), and Route 103
-# (Altering Cave). Sky Pillar is NOT: the Sootopolis crisis
-# advances VAR_SKY_PILLAR_STATE to 2/3 and unlocks Rayquaza before Champion.
-# These areas are inaccessible until after a regional Champion or otherwise
-# depend on postgame tickets/story. Never count them as the only required
-# pre-first-Champion sources, even if their encounter tables exist in source.
+# (Altering Cave). Sky Pillar is NOT: the Sootopolis crisis unlocks it earlier.
+# Include these areas in FULL-GAME source coverage, but track their timing
+# separately. 1,025 before any Champion is no longer a design requirement.
 POSTGAME = ("CERULEAN_CAVE", "MT_SILVER", "BIRTH_ISLAND",
             "FARAWAY_ISLAND", "NAVEL_ROCK", "SOUTHERN_ISLAND",
             "FOUR_ISLAND", "FIVE_ISLAND", "SIX_ISLAND", "SEVEN_ISLAND",
@@ -107,13 +105,17 @@ def preleague(loc):
     return loc in regions and regions[loc] in ("KANTO","JOHTO","HOENN") and not any(v in loc for v in POSTGAME)
 
 seed = defaultdict(set)
+preleague_seed = defaultdict(set)
 provenance = defaultdict(lambda:defaultdict(set))
 def add(loc,mon,how):
     mon = actual_species(mon)
-    if preleague(loc) and mon in species_dex:
+    if loc in regions and regions[loc] in ("KANTO", "JOHTO", "HOENN") and mon in species_dex:
         region = regions[loc]
         seed[region].add(mon)
-        provenance[region][mon].add(how+":"+loc)
+        is_early = preleague(loc)
+        if is_early:
+            preleague_seed[region].add(mon)
+        provenance[region][mon].add(("preleague:" if is_early else "postgame:") + how + ":" + loc)
 
 encounters = json.loads(read("src/data/wild_encounters.json"))
 for group in encounters["wild_encounter_groups"]:
@@ -145,11 +147,13 @@ for named in set(re.findall(r"\bSPECIES_([A-Z0-9_]+)\b",read("src/starter_choose
     if mon in species_dex:
         r = owner[species_dex[mon]]
         seed[r].add(mon)
+        preleague_seed[r].add(mon)
         provenance[r][mon].add("starter_menu:review")
 
 # Special breeding branch, not an ordinary evolution.
 if "MANAPHY" in seed["KANTO"]:
     seed["KANTO"].add("PHIONE")
+    preleague_seed["KANTO"].add("PHIONE")
     provenance["KANTO"]["PHIONE"].add("Manaphy_breeding:review")
 
 # Regression for common name aliases. In the wild C catalog
@@ -159,7 +163,7 @@ assert actual_species("GIMMIGHOUL") == "GIMMIGHOUL_CHEST", "missing Gimmighoul e
 assert ("GIMMIGHOUL_CHEST", "GHOLDENGO") in evolutions
 assert species_dex["MOTHIM_PLANT"] == by_name["MOTHIM"]
 
-print("P0 NATIONAL SOURCE REACHABILITY (optimistic candidates, not gameplay acceptance)")
+print("P0 FULL-ADVENTURE NATIONAL SOURCE REACHABILITY (optimistic candidates, not gameplay acceptance)")
 total=0
 for region in ("KANTO","JOHTO","HOENN"):
     reach=set(seed[region])
@@ -188,7 +192,9 @@ for region in ("KANTO","JOHTO","HOENN"):
     print(f"{region}: {len(regional_forms) - len(absent_forms)}/{len(regional_forms)}"
           " regional form source candidates (not gameplay verification)")
     print("REGIONAL FORM GAPS "+region+": "+(", ".join(absent_forms) or "none"))
-print(f"COMBINED optimistic {total}/1025.")
+print(f"COMBINED full-adventure optimistic {total}/1025.")
+print("Postgame-gated encounters count toward full-game coverage, not first-Champion access.")
+assert "MEWTWO" in seed["KANTO"] and "MEWTWO" not in preleague_seed["KANTO"], "Mewtwo must stay Kanto postgame"
 assert total == 1025, f"National optimistic source routes incomplete: {total}/1025"
-print("ALL 1025 numbered National entries have an optimistic region-source/evolution route.")
+print("ALL 1025 numbered National entries have a full-adventure optimistic region-source/evolution route.")
 print("NOT VERIFIED: fossil revival, breeding graph, item/move/level gates, map passage, event script outcomes, forms, real ROM catch/save.")

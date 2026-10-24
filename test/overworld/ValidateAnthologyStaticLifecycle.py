@@ -174,7 +174,7 @@ for directory, transition, battle, suffix, form_capture in SITES:
 
 # Exercise every physical field object's battle end-path, not only a handful
 # of representative maps. Read the source-of-truth inventory as a Python
-# literal rather than duplicating 89 map/species coordinates in this harness.
+# literal rather than duplicating the map/species coordinates in this harness.
 import ast
 inventory = ast.parse((ROOT / "test/overworld/ValidateAnthologyHabitatRare.py").read_text())
 table = next(
@@ -183,7 +183,7 @@ table = next(
     if isinstance(node, ast.Assign)
     and any(isinstance(t, ast.Name) and t.id == "_p0_new_statics" for t in node.targets)
 )
-assert len(table) == 89
+assert len(table) == 87
 for directory, prefix, name, species, x, y, suffix, multiple in table:
     scripts = blocks(directory)
     battle = prefix + "_EventScript_" + name
@@ -202,7 +202,7 @@ for directory, prefix, name, species, x, y, suffix, multiple in table:
             claimed = "FLAG_CAUGHT_ANTHOLOGY_" + suffix
             assert (claimed in state.flags) == (outcome == "B_OUTCOME_CAUGHT"), (
                 directory, species, outcome, "shared-National alternate capture")
-print("P0 all 89 field object scripts: battle-faint/catch/flee/teleport paths source-interpreted PASS")
+print("P0 all 87 current field object scripts: battle-faint/catch/flee/teleport paths source-interpreted PASS")
 
 # The two Kubfu/three Galarian flags must not depend on the shared National entry.
 route42 = (ROOT / "data/maps/Route42/scripts.inc").read_text()

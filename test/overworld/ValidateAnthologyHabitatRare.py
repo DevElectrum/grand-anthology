@@ -242,8 +242,8 @@ assert all(line.endswith(chr(92)) and not line.endswith(chr(92) * 2)
 # without champion flags or replacing canonical encounters.
 aquatic_catalog = (root / "src/data/anthology_aquatic_habitats.h").read_text()
 aquatic = re.findall(r"^AQUATIC_ON_MAP\((MAP_[A-Z0-9_]+), (WATER|FISHING), ([A-Z0-9_]+)\)$", aquatic_catalog, re.M)
-assert len(aquatic) == 81, len(aquatic)
-assert sum(kind == "WATER" for _, kind, _ in aquatic) == 59
+assert len(aquatic) == 82, len(aquatic)
+assert sum(kind == "WATER" for _, kind, _ in aquatic) == 60
 assert sum(kind == "FISHING" for _, kind, _ in aquatic) == 22
 assert len({(loc, kind) for loc, kind, _ in aquatic}) == len(aquatic)
 for loc, kind, mon in aquatic:
@@ -263,7 +263,9 @@ assert "AnthologyMapHasAquaticHabitatSpecies(header->mapGroup, header->mapNum, W
 assert "AnthologyMapHasAquaticHabitatSpecies(header->mapGroup, header->mapNum, WILD_AREA_FISHING" in area_screen
 assert "|| useAquatic) ? 0 : wildMonIndex" in wild
 assert "Random() % 100 < 3" in wild
-print("P0 aquatic ecology: 59 Surf + 22 rod placements, DexNav capacity, native parity, area map hooks PASS")
+assert ("MAP_ROUTE20", "WATER", "LAPRAS") in aquatic
+assert ("MAP_ROUTE21", "WATER", "BINACLE") in aquatic
+print("P0 aquatic ecology: 60 Surf + 22 rod placements, Route 20 Lapras, DexNav and native parity PASS")
 
 # Permanent regional aquatic forms have explicit reachable pre-Champion sources.
 for form in ("WOOPER_PALDEA", "BASCULIN_RED_STRIPED", "BASCULIN_BLUE_STRIPED",
@@ -911,27 +913,22 @@ regional_form_habitats = {
 assert len(regional_form_habitats) == 30
 assert regional_form_habitats <= set(extra)
 
-# Previously unobtainable in their home region: five Kanto Galarian
-# field-stable variants, a cap-wearing Pikachu, and Johto's Paldean Wooper.
-# Own-Tempo Rockruff is a distinct seed for dusk Lycanroc evolution.
-# Existing Johto Galarian bird scripted field encounters are not modified.
+# Galarian Legendary birds are now deliberate Johto statics, not Kanto grass.
+# The other regional forms and evolution seeds retain their ordinary habitats.
 pre_champion_form_reconciliation = {
     ("MAP_ROUTE8", "FARFETCHD_GALAR"),
     ("MAP_ROUTE11", "MEOWTH_GALAR"),
-    ("MAP_ROUTE22", "ZAPDOS_GALAR"),
-    ("MAP_SEAFOAM_ISLANDS_B1F", "ARTICUNO_GALAR"),
-    ("MAP_POKEMON_MANSION_1F", "MOLTRES_GALAR"),
     ("MAP_ROUTE30", "WOOPER_PALDEA"),
     ("MAP_ROUTE9", "ROCKRUFF_OWN_TEMPO"),
     ("MAP_ROUTE6", "PIKACHU_ALOLA"),
 }
-assert len(pre_champion_form_reconciliation) == 8
+assert len(pre_champion_form_reconciliation) == 5
 assert pre_champion_form_reconciliation <= set(extra), sorted(pre_champion_form_reconciliation - set(extra))
-# These are land habitats with protected primary rare-map tables.
 assert all(loc in {loc for loc, mon in mappings} for loc, mon in pre_champion_form_reconciliation)
-# Battle-form Zen Mode Galarian Darmanitan must *not* be a wild source.
 assert "DARMANITAN_GALAR_ZEN" not in {mon for loc, mon in extra}
-print("P0 8-region pre-Champion permanent forms and special seed habitat contracts PASS")
+for forbidden in ("ZAPDOS_GALAR", "ARTICUNO_GALAR", "MOLTRES_GALAR"):
+    assert forbidden not in {mon for _, mon in extra}
+print("P0 five ordinary regional forms and three static-only Galarian birds: habitat contracts PASS")
 
 
 # Six cross-generation families were incorrectly counted as pre-first-Champion
@@ -950,22 +947,15 @@ assert all(not any(x in loc for x in ("FOUR_ISLAND", "FIVE_ISLAND", "SIX_ISLAND"
 print(f"P0 pre-Champion Kanto Sevii relief: {len(sevii_mainland_relief)} mainland parent sources guarded")
 
 
-# The source auditor excludes three real Champion-gated areas:
-# Embedded Tower (Route 47), Steven's Cave (Meteor Falls) and
-# Altering Cave (Route 103). The original Terra/Marine Caves are also postgame.
-# These two Hoenn ecological alternatives restore a natural pre-Champion
-# route for the continental legendaries without changing their old statics.
-pre_champion_continental_legendary_habitats = {
-    ("MAP_ROUTE111", "GROUDON"),
-    ("MAP_SEAFLOOR_CAVERN_ROOM1", "KYOGRE"),
-}
-assert pre_champion_continental_legendary_habitats <= set(extra)
-assert all(m in {loc for loc, species in mappings}
-           for m, species in pre_champion_continental_legendary_habitats)
+# Continental Legendaries are only ordinary statics in the original
+# postgame Terra/Marine cave sites after Rayquaza, never native wild hunts.
+for species_name in ("GROUDON", "KYOGRE"):
+    assert species_name not in {mon for _, mon in extra}
 audit = (root / "tools/audit_p0_acquisition.py").read_text()
 for postleague_only in ("EMBEDDED_TOWER", "STEVENS_CAVE", "ALTERING_CAVE"):
     assert '"' + postleague_only + '"' in audit, postleague_only
-print("P0 Groudon/Kyogre before first Champion: late Hoenn land habitats and locked-map audit guards PASS")
+assert "FULL-ADVENTURE NATIONAL SOURCE REACHABILITY" in audit
+print("P0 Groudon/Kyogre: postgame-only intended source accounting PASS")
 
 # The source graph must not count the Champion-gated Steven's Cave
 # Klawf record as the sole pre-Champion path for National #950.
