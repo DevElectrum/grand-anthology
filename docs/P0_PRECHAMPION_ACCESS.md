@@ -1,5 +1,11 @@
 # P0 before-first-Champion acquisition access audit
 
+### Final evidence from the synthetic Route 5 entrance smoke
+
+[`10bf90d` mGBA #40066826492](https://github.com/DevElectrum/grand-anthology/actions/runs/40066826492) now resolves the compiler-private script context and runs. It verifies a disposable battery Save/Continue **outside** Route 5 at coordinates (23,26), but repeated Up input traverses Route 5 to the next Cerulean map group37/11 at (23,0), bypassing the expected daycare door warp at (23,25). Result: **3/4 in this fixture; no interior actor spawn or interaction was inspected**. The accompanying [optimized build #40066826520](https://github.com/DevElectrum/grand-anthology/actions/runs/40066826520) is fully green. These results do not establish that normal Route 5 daycare entry is broken or working. Defer a reliable normal-progression emulator entry test until a broader play-through batch; never claim Phione hatching without a real Egg transaction.
+
+
+
 ### Follow-up mGBA probe evidence precision
 
 [`53aa59b` Gameplay Build #40066330963](https://github.com/DevElectrum/grand-anthology/actions/runs/40066330963) compiled the optimized game; its source job only failed on a stale literal comment assertion. [mGBA #40066331018](https://github.com/DevElectrum/grand-anthology/actions/runs/40066331018) generated the ROM and emulator but could not start suites because lean symbol export did not resolve an LTO-private script context. Fixes remove brittle test prose checks, recognize compiler-suffixed symbols, and fail closed if the context is unavailable. The live Route 5 exterior-door NPC test and actual Phione breeding/hatch remain **unverified**.

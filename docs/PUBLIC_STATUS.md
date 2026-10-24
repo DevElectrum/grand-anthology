@@ -1,5 +1,17 @@
 # Pokémon Grand Anthology: scope and verification status
 
+## Last exact optimized and mGBA results (24 October UTC)
+
+[`10bf90d` Gameplay Build #40066826520](https://github.com/DevElectrum/grand-anthology/actions/runs/40066826520) **passed both source validation and optimized game compilation**. [Same-commit real mGBA #40066826492](https://github.com/DevElectrum/grand-anthology/actions/runs/40066826492) passed nine earlier acceptance suites, including Kanto/Johto starter scenes, Hoenn storage refusal, seven-mon gift boxing, new-game boot, Shiny options and three-region party/trainer Save/Continue. The lean release script pointer was correctly recovered as an unambiguous LTO-private symbol.
+
+Overall mGBA still reports failure because **two independent synthetic map-navigation fixtures** could not reach their target:
+- Kanto daycare smoke **3/4**, start at saved Route 5 exterior 37/23 (23,26), walking Up crossed to Cerulean group37 map11 (23,0) instead of triggering the daycare door. No interior NPCs were inspected.
+- Diancie smoke **5/6**, staying on Granite Cave 24/7 rather than entering Steven's Room. No Diancie battle began.
+
+Both are unresolved *test approach / map transition* observations, **not demonstrated gameplay regressions in the targeted Pokémon or NPC scripts**. Kanto breeding pair and actual Phione Egg pickup/hatching remain pending genuine in-game acceptance. Prioritize broader P0 implementation instead of repeatedly restarting full ROM builds to tune these isolated fixtures.
+
+
+
 ## Next P0 smoke gate adjustment (24 October UTC)
 
 [`53aa59b` P0 gameplay build #40066330963](https://github.com/DevElectrum/grand-anthology/actions/runs/40066330963): **optimized compile passed**, while source validation failed only when checking an outdated test-comment phrase. [Release mGBA #40066331018](https://github.com/DevElectrum/grand-anthology/actions/runs/40066331018) compiled the game and mGBA itself, but halted while generating lean release symbols because the file-local `sGlobalScriptContext` was not found under its bare name. Consequently, neither run supplies new actual Route 5 NPC gameplay evidence. The next correction uses the actual exterior doorway, a stable source guard, and LTO-private alias lookup with fail-closed runtime interpretation. The mGBA workflow will also run the daycare and Diancie probes independently to avoid hiding results.
