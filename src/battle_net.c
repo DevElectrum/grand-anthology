@@ -160,12 +160,6 @@ void TryBattleNetRematchReward(void)
     gSpecialVar_0x8008 = ITEM_NONE;
     gSpecialVar_0x8009 = ITEM_NONE;
 
-    if (GetCurrentDifficultyLevel() != DIFFICULTY_HARD)
-    {
-        gSpecialVar_Result = 0;
-        return;
-    }
-
     reward = FindReward(gSpecialVar_0x8004);
     if (reward == NULL)
     {
@@ -173,12 +167,21 @@ void TryBattleNetRematchReward(void)
         return;
     }
 
+    if (!FlagGet(FLAG_HOENN_CHAMPION)
+     && (gSpecialVar_0x8004 == TRAINER_SIDNEY || gSpecialVar_0x8004 == TRAINER_PHOEBE
+      || gSpecialVar_0x8004 == TRAINER_GLACIA || gSpecialVar_0x8004 == TRAINER_DRAKE
+      || gSpecialVar_0x8004 == TRAINER_WALLACE))
+    {
+        gSpecialVar_Result = 0;
+        return;
+    }
     FlagSet(reward->beatenFlag);
-    if (gSaveBlock2Ptr->frontier.battleNetHardWins < 0xFFFF)
+    if (GetCurrentDifficultyLevel() == DIFFICULTY_HARD
+     && gSaveBlock2Ptr->frontier.battleNetHardWins < 0xFFFF)
         gSaveBlock2Ptr->frontier.battleNetHardWins++;
 
     gSpecialVar_0x8006 = reward->shardItem;
-    gSpecialVar_0x8007 = reward->shardCount;
+    gSpecialVar_0x8007 = reward->shardCount * 5;
 
     if (reward->stone1 != ITEM_NONE && !FlagGet(reward->stoneFlag))
     {
@@ -219,7 +222,7 @@ void ClaimBattleNetStone(void)
 
 #define SHARD_PRICE_COMMON 20
 #define SHARD_PRICE_STRONG 35
-#define BP_PER_SHARD        4
+#define BP_PER_SHARD        2
 
 // Greedy deduction order; also the shard-color menu order.
 static const u16 sShardItems[] = { ITEM_RED_SHARD, ITEM_BLUE_SHARD, ITEM_YELLOW_SHARD, ITEM_GREEN_SHARD };
@@ -366,6 +369,11 @@ void DeductBattleNetShards(void)
 // unsigned subtraction can never wrap.
 void TryBuyBattleNetShard(void)
 {
+    if (FlagGet(FLAG_ANTHOLOGY_INFINITE_BP))
+    {
+        gSpecialVar_Result = 1;
+        return;
+    }
     if (gSaveBlock2Ptr->frontier.battlePoints < BP_PER_SHARD)
     {
         gSpecialVar_Result = 0;
@@ -771,7 +779,7 @@ void CheckBattleNetRuleParty(void)
 void AddBattleNetPoints(void)
 {
     u32 before = gSaveBlock2Ptr->frontier.battlePoints;
-    u32 points = before + gSpecialVar_0x8005;
+    u32 points = before + 5 * gSpecialVar_0x8005;
 
     if (points > MAX_BATTLE_FRONTIER_POINTS)
         points = MAX_BATTLE_FRONTIER_POINTS;
@@ -789,8 +797,7 @@ void AddBattleNetPoints(void)
 void GiveBattleNetRandomShard(void)
 {
     gSpecialVar_0x8008 = ITEM_NONE;
-    if (Random() % 10 < 3)
-        gSpecialVar_0x8008 = sShardItems[Random() % ARRAY_COUNT(sShardItems)];
+    gSpecialVar_0x8008 = sShardItems[Random() % ARRAY_COUNT(sShardItems)];
 }
 
 // VAR_0x8005 = wins this Tower Streak run; keeps the best on the records board.
