@@ -334,3 +334,15 @@ PokemonTower_7F_AnthologyDarkraiRetreated::
 	release
 	end
 
+\n
+Anthology_MegaStone_DARKRANITE::
+    getcaughtmon SPECIES_DARKRAI
+    goto_if_ne VAR_RESULT, TRUE, Anthology_MegaStone_DARKRANITE_Locked
+    finditem ITEM_DARKRANITE
+    end
+Anthology_MegaStone_DARKRANITE_Locked::
+    msgbox Anthology_MegaStone_DARKRANITE_LockedText, MSGBOX_DEFAULT
+    end
+Anthology_MegaStone_DARKRANITE_LockedText::
+    .string "A special MEGA STONE resonates here.\p"
+    .string "Return when its guardian is yours.$"
