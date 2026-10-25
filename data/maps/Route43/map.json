@@ -263,6 +263,20 @@
       "trainer_sight_or_berry_tree_id": "4",
       "script": "Route43_EventScript_Brent",
       "flag": "0"
+    },
+    {
+      "local_id": "LOCALID_ANTHOLOGY_LANDORUS",
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(LANDORUS)",
+      "x": 14,
+      "y": 25,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Route43_EventScript_Landorus",
+      "flag": "FLAG_HIDE_ANTHOLOGY_LANDORUS"
     }
   ],
   "warp_events": [

@@ -3,6 +3,7 @@ Route41_MapScripts::
 	.byte 0
 
 Route41_MapScript_OnTransition::
+	call Route41_AnthologyOnTransition
 	goto_if_eq VAR_COMPLETED_LUGIA, 4, Route41_MapScript_DoNothing
 	goto_if_ge VAR_OLIVINE_CITY_STATE, 5, OlivineCity_MapScript_ClearWeather
 	end
@@ -293,3 +294,41 @@ Route41_Text_TentacruelAttack:
 Route41_Text_TentacruelHeal:
 	.string "The TENTACRUEL used RECOVER!\n"
 	.string "It is fully healed!$"
+
+Route41_AnthologyOnTransition::
+	getcaughtmon SPECIES_THUNDURUS
+	goto_if_eq VAR_RESULT, TRUE, Route41_AnthologyHideThundurus
+	clearflag FLAG_HIDE_ANTHOLOGY_THUNDURUS
+	return
+
+Route41_AnthologyHideThundurus::
+	setflag FLAG_HIDE_ANTHOLOGY_THUNDURUS
+	return
+
+Route41_EventScript_Thundurus::
+	lock
+	faceplayer
+	playmoncry SPECIES_THUNDURUS, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_THUNDURUS, 36
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route41_AnthologyThundurusRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route41_AnthologyThundurusRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route41_AnthologyThundurusResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route41_AnthologyThundurusResolved
+	release
+	end
+
+Route41_AnthologyThundurusResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_THUNDURUS
+	setflag FLAG_HIDE_ANTHOLOGY_THUNDURUS
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route41_AnthologyThundurusRetreated::
+	release
+	end

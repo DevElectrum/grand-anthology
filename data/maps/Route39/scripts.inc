@@ -375,58 +375,19 @@ Route39_Text_TrainerTips:
 
 // New static acquisition flags are independent of original Johto plot events.
 Route39_AnthologyOnTransition::
-	getcaughtmon SPECIES_LANDORUS
-	call_if_eq VAR_RESULT, TRUE, Route39_AnthologyHideLandorus
-	call_if_ne VAR_RESULT, TRUE, Route39_AnthologyShowLandorus
 	getcaughtmon SPECIES_ENAMORUS
-	call_if_eq VAR_RESULT, TRUE, Route39_AnthologyHideEnamorus
-	call_if_ne VAR_RESULT, TRUE, Route39_AnthologyShowEnamorus
+	goto_if_eq VAR_RESULT, TRUE, Route39_AnthologyHideEnamorus
+	getcaughtmon SPECIES_TORNADUS
+	goto_if_ne VAR_RESULT, TRUE, Route39_AnthologyHideEnamorus
+	getcaughtmon SPECIES_THUNDURUS
+	goto_if_ne VAR_RESULT, TRUE, Route39_AnthologyHideEnamorus
+	getcaughtmon SPECIES_LANDORUS
+	goto_if_ne VAR_RESULT, TRUE, Route39_AnthologyHideEnamorus
+	clearflag FLAG_HIDE_ANTHOLOGY_ENAMORUS
 	return
-
-Route39_AnthologyHideLandorus::
-	setflag FLAG_HIDE_ANTHOLOGY_LANDORUS
-	return
-
-Route39_AnthologyShowLandorus::
-	clearflag FLAG_HIDE_ANTHOLOGY_LANDORUS
-	return
-
-// Defeated => map re-entry rematch. Caught => permanent for this site.
-// Flee/teleport => stays.
-Route39_EventScript_Landorus::
-	lock
-	faceplayer
-	playmoncry SPECIES_LANDORUS, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_LANDORUS, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route39_AnthologyLandorusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route39_AnthologyLandorusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route39_AnthologyLandorusResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route39_AnthologyLandorusResolved
-	release
-	end
-
-Route39_AnthologyLandorusResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_LANDORUS
-	setflag FLAG_HIDE_ANTHOLOGY_LANDORUS
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route39_AnthologyLandorusRetreated::
-	release
-	end
 
 Route39_AnthologyHideEnamorus::
 	setflag FLAG_HIDE_ANTHOLOGY_ENAMORUS
-	return
-
-Route39_AnthologyShowEnamorus::
-	clearflag FLAG_HIDE_ANTHOLOGY_ENAMORUS
 	return
 
 // Defeated => map re-entry rematch. Caught => permanent for this site.
@@ -436,7 +397,7 @@ Route39_EventScript_Enamorus::
 	faceplayer
 	playmoncry SPECIES_ENAMORUS, CRY_MODE_ENCOUNTER
 	waitmoncry
-	seteventmon SPECIES_ENAMORUS, 45
+	seteventmon SPECIES_ENAMORUS, 43
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	specialvar VAR_RESULT, GetBattleOutcome

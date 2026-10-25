@@ -4,6 +4,7 @@ Route43_MapScripts::
 	.byte 0
 
 Route43_MapScript_OnTransition::
+	call Route43_AnthologyOnTransition
 	call_if_set FLAG_HIDE_ROUTE42_SUICUNE, Route42_MapScript_HideTrigger
 	end
 
@@ -142,3 +143,41 @@ Route43_TrainerTips:
     .string "Learn which types are strong and\n"
     .string "weak against your POKéMON's type.$"
 
+
+Route43_AnthologyOnTransition::
+	getcaughtmon SPECIES_LANDORUS
+	goto_if_eq VAR_RESULT, TRUE, Route43_AnthologyHideLandorus
+	clearflag FLAG_HIDE_ANTHOLOGY_LANDORUS
+	return
+
+Route43_AnthologyHideLandorus::
+	setflag FLAG_HIDE_ANTHOLOGY_LANDORUS
+	return
+
+Route43_EventScript_Landorus::
+	lock
+	faceplayer
+	playmoncry SPECIES_LANDORUS, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_LANDORUS, 42
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route43_AnthologyLandorusRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route43_AnthologyLandorusRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route43_AnthologyLandorusResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route43_AnthologyLandorusResolved
+	release
+	end
+
+Route43_AnthologyLandorusResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_LANDORUS
+	setflag FLAG_HIDE_ANTHOLOGY_LANDORUS
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route43_AnthologyLandorusRetreated::
+	release
+	end

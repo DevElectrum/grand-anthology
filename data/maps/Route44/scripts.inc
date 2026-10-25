@@ -4,7 +4,8 @@ Route44_MapScripts::
 	.byte 0
 
 Route44_OnTransition:
-	call Route44_AnthologyOnTransition 
+	call Route44_AnthologyOnTransition
+	call Route44_TornadusOnTransition
 	end
 
 Route44_EventScript_Wilton::
@@ -245,5 +246,43 @@ Route44_AnthologyGlastrierJohtoResolved::
 	end
 
 Route44_AnthologyGlastrierJohtoRetreated::
+	release
+	end
+
+Route44_TornadusOnTransition::
+	getcaughtmon SPECIES_TORNADUS
+	goto_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideTornadus
+	clearflag FLAG_HIDE_ANTHOLOGY_TORNADUS
+	return
+
+Route44_AnthologyHideTornadus::
+	setflag FLAG_HIDE_ANTHOLOGY_TORNADUS
+	return
+
+Route44_EventScript_Tornadus::
+	lock
+	faceplayer
+	playmoncry SPECIES_TORNADUS, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_TORNADUS, 40
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route44_AnthologyTornadusRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route44_AnthologyTornadusRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route44_AnthologyTornadusResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route44_AnthologyTornadusResolved
+	release
+	end
+
+Route44_AnthologyTornadusResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_TORNADUS
+	setflag FLAG_HIDE_ANTHOLOGY_TORNADUS
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route44_AnthologyTornadusRetreated::
 	release
 	end

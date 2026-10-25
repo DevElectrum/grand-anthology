@@ -5,7 +5,6 @@ Route38_MapScripts::
 
 Route38_OnTransition:
 	call Route38_AnthologyFieldTransition
-	call Route38_AnthologyOnTransition 
 	end
 
 Route38_EventScript_Toby::
@@ -158,91 +157,6 @@ Route38_Text_WaterSign:
 	.string "-ECRUTEAK COUNCIL$"
 
 // New static acquisition flags are independent of original Johto plot events.
-Route38_AnthologyOnTransition::
-	getcaughtmon SPECIES_TORNADUS
-	call_if_eq VAR_RESULT, TRUE, Route38_AnthologyHideTornadus
-	call_if_ne VAR_RESULT, TRUE, Route38_AnthologyShowTornadus
-	getcaughtmon SPECIES_THUNDURUS
-	call_if_eq VAR_RESULT, TRUE, Route38_AnthologyHideThundurus
-	call_if_ne VAR_RESULT, TRUE, Route38_AnthologyShowThundurus
-	return
-
-Route38_AnthologyHideTornadus::
-	setflag FLAG_HIDE_ANTHOLOGY_TORNADUS
-	return
-
-Route38_AnthologyShowTornadus::
-	clearflag FLAG_HIDE_ANTHOLOGY_TORNADUS
-	return
-
-// Defeated => map re-entry rematch. Caught => permanent for this site.
-// Flee/teleport => stays.
-Route38_EventScript_Tornadus::
-	lock
-	faceplayer
-	playmoncry SPECIES_TORNADUS, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_TORNADUS, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route38_AnthologyTornadusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route38_AnthologyTornadusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route38_AnthologyTornadusResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route38_AnthologyTornadusResolved
-	release
-	end
-
-Route38_AnthologyTornadusResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_TORNADUS
-	setflag FLAG_HIDE_ANTHOLOGY_TORNADUS
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route38_AnthologyTornadusRetreated::
-	release
-	end
-
-Route38_AnthologyHideThundurus::
-	setflag FLAG_HIDE_ANTHOLOGY_THUNDURUS
-	return
-
-Route38_AnthologyShowThundurus::
-	clearflag FLAG_HIDE_ANTHOLOGY_THUNDURUS
-	return
-
-// Defeated => map re-entry rematch. Caught => permanent for this site.
-// Flee/teleport => stays.
-Route38_EventScript_Thundurus::
-	lock
-	faceplayer
-	playmoncry SPECIES_THUNDURUS, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_THUNDURUS, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route38_AnthologyThundurusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route38_AnthologyThundurusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route38_AnthologyThundurusResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route38_AnthologyThundurusResolved
-	release
-	end
-
-Route38_AnthologyThundurusResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_THUNDURUS
-	setflag FLAG_HIDE_ANTHOLOGY_THUNDURUS
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route38_AnthologyThundurusRetreated::
-	release
-	end
-
 // Optional new form or post-release roamer safety-net encounter.
 Route38_AnthologyFieldTransition::
 	call_if_set FLAG_CAUGHT_ANTHOLOGY_ZAPDOS_GALAR, Route38_FieldHideGalarianZapdos
