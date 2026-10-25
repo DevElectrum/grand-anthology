@@ -457,8 +457,6 @@ _p0_new_statics = (
 ("SproutTower_2F","SproutTower_2F","KubfuWest","KUBFU",14,11,"KUBFU_WEST",True),
 ("Route34","Route34","KubfuEast","KUBFU",39,33,"KUBFU_EAST",True),
 ("NationalPark_Normal","NationalPark_Normal","Victini","VICTINI",34,23,"VICTINI",False),
-("Route48","Route48","Zacian","ZACIAN",8,15,"ZACIAN",False),
-("RuinsOfAlph_Outside","RuinsOfAlph_Outside","Zamazenta","ZAMAZENTA",20,14,"ZAMAZENTA",False),
 ("OlivineCity_Lighthouse","OlivineCity_Lighthouse","Regieleki","REGIELEKI",151,10,"REGIELEKI",False),
 ("EcruteakCity_Theater","EcruteakCity_Theater","Meloetta","MELOETTA",16,13,"MELOETTA",False),
 ("MtMortar_1F_South","MtMortar_1F_South","Cobalion","COBALION",19,41,"COBALION",False),
@@ -507,7 +505,7 @@ _p0_new_statics = (
 )
 _p0_layouts = {x["id"]: x for x in json.loads((root / "data/layouts/layouts.json").read_text())["layouts"] if x}
 _p0_flags = (root / "include/constants/flags.h").read_text()
-assert len(_p0_new_statics)==85 and len({(s[0],s[4],s[5]) for s in _p0_new_statics})==85
+assert len(_p0_new_statics)==83 and len({(s[0],s[4],s[5]) for s in _p0_new_statics})==83
 # Proactively diagnose every invalid new static tile before the first assert.
 # This keeps region-wide batches repairable in one CI pass.
 for _dir,_prefix,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
@@ -617,6 +615,11 @@ for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
         assert "#define "+_claimed+" " in _p0_flags
         assert f"call_if_set {_claimed}" in _script and f"call_if_unset {_claimed}" in _script
         assert "setflag "+_claimed in _part and f"getcaughtmon SPECIES_{_species}" not in _script
+    elif _dir == "Route114" and _n == "Terapagos":
+        # Normal and permanent Stellar Terapagos now have independent catch flags.
+        assert "FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_NORMAL" in _script
+        assert "goto_if_set FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_NORMAL" in _script
+        assert "setflag FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_NORMAL" in _part
     else:
         assert "getcaughtmon SPECIES_"+_species in _script
     _lay=_p0_layouts[_m["layout"]]
