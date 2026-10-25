@@ -216,9 +216,9 @@ for directory, prefix, name, species, x, y, suffix, multiple in table:
 print("P0 all 86 current field object scripts: battle-faint/catch/flee/teleport paths source-interpreted PASS")
 
 # The two Kubfu/three Galarian flags must not depend on the shared National entry.
-route42 = (ROOT / "data/maps/Route42/scripts.inc").read_text()
-for suffix in ("KUBFU_WEST", "KUBFU_EAST"):
-    assert "FLAG_CAUGHT_ANTHOLOGY_" + suffix in route42
+for directory, suffix in (("SproutTower_2F", "KUBFU_WEST"), ("Route34", "KUBFU_EAST")):
+    site = (ROOT / "data/maps" / directory / "scripts.inc").read_text()
+    assert "FLAG_CAUGHT_ANTHOLOGY_" + suffix in site
 for name in ("GalarianZapdos", "GalarianArticuno", "GalarianMoltres"):
     assert any(name in battle for _, _, battle, _, _ in SITES)
 
