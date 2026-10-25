@@ -130,8 +130,8 @@ SITES = (
      "FieryPath_EventScript_GroudonPreLeague", "PRELEAGUE_GROUDON", None),
     ("Route125", "Route125_PreLeagueOnTransition",
      "Route125_EventScript_KyogrePreLeague", "PRELEAGUE_KYOGRE", None),
-    ("Route44", "Route44_AnthologyOnTransition",
-     "Route44_EventScript_GlastrierJohto", "JOHTO_GLASTRIER", None),
+    ("IcePath_B2F", "IcePath_B2F_AnthologyOnTransition",
+     "IcePath_B2F_EventScript_GlastrierJohto", "JOHTO_GLASTRIER", None),
     ("ShoalCave_LowTideIceRoom", "ShoalCave_LowTideIceRoom_OnTransition",
      "ShoalCave_LowTideIceRoom_EventScript_Glastrier", "GLASTRIER", None),
 )
