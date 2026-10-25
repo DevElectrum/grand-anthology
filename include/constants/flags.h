@@ -4343,7 +4343,8 @@
 // Dedicated flags, distinct from normal Route 114 Terapagos's caught dex bit.
 #define FLAG_HIDE_ANTHOLOGY_TERAPAGOS_STELLAR (FLAG_WORLD_MAP_BANK + 0x128)
 #define FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_STELLAR (FLAG_WORLD_MAP_BANK + 0x129)
-// Next free world-map flag: bank + 0x12A.
+#define FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_NORMAL (FLAG_WORLD_MAP_BANK + 0x12A)
+// Next free world-map flag: bank + 0x12B.
 
 #undef FLAGS_COUNT
 #define FLAGS_COUNT 0x1030
