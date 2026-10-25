@@ -5,7 +5,8 @@ Route34_MapScripts::
 	map_script MAP_SCRIPT_ON_RESUME, SetTimeEncounters
 	.byte 0
 
-Route34_OnTransition: 
+Route34_OnTransition:
+	call Route34_AnthologyOnTransition
 	specialvar VAR_RESULT, GetDaycareState
 	call_if_eq VAR_RESULT, DAYCARE_EGG_WAITING, Route34_MapScript_EggReady
 	end	
@@ -232,3 +233,48 @@ Route34_Text_CooltrainerKate_After:
 Route34_Text_Sign_DayCare:
 	.string "DAY-CARE\p"
 	.string "LET US RAISE YOUR POKéMON FOR YOU!$"
+
+Route34_AnthologyOnTransition::
+	call_if_set FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST, Route34_HideKubfuEast
+	call_if_unset FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST, Route34_ShowKubfuEast
+	return
+
+Route34_HideKubfuEast::
+	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_EAST
+	return
+
+Route34_ShowKubfuEast::
+	clearflag FLAG_HIDE_ANTHOLOGY_KUBFU_EAST
+	return
+
+Route34_EventScript_KubfuEast::
+	lock
+	faceplayer
+	playmoncry SPECIES_KUBFU, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_KUBFU, 18
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route34_KubfuEastRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route34_KubfuEastRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route34_KubfuEastCaught
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route34_KubfuEastResolved
+	release
+	end
+
+Route34_KubfuEastCaught::
+	setflag FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST
+	goto Route34_KubfuEastResolved
+
+Route34_KubfuEastResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_KUBFU_EAST
+	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_EAST
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route34_KubfuEastRetreated::
+	release
+	end

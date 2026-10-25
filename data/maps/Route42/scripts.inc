@@ -7,7 +7,6 @@ Route42_MapScripts::
 	.byte 0
 
 Route42_MapScript_OnTransition::
-	call Route42_AnthologyOnTransition
 	call_if_set FLAG_HIDE_ROUTE42_SUICUNE, Route42_MapScript_HideTrigger
 	end
 
@@ -251,93 +250,3 @@ Route42_Text_MtMortarSign1:
 	.string "WATERFALL CAVE INSIDE$"
 
 // New static acquisition flags are independent of original Johto plot events.
-Route42_AnthologyOnTransition::
-	call_if_set FLAG_CAUGHT_ANTHOLOGY_KUBFU_WEST, Route42_AnthologyHideKubfuWest
-	call_if_unset FLAG_CAUGHT_ANTHOLOGY_KUBFU_WEST, Route42_AnthologyShowKubfuWest
-	call_if_set FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST, Route42_AnthologyHideKubfuEast
-	call_if_unset FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST, Route42_AnthologyShowKubfuEast
-	return
-
-Route42_AnthologyHideKubfuWest::
-	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_WEST
-	return
-
-Route42_AnthologyShowKubfuWest::
-	clearflag FLAG_HIDE_ANTHOLOGY_KUBFU_WEST
-	return
-
-// Defeated => map re-entry rematch. Caught => permanent for this site.
-// Flee/teleport => stays.
-Route42_EventScript_KubfuWest::
-	lock
-	faceplayer
-	playmoncry SPECIES_KUBFU, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_KUBFU, 25
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route42_AnthologyKubfuWestRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route42_AnthologyKubfuWestRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route42_AnthologyKubfuWestCaught
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route42_AnthologyKubfuWestResolved
-	release
-	end
-
-Route42_AnthologyKubfuWestCaught::
-	setflag FLAG_CAUGHT_ANTHOLOGY_KUBFU_WEST
-	goto Route42_AnthologyKubfuWestResolved
-
-Route42_AnthologyKubfuWestResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_KUBFU_WEST
-	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_WEST
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route42_AnthologyKubfuWestRetreated::
-	release
-	end
-
-Route42_AnthologyHideKubfuEast::
-	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_EAST
-	return
-
-Route42_AnthologyShowKubfuEast::
-	clearflag FLAG_HIDE_ANTHOLOGY_KUBFU_EAST
-	return
-
-// Defeated => map re-entry rematch. Caught => permanent for this site.
-// Flee/teleport => stays.
-Route42_EventScript_KubfuEast::
-	lock
-	faceplayer
-	playmoncry SPECIES_KUBFU, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_KUBFU, 25
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route42_AnthologyKubfuEastRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route42_AnthologyKubfuEastRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route42_AnthologyKubfuEastCaught
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route42_AnthologyKubfuEastResolved
-	release
-	end
-
-Route42_AnthologyKubfuEastCaught::
-	setflag FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST
-	goto Route42_AnthologyKubfuEastResolved
-
-Route42_AnthologyKubfuEastResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_KUBFU_EAST
-	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_EAST
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route42_AnthologyKubfuEastRetreated::
-	release
-	end

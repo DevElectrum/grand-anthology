@@ -271,34 +271,6 @@
       "trainer_sight_or_berry_tree_id": "0",
       "script": "NULL",
       "flag": "FLAG_HIDE_ROUTE42_EUSINE"
-    },
-    {
-      "local_id": "LOCALID_ANTHOLOGY_KUBFU_WEST",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(KUBFU)",
-      "x": 14,
-      "y": 14,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "Route42_EventScript_KubfuWest",
-      "flag": "FLAG_HIDE_ANTHOLOGY_KUBFU_WEST"
-    },
-    {
-      "local_id": "LOCALID_ANTHOLOGY_KUBFU_EAST",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(KUBFU)",
-      "x": 74,
-      "y": 8,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "Route42_EventScript_KubfuEast",
-      "flag": "FLAG_HIDE_ANTHOLOGY_KUBFU_EAST"
     }
   ],
   "warp_events": [
