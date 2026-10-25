@@ -366,7 +366,7 @@ Route101_AnthologyZygardeCompleteRetreated::
 	end
 
 Route101_Text_ZygardeCompleteGuardian:
-	.string "A powerful guardian stands silently\\n"
-	.string "before you.\\p"
-	.string "It seems to have sought you out,\\n"
+	.string "A powerful guardian stands silently\n"
+	.string "before you.\p"
+	.string "It seems to have sought you out,\n"
 	.string "the CHAMPION of HOENN...$"
