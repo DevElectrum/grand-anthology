@@ -126,10 +126,6 @@ SITES = (
      "BEAST_ENTEI", None),
     ("LakeOfRage", "LakeOfRage_AnthologyFieldTransition", "LakeOfRage_EventScript_SuicuneReserve",
      "BEAST_SUICUNE", None),
-    ("FieryPath", "FieryPath_PreLeagueOnTransition",
-     "FieryPath_EventScript_GroudonPreLeague", "PRELEAGUE_GROUDON", None),
-    ("Route125", "Route125_PreLeagueOnTransition",
-     "Route125_EventScript_KyogrePreLeague", "PRELEAGUE_KYOGRE", None),
     ("IcePath_B2F", "IcePath_B2F_AnthologyOnTransition",
      "IcePath_B2F_EventScript_GlastrierJohto", "JOHTO_GLASTRIER", None),
     ("ShoalCave_LowTideIceRoom", "ShoalCave_LowTideIceRoom_OnTransition",
@@ -142,8 +138,7 @@ for directory, transition, battle, suffix, form_capture in SITES:
     species = {
         "BEAST_RAIKOU": "RAIKOU", "BEAST_ENTEI": "ENTEI",
         "BEAST_SUICUNE": "SUICUNE",
-        "PRELEAGUE_GROUDON": "GROUDON",
-        "PRELEAGUE_KYOGRE": "KYOGRE", "JOHTO_GLASTRIER": "GLASTRIER",
+        "JOHTO_GLASTRIER": "GLASTRIER",
     }.get(suffix, suffix)
     state = Save()
     state.flags.add(hide)  # Simulate a previously fainted/hidden object.
@@ -194,7 +189,7 @@ table = next(
     if isinstance(node, ast.Assign)
     and any(isinstance(t, ast.Name) and t.id == "_p0_new_statics" for t in node.targets)
 )
-assert len(table) >= 87, f"Lost tracked static encounter coverage: {len(table)}"
+assert len(table) >= 85, f"Lost tracked static encounter coverage: {len(table)}"
 for directory, prefix, name, species, x, y, suffix, multiple in table:
     scripts = blocks(directory)
     battle = prefix + "_EventScript_" + name

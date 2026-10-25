@@ -3,7 +3,6 @@ FieryPath_MapScripts::
 	.byte 0
 
 FieryPath_OnTransition:
-	call FieryPath_PreLeagueOnTransition
 	call_if_unset FLAG_LANDMARK_FIERY_PATH, FieryPath_EventScript_MoveScottToFallarbor
 	setflag FLAG_LANDMARK_FIERY_PATH
 	end
@@ -12,47 +11,3 @@ FieryPath_EventScript_MoveScottToFallarbor::
 	setflag FLAG_HIDE_VERDANTURF_TOWN_SCOTT
 	clearflag FLAG_HIDE_FALLARBOR_TOWN_BATTLE_TENT_SCOTT
 	return
-
-// Cluster-first optional statics. The original cave boulders, passage,
-// weather, and Team Magma stories remain controlled by their native scripts.
-FieryPath_PreLeagueOnTransition::
-	goto_if_lt VAR_SOOTOPOLIS_CITY_STATE, 6, FieryPath_PreLeagueGROUDONHide
-	getcaughtmon SPECIES_GROUDON
-	goto_if_eq VAR_RESULT, TRUE, FieryPath_PreLeagueGROUDONHide
-	goto FieryPath_PreLeagueGROUDONShow
-
-FieryPath_PreLeagueGROUDONHide::
-	setflag FLAG_HIDE_ANTHOLOGY_PRELEAGUE_GROUDON
-	return
-
-FieryPath_PreLeagueGROUDONShow::
-	clearflag FLAG_HIDE_ANTHOLOGY_PRELEAGUE_GROUDON
-	return
-
-FieryPath_EventScript_GroudonPreLeague::
-	lock
-	faceplayer
-	playmoncry SPECIES_GROUDON, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_GROUDON, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, FieryPath_PreLeagueGROUDONRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, FieryPath_PreLeagueGROUDONRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, FieryPath_PreLeagueGROUDONResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, FieryPath_PreLeagueGROUDONResolved
-	release
-	end
-
-FieryPath_PreLeagueGROUDONResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_PRELEAGUE_GROUDON
-	setflag FLAG_HIDE_ANTHOLOGY_PRELEAGUE_GROUDON
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-FieryPath_PreLeagueGROUDONRetreated::
-	release
-	end

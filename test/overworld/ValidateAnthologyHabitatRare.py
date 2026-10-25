@@ -513,14 +513,12 @@ _p0_new_statics = (
 ("Route38","Route38","RaikouReserve","RAIKOU",27,22,"BEAST_RAIKOU",False),
 ("MtMortar_2F","MtMortar_2F","EnteiReserve","ENTEI",10,13,"BEAST_ENTEI",False),
 ("LakeOfRage","LakeOfRage","SuicuneReserve","SUICUNE",35,38,"BEAST_SUICUNE",False),
-("FieryPath","FieryPath","GroudonPreLeague","GROUDON",20,20,"PRELEAGUE_GROUDON",False),
-("Route125","Route125","KyogrePreLeague","KYOGRE",56,7,"PRELEAGUE_KYOGRE",False),
 ("Route124","Route124","IronCrown","IRON_CROWN",59,40,"IRON_CROWN",False),
 ("IcePath_B2F","IcePath_B2F","GlastrierJohto","GLASTRIER",21,20,"JOHTO_GLASTRIER",False),
 )
 _p0_layouts = {x["id"]: x for x in json.loads((root / "data/layouts/layouts.json").read_text())["layouts"] if x}
 _p0_flags = (root / "include/constants/flags.h").read_text()
-assert len(_p0_new_statics)==87 and len({(s[0],s[4],s[5]) for s in _p0_new_statics})==87
+assert len(_p0_new_statics)==85 and len({(s[0],s[4],s[5]) for s in _p0_new_statics})==85
 # Proactively diagnose every invalid new static tile before the first assert.
 # This keeps region-wide batches repairable in one CI pass.
 for _dir,_prefix,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
@@ -812,7 +810,14 @@ for _loc, _prefix, _species, _defeated, _hide in _native_legendary_persistence:
     _base=f"{_prefix}_Native{_species}"
     assert "getcaughtmon SPECIES_"+_species in _native
     assert f"call_if_eq VAR_RESULT, TRUE, {_base}Caught" in _native
-    assert f"call_if_ne VAR_RESULT, TRUE, {_base}Uncaught" in _native
+    if _species in ("GROUDON", "KYOGRE"):
+        assert "getcaughtmon SPECIES_RAYQUAZA" in _native
+        assert f"call_if_eq VAR_RESULT, TRUE, {_base}Uncaught" in _native
+        assert f"call_if_ne VAR_RESULT, TRUE, {_base}Locked" in _native
+        assert f"{_base}Locked::" in _native
+        assert "setflag "+_hide in _native.split(f"{_base}Locked::")[1]
+    else:
+        assert f"call_if_ne VAR_RESULT, TRUE, {_base}Uncaught" in _native
     _caught=_native.split(f"{_base}Caught::")[1].split(f"{_base}Uncaught::")[0]
     _uncaught=_native.split(f"{_base}Uncaught::")[1]
     assert "setflag "+_defeated in _caught and "setflag "+_hide in _caught
@@ -892,7 +897,7 @@ for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
             _t=(root/"data/tilesets/primary/general/metatile_attributes.bin").read_bytes()
             _tile=_raw&1023
             assert _tile<512 and _t[2*_tile]==23 # MB_SHALLOW_WATER
-print("P0 eighty-nine new legendary, beast backup, Galarian form and pre-League alternative objects: PASS")
+print("P0 eighty-five validated legendary, form and regional static encounter objects: PASS")
 
 # Additional late-branch and regional form sources, separate from item access.
 extra_branch_sources = {

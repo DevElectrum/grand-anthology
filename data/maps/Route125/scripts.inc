@@ -5,7 +5,6 @@ Route125_MapScripts::
 	.byte 0
 
 Route125_OnTransition:
-	call Route125_PreLeagueOnTransition
 	call Route125_AnthologyOnTransition
 	call_if_set FLAG_SYS_WEATHER_CTRL, Common_EventScript_SetAbnormalWeather
 	call_if_eq VAR_SHOULD_END_ABNORMAL_WEATHER, 1, AbnormalWeather_EventScript_HideMapNamePopup
@@ -129,44 +128,3 @@ Route125_AnthologyWalkingWakeRetreated::
 
 // Alternate before-first-Champion capture source. Native legendary story,
  // puzzle and optional post-League site remain in their original maps.
-Route125_PreLeagueOnTransition::
-	goto_if_lt VAR_SOOTOPOLIS_CITY_STATE, 6, Route125_PreLeagueKYOGREHide
-	getcaughtmon SPECIES_KYOGRE
-	goto_if_eq VAR_RESULT, TRUE, Route125_PreLeagueKYOGREHide
-	goto Route125_PreLeagueKYOGREShow
-
-Route125_PreLeagueKYOGREHide::
-	setflag FLAG_HIDE_ANTHOLOGY_PRELEAGUE_KYOGRE
-	return
-
-Route125_PreLeagueKYOGREShow::
-	clearflag FLAG_HIDE_ANTHOLOGY_PRELEAGUE_KYOGRE
-	return
-
-Route125_EventScript_KyogrePreLeague::
-	lock
-	faceplayer
-	playmoncry SPECIES_KYOGRE, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_KYOGRE, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route125_PreLeagueKYOGRERetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route125_PreLeagueKYOGRERetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route125_PreLeagueKYOGREResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route125_PreLeagueKYOGREResolved
-	release
-	end
-
-Route125_PreLeagueKYOGREResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_PRELEAGUE_KYOGRE
-	setflag FLAG_HIDE_ANTHOLOGY_PRELEAGUE_KYOGRE
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route125_PreLeagueKYOGRERetreated::
-	release
-	end
