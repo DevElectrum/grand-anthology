@@ -229,21 +229,36 @@ static const u16 sShardItems[] = { ITEM_RED_SHARD, ITEM_BLUE_SHARD, ITEM_YELLOW_
 
 static const u16 sStarterStones[] =
 {
-    ITEM_VENUSAURITE, ITEM_CHARIZARDITE_X, ITEM_CHARIZARDITE_Y, ITEM_BLASTOISINITE,
-    ITEM_SCEPTILITE,  ITEM_BLAZIKENITE,    ITEM_SWAMPERTITE,
+    ITEM_VENUSAURITE, ITEM_CHARIZARDITE_X, ITEM_CHARIZARDITE_Y, ITEM_BLASTOISINITE, ITEM_SCEPTILITE, ITEM_BLAZIKENITE, ITEM_SWAMPERTITE, ITEM_MEGANIUMITE, ITEM_FERALIGITE, ITEM_EMBOARITE, ITEM_CHESNAUGHTITE, ITEM_DELPHOXITE, ITEM_GRENINJITE
 };
 
 static const struct { u16 item; u16 price; } sVendorStones[] =
 {
-    { ITEM_VENUSAURITE,    SHARD_PRICE_STRONG }, { ITEM_CHARIZARDITE_X, SHARD_PRICE_STRONG },
-    { ITEM_CHARIZARDITE_Y, SHARD_PRICE_STRONG }, { ITEM_BLASTOISINITE,  SHARD_PRICE_STRONG },
-    { ITEM_SCEPTILITE,     SHARD_PRICE_STRONG }, { ITEM_BLAZIKENITE,    SHARD_PRICE_STRONG },
-    { ITEM_SWAMPERTITE,    SHARD_PRICE_STRONG }, { ITEM_GARDEVOIRITE,   SHARD_PRICE_STRONG },
-    { ITEM_PINSIRITE,      SHARD_PRICE_COMMON }, { ITEM_MAWILITE,       SHARD_PRICE_COMMON },
+    { ITEM_VENUSAURITE, SHARD_PRICE_STRONG },
+    { ITEM_CHARIZARDITE_X, SHARD_PRICE_STRONG },
+    { ITEM_CHARIZARDITE_Y, SHARD_PRICE_STRONG },
+    { ITEM_BLASTOISINITE, SHARD_PRICE_STRONG },
+    { ITEM_SCEPTILITE, SHARD_PRICE_STRONG },
+    { ITEM_BLAZIKENITE, SHARD_PRICE_STRONG },
+    { ITEM_SWAMPERTITE, SHARD_PRICE_STRONG },
+    { ITEM_GARDEVOIRITE, SHARD_PRICE_STRONG },
+    { ITEM_PINSIRITE, SHARD_PRICE_COMMON },
+    { ITEM_MAWILITE, SHARD_PRICE_COMMON },
+    { ITEM_MEGANIUMITE, SHARD_PRICE_STRONG },
+    { ITEM_FERALIGITE, SHARD_PRICE_STRONG },
+    { ITEM_EMBOARITE, SHARD_PRICE_STRONG },
+    { ITEM_CHESNAUGHTITE, SHARD_PRICE_STRONG },
+    { ITEM_DELPHOXITE, SHARD_PRICE_STRONG },
+    { ITEM_GRENINJITE, SHARD_PRICE_STRONG },
+    { ITEM_DRAGONINITE, SHARD_PRICE_STRONG },
+    { ITEM_RAICHUNITE_X, SHARD_PRICE_STRONG },
+    { ITEM_RAICHUNITE_Y, SHARD_PRICE_STRONG },
+    { ITEM_GARCHOMPITE_Z, SHARD_PRICE_STRONG },
+    { ITEM_LUCARIONITE_Z, SHARD_PRICE_STRONG },
 };
 
-STATIC_ASSERT(ARRAY_COUNT(sStarterStones) == 7, BattleNetStarterStoneCount);
-STATIC_ASSERT(ARRAY_COUNT(sVendorStones) == 10, BattleNetVendorStoneCount);
+STATIC_ASSERT(ARRAY_COUNT(sStarterStones) == 13, BattleNetStarterStoneCount);
+STATIC_ASSERT(ARRAY_COUNT(sVendorStones) == 21, BattleNetVendorStoneCount);
 
 // VAR_RESULT in = menu index; out = 1 picked / 0 cancelled. VAR_0x8008 = stone.
 void BattleNetStarterStoneFromChoice(void)
@@ -251,7 +266,13 @@ void BattleNetStarterStoneFromChoice(void)
     u32 choice = gSpecialVar_Result;
 
     gSpecialVar_0x8008 = ITEM_NONE;
-    if (choice >= ARRAY_COUNT(sStarterStones))  // covers the Exit row and MULTI_B_PRESSED
+    if (choice >= 7 || gSpecialVar_0x8005 >= 2)
+    {
+        gSpecialVar_Result = 0;
+        return;
+    }
+    choice += gSpecialVar_0x8005 * 7;
+    if (choice >= ARRAY_COUNT(sStarterStones))
     {
         gSpecialVar_Result = 0;
         return;
@@ -281,7 +302,7 @@ void BattleNetVendorStoneFromChoice(void)
     gSpecialVar_0x8008 = ITEM_NONE;
     gSpecialVar_0x8009 = 0;
     // Rejects the page toggle (5), EXIT (6) and MULTI_B_PRESSED (127) without trusting the script.
-    if (row >= VENDOR_ROWS_PER_PAGE)
+    if (row >= VENDOR_ROWS_PER_PAGE || page >= 5)
     {
         gSpecialVar_Result = 0;
         return;
@@ -297,7 +318,7 @@ void BattleNetVendorStoneFromChoice(void)
     gSpecialVar_Result = 1;
 }
 
-STATIC_ASSERT(ARRAY_COUNT(sVendorStones) == VENDOR_ROWS_PER_PAGE * 2, BattleNetVendorPagesCoverStoneTable);
+STATIC_ASSERT(ARRAY_COUNT(sVendorStones) <= VENDOR_ROWS_PER_PAGE * 5, BattleNetVendorPagesCoverStoneTable);
 
 // VAR_RESULT in = menu index; out = 1 picked / 0 cancelled. VAR_0x8008 = shard item.
 void BattleNetShardColorFromChoice(void)
