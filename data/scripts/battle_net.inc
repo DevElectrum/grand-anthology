@@ -400,7 +400,7 @@ BattleNet_Text_SimCantStart:
 	.string "detected in your party.$"
 BattleNet_Text_ScalingWon:
 	.string "SIMULATION COMPLETE - you win!\n"
-	.string "1 BATTLE POINT awarded.$"
+	.string "5 BATTLE POINTS awarded.$"
 BattleNet_Text_ScalingWonCapped:
 	.string "SIMULATION COMPLETE - you win!\p"
 	.string "…but your BP CASE is maxed out\n"
@@ -418,7 +418,7 @@ BattleNet_Text_LeaderNotChampion:
 	.string "its LEADER SIMS.$"
 BattleNet_Text_SimWon:
 	.string "SIMULATION COMPLETE - you win!\n"
-	.string "2 BATTLE POINTS awarded.$"
+	.string "10 BATTLE POINTS awarded.$"
 BattleNet_Text_SimWonCapped:
 	.string "SIMULATION COMPLETE - you win!\p"
 	.string "…but your BP CASE is maxed out\n"
@@ -426,3 +426,58 @@ BattleNet_Text_SimWonCapped:
 BattleNet_Text_SimLossQuote:
 	.string "The simulation flickers off…\p"
 	.string "Better luck next run!$"
+
+@ One time, independently recoverable Ring and free stone after any region's third Gym.
+BattleNet_EventScript_ThirdGymMegaGift::
+    goto_if_set FLAG_KANTO_BADGE_3, BattleNet_EventScript_ThirdGymEligible
+    goto_if_set FLAG_JOHTO_BADGE_3, BattleNet_EventScript_ThirdGymEligible
+    goto_if_set FLAG_BADGE03_GET, BattleNet_EventScript_ThirdGymEligible
+    return
+BattleNet_EventScript_ThirdGymEligible::
+    checkitem ITEM_MEGA_RING, 1
+    goto_if_eq VAR_RESULT, TRUE, BattleNet_EventScript_ThirdGymRingOwned
+    msgbox BattleNet_Text_ThirdGymRing, MSGBOX_DEFAULT
+    checkitemspace ITEM_MEGA_RING, 1
+    goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_ThirdGymBagFull
+    giveitem ITEM_MEGA_RING
+    goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_ThirdGymBagFull
+BattleNet_EventScript_ThirdGymRingOwned::
+    setflag FLAG_BNET_DIRECTOR_INTRO
+    goto_if_set FLAG_BNET_DIRECTOR_STONE, BattleNet_EventScript_ThirdGymDone
+BattleNet_EventScript_ThirdGymStonePage1::
+    msgbox BattleNet_Text_ThirdGymStone, MSGBOX_DEFAULT
+    setvar VAR_0x8005, 0
+    multichoice 0, 0, MULTI_BNET_STARTER_STONE, FALSE
+    goto_if_eq VAR_RESULT, 7, BattleNet_EventScript_ThirdGymStonePage2
+    goto_if_ge VAR_RESULT, 8, BattleNet_EventScript_ThirdGymDone
+    goto BattleNet_EventScript_ThirdGymGiveStone
+BattleNet_EventScript_ThirdGymStonePage2::
+    setvar VAR_0x8005, 1
+    multichoice 0, 0, MULTI_BNET_STARTER_STONE_2, FALSE
+    goto_if_eq VAR_RESULT, 6, BattleNet_EventScript_ThirdGymStonePage1
+    goto_if_ge VAR_RESULT, 7, BattleNet_EventScript_ThirdGymDone
+BattleNet_EventScript_ThirdGymGiveStone::
+    special BattleNetStarterStoneFromChoice
+    goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_ThirdGymDone
+    checkitemspace VAR_0x8008, 1
+    goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_ThirdGymBagFull
+    giveitem VAR_0x8008
+    goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_ThirdGymBagFull
+    setflag FLAG_BNET_DIRECTOR_STONE
+    msgbox BattleNet_Text_ThirdGymGiftDone, MSGBOX_DEFAULT
+BattleNet_EventScript_ThirdGymDone::
+    return
+BattleNet_EventScript_ThirdGymBagFull::
+    msgbox BattleNet_Text_ThirdGymBagFull, MSGBOX_DEFAULT
+    return
+BattleNet_Text_ThirdGymRing::
+    .string "Your third GYM BADGE! Take this\p"
+    .string "MEGA RING to celebrate!$"
+BattleNet_Text_ThirdGymStone::
+    .string "Choose one starter MEGA STONE.\p"
+    .string "The others remain obtainable!$"
+BattleNet_Text_ThirdGymGiftDone::
+    .string "Your MEGA STONE is ready!$"
+BattleNet_Text_ThirdGymBagFull::
+    .string "Make room in your BAG, then talk\l"
+    .string "to this GYM LEADER again.$"
