@@ -3,6 +3,7 @@ Route112_MapScripts::
 	.byte 0
 
 Route112_OnTransition:
+	call Route112_AnthologyHuntTransition
 	clearflag FLAG_FORCE_MIRAGE_TOWER_VISIBLE
 	setvar VAR_JAGGED_PASS_ASH_WEATHER, 0
 	end
@@ -140,3 +141,43 @@ Route112_Text_RouteSignLavaridge:
 	.string "ROUTE 112\n"
 	.string "{LEFT_ARROW} LAVARIDGE TOWN$"
 
+
+Route112_AnthologyHuntTransition::
+	getcaughtmon SPECIES_OKIDOGI
+	goto_if_eq VAR_RESULT, TRUE, Route112_HideOkidogi
+	getcaughtmon SPECIES_OGERPON_TEAL
+	goto_if_ne VAR_RESULT, TRUE, Route112_HideOkidogi
+	clearflag FLAG_HIDE_ANTHOLOGY_OKIDOGI
+	return
+
+Route112_HideOkidogi::
+	setflag FLAG_HIDE_ANTHOLOGY_OKIDOGI
+	return
+
+Route112_EventScript_Okidogi::
+	lock
+	faceplayer
+	playmoncry SPECIES_OKIDOGI, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_OKIDOGI, 27
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route112_OkidogiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route112_OkidogiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route112_OkidogiResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route112_OkidogiResolved
+	release
+	end
+
+Route112_OkidogiResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_OKIDOGI
+	setflag FLAG_HIDE_ANTHOLOGY_OKIDOGI
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route112_OkidogiRetreated::
+	release
+	end

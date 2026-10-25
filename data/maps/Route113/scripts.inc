@@ -8,6 +8,7 @@ Route113_OnResume:
 	end
 
 Route113_OnTransition:
+	call Route113_AnthologyHuntTransition
 	clearflag FLAG_FORCE_MIRAGE_TOWER_VISIBLE
 	call Route113_EventScript_CheckSetAshWeather
 	end
@@ -164,3 +165,43 @@ Route113_Text_GlassWorkshopSign:
 	.string "GLASS WORKSHOP\n"
 	.string "“Turning Volcanic Ash into Glass Items”$"
 
+
+Route113_AnthologyHuntTransition::
+	getcaughtmon SPECIES_FEZANDIPITI
+	goto_if_eq VAR_RESULT, TRUE, Route113_HideFezandipiti
+	getcaughtmon SPECIES_OGERPON_TEAL
+	goto_if_ne VAR_RESULT, TRUE, Route113_HideFezandipiti
+	clearflag FLAG_HIDE_ANTHOLOGY_FEZANDIPITI
+	return
+
+Route113_HideFezandipiti::
+	setflag FLAG_HIDE_ANTHOLOGY_FEZANDIPITI
+	return
+
+Route113_EventScript_Fezandipiti::
+	lock
+	faceplayer
+	playmoncry SPECIES_FEZANDIPITI, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_FEZANDIPITI, 29
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route113_FezandipitiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route113_FezandipitiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route113_FezandipitiResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route113_FezandipitiResolved
+	release
+	end
+
+Route113_FezandipitiResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_FEZANDIPITI
+	setflag FLAG_HIDE_ANTHOLOGY_FEZANDIPITI
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route113_FezandipitiRetreated::
+	release
+	end

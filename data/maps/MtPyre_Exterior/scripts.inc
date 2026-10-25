@@ -35,9 +35,6 @@ MtPyre_Exterior_AnthologyOnTransition::
 	getcaughtmon SPECIES_WO_CHIEN
 	call_if_eq VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyHideWoChien
 	call_if_ne VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyShowWoChien
-	getcaughtmon SPECIES_FEZANDIPITI
-	call_if_eq VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyHideFezandipiti
-	call_if_ne VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyShowFezandipiti
 	return
 
 MtPyre_Exterior_AnthologyHideYveltal::
@@ -112,38 +109,3 @@ MtPyre_Exterior_AnthologyWoChienRetreated::
 	release
 	end
 
-MtPyre_Exterior_AnthologyHideFezandipiti::
-	setflag FLAG_HIDE_ANTHOLOGY_FEZANDIPITI
-	return
-
-MtPyre_Exterior_AnthologyShowFezandipiti::
-	clearflag FLAG_HIDE_ANTHOLOGY_FEZANDIPITI
-	return
-
-MtPyre_Exterior_EventScript_Fezandipiti::
-	lock
-	faceplayer
-	playmoncry SPECIES_FEZANDIPITI, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_FEZANDIPITI, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtPyre_Exterior_AnthologyFezandipitiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtPyre_Exterior_AnthologyFezandipitiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtPyre_Exterior_AnthologyFezandipitiResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtPyre_Exterior_AnthologyFezandipitiResolved
-	release
-	end
-
-MtPyre_Exterior_AnthologyFezandipitiResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_FEZANDIPITI
-	setflag FLAG_HIDE_ANTHOLOGY_FEZANDIPITI
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-MtPyre_Exterior_AnthologyFezandipitiRetreated::
-	release
-	end

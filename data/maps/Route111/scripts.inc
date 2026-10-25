@@ -722,9 +722,6 @@ Route111_AnthologyOnTransition::
 	getcaughtmon SPECIES_KORAIDON
 	call_if_eq VAR_RESULT, TRUE, Route111_AnthologyHideKoraidon
 	call_if_ne VAR_RESULT, TRUE, Route111_AnthologyShowKoraidon
-	getcaughtmon SPECIES_OKIDOGI
-	call_if_eq VAR_RESULT, TRUE, Route111_AnthologyHideOkidogi
-	call_if_ne VAR_RESULT, TRUE, Route111_AnthologyShowOkidogi
 	getcaughtmon SPECIES_HOOPA_CONFINED
 	call_if_eq VAR_RESULT, TRUE, Route111_AnthologyHideHoopa
 	call_if_ne VAR_RESULT, TRUE, Route111_AnthologyShowHoopa
@@ -763,42 +760,6 @@ Route111_AnthologyKoraidonResolved::
 	end
 
 Route111_AnthologyKoraidonRetreated::
-	release
-	end
-
-Route111_AnthologyHideOkidogi::
-	setflag FLAG_HIDE_ANTHOLOGY_OKIDOGI
-	return
-
-Route111_AnthologyShowOkidogi::
-	clearflag FLAG_HIDE_ANTHOLOGY_OKIDOGI
-	return
-
-Route111_EventScript_Okidogi::
-	lock
-	faceplayer
-	playmoncry SPECIES_OKIDOGI, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_OKIDOGI, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route111_AnthologyOkidogiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route111_AnthologyOkidogiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route111_AnthologyOkidogiResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route111_AnthologyOkidogiResolved
-	release
-	end
-
-Route111_AnthologyOkidogiResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_OKIDOGI
-	setflag FLAG_HIDE_ANTHOLOGY_OKIDOGI
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route111_AnthologyOkidogiRetreated::
 	release
 	end
 
