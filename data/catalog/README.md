@@ -4,8 +4,8 @@
 
 ## The two reader views
 
-- **Astra / machine:** [`world_acquisition.jsonl`](world_acquisition.jsonl). One JSON object per line: a metadata header, exactly **1,025** `kind=pokemon` records in National Dex order, and **874** `kind=item` records for explicitly numbered item constants. The item list includes all **92** defined Mega Stones.
-- **Human:** [Grand Anthology Field Guide](../../docs/GRAND_ANTHOLOGY_FIELD_GUIDE.md), which has Kanto → Johto → Hoenn progression, a complete Pokédex lookup, 455 location groups, the 92-stone acquisition list and an item lookup.
+- **Astra / machine:** [`world_acquisition.jsonl`](world_acquisition.jsonl). One JSON object per line: a metadata header, exactly **1,025** `kind=pokemon` records in National Dex order, and **874** `kind=item` records for explicitly numbered item constants. The item list includes all **92** defined Mega Stones, and **41** world Mega Stone entries carry exact source-map tile coordinates.
+- **Human:** [Grand Anthology Field Guide](../../docs/GRAND_ANTHOLOGY_FIELD_GUIDE.md), which has Kanto → Johto → Hoenn progression, a complete Pokédex lookup, 546 source-location groups, the 92-stone acquisition list and an item lookup.
 - **Public introduction:** [README](../../README.md). Keep its progression and development status synchronized.
 
 ## Search examples
@@ -39,7 +39,7 @@ jq -r 'select(.kind=="pokemon" and (.sources | length)==0) | .name' data/catalog
 
 ## Source inputs and maintenance
 
-This index was assembled from current `include/constants/pokedex.h`, `include/constants/items.h`, the Gen 1–9 species-info evolution links, `src/data/wild_encounters.json`, three `src/data/anthology_*_habitats.h` catalogs, map script code-search matches, world Mega Stone item-ball references, `src/battle_net.c`, and bespoke Royal Duo / Mew / Terapagos / Zygarde source paths. **The search extraction is conservative and incomplete for arbitrary script branches.**
+This index was assembled from current `include/constants/pokedex.h`, `include/constants/items.h`, the Gen 1–9 species-info evolution links, `src/data/wild_encounters.json`, three `src/data/anthology_*_habitats.h` catalogs, map script code-search matches, world Mega Stone item-ball references, `src/battle_net.c`, and bespoke Royal Duo / Mew / Terapagos / Zygarde source paths. **The search extraction is conservative and incomplete for arbitrary script branches.** The 25 October snapshot currently records at least one explicit source for 197 of 874 item definitions; the remainder require deeper inherited shop/quest/drop auditing. All 1,025 National species have a direct source candidate or evolution-parent relation in the index, but that does not prove they are obtainable in normal gameplay.
 
 When source changes:
 
