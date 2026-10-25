@@ -441,20 +441,20 @@ _p0_new_statics = (
 ("SeafoamIslands_B2F_Frlg","SeafoamIslands_B2F","Manaphy","MANAPHY",14,16,"MANAPHY",False),
 ("SeafoamIslands_B2F_Frlg","SeafoamIslands_B2F","TapuFini","TAPU_FINI",14,4,"TAPU_FINI",False),
 ("Route111","Route111","Koraidon","KORAIDON",24,81,"KORAIDON",False),
-("Route112","Route112","Okidogi","OKIDOGI",16,43,"OKIDOGI",False),
+("Route112","Route112","Okidogi","OKIDOGI",16,45,"OKIDOGI",False),
 ("Route111","Route111","Hoopa","HOOPA_CONFINED",30,56,"HOOPA",False),
 ("Route111","Route111","TingLu","TING_LU",34,84,"TING_LU",False),
-("MtChimney","MtChimney","Volcanion","VOLCANION",10,28,"VOLCANION",False),
+("MtChimney","MtChimney","Volcanion","VOLCANION",10,32,"VOLCANION",False),
 ("SealedChamber_OuterRoom","SealedChamber_OuterRoom","ChiYu","CHI_YU",16,15,"CHI_YU",False),
 ("JaggedPass","JaggedPass","GougingFire","GOUGING_FIRE",9,31,"GOUGING_FIRE",False),
 ("MtPyre_Exterior","MtPyre_Exterior","Yveltal","YVELTAL",13,17,"YVELTAL",False),
-("Route117","Route117","Pecharunt","PECHARUNT",40,11,"PECHARUNT",False),
+("Route117","Route117","Pecharunt","PECHARUNT",37,11,"PECHARUNT",False),
     ("Route117","Route117","Ogerpon","OGERPON_TEAL",10,9,"OGERPON",False),
-("Route120","Route120","WoChien","WO_CHIEN",14,59,"WO_CHIEN",False),
+("Route120","Route120","WoChien","WO_CHIEN",13,59,"WO_CHIEN",False),
 ("Route113","Route113","Fezandipiti","FEZANDIPITI",56,10,"FEZANDIPITI",False),
-("Route102","Route102","Jirachi","JIRACHI",14,9,"JIRACHI",False),
+("Route102","Route102","Jirachi","JIRACHI",16,9,"JIRACHI",False),
 ("MossdeepCity_SpaceCenter_1F","MossdeepCity_SpaceCenter_1F","Deoxys","DEOXYS_NORMAL",9,4,"DEOXYS",False),
-("Route114","Route114","Terapagos","TERAPAGOS_NORMAL",15,32,"TERAPAGOS",False),
+("Route114","Route114","Terapagos","TERAPAGOS_NORMAL",15,34,"TERAPAGOS",False),
 ("Route119","Route119","RagingBolt","RAGING_BOLT",24,111,"RAGING_BOLT",False),
 ("Route114","Route114","Munkidori","MUNKIDORI",22,28,"MUNKIDORI",False),
 ("Route125","Route125","WalkingWake","WALKING_WAKE",9,22,"WALKING_WAKE",False),
@@ -498,9 +498,9 @@ _p0_new_statics = (
 ("IcePath_B1F","IcePath_B1F","Kyurem","KYUREM",8,10,"KYUREM",False),
 ("Route44","Route44","Eternatus","ETERNATUS",8,17,"ETERNATUS",False),
 ("GoldenrodCity","GoldenrodCity","Genesect","GENESECT",36,25,"GENESECT",False),
-("Route105","Route105","ChienPao","CHIEN_PAO",13,19,"CHIEN_PAO",False),
+("Route105","Route105","ChienPao","CHIEN_PAO",10,22,"CHIEN_PAO",False),
 ("GraniteCave_B2F","GraniteCave_B2F","Zygarde","ZYGARDE",22,5,"ZYGARDE",False),
-("Route119","Route119","Xerneas","XERNEAS",32,73,"XERNEAS",False),
+("Route119","Route119","Xerneas","XERNEAS",32,72,"XERNEAS",False),
 ("Route120","Route120","IronLeaves","IRON_LEAVES",36,58,"IRON_LEAVES",False),
 ("Route120","Route120","Latios","LATIOS",25,61,"LATIOS",False),
 ("Route110","Route110","Miraidon","MIRAIDON",33,27,"MIRAIDON",False),
@@ -559,7 +559,19 @@ for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
     assert _obj["graphics_id"]==f"OBJ_EVENT_GFX_SPECIES({_species})"
     assert _obj["local_id"]=="LOCALID_ANTHOLOGY_"+_suffix and _obj["flag"]==_hide
     assert "#define "+_hide+" " in _p0_flags
-    assert (f"call {_p}_AnthologyOnTransition" in _script or f"map_script MAP_SCRIPT_ON_TRANSITION, {_p}_AnthologyOnTransition" in _script or f"call {_p}_BigBatchOnTransition" in _script or f"call {_p}_SecondBatchOnTransition" in _script or f"call {_p}_AnthologyFieldTransition" in _script or f"call {_p}_PreLeagueOnTransition" in _script or f"map_script MAP_SCRIPT_ON_TRANSITION, {_p}_AnthologyOnTransition" in _script)
+    _transition_hooks = (
+        f"{_p}_AnthologyOnTransition",
+        f"{_p}_BigBatchOnTransition",
+        f"{_p}_SecondBatchOnTransition",
+        f"{_p}_AnthologyFieldTransition",
+        f"{_p}_PreLeagueOnTransition",
+        f"{_p}_AnthologyHuntTransition",
+        f"{_p}_{_n}Transition",
+    )
+    assert any(
+        f"call {hook}" in _script or f"map_script MAP_SCRIPT_ON_TRANSITION, {hook}" in _script
+        for hook in _transition_hooks
+    ), (_dir, _n, "missing encounter transition hook")
     _part=_script.split(f"{_p}_EventScript_{_n}::")[1].split(f"{_p}_Anthology{_n}Retreated::")[0].split(f"{_p}_BigBatch{_n}Retreated::")[0].split(f"{_p}_SecondBatch{_n}Retreated::")[0].split(f"{_p}_Field{_n}Retreated::")[0]
     for _token in (f"seteventmon SPECIES_{_species}","BattleSetup_StartLegendaryBattle",
                    "GetBattleOutcome","B_OUTCOME_CAUGHT","B_OUTCOME_WON",

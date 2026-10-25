@@ -382,7 +382,7 @@
     {
       "local_id": "LOCALID_ANTHOLOGY_PECHARUNT",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(PECHARUNT)",
-      "x": 40,
+      "x": 37,
       "y": 11,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",

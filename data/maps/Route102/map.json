@@ -146,7 +146,7 @@
     {
       "local_id": "LOCALID_ANTHOLOGY_JIRACHI",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(JIRACHI)",
-      "x": 14,
+      "x": 16,
       "y": 9,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",

@@ -636,7 +636,7 @@
     {
       "local_id": "LOCALID_ANTHOLOGY_WO_CHIEN",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(WO_CHIEN)",
-      "x": 14,
+      "x": 13,
       "y": 59,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
