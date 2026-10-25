@@ -1,3 +1,5 @@
+**Newest source checkpoint:** Johto Tao Trio implemented in public main through `79937e62`; see `docs/JOHTO_TAO_TRIO_2026-10-24.md`. Do not reimplement it. Verify builds/emulator and continue approved ledger only after reconciling results. Older “Tao is next” text below is historical.
+
 Astra, continue **Pokémon Grand Anthology**! 🎮
 
 **Repository:** `DevElectrum/grand-anthology`, public `main`. Do not touch the old private archive `DevElectrum/pokemon-grand-anthology` or import its history.

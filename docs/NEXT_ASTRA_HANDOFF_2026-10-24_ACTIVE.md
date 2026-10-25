@@ -1,7 +1,9 @@
+> **TAO TRIO SOURCE BATCH NOW ON PUBLIC MAIN (24 Oct 2026 local, overriding the older "Tao is next" text below):** [Reshiram lower Tin Tower 2F Lv44](https://github.com/DevElectrum/grand-anthology/commit/9dd78c8d6be77e0baa40c84f56c13d0a36672c65), [Zekrom Dark Cave NorthSide Lv44](https://github.com/DevElectrum/grand-anthology/commit/bbad6b9b24af11569f9e2c9db9aede32ffdbbdcd), [Kyurem Ice Path B1F Lv49 after BOTH dragons caught, DNA Splicers on catch with full-bag recovery](https://github.com/DevElectrum/grand-anthology/commit/db3e67e45b720bc340662442bd4cbe3f3145bd38). Old Route45/44 statics deleted. [Source inventory, bespoke validator and mGBA triggers](https://github.com/DevElectrum/grand-anthology/commit/fc2d6338ea84abcb05b731ccbc79953496b22e37); [static test interpreter crash repair](https://github.com/DevElectrum/grand-anthology/commit/79937e62b4f3326e342e3cafe51a47faf292fb69). **Source committed is NOT the same as optimized build/emulator gameplay PASS**. An early source job failed because of the test interpreter's eager string-versus-boolean numeric comparison, now fixed; rerun source CI, optimized build, and mGBA outcomes must be checked. [Implementation/evidence details](docs/JOHTO_TAO_TRIO_2026-10-24.md). Keep native Ho-Oh and Ice Path story intact. Do not redo Tao placement. Next is acceptance/repair of the new batch followed by the next approved Johto ledger relocation, not reopening settled design.
+
 # Next Astra: Active P0 engineering and full discussion handoff
 **Date:** 24 October 2026 local / 25 October UTC
 **Public canonical repository:** `DevElectrum/grand-anthology`, `main`.
-**Latest verified gameplay code:** `6621cd852e09038377654611d8bd7a0a36a22db7`.
+**Latest previously verified optimized gameplay code:** `6621cd852e09038377654611d8bd7a0a36a22db7` (Johto Swords). **Newer Tao source code:** `79937e62b4f3326e342e3cafe51a47faf292fb69`, compile/emulator acceptance pending.
 **Existing checkpoint commit:** `29311e336f213f35749b124029f557a3c81a347a` documents the Swords CI results. Read current HEAD first: this full-document handoff commit follows it.
 
 ## Required first reads
@@ -42,7 +44,7 @@ The user's Linux gaming PC **Nyx** successfully builds the 32 MiB `pokemonworld-
   - Source-interpreted faint/flee/catch behavior checked. Not manually battle-tested on Nyx. Do not redo or revert without a concrete bug.
 - Initial source-level acquisition path audit 1,025/1,025 is optimistic and may overcount unreachable, story-gated or nonfunctional sources. Follow the correct eventual-completion target.
 
-## NEXT ACTION: Johto Tao trio, major coherent batch
+## Historical pre-batch plan: Johto Tao trio (source now implemented; acceptance pending)
 Read actual Bell/Tin Tower, Dark Cave, Ice Path layouts, map entrance/story flags, new/old static scripts and native Ho-Oh story **before** editing. The current old **Reshiram and Zekrom** statics are both on Route45, **Kyurem** on Route44. Those are **not** the approved final placements. Do not claim they are already implemented.
 - **Reshiram:** independent static on **lower Bell/Tin Tower interior**, in a nonblocking ancient chamber, around 7–8 Johto badges and Lv43–45. Respect genuine Radio Tower/Rainbow Wing admission. Do not require catching legendary beasts / Ho-Oh merely to access this lower chamber; that caught-beasts gate belongs exclusively to native Ho-Oh **on the roof**.
 - **Zekrom:** independent **northeast/Blackthorn-side Dark Cave chamber** from Route45, Lv43–45, late badges. Must be accessible without routing through the early Route31 entrance or crossing impossible HM blockers.
