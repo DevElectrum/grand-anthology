@@ -194,7 +194,7 @@ table = next(
     if isinstance(node, ast.Assign)
     and any(isinstance(t, ast.Name) and t.id == "_p0_new_statics" for t in node.targets)
 )
-assert len(table) == 86
+assert len(table) >= 87, f"Lost tracked static encounter coverage: {len(table)}"
 for directory, prefix, name, species, x, y, suffix, multiple in table:
     scripts = blocks(directory)
     battle = prefix + "_EventScript_" + name
@@ -213,7 +213,7 @@ for directory, prefix, name, species, x, y, suffix, multiple in table:
             claimed = "FLAG_CAUGHT_ANTHOLOGY_" + suffix
             assert (claimed in state.flags) == (outcome == "B_OUTCOME_CAUGHT"), (
                 directory, species, outcome, "shared-National alternate capture")
-print("P0 all 86 current field object scripts: battle-faint/catch/flee/teleport paths source-interpreted PASS")
+print(f"P0 all {len(table)} current field object scripts: battle-faint/catch/flee/teleport paths source-interpreted PASS")
 
 # The two Kubfu/three Galarian flags must not depend on the shared National entry.
 for directory, suffix in (("SproutTower_2F", "KUBFU_WEST"), ("Route34", "KUBFU_EAST")):
