@@ -4,7 +4,6 @@ RuinsOfAlph_Outside_MapScripts::
 	.byte 0
 
 RuinsOfAlph_Outside_OnTransition:
-	call RuinsOfAlph_Outside_AnthologyOnTransition 
 	end	
 
 RuinsOfAlph_Outside_EventScript_Quagsire::
