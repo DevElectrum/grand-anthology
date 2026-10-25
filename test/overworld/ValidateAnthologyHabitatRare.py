@@ -466,7 +466,7 @@ _p0_new_statics = (
 ("Route32","Route32","Keldeo","KELDEO",18,35,"KELDEO",False),
 ("SproutTower_2F","SproutTower_2F","KubfuWest","KUBFU",14,11,"KUBFU_WEST",True),
 ("Route34","Route34","KubfuEast","KUBFU",39,34,"KUBFU_EAST",True),
-("Route48","Route48","Victini","VICTINI",7,27,"VICTINI",False),
+("NationalPark_Normal","NationalPark_Normal","Victini","VICTINI",34,23,"VICTINI",False),
 ("Route48","Route48","Zacian","ZACIAN",8,15,"ZACIAN",False),
 ("RuinsOfAlph_Outside","RuinsOfAlph_Outside","Zamazenta","ZAMAZENTA",20,14,"ZAMAZENTA",False),
 ("RuinsOfAlph_Outside","RuinsOfAlph_Outside","Regieleki","REGIELEKI",32,19,"REGIELEKI",False),
@@ -514,7 +514,7 @@ _p0_new_statics = (
 ("FieryPath","FieryPath","GroudonPreLeague","GROUDON",20,20,"PRELEAGUE_GROUDON",False),
 ("Route125","Route125","KyogrePreLeague","KYOGRE",56,7,"PRELEAGUE_KYOGRE",False),
 ("Route124","Route124","IronCrown","IRON_CROWN",59,40,"IRON_CROWN",False),
-("Route44","Route44","GlastrierJohto","GLASTRIER",59,16,"JOHTO_GLASTRIER",False),
+("IcePath_B2F","IcePath_B2F","GlastrierJohto","GLASTRIER",21,20,"JOHTO_GLASTRIER",False),
 )
 _p0_layouts = {x["id"]: x for x in json.loads((root / "data/layouts/layouts.json").read_text())["layouts"] if x}
 _p0_flags = (root / "include/constants/flags.h").read_text()

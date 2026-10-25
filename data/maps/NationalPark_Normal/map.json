@@ -664,6 +664,20 @@
       "trainer_sight_or_berry_tree_id": "0",
       "script": "NationalPark_Normal_EventScript_Virizion",
       "flag": "FLAG_HIDE_ANTHOLOGY_VIRIZION"
+    },
+    {
+      "local_id": "LOCALID_ANTHOLOGY_VICTINI",
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(VICTINI)",
+      "x": 34,
+      "y": 23,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "NationalPark_Normal_EventScript_Victini",
+      "flag": "FLAG_HIDE_ANTHOLOGY_VICTINI"
     }
   ],
   "warp_events": [

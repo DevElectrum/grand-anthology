@@ -169,9 +169,6 @@ Route44_AnthologyOnTransition::
 	getcaughtmon SPECIES_ETERNATUS
 	call_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideEternatus
 	call_if_ne VAR_RESULT, TRUE, Route44_AnthologyShowEternatus
-	getcaughtmon SPECIES_GLASTRIER
-	call_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideGlastrierJohto
-	call_if_ne VAR_RESULT, TRUE, Route44_AnthologyShowGlastrierJohto
 	return
 
 Route44_AnthologyHideEternatus::
@@ -213,42 +210,6 @@ Route44_AnthologyEternatusRetreated::
 // A Johto-side source on the Ice Path approach guarantees availability before
 // the first Johto Champion. Hoenn's Shoal Cave source uses the same persistent
 // National Dex caught bit, so capturing either source retires both on revisit.
-Route44_AnthologyHideGlastrierJohto::
-	setflag FLAG_HIDE_ANTHOLOGY_JOHTO_GLASTRIER
-	return
-
-Route44_AnthologyShowGlastrierJohto::
-	clearflag FLAG_HIDE_ANTHOLOGY_JOHTO_GLASTRIER
-	return
-
-Route44_EventScript_GlastrierJohto::
-	lock
-	faceplayer
-	playmoncry SPECIES_GLASTRIER, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_GLASTRIER, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route44_AnthologyGlastrierJohtoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route44_AnthologyGlastrierJohtoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route44_AnthologyGlastrierJohtoResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route44_AnthologyGlastrierJohtoResolved
-	release
-	end
-
-Route44_AnthologyGlastrierJohtoResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_JOHTO_GLASTRIER
-	setflag FLAG_HIDE_ANTHOLOGY_JOHTO_GLASTRIER
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route44_AnthologyGlastrierJohtoRetreated::
-	release
-	end
-
 Route44_TornadusOnTransition::
 	getcaughtmon SPECIES_TORNADUS
 	goto_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideTornadus

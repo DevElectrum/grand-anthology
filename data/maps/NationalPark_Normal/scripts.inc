@@ -5,6 +5,7 @@ NationalPark_Normal_MapScripts::
 
 NationalPark_Normal_OnTransition: 
 	call NationalPark_Normal_AnthologyOnTransition
+	call NationalPark_Normal_VictiniOnTransition
 	end
 
 NationalPark_Normal_EventScript_Lass::
@@ -241,3 +242,42 @@ NationalPark_Normal_AnthologyVirizionRetreated::
 	release
 	end
 
+
+NationalPark_Normal_VictiniOnTransition::
+	goto_if_unset FLAG_SYS_GAME_CLEAR, NationalPark_Normal_HideVictini
+	getcaughtmon SPECIES_VICTINI
+	goto_if_eq VAR_RESULT, TRUE, NationalPark_Normal_HideVictini
+	clearflag FLAG_HIDE_ANTHOLOGY_VICTINI
+	return
+
+NationalPark_Normal_HideVictini::
+	setflag FLAG_HIDE_ANTHOLOGY_VICTINI
+	return
+
+NationalPark_Normal_EventScript_Victini::
+	lock
+	faceplayer
+	playmoncry SPECIES_VICTINI, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_VICTINI, 42
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, NationalPark_Normal_VictiniRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, NationalPark_Normal_VictiniRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NationalPark_Normal_VictiniResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NationalPark_Normal_VictiniResolved
+	release
+	end
+
+NationalPark_Normal_VictiniResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_VICTINI
+	setflag FLAG_HIDE_ANTHOLOGY_VICTINI
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+NationalPark_Normal_VictiniRetreated::
+	release
+	end
