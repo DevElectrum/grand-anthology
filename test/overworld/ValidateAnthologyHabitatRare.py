@@ -407,7 +407,10 @@ for layout, width, height, x, y, expected in (
     assert len(raw) == width * height * 2, layout
     tile, = struct.unpack_from("<H", raw, 2 * (y * width + x))
     assert tile == expected and (tile >> 12) == 3, (layout, hex(tile))
-    obj = json.loads((root / "data/maps" / layout / "map.json").read_text())["object_events"][-1]
+    objs = json.loads((root / "data/maps" / layout / "map.json").read_text())["object_events"]
+    local_id = ("LOCALID_ANTHOLOGY_DIANCIE" if layout == "GraniteCave_StevensRoom"
+                else "LOCALID_ANTHOLOGY_GLASTRIER")
+    obj = next(obj for obj in objs if obj.get("local_id") == local_id)
     assert (obj["x"], obj["y"], obj["elevation"]) == (x, y, 3), layout
 print("P0 cave statics: real collision/elevation tilemap coordinates PASS")
 
