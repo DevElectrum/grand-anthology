@@ -1025,17 +1025,17 @@
 {"kind":"pokemon","dex":1024,"symbol":"SPECIES_TERAPAGOS","name":"TERAPAGOS","audit_region":"HOENN","evolves_from":[],"sources":[{"method":"scripted_battle_candidate","map":"Route114","source":"data/maps/Route114/scripts.inc","level":31,"form":"SPECIES_TERAPAGOS_NORMAL"},{"method":"scripted_battle_candidate","map":"CaveOfOrigin_B1F","source":"data/maps/CaveOfOrigin_B1F/scripts.inc","level":75,"form":"SPECIES_TERAPAGOS_STELLAR"}],"known_path_status":"source_candidate_only"}
 {"kind":"pokemon","dex":1025,"symbol":"SPECIES_PECHARUNT","name":"PECHARUNT","audit_region":"HOENN","evolves_from":[],"sources":[{"method":"scripted_battle_candidate","map":"Route117","source":"data/maps/Route117/scripts.inc","level":36}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":0,"symbol":"ITEM_NONE","name":"NONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":1,"symbol":"ITEM_POKE_BALL","name":"POKE BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":2,"symbol":"ITEM_GREAT_BALL","name":"GREAT BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":3,"symbol":"ITEM_ULTRA_BALL","name":"ULTRA BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":1,"symbol":"ITEM_POKE_BALL","name":"POKE BALL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"Route31","source":"data/maps/Route31/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":2,"symbol":"ITEM_GREAT_BALL","name":"GREAT BALL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"Route32","source":"data/maps/Route32/scripts.inc"},{"method":"scripted_pickup_candidate","map":"UnionCave_1F","source":"data/maps/UnionCave_1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":3,"symbol":"ITEM_ULTRA_BALL","name":"ULTRA BALL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"BurnedTower_B1F","source":"data/maps/BurnedTower_B1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"GoldenrodCity_UndergroundStorage","source":"data/maps/GoldenrodCity_UndergroundStorage/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route44","source":"data/maps/Route44/scripts.inc"},{"method":"scripted_pickup_candidate","map":"TinTower_3F","source":"data/maps/TinTower_3F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"WhirlIslands_1F","source":"data/maps/WhirlIslands_1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":4,"symbol":"ITEM_MASTER_BALL","name":"MASTER BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":5,"symbol":"ITEM_PREMIER_BALL","name":"PREMIER BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":5,"symbol":"ITEM_PREMIER_BALL","name":"PREMIER BALL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"RustboroCity_Flat2_2F","source":"data/maps/RustboroCity_Flat2_2F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":6,"symbol":"ITEM_HEAL_BALL","name":"HEAL BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":7,"symbol":"ITEM_NET_BALL","name":"NET BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":7,"symbol":"ITEM_NET_BALL","name":"NET BALL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route12_FishingHouse_Frlg","source":"data/maps/Route12_FishingHouse_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":8,"symbol":"ITEM_NEST_BALL","name":"NEST BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":9,"symbol":"ITEM_DIVE_BALL","name":"DIVE BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":10,"symbol":"ITEM_DUSK_BALL","name":"DUSK BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":11,"symbol":"ITEM_TIMER_BALL","name":"TIMER BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":11,"symbol":"ITEM_TIMER_BALL","name":"TIMER BALL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route110_TrickHouseEnd","source":"data/maps/Route110_TrickHouseEnd/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":12,"symbol":"ITEM_QUICK_BALL","name":"QUICK BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":13,"symbol":"ITEM_REPEAT_BALL","name":"REPEAT BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":14,"symbol":"ITEM_LUXURY_BALL","name":"LUXURY BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1043,59 +1043,59 @@
 {"kind":"item","id":16,"symbol":"ITEM_LURE_BALL","name":"LURE BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":17,"symbol":"ITEM_MOON_BALL","name":"MOON BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":18,"symbol":"ITEM_FRIEND_BALL","name":"FRIEND BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":19,"symbol":"ITEM_LOVE_BALL","name":"LOVE BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":20,"symbol":"ITEM_FAST_BALL","name":"FAST BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":19,"symbol":"ITEM_LOVE_BALL","name":"LOVE BALL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"AzaleaTown_KurtsHouse","source":"data/maps/AzaleaTown_KurtsHouse/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":20,"symbol":"ITEM_FAST_BALL","name":"FAST BALL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"AzaleaTown_KurtsHouse","source":"data/maps/AzaleaTown_KurtsHouse/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":21,"symbol":"ITEM_HEAVY_BALL","name":"HEAVY BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":22,"symbol":"ITEM_DREAM_BALL","name":"DREAM BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":23,"symbol":"ITEM_SAFARI_BALL","name":"SAFARI BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":23,"symbol":"ITEM_SAFARI_BALL","name":"SAFARI BALL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Gate_NationalPark","source":"data/maps/Gate_NationalPark/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":24,"symbol":"ITEM_SPORT_BALL","name":"SPORT BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":25,"symbol":"ITEM_PARK_BALL","name":"PARK BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":26,"symbol":"ITEM_BEAST_BALL","name":"BEAST BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":27,"symbol":"ITEM_CHERISH_BALL","name":"CHERISH BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":28,"symbol":"ITEM_POTION","name":"POTION","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":29,"symbol":"ITEM_SUPER_POTION","name":"SUPER POTION","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":30,"symbol":"ITEM_HYPER_POTION","name":"HYPER POTION","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":31,"symbol":"ITEM_MAX_POTION","name":"MAX POTION","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":32,"symbol":"ITEM_FULL_RESTORE","name":"FULL RESTORE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":33,"symbol":"ITEM_REVIVE","name":"REVIVE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":34,"symbol":"ITEM_MAX_REVIVE","name":"MAX REVIVE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":28,"symbol":"ITEM_POTION","name":"POTION","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"DarkCave_SouthSide","source":"data/maps/DarkCave_SouthSide/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route29","source":"data/maps/Route29/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route32","source":"data/maps/Route32/scripts.inc"},{"method":"scripted_pickup_candidate","map":"SproutTower_3F","source":"data/maps/SproutTower_3F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"UnionCave_1F","source":"data/maps/UnionCave_1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":29,"symbol":"ITEM_SUPER_POTION","name":"SUPER POTION","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"GoldenrodCity_UndergroundTunnel","source":"data/maps/GoldenrodCity_UndergroundTunnel/scripts.inc"},{"method":"scripted_pickup_candidate","map":"IlexForest","source":"data/maps/IlexForest/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route42","source":"data/maps/Route42/scripts.inc"},{"method":"scripted_pickup_candidate","map":"SlowpokeWell_B1F","source":"data/maps/SlowpokeWell_B1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":30,"symbol":"ITEM_HYPER_POTION","name":"HYPER POTION","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"MahoganyHideout_B1F","source":"data/maps/MahoganyHideout_B1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"MtMortar_B1F","source":"data/maps/MtMortar_B1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"UnionCave_B2F","source":"data/maps/UnionCave_B2F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":31,"symbol":"ITEM_MAX_POTION","name":"MAX POTION","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"DragonsDen_Cavern","source":"data/maps/DragonsDen_Cavern/scripts.inc"},{"method":"scripted_pickup_candidate","map":"IcePath_B2F","source":"data/maps/IcePath_B2F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"MtSilver_1F_WaterfallRoom","source":"data/maps/MtSilver_1F_WaterfallRoom/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route45","source":"data/maps/Route45/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":32,"symbol":"ITEM_FULL_RESTORE","name":"FULL RESTORE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"JohtoVictoryRoad_B1F","source":"data/maps/JohtoVictoryRoad_B1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"LakeOfRage","source":"data/maps/LakeOfRage/scripts.inc"},{"method":"scripted_pickup_candidate","map":"WhirlIslands_B1F","source":"data/maps/WhirlIslands_B1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"WhirlIslands_Descent","source":"data/maps/WhirlIslands_Descent/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":33,"symbol":"ITEM_REVIVE","name":"REVIVE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"DarkCave_SouthSide","source":"data/maps/DarkCave_SouthSide/scripts.inc"},{"method":"scripted_pickup_candidate","map":"IcePath_B1F","source":"data/maps/IcePath_B1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"MtMortar_1F_South","source":"data/maps/MtMortar_1F_South/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route46","source":"data/maps/Route46/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route47","source":"data/maps/Route47/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":34,"symbol":"ITEM_MAX_REVIVE","name":"MAX REVIVE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"LakeOfRage","source":"data/maps/LakeOfRage/scripts.inc"},{"method":"scripted_pickup_candidate","map":"MtMortar_2F","source":"data/maps/MtMortar_2F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"WhirlIslands_Descent","source":"data/maps/WhirlIslands_Descent/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":35,"symbol":"ITEM_FRESH_WATER","name":"FRESH WATER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":36,"symbol":"ITEM_SODA_POP","name":"SODA POP","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":36,"symbol":"ITEM_SODA_POP","name":"SODA POP","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route109_SeashoreHouse","source":"data/maps/Route109_SeashoreHouse/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":37,"symbol":"ITEM_LEMONADE","name":"LEMONADE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":38,"symbol":"ITEM_MOOMOO_MILK","name":"MOOMOO MILK","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":39,"symbol":"ITEM_ENERGY_POWDER","name":"ENERGY POWDER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":40,"symbol":"ITEM_ENERGY_ROOT","name":"ENERGY ROOT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":41,"symbol":"ITEM_HEAL_POWDER","name":"HEAL POWDER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":41,"symbol":"ITEM_HEAL_POWDER","name":"HEAL POWDER","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"RuinsOfAlph_PuzzleAndRewardChambers","source":"data/maps/RuinsOfAlph_PuzzleAndRewardChambers/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":42,"symbol":"ITEM_REVIVAL_HERB","name":"REVIVAL HERB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":43,"symbol":"ITEM_ANTIDOTE","name":"ANTIDOTE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":44,"symbol":"ITEM_PARALYZE_HEAL","name":"PARALYZE HEAL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":43,"symbol":"ITEM_ANTIDOTE","name":"ANTIDOTE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"Route31","source":"data/maps/Route31/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":44,"symbol":"ITEM_PARALYZE_HEAL","name":"PARALYZE HEAL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"SproutTower_1F","source":"data/maps/SproutTower_1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":45,"symbol":"ITEM_BURN_HEAL","name":"BURN HEAL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":46,"symbol":"ITEM_ICE_HEAL","name":"ICE HEAL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":46,"symbol":"ITEM_ICE_HEAL","name":"ICE HEAL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"MahoganyHideout_B3F","source":"data/maps/MahoganyHideout_B3F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":47,"symbol":"ITEM_AWAKENING","name":"AWAKENING","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":48,"symbol":"ITEM_FULL_HEAL","name":"FULL HEAL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":49,"symbol":"ITEM_ETHER","name":"ETHER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":50,"symbol":"ITEM_MAX_ETHER","name":"MAX ETHER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":51,"symbol":"ITEM_ELIXIR","name":"ELIXIR","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":52,"symbol":"ITEM_MAX_ELIXIR","name":"MAX ELIXIR","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":48,"symbol":"ITEM_FULL_HEAL","name":"FULL HEAL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"IcePath_B2F","source":"data/maps/IcePath_B2F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"JohtoVictoryRoad_B2F","source":"data/maps/JohtoVictoryRoad_B2F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"TinTower_3F","source":"data/maps/TinTower_3F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":49,"symbol":"ITEM_ETHER","name":"ETHER","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"BurnedTower_1F","source":"data/maps/BurnedTower_1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"GoldenrodCity_DepartmentStoreBasement","source":"data/maps/GoldenrodCity_DepartmentStoreBasement/scripts.inc"},{"method":"scripted_pickup_candidate","map":"IlexForest","source":"data/maps/IlexForest/scripts.inc"},{"method":"scripted_pickup_candidate","map":"OlivineCity_Lighthouse","source":"data/maps/OlivineCity_Lighthouse/scripts.inc"},{"method":"scripted_pickup_candidate","map":"UnionCave_B2F","source":"data/maps/UnionCave_B2F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":50,"symbol":"ITEM_MAX_ETHER","name":"MAX ETHER","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"Route43","source":"data/maps/Route43/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":51,"symbol":"ITEM_ELIXIR","name":"ELIXIR","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"MtMortar_1F_South","source":"data/maps/MtMortar_1F_South/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route45","source":"data/maps/Route45/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":52,"symbol":"ITEM_MAX_ELIXIR","name":"MAX ELIXIR","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"JohtoVictoryRoad_1F","source":"data/maps/JohtoVictoryRoad_1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":53,"symbol":"ITEM_BERRY_JUICE","name":"BERRY JUICE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":54,"symbol":"ITEM_SACRED_ASH","name":"SACRED ASH","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":55,"symbol":"ITEM_SWEET_HEART","name":"SWEET HEART","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":56,"symbol":"ITEM_MAX_HONEY","name":"MAX HONEY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":57,"symbol":"ITEM_PEWTER_CRUNCHIES","name":"PEWTER CRUNCHIES","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":58,"symbol":"ITEM_RAGE_CANDY_BAR","name":"RAGE CANDY BAR","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":59,"symbol":"ITEM_LAVA_COOKIE","name":"LAVA COOKIE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":58,"symbol":"ITEM_RAGE_CANDY_BAR","name":"RAGE CANDY BAR","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Mahoganytown","source":"data/maps/Mahoganytown/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":59,"symbol":"ITEM_LAVA_COOKIE","name":"LAVA COOKIE","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"MtChimney","source":"data/maps/MtChimney/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":60,"symbol":"ITEM_OLD_GATEAU","name":"OLD GATEAU","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":61,"symbol":"ITEM_CASTELIACONE","name":"CASTELIACONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":62,"symbol":"ITEM_LUMIOSE_GALETTE","name":"LUMIOSE GALETTE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":63,"symbol":"ITEM_SHALOUR_SABLE","name":"SHALOUR SABLE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":64,"symbol":"ITEM_BIG_MALASADA","name":"BIG MALASADA","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":65,"symbol":"ITEM_HP_UP","name":"HP UP","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":66,"symbol":"ITEM_PROTEIN","name":"PROTEIN","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":67,"symbol":"ITEM_IRON","name":"IRON","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":65,"symbol":"ITEM_HP_UP","name":"HP UP","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"BurnedTower_1F","source":"data/maps/BurnedTower_1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":66,"symbol":"ITEM_PROTEIN","name":"PROTEIN","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"IcePath_1F","source":"data/maps/IcePath_1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"MahoganyHideout_B3F","source":"data/maps/MahoganyHideout_B3F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":67,"symbol":"ITEM_IRON","name":"IRON","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"IcePath_B1F","source":"data/maps/IcePath_B1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"MtMortar_2F","source":"data/maps/MtMortar_2F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":68,"symbol":"ITEM_CALCIUM","name":"CALCIUM","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":69,"symbol":"ITEM_ZINC","name":"ZINC","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":70,"symbol":"ITEM_CARBOS","name":"CARBOS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":71,"symbol":"ITEM_PP_UP","name":"PP UP","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":70,"symbol":"ITEM_CARBOS","name":"CARBOS","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"MtMortar_B1F","source":"data/maps/MtMortar_B1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":71,"symbol":"ITEM_PP_UP","name":"PP UP","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"IcePath_1F","source":"data/maps/IcePath_1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"JohtoVictoryRoad_1F","source":"data/maps/JohtoVictoryRoad_1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":72,"symbol":"ITEM_PP_MAX","name":"PP MAX","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":73,"symbol":"ITEM_HEALTH_FEATHER","name":"HEALTH FEATHER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":74,"symbol":"ITEM_MUSCLE_FEATHER","name":"MUSCLE FEATHER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1113,7 +1113,7 @@
 {"kind":"item","id":86,"symbol":"ITEM_IMPISH_MINT","name":"IMPISH MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":87,"symbol":"ITEM_LAX_MINT","name":"LAX MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":88,"symbol":"ITEM_RELAXED_MINT","name":"RELAXED MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":89,"symbol":"ITEM_MODEST_MINT","name":"MODEST MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":89,"symbol":"ITEM_MODEST_MINT","name":"MODEST MINT","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"Route42","source":"data/maps/Route42/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":90,"symbol":"ITEM_MILD_MINT","name":"MILD MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":91,"symbol":"ITEM_RASH_MINT","name":"RASH MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":92,"symbol":"ITEM_QUIET_MINT","name":"QUIET MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1126,7 +1126,7 @@
 {"kind":"item","id":99,"symbol":"ITEM_JOLLY_MINT","name":"JOLLY MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":100,"symbol":"ITEM_NAIVE_MINT","name":"NAIVE MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":101,"symbol":"ITEM_SERIOUS_MINT","name":"SERIOUS MINT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":102,"symbol":"ITEM_RARE_CANDY","name":"RARE CANDY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":102,"symbol":"ITEM_RARE_CANDY","name":"RARE CANDY","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"EcruteakCity","source":"data/maps/EcruteakCity/scripts.inc"},{"method":"scripted_pickup_candidate","map":"MtSilver_Snow","source":"data/maps/MtSilver_Snow/scripts.inc"},{"method":"scripted_pickup_candidate","map":"OlivineCity_Lighthouse","source":"data/maps/OlivineCity_Lighthouse/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route27","source":"data/maps/Route27/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route34","source":"data/maps/Route34/scripts.inc"},{"method":"scripted_pickup_candidate","map":"VioletCity","source":"data/maps/VioletCity/scripts.inc"},{"method":"scripted_pickup_candidate","map":"WhirlIslands_1F","source":"data/maps/WhirlIslands_1F/scripts.inc"},{"method":"scripted_reward_candidate","map":"Route110_TrickHouseEnd","source":"data/maps/Route110_TrickHouseEnd/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":103,"symbol":"ITEM_EXP_CANDY_XS","name":"EXP CANDY XS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":104,"symbol":"ITEM_EXP_CANDY_S","name":"EXP CANDY S","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":105,"symbol":"ITEM_EXP_CANDY_M","name":"EXP CANDY M","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1136,22 +1136,22 @@
 {"kind":"item","id":109,"symbol":"ITEM_BLUE_FLUTE","name":"BLUE FLUTE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":110,"symbol":"ITEM_YELLOW_FLUTE","name":"YELLOW FLUTE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":111,"symbol":"ITEM_RED_FLUTE","name":"RED FLUTE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":112,"symbol":"ITEM_BLACK_FLUTE","name":"BLACK FLUTE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":112,"symbol":"ITEM_BLACK_FLUTE","name":"BLACK FLUTE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"DarkCave_NorthSide","source":"data/maps/DarkCave_NorthSide/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":113,"symbol":"ITEM_WHITE_FLUTE","name":"WHITE FLUTE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":114,"symbol":"ITEM_REPEL","name":"REPEL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":115,"symbol":"ITEM_SUPER_REPEL","name":"SUPER REPEL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":116,"symbol":"ITEM_MAX_REPEL","name":"MAX REPEL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":116,"symbol":"ITEM_MAX_REPEL","name":"MAX REPEL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"MtMortar_1F_North","source":"data/maps/MtMortar_1F_North/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route44","source":"data/maps/Route44/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":117,"symbol":"ITEM_LURE","name":"LURE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":118,"symbol":"ITEM_SUPER_LURE","name":"SUPER LURE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":119,"symbol":"ITEM_MAX_LURE","name":"MAX LURE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":120,"symbol":"ITEM_ESCAPE_ROPE","name":"ESCAPE ROPE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":120,"symbol":"ITEM_ESCAPE_ROPE","name":"ESCAPE ROPE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"MtMortar_1F_North","source":"data/maps/MtMortar_1F_North/scripts.inc"},{"method":"scripted_pickup_candidate","map":"SproutTower_3F","source":"data/maps/SproutTower_3F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":121,"symbol":"ITEM_X_ATTACK","name":"X ATTACK","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":122,"symbol":"ITEM_X_DEFENSE","name":"X DEFENSE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":123,"symbol":"ITEM_X_SP_ATK","name":"X SP ATK","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":124,"symbol":"ITEM_X_SP_DEF","name":"X SP DEF","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":125,"symbol":"ITEM_X_SPEED","name":"X SPEED","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":126,"symbol":"ITEM_X_ACCURACY","name":"X ACCURACY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":127,"symbol":"ITEM_DIRE_HIT","name":"DIRE HIT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":127,"symbol":"ITEM_DIRE_HIT","name":"DIRE HIT","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"MtSilver_1F_WaterfallRoom","source":"data/maps/MtSilver_1F_WaterfallRoom/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":128,"symbol":"ITEM_GUARD_SPEC","name":"GUARD SPEC","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":129,"symbol":"ITEM_POKE_DOLL","name":"POKE DOLL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":130,"symbol":"ITEM_FLUFFY_TAIL","name":"FLUFFY TAIL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1159,24 +1159,24 @@
 {"kind":"item","id":132,"symbol":"ITEM_MAX_MUSHROOMS","name":"MAX MUSHROOMS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":133,"symbol":"ITEM_BOTTLE_CAP","name":"BOTTLE CAP","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":134,"symbol":"ITEM_GOLD_BOTTLE_CAP","name":"GOLD BOTTLE CAP","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":135,"symbol":"ITEM_NUGGET","name":"NUGGET","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":136,"symbol":"ITEM_BIG_NUGGET","name":"BIG NUGGET","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":135,"symbol":"ITEM_NUGGET","name":"NUGGET","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"ThreeIsland_DunsparceTunnel_Frlg","source":"data/maps/ThreeIsland_DunsparceTunnel_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":136,"symbol":"ITEM_BIG_NUGGET","name":"BIG NUGGET","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"MahoganyHideout_B1F","source":"data/maps/MahoganyHideout_B1F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route35","source":"data/maps/Route35/scripts.inc"},{"method":"scripted_pickup_candidate","map":"Route39","source":"data/maps/Route39/scripts.inc"},{"method":"scripted_pickup_candidate","map":"WhirlIslands_B1F","source":"data/maps/WhirlIslands_B1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":137,"symbol":"ITEM_TINY_MUSHROOM","name":"TINY MUSHROOM","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":138,"symbol":"ITEM_BIG_MUSHROOM","name":"BIG MUSHROOM","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":138,"symbol":"ITEM_BIG_MUSHROOM","name":"BIG MUSHROOM","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"BellchimeTrail","source":"data/maps/BellchimeTrail/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":139,"symbol":"ITEM_BALM_MUSHROOM","name":"BALM MUSHROOM","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":140,"symbol":"ITEM_PEARL","name":"PEARL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":140,"symbol":"ITEM_PEARL","name":"PEARL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"Route47","source":"data/maps/Route47/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":141,"symbol":"ITEM_BIG_PEARL","name":"BIG PEARL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":142,"symbol":"ITEM_PEARL_STRING","name":"PEARL STRING","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":143,"symbol":"ITEM_STARDUST","name":"STARDUST","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":144,"symbol":"ITEM_STAR_PIECE","name":"STAR PIECE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":144,"symbol":"ITEM_STAR_PIECE","name":"STAR PIECE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"DarkCave_NorthSide","source":"data/maps/DarkCave_NorthSide/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":145,"symbol":"ITEM_COMET_SHARD","name":"COMET SHARD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":146,"symbol":"ITEM_SHOAL_SALT","name":"SHOAL SALT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":147,"symbol":"ITEM_SHOAL_SHELL","name":"SHOAL SHELL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":146,"symbol":"ITEM_SHOAL_SALT","name":"SHOAL SALT","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"ShoalCave_LowTideLowerRoom","source":"data/maps/ShoalCave_LowTideLowerRoom/scripts.inc"},{"method":"scripted_reward_candidate","map":"ShoalCave_LowTideStairsRoom","source":"data/maps/ShoalCave_LowTideStairsRoom/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":147,"symbol":"ITEM_SHOAL_SHELL","name":"SHOAL SHELL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"ShoalCave_LowTideInnerRoom","source":"data/maps/ShoalCave_LowTideInnerRoom/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":148,"symbol":"ITEM_RED_SHARD","name":"RED SHARD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":149,"symbol":"ITEM_BLUE_SHARD","name":"BLUE SHARD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":150,"symbol":"ITEM_YELLOW_SHARD","name":"YELLOW SHARD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":151,"symbol":"ITEM_GREEN_SHARD","name":"GREEN SHARD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":152,"symbol":"ITEM_HEART_SCALE","name":"HEART SCALE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":152,"symbol":"ITEM_HEART_SCALE","name":"HEART SCALE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"TohjoFalls_Cavern","source":"data/maps/TohjoFalls_Cavern/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":153,"symbol":"ITEM_HONEY","name":"HONEY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":154,"symbol":"ITEM_RARE_BONE","name":"RARE BONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":155,"symbol":"ITEM_ODD_KEYSTONE","name":"ODD KEYSTONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1189,11 +1189,11 @@
 {"kind":"item","id":162,"symbol":"ITEM_RELIC_STATUE","name":"RELIC STATUE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":163,"symbol":"ITEM_RELIC_CROWN","name":"RELIC CROWN","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":164,"symbol":"ITEM_STRANGE_SOUVENIR","name":"STRANGE SOUVENIR","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":165,"symbol":"ITEM_HELIX_FOSSIL","name":"HELIX FOSSIL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":166,"symbol":"ITEM_DOME_FOSSIL","name":"DOME FOSSIL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":165,"symbol":"ITEM_HELIX_FOSSIL","name":"HELIX FOSSIL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"RuinsOfAlph_B1F","source":"data/maps/RuinsOfAlph_B1F/scripts.inc"},{"method":"scripted_reward_candidate","map":"MtMoon_B2F_Frlg","source":"data/maps/MtMoon_B2F_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":166,"symbol":"ITEM_DOME_FOSSIL","name":"DOME FOSSIL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"RuinsOfAlph_B1F","source":"data/maps/RuinsOfAlph_B1F/scripts.inc"},{"method":"scripted_reward_candidate","map":"MtMoon_B2F_Frlg","source":"data/maps/MtMoon_B2F_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":167,"symbol":"ITEM_OLD_AMBER","name":"OLD AMBER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":168,"symbol":"ITEM_ROOT_FOSSIL","name":"ROOT FOSSIL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":169,"symbol":"ITEM_CLAW_FOSSIL","name":"CLAW FOSSIL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":168,"symbol":"ITEM_ROOT_FOSSIL","name":"ROOT FOSSIL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"DesertUnderpass","source":"data/maps/DesertUnderpass/scripts.inc"},{"method":"scripted_reward_candidate","map":"MirageTower_4F","source":"data/maps/MirageTower_4F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":169,"symbol":"ITEM_CLAW_FOSSIL","name":"CLAW FOSSIL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"DesertUnderpass","source":"data/maps/DesertUnderpass/scripts.inc"},{"method":"scripted_reward_candidate","map":"MirageTower_4F","source":"data/maps/MirageTower_4F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":170,"symbol":"ITEM_ARMOR_FOSSIL","name":"ARMOR FOSSIL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":171,"symbol":"ITEM_SKULL_FOSSIL","name":"SKULL FOSSIL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":172,"symbol":"ITEM_COVER_FOSSIL","name":"COVER FOSSIL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1240,7 +1240,7 @@
 {"kind":"item","id":214,"symbol":"ITEM_LEAF_STONE","name":"LEAF STONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":215,"symbol":"ITEM_ICE_STONE","name":"ICE STONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":216,"symbol":"ITEM_SUN_STONE","name":"SUN STONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":217,"symbol":"ITEM_MOON_STONE","name":"MOON STONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":217,"symbol":"ITEM_MOON_STONE","name":"MOON STONE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"Route27","source":"data/maps/Route27/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":218,"symbol":"ITEM_SHINY_STONE","name":"SHINY STONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":219,"symbol":"ITEM_DUSK_STONE","name":"DUSK STONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":220,"symbol":"ITEM_DAWN_STONE","name":"DAWN STONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1311,57 +1311,57 @@
 {"kind":"item","id":285,"symbol":"ITEM_DARK_MEMORY","name":"DARK MEMORY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":286,"symbol":"ITEM_STEEL_MEMORY","name":"STEEL MEMORY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":287,"symbol":"ITEM_FAIRY_MEMORY","name":"FAIRY MEMORY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":288,"symbol":"ITEM_RUSTED_SWORD","name":"RUSTED SWORD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":289,"symbol":"ITEM_RUSTED_SHIELD","name":"RUSTED SHIELD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":288,"symbol":"ITEM_RUSTED_SWORD","name":"RUSTED SWORD","mega_stone":false,"sources":[{"method":"royal_duo_held_reward","map":"Route27","detail":"Held by awarded Zacian; 8 Johto badges","source":"src/script_pokemon_util.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":289,"symbol":"ITEM_RUSTED_SHIELD","name":"RUSTED SHIELD","mega_stone":false,"sources":[{"method":"royal_duo_held_reward","map":"Route27","detail":"Held by awarded Zamazenta; 8 Johto badges","source":"src/script_pokemon_util.c"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":290,"symbol":"ITEM_RED_ORB","name":"RED ORB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":291,"symbol":"ITEM_BLUE_ORB","name":"BLUE ORB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":292,"symbol":"ITEM_VENUSAURITE","name":"VENUSAURITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":293,"symbol":"ITEM_CHARIZARDITE_X","name":"CHARIZARDITE X","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":294,"symbol":"ITEM_CHARIZARDITE_Y","name":"CHARIZARDITE Y","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":295,"symbol":"ITEM_BLASTOISINITE","name":"BLASTOISINITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":296,"symbol":"ITEM_BEEDRILLITE","name":"BEEDRILLITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":297,"symbol":"ITEM_PIDGEOTITE","name":"PIDGEOTITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":298,"symbol":"ITEM_ALAKAZITE","name":"ALAKAZITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":299,"symbol":"ITEM_SLOWBRONITE","name":"SLOWBRONITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":300,"symbol":"ITEM_GENGARITE","name":"GENGARITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":301,"symbol":"ITEM_KANGASKHANITE","name":"KANGASKHANITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":302,"symbol":"ITEM_PINSIRITE","name":"PINSIRITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":303,"symbol":"ITEM_GYARADOSITE","name":"GYARADOSITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":304,"symbol":"ITEM_AERODACTYLITE","name":"AERODACTYLITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":305,"symbol":"ITEM_MEWTWONITE_X","name":"MEWTWONITE X","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":306,"symbol":"ITEM_MEWTWONITE_Y","name":"MEWTWONITE Y","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":307,"symbol":"ITEM_AMPHAROSITE","name":"AMPHAROSITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":308,"symbol":"ITEM_STEELIXITE","name":"STEELIXITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":309,"symbol":"ITEM_SCIZORITE","name":"SCIZORITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":310,"symbol":"ITEM_HERACRONITE","name":"HERACRONITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":311,"symbol":"ITEM_HOUNDOOMINITE","name":"HOUNDOOMINITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":312,"symbol":"ITEM_TYRANITARITE","name":"TYRANITARITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":313,"symbol":"ITEM_SCEPTILITE","name":"SCEPTILITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":314,"symbol":"ITEM_BLAZIKENITE","name":"BLAZIKENITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":315,"symbol":"ITEM_SWAMPERTITE","name":"SWAMPERTITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":316,"symbol":"ITEM_GARDEVOIRITE","name":"GARDEVOIRITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":317,"symbol":"ITEM_SABLENITE","name":"SABLENITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":318,"symbol":"ITEM_MAWILITE","name":"MAWILITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":319,"symbol":"ITEM_AGGRONITE","name":"AGGRONITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":320,"symbol":"ITEM_MEDICHAMITE","name":"MEDICHAMITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":321,"symbol":"ITEM_MANECTITE","name":"MANECTITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":322,"symbol":"ITEM_SHARPEDONITE","name":"SHARPEDONITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":323,"symbol":"ITEM_CAMERUPTITE","name":"CAMERUPTITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":324,"symbol":"ITEM_ALTARIANITE","name":"ALTARIANITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":325,"symbol":"ITEM_BANETTITE","name":"BANETTITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":326,"symbol":"ITEM_ABSOLITE","name":"ABSOLITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":327,"symbol":"ITEM_GLALITITE","name":"GLALITITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":328,"symbol":"ITEM_SALAMENCITE","name":"SALAMENCITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":329,"symbol":"ITEM_METAGROSSITE","name":"METAGROSSITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":330,"symbol":"ITEM_LATIASITE","name":"LATIASITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":331,"symbol":"ITEM_LATIOSITE","name":"LATIOSITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":332,"symbol":"ITEM_LOPUNNITE","name":"LOPUNNITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":333,"symbol":"ITEM_GARCHOMPITE","name":"GARCHOMPITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":334,"symbol":"ITEM_LUCARIONITE","name":"LUCARIONITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":335,"symbol":"ITEM_ABOMASITE","name":"ABOMASITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":336,"symbol":"ITEM_GALLADITE","name":"GALLADITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":337,"symbol":"ITEM_AUDINITE","name":"AUDINITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":338,"symbol":"ITEM_DIANCITE","name":"DIANCITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":292,"symbol":"ITEM_VENUSAURITE","name":"VENUSAURITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":293,"symbol":"ITEM_CHARIZARDITE_X","name":"CHARIZARDITE X","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":294,"symbol":"ITEM_CHARIZARDITE_Y","name":"CHARIZARDITE Y","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":295,"symbol":"ITEM_BLASTOISINITE","name":"BLASTOISINITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":296,"symbol":"ITEM_BEEDRILLITE","name":"BEEDRILLITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_LEADER_KOGA","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":297,"symbol":"ITEM_PIDGEOTITE","name":"PIDGEOTITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_FALKNER_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":298,"symbol":"ITEM_ALAKAZITE","name":"ALAKAZITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_LEADER_SABRINA","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":299,"symbol":"ITEM_SLOWBRONITE","name":"SLOWBRONITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_WILL_2","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":300,"symbol":"ITEM_GENGARITE","name":"GENGARITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_ELITE_FOUR_AGATHA_2","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":301,"symbol":"ITEM_KANGASKHANITE","name":"KANGASKHANITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_NORMAN_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":302,"symbol":"ITEM_PINSIRITE","name":"PINSIRITE","mega_stone":true,"sources":[{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":303,"symbol":"ITEM_GYARADOSITE","name":"GYARADOSITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_LEADER_MISTY","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":304,"symbol":"ITEM_AERODACTYLITE","name":"AERODACTYLITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_LEADER_BROCK","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":305,"symbol":"ITEM_MEWTWONITE_X","name":"MEWTWONITE X","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_CHAMPION_REMATCH_SQUIRTLE","source":"src/battle_net.c"},{"method":"hard_rematch_reward","detail":"TRAINER_CHAMPION_REMATCH_BULBASAUR","source":"src/battle_net.c"},{"method":"hard_rematch_reward","detail":"TRAINER_CHAMPION_REMATCH_CHARMANDER","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":306,"symbol":"ITEM_MEWTWONITE_Y","name":"MEWTWONITE Y","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_CHAMPION_REMATCH_SQUIRTLE","source":"src/battle_net.c"},{"method":"hard_rematch_reward","detail":"TRAINER_CHAMPION_REMATCH_BULBASAUR","source":"src/battle_net.c"},{"method":"hard_rematch_reward","detail":"TRAINER_CHAMPION_REMATCH_CHARMANDER","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":307,"symbol":"ITEM_AMPHAROSITE","name":"AMPHAROSITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_CLAIR_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":308,"symbol":"ITEM_STEELIXITE","name":"STEELIXITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_JASMINE_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":309,"symbol":"ITEM_SCIZORITE","name":"SCIZORITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_BUGSY_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":310,"symbol":"ITEM_HERACRONITE","name":"HERACRONITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_CHUCK_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":311,"symbol":"ITEM_HOUNDOOMINITE","name":"HOUNDOOMINITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_LEADER_BLAINE","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":312,"symbol":"ITEM_TYRANITARITE","name":"TYRANITARITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_SIDNEY","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":313,"symbol":"ITEM_SCEPTILITE","name":"SCEPTILITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":314,"symbol":"ITEM_BLAZIKENITE","name":"BLAZIKENITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":315,"symbol":"ITEM_SWAMPERTITE","name":"SWAMPERTITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":316,"symbol":"ITEM_GARDEVOIRITE","name":"GARDEVOIRITE","mega_stone":true,"sources":[{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":317,"symbol":"ITEM_SABLENITE","name":"SABLENITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_MORTY_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":318,"symbol":"ITEM_MAWILITE","name":"MAWILITE","mega_stone":true,"sources":[{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":319,"symbol":"ITEM_AGGRONITE","name":"AGGRONITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_ROXANNE_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":320,"symbol":"ITEM_MEDICHAMITE","name":"MEDICHAMITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_BRAWLY_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":321,"symbol":"ITEM_MANECTITE","name":"MANECTITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_WATTSON_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":322,"symbol":"ITEM_SHARPEDONITE","name":"SHARPEDONITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_JUAN_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":323,"symbol":"ITEM_CAMERUPTITE","name":"CAMERUPTITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_FLANNERY_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":324,"symbol":"ITEM_ALTARIANITE","name":"ALTARIANITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_WINONA_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":325,"symbol":"ITEM_BANETTITE","name":"BANETTITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_PHOEBE","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":326,"symbol":"ITEM_ABSOLITE","name":"ABSOLITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_KAREN_2_JT","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":327,"symbol":"ITEM_GLALITITE","name":"GLALITITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_GLACIA","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":328,"symbol":"ITEM_SALAMENCITE","name":"SALAMENCITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_LANCE_2","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":329,"symbol":"ITEM_METAGROSSITE","name":"METAGROSSITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_TATE_AND_LIZA_1","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":330,"symbol":"ITEM_LATIASITE","name":"LATIASITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_WALLACE","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":331,"symbol":"ITEM_LATIOSITE","name":"LATIOSITE","mega_stone":true,"sources":[{"method":"hard_rematch_reward","detail":"TRAINER_DRAKE","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":332,"symbol":"ITEM_LOPUNNITE","name":"LOPUNNITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route34","flag":"FLAG_ANTHOLOGY_MEGA_STONE_29","source":"data/maps/Route34/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":333,"symbol":"ITEM_GARCHOMPITE","name":"GARCHOMPITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"DragonsDen_Cavern","flag":"FLAG_ANTHOLOGY_MEGA_STONE_30","source":"data/maps/DragonsDen_Cavern/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":334,"symbol":"ITEM_LUCARIONITE","name":"LUCARIONITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route10_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_31","source":"data/maps/Route10_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":335,"symbol":"ITEM_ABOMASITE","name":"ABOMASITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"SeafoamIslands_B3F_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_32","source":"data/maps/SeafoamIslands_B3F_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":336,"symbol":"ITEM_GALLADITE","name":"GALLADITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"VerdanturfTown","flag":"FLAG_ANTHOLOGY_MEGA_STONE_33","source":"data/maps/VerdanturfTown/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":337,"symbol":"ITEM_AUDINITE","name":"AUDINITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"RustboroCity","flag":"FLAG_ANTHOLOGY_MEGA_STONE_34","source":"data/maps/RustboroCity/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":338,"symbol":"ITEM_DIANCITE","name":"DIANCITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"GraniteCave_B1F","flag":"FLAG_ANTHOLOGY_MEGA_STONE_35","source":"data/maps/GraniteCave_B1F/map.json"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":339,"symbol":"ITEM_NORMAL_GEM","name":"NORMAL GEM","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":340,"symbol":"ITEM_FIRE_GEM","name":"FIRE GEM","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":341,"symbol":"ITEM_WATER_GEM","name":"WATER GEM","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1428,7 +1428,7 @@
 {"kind":"item","id":402,"symbol":"ITEM_LUSTROUS_ORB","name":"LUSTROUS ORB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":403,"symbol":"ITEM_GRISEOUS_ORB","name":"GRISEOUS ORB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":404,"symbol":"ITEM_SEA_INCENSE","name":"SEA INCENSE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":405,"symbol":"ITEM_LAX_INCENSE","name":"LAX INCENSE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":405,"symbol":"ITEM_LAX_INCENSE","name":"LAX INCENSE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"Route38","source":"data/maps/Route38/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":406,"symbol":"ITEM_ODD_INCENSE","name":"ODD INCENSE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":407,"symbol":"ITEM_ROCK_INCENSE","name":"ROCK INCENSE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":408,"symbol":"ITEM_FULL_INCENSE","name":"FULL INCENSE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1436,8 +1436,8 @@
 {"kind":"item","id":410,"symbol":"ITEM_ROSE_INCENSE","name":"ROSE INCENSE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":411,"symbol":"ITEM_LUCK_INCENSE","name":"LUCK INCENSE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":412,"symbol":"ITEM_PURE_INCENSE","name":"PURE INCENSE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":413,"symbol":"ITEM_RED_SCARF","name":"RED SCARF","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":414,"symbol":"ITEM_BLUE_SCARF","name":"BLUE SCARF","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":413,"symbol":"ITEM_RED_SCARF","name":"RED SCARF","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"SlateportCity_PokemonFanClub","source":"data/maps/SlateportCity_PokemonFanClub/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":414,"symbol":"ITEM_BLUE_SCARF","name":"BLUE SCARF","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"SlateportCity_PokemonFanClub","source":"data/maps/SlateportCity_PokemonFanClub/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":415,"symbol":"ITEM_PINK_SCARF","name":"PINK SCARF","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":416,"symbol":"ITEM_GREEN_SCARF","name":"GREEN SCARF","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":417,"symbol":"ITEM_YELLOW_SCARF","name":"YELLOW SCARF","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1448,23 +1448,23 @@
 {"kind":"item","id":422,"symbol":"ITEM_POWER_LENS","name":"POWER LENS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":423,"symbol":"ITEM_POWER_BAND","name":"POWER BAND","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":424,"symbol":"ITEM_POWER_ANKLET","name":"POWER ANKLET","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":425,"symbol":"ITEM_SILK_SCARF","name":"SILK SCARF","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":426,"symbol":"ITEM_CHARCOAL","name":"CHARCOAL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":425,"symbol":"ITEM_SILK_SCARF","name":"SILK SCARF","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"DewfordTown_House2","source":"data/maps/DewfordTown_House2/scripts.inc"},{"method":"scripted_reward_candidate","map":"Route29","source":"data/maps/Route29/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":426,"symbol":"ITEM_CHARCOAL","name":"CHARCOAL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"RuinsOfAlph_PuzzleAndRewardChambers","source":"data/maps/RuinsOfAlph_PuzzleAndRewardChambers/scripts.inc"},{"method":"scripted_reward_candidate","map":"AzaleaTown_House1","source":"data/maps/AzaleaTown_House1/scripts.inc"},{"method":"scripted_reward_candidate","map":"LavaridgeTown_HerbShop","source":"data/maps/LavaridgeTown_HerbShop/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":427,"symbol":"ITEM_MYSTIC_WATER","name":"MYSTIC WATER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":428,"symbol":"ITEM_MAGNET","name":"MAGNET","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":428,"symbol":"ITEM_MAGNET","name":"MAGNET","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route37","source":"data/maps/Route37/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":429,"symbol":"ITEM_MIRACLE_SEED","name":"MIRACLE SEED","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":430,"symbol":"ITEM_NEVER_MELT_ICE","name":"NEVER MELT ICE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":431,"symbol":"ITEM_BLACK_BELT","name":"BLACK BELT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":432,"symbol":"ITEM_POISON_BARB","name":"POISON BARB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":433,"symbol":"ITEM_SOFT_SAND","name":"SOFT SAND","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":434,"symbol":"ITEM_SHARP_BEAK","name":"SHARP BEAK","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":430,"symbol":"ITEM_NEVER_MELT_ICE","name":"NEVER MELT ICE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"IcePath_B4F","source":"data/maps/IcePath_B4F/scripts.inc"},{"method":"scripted_pickup_candidate","map":"MtSilver_Snow","source":"data/maps/MtSilver_Snow/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":431,"symbol":"ITEM_BLACK_BELT","name":"BLACK BELT","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"LakeOfRage","source":"data/maps/LakeOfRage/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":432,"symbol":"ITEM_POISON_BARB","name":"POISON BARB","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route32","source":"data/maps/Route32/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":433,"symbol":"ITEM_SOFT_SAND","name":"SOFT SAND","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"Route34","source":"data/maps/Route34/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":434,"symbol":"ITEM_SHARP_BEAK","name":"SHARP BEAK","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route40","source":"data/maps/Route40/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":435,"symbol":"ITEM_TWISTED_SPOON","name":"TWISTED SPOON","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":436,"symbol":"ITEM_SILVER_POWDER","name":"SILVER POWDER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":437,"symbol":"ITEM_HARD_STONE","name":"HARD STONE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":437,"symbol":"ITEM_HARD_STONE","name":"HARD STONE","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route36","source":"data/maps/Route36/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":438,"symbol":"ITEM_SPELL_TAG","name":"SPELL TAG","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":439,"symbol":"ITEM_DRAGON_FANG","name":"DRAGON FANG","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":440,"symbol":"ITEM_BLACK_GLASSES","name":"BLACK GLASSES","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":441,"symbol":"ITEM_METAL_COAT","name":"METAL COAT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":439,"symbol":"ITEM_DRAGON_FANG","name":"DRAGON FANG","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"DragonsDen_Cavern","source":"data/maps/DragonsDen_Cavern/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":440,"symbol":"ITEM_BLACK_GLASSES","name":"BLACK GLASSES","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"DarkCave_NorthSide","source":"data/maps/DarkCave_NorthSide/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":441,"symbol":"ITEM_METAL_COAT","name":"METAL COAT","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"SSAqua_RoomSSE","source":"data/maps/SSAqua_RoomSSE/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":442,"symbol":"ITEM_CHOICE_BAND","name":"CHOICE BAND","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":443,"symbol":"ITEM_CHOICE_SPECS","name":"CHOICE SPECS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":444,"symbol":"ITEM_CHOICE_SCARF","name":"CHOICE SCARF","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1486,13 +1486,13 @@
 {"kind":"item","id":460,"symbol":"ITEM_WHITE_HERB","name":"WHITE HERB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":461,"symbol":"ITEM_EXP_SHARE","name":"EXP SHARE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":462,"symbol":"ITEM_QUICK_CLAW","name":"QUICK CLAW","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":463,"symbol":"ITEM_SOOTHE_BELL","name":"SOOTHE BELL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":464,"symbol":"ITEM_MENTAL_HERB","name":"MENTAL HERB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":465,"symbol":"ITEM_KINGS_ROCK","name":"KINGS ROCK","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":466,"symbol":"ITEM_AMULET_COIN","name":"AMULET COIN","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":467,"symbol":"ITEM_CLEANSE_TAG","name":"CLEANSE TAG","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":463,"symbol":"ITEM_SOOTHE_BELL","name":"SOOTHE BELL","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"NationalPark_Normal","source":"data/maps/NationalPark_Normal/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":464,"symbol":"ITEM_MENTAL_HERB","name":"MENTAL HERB","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"FortreeCity_House4","source":"data/maps/FortreeCity_House4/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":465,"symbol":"ITEM_KINGS_ROCK","name":"KINGS ROCK","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"SlowpokeWell_B2F","source":"data/maps/SlowpokeWell_B2F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":466,"symbol":"ITEM_AMULET_COIN","name":"AMULET COIN","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"GoldenrodCity_DepartmentStoreBasement","source":"data/maps/GoldenrodCity_DepartmentStoreBasement/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":467,"symbol":"ITEM_CLEANSE_TAG","name":"CLEANSE TAG","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"MtPyre_1F","source":"data/maps/MtPyre_1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":468,"symbol":"ITEM_SMOKE_BALL","name":"SMOKE BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":469,"symbol":"ITEM_FOCUS_BAND","name":"FOCUS BAND","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":469,"symbol":"ITEM_FOCUS_BAND","name":"FOCUS BAND","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"ShoalCave_LowTideLowerRoom","source":"data/maps/ShoalCave_LowTideLowerRoom/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":470,"symbol":"ITEM_LUCKY_EGG","name":"LUCKY EGG","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":471,"symbol":"ITEM_SCOPE_LENS","name":"SCOPE LENS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":472,"symbol":"ITEM_LEFTOVERS","name":"LEFTOVERS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1538,7 +1538,7 @@
 {"kind":"item","id":512,"symbol":"ITEM_ROOM_SERVICE","name":"ROOM SERVICE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":513,"symbol":"ITEM_UTILITY_UMBRELLA","name":"UTILITY UMBRELLA","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":515,"symbol":"ITEM_CHESTO_BERRY","name":"CHESTO BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":516,"symbol":"ITEM_PECHA_BERRY","name":"PECHA BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":516,"symbol":"ITEM_PECHA_BERRY","name":"PECHA BERRY","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"VioletCity","source":"data/maps/VioletCity/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":517,"symbol":"ITEM_RAWST_BERRY","name":"RAWST BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":518,"symbol":"ITEM_ASPEAR_BERRY","name":"ASPEAR BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":519,"symbol":"ITEM_LEPPA_BERRY","name":"LEPPA BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1550,7 +1550,7 @@
 {"kind":"item","id":525,"symbol":"ITEM_WIKI_BERRY","name":"WIKI BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":526,"symbol":"ITEM_MAGO_BERRY","name":"MAGO BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":527,"symbol":"ITEM_AGUAV_BERRY","name":"AGUAV BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":528,"symbol":"ITEM_IAPAPA_BERRY","name":"IAPAPA BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":528,"symbol":"ITEM_IAPAPA_BERRY","name":"IAPAPA BERRY","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"ThreeIsland_BerryForest_Frlg","source":"data/maps/ThreeIsland_BerryForest_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":529,"symbol":"ITEM_RAZZ_BERRY","name":"RAZZ BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":530,"symbol":"ITEM_BLUK_BERRY","name":"BLUK BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":531,"symbol":"ITEM_NANAB_BERRY","name":"NANAB BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1566,8 +1566,8 @@
 {"kind":"item","id":541,"symbol":"ITEM_MAGOST_BERRY","name":"MAGOST BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":542,"symbol":"ITEM_RABUTA_BERRY","name":"RABUTA BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":543,"symbol":"ITEM_NOMEL_BERRY","name":"NOMEL BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":544,"symbol":"ITEM_SPELON_BERRY","name":"SPELON BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":545,"symbol":"ITEM_PAMTRE_BERRY","name":"PAMTRE BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":544,"symbol":"ITEM_SPELON_BERRY","name":"SPELON BERRY","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route123_BerryMastersHouse","source":"data/maps/Route123_BerryMastersHouse/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":545,"symbol":"ITEM_PAMTRE_BERRY","name":"PAMTRE BERRY","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route123_BerryMastersHouse","source":"data/maps/Route123_BerryMastersHouse/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":546,"symbol":"ITEM_WATMEL_BERRY","name":"WATMEL BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":547,"symbol":"ITEM_DURIN_BERRY","name":"DURIN BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":548,"symbol":"ITEM_BELUE_BERRY","name":"BELUE BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1594,8 +1594,8 @@
 {"kind":"item","id":569,"symbol":"ITEM_SALAC_BERRY","name":"SALAC BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":570,"symbol":"ITEM_PETAYA_BERRY","name":"PETAYA BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":571,"symbol":"ITEM_APICOT_BERRY","name":"APICOT BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":572,"symbol":"ITEM_LANSAT_BERRY","name":"LANSAT BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":573,"symbol":"ITEM_STARF_BERRY","name":"STARF BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":572,"symbol":"ITEM_LANSAT_BERRY","name":"LANSAT BERRY","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"BattleFrontier_ScottsHouse","source":"data/maps/BattleFrontier_ScottsHouse/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":573,"symbol":"ITEM_STARF_BERRY","name":"STARF BERRY","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"BattleFrontier_ScottsHouse","source":"data/maps/BattleFrontier_ScottsHouse/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":574,"symbol":"ITEM_ENIGMA_BERRY","name":"ENIGMA BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":575,"symbol":"ITEM_MICLE_BERRY","name":"MICLE BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":576,"symbol":"ITEM_CUSTAP_BERRY","name":"CUSTAP BERRY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1632,7 +1632,7 @@
 {"kind":"item","id":607,"symbol":"ITEM_TM26","name":"TM26","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":608,"symbol":"ITEM_TM27","name":"TM27","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":609,"symbol":"ITEM_TM28","name":"TM28","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":610,"symbol":"ITEM_TM29","name":"TM29","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":610,"symbol":"ITEM_TM29","name":"TM29","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"JohtoVictoryRoad_B1F","source":"data/maps/JohtoVictoryRoad_B1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":611,"symbol":"ITEM_TM30","name":"TM30","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":612,"symbol":"ITEM_TM31","name":"TM31","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":613,"symbol":"ITEM_TM32","name":"TM32","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1645,7 +1645,7 @@
 {"kind":"item","id":620,"symbol":"ITEM_TM39","name":"TM39","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":621,"symbol":"ITEM_TM40","name":"TM40","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":622,"symbol":"ITEM_TM41","name":"TM41","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":623,"symbol":"ITEM_TM42","name":"TM42","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":623,"symbol":"ITEM_TM42","name":"TM42","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"FiveIsland_MemorialPillar_Frlg","source":"data/maps/FiveIsland_MemorialPillar_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":624,"symbol":"ITEM_TM43","name":"TM43","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":625,"symbol":"ITEM_TM44","name":"TM44","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":626,"symbol":"ITEM_TM45","name":"TM45","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1704,11 +1704,11 @@
 {"kind":"item","id":679,"symbol":"ITEM_TM98","name":"TM98","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":680,"symbol":"ITEM_TM99","name":"TM99","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":681,"symbol":"ITEM_TM100","name":"TM100","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":682,"symbol":"ITEM_HM01","name":"HM01","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":683,"symbol":"ITEM_HM02","name":"HM02","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":684,"symbol":"ITEM_HM03","name":"HM03","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":682,"symbol":"ITEM_HM01","name":"HM01","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"SSAnne_CaptainsOffice_Frlg","source":"data/maps/SSAnne_CaptainsOffice_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":683,"symbol":"ITEM_HM02","name":"HM02","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route16_House_Frlg","source":"data/maps/Route16_House_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":684,"symbol":"ITEM_HM03","name":"HM03","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"SafariZone_SecretHouse_Frlg","source":"data/maps/SafariZone_SecretHouse_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":685,"symbol":"ITEM_HM04","name":"HM04","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":686,"symbol":"ITEM_HM05","name":"HM05","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":686,"symbol":"ITEM_HM05","name":"HM05","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route2_EastBuilding_Frlg","source":"data/maps/Route2_EastBuilding_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":687,"symbol":"ITEM_HM06","name":"HM06","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":688,"symbol":"ITEM_HM07","name":"HM07","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":689,"symbol":"ITEM_HM08","name":"HM08","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1719,7 +1719,7 @@
 {"kind":"item","id":694,"symbol":"ITEM_ROTOM_CATALOG","name":"ROTOM CATALOG","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":695,"symbol":"ITEM_GRACIDEA","name":"GRACIDEA","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":696,"symbol":"ITEM_REVEAL_GLASS","name":"REVEAL GLASS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":697,"symbol":"ITEM_DNA_SPLICERS","name":"DNA SPLICERS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":697,"symbol":"ITEM_DNA_SPLICERS","name":"DNA SPLICERS","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"IcePath_B1F","source":"data/maps/IcePath_B1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":698,"symbol":"ITEM_ZYGARDE_CUBE","name":"ZYGARDE CUBE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":699,"symbol":"ITEM_PRISON_BOTTLE","name":"PRISON BOTTLE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":700,"symbol":"ITEM_N_SOLARIZER","name":"N SOLARIZER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1729,23 +1729,23 @@
 {"kind":"item","id":704,"symbol":"ITEM_Z_POWER_RING","name":"Z POWER RING","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":705,"symbol":"ITEM_DYNAMAX_BAND","name":"DYNAMAX BAND","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":706,"symbol":"ITEM_BICYCLE","name":"BICYCLE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":707,"symbol":"ITEM_MACH_BIKE","name":"MACH BIKE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":708,"symbol":"ITEM_ACRO_BIKE","name":"ACRO BIKE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":709,"symbol":"ITEM_OLD_ROD","name":"OLD ROD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":710,"symbol":"ITEM_GOOD_ROD","name":"GOOD ROD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":711,"symbol":"ITEM_SUPER_ROD","name":"SUPER ROD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":712,"symbol":"ITEM_DOWSING_MACHINE","name":"DOWSING MACHINE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":707,"symbol":"ITEM_MACH_BIKE","name":"MACH BIKE","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"GoldenrodCity_BikeShop","source":"data/maps/GoldenrodCity_BikeShop/scripts.inc"},{"method":"scripted_reward_candidate","map":"MauvilleCity_BikeShop","source":"data/maps/MauvilleCity_BikeShop/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":708,"symbol":"ITEM_ACRO_BIKE","name":"ACRO BIKE","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"MauvilleCity_BikeShop","source":"data/maps/MauvilleCity_BikeShop/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":709,"symbol":"ITEM_OLD_ROD","name":"OLD ROD","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route32_PokemonCenter","source":"data/maps/Route32_PokemonCenter/scripts.inc"},{"method":"scripted_reward_candidate","map":"VermilionCity_House1_Frlg","source":"data/maps/VermilionCity_House1_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":710,"symbol":"ITEM_GOOD_ROD","name":"GOOD ROD","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"FuchsiaCity_House2_Frlg","source":"data/maps/FuchsiaCity_House2_Frlg/scripts.inc"},{"method":"scripted_reward_candidate","map":"OlivineCity_House3","source":"data/maps/OlivineCity_House3/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":711,"symbol":"ITEM_SUPER_ROD","name":"SUPER ROD","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"MossdeepCity_House3","source":"data/maps/MossdeepCity_House3/scripts.inc"},{"method":"scripted_reward_candidate","map":"Route12_FishingHouse_Frlg","source":"data/maps/Route12_FishingHouse_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":712,"symbol":"ITEM_DOWSING_MACHINE","name":"DOWSING MACHINE","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route110","source":"data/maps/Route110/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":713,"symbol":"ITEM_TOWN_MAP","name":"TOWN MAP","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":714,"symbol":"ITEM_VS_SEEKER","name":"VS SEEKER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":715,"symbol":"ITEM_TM_CASE","name":"TM CASE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":716,"symbol":"ITEM_BERRY_POUCH","name":"BERRY POUCH","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":717,"symbol":"ITEM_POKEMON_BOX_LINK","name":"POKEMON BOX LINK","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":718,"symbol":"ITEM_COIN_CASE","name":"COIN CASE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":718,"symbol":"ITEM_COIN_CASE","name":"COIN CASE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"GoldenrodCity_UndergroundTunnel","source":"data/maps/GoldenrodCity_UndergroundTunnel/scripts.inc"},{"method":"scripted_reward_candidate","map":"CeladonCity_Restaurant_Frlg","source":"data/maps/CeladonCity_Restaurant_Frlg/scripts.inc"},{"method":"scripted_reward_candidate","map":"MauvilleCity_House2","source":"data/maps/MauvilleCity_House2/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":719,"symbol":"ITEM_POWDER_JAR","name":"POWDER JAR","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":720,"symbol":"ITEM_WAILMER_PAIL","name":"WAILMER PAIL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":720,"symbol":"ITEM_WAILMER_PAIL","name":"WAILMER PAIL","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"GoldenrodCity_FlowerShop","source":"data/maps/GoldenrodCity_FlowerShop/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":721,"symbol":"ITEM_POKE_RADAR","name":"POKE RADAR","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":722,"symbol":"ITEM_POKEBLOCK_CASE","name":"POKEBLOCK CASE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":723,"symbol":"ITEM_SOOT_SACK","name":"SOOT SACK","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":723,"symbol":"ITEM_SOOT_SACK","name":"SOOT SACK","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route113_GlassWorkshop","source":"data/maps/Route113_GlassWorkshop/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":724,"symbol":"ITEM_POKE_FLUTE","name":"POKE FLUTE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":725,"symbol":"ITEM_FAME_CHECKER","name":"FAME CHECKER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":726,"symbol":"ITEM_TEACHY_TV","name":"TEACHY TV","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1756,8 +1756,8 @@
 {"kind":"item","id":731,"symbol":"ITEM_OLD_SEA_MAP","name":"OLD SEA MAP","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":732,"symbol":"ITEM_LETTER","name":"LETTER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":733,"symbol":"ITEM_DEVON_PARTS","name":"DEVON PARTS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":734,"symbol":"ITEM_GO_GOGGLES","name":"GO GOGGLES","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":735,"symbol":"ITEM_DEVON_SCOPE","name":"DEVON SCOPE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":734,"symbol":"ITEM_GO_GOGGLES","name":"GO GOGGLES","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"LavaridgeTown","source":"data/maps/LavaridgeTown/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":735,"symbol":"ITEM_DEVON_SCOPE","name":"DEVON SCOPE","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"Route120","source":"data/maps/Route120/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":736,"symbol":"ITEM_BASEMENT_KEY","name":"BASEMENT KEY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":737,"symbol":"ITEM_SCANNER","name":"SCANNER","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":738,"symbol":"ITEM_STORAGE_KEY","name":"STORAGE KEY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1774,11 +1774,11 @@
 {"kind":"item","id":749,"symbol":"ITEM_GOLD_TEETH","name":"GOLD TEETH","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":750,"symbol":"ITEM_CARD_KEY","name":"CARD KEY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":751,"symbol":"ITEM_LIFT_KEY","name":"LIFT KEY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":752,"symbol":"ITEM_SILPH_SCOPE","name":"SILPH SCOPE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":752,"symbol":"ITEM_SILPH_SCOPE","name":"SILPH SCOPE","mega_stone":false,"sources":[{"method":"scripted_pickup_candidate","map":"RocketHideout_B4F_Frlg","source":"data/maps/RocketHideout_B4F_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":753,"symbol":"ITEM_TRI_PASS","name":"TRI PASS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":754,"symbol":"ITEM_RAINBOW_PASS","name":"RAINBOW PASS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":755,"symbol":"ITEM_TEA","name":"TEA","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":756,"symbol":"ITEM_RUBY","name":"RUBY","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":756,"symbol":"ITEM_RUBY","name":"RUBY","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"MtEmber_RubyPath_B3F_Frlg","source":"data/maps/MtEmber_RubyPath_B3F_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":757,"symbol":"ITEM_SAPPHIRE","name":"SAPPHIRE","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":758,"symbol":"ITEM_ABILITY_SHIELD","name":"ABILITY SHIELD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":759,"symbol":"ITEM_CLEAR_AMULET","name":"CLEAR AMULET","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1792,8 +1792,8 @@
 {"kind":"item","id":767,"symbol":"ITEM_LEADERS_CREST","name":"LEADERS CREST","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":768,"symbol":"ITEM_MALICIOUS_ARMOR","name":"MALICIOUS ARMOR","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":769,"symbol":"ITEM_MIRROR_HERB","name":"MIRROR HERB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":770,"symbol":"ITEM_SCROLL_OF_DARKNESS","name":"SCROLL OF DARKNESS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":771,"symbol":"ITEM_SCROLL_OF_WATERS","name":"SCROLL OF WATERS","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":770,"symbol":"ITEM_SCROLL_OF_DARKNESS","name":"SCROLL OF DARKNESS","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"MtMortar_B1F","source":"data/maps/MtMortar_B1F/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":771,"symbol":"ITEM_SCROLL_OF_WATERS","name":"SCROLL OF WATERS","mega_stone":false,"sources":[{"method":"scripted_reward_candidate","map":"CianwoodGym","source":"data/maps/CianwoodGym/scripts.inc"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":772,"symbol":"ITEM_TERA_ORB","name":"TERA ORB","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":773,"symbol":"ITEM_TINY_BAMBOO_SHOOT","name":"TINY BAMBOO SHOOT","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":774,"symbol":"ITEM_BUG_TERA_SHARD","name":"BUG TERA SHARD","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
@@ -1851,50 +1851,50 @@
 {"kind":"item","id":826,"symbol":"ITEM_TWICE_SPICED_RADISH","name":"TWICE SPICED RADISH","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":827,"symbol":"ITEM_POKESHI_DOLL","name":"POKESHI DOLL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":828,"symbol":"ITEM_STRANGE_BALL","name":"STRANGE BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":829,"symbol":"ITEM_CLEFABLITE","name":"CLEFABLITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":830,"symbol":"ITEM_VICTREEBELITE","name":"VICTREEBELITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":831,"symbol":"ITEM_STARMINITE","name":"STARMINITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":832,"symbol":"ITEM_DRAGONINITE","name":"DRAGONINITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":833,"symbol":"ITEM_MEGANIUMITE","name":"MEGANIUMITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":834,"symbol":"ITEM_FERALIGITE","name":"FERALIGITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":835,"symbol":"ITEM_SKARMORITE","name":"SKARMORITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":836,"symbol":"ITEM_FROSLASSITE","name":"FROSLASSITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":837,"symbol":"ITEM_EMBOARITE","name":"EMBOARITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":838,"symbol":"ITEM_EXCADRITE","name":"EXCADRITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":839,"symbol":"ITEM_SCOLIPITE","name":"SCOLIPITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":840,"symbol":"ITEM_SCRAFTINITE","name":"SCRAFTINITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":841,"symbol":"ITEM_EELEKTROSSITE","name":"EELEKTROSSITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":842,"symbol":"ITEM_CHANDELURITE","name":"CHANDELURITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":843,"symbol":"ITEM_CHESNAUGHTITE","name":"CHESNAUGHTITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":844,"symbol":"ITEM_DELPHOXITE","name":"DELPHOXITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":845,"symbol":"ITEM_GRENINJITE","name":"GRENINJITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":846,"symbol":"ITEM_PYROARITE","name":"PYROARITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":847,"symbol":"ITEM_FLOETTITE","name":"FLOETTITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":848,"symbol":"ITEM_MALAMARITE","name":"MALAMARITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":849,"symbol":"ITEM_BARBARACITE","name":"BARBARACITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":850,"symbol":"ITEM_DRAGALGITE","name":"DRAGALGITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":851,"symbol":"ITEM_HAWLUCHANITE","name":"HAWLUCHANITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":852,"symbol":"ITEM_ZYGARDITE","name":"ZYGARDITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":853,"symbol":"ITEM_DRAMPANITE","name":"DRAMPANITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":854,"symbol":"ITEM_FALINKSITE","name":"FALINKSITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":855,"symbol":"ITEM_HEATRANITE","name":"HEATRANITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":856,"symbol":"ITEM_DARKRANITE","name":"DARKRANITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":857,"symbol":"ITEM_ZERAORITE","name":"ZERAORITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":858,"symbol":"ITEM_RAICHUNITE_X","name":"RAICHUNITE X","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":859,"symbol":"ITEM_RAICHUNITE_Y","name":"RAICHUNITE Y","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":860,"symbol":"ITEM_CHIMECHITE","name":"CHIMECHITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":861,"symbol":"ITEM_ABSOLITE_Z","name":"ABSOLITE Z","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":862,"symbol":"ITEM_STARAPTITE","name":"STARAPTITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":863,"symbol":"ITEM_GARCHOMPITE_Z","name":"GARCHOMPITE Z","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":864,"symbol":"ITEM_LUCARIONITE_Z","name":"LUCARIONITE Z","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":865,"symbol":"ITEM_GOLURKITE","name":"GOLURKITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":866,"symbol":"ITEM_MEOWSTICITE","name":"MEOWSTICITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":867,"symbol":"ITEM_CRABOMINITE","name":"CRABOMINITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":868,"symbol":"ITEM_GOLISOPITE","name":"GOLISOPITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":869,"symbol":"ITEM_MAGEARNITE","name":"MAGEARNITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":870,"symbol":"ITEM_SCOVILLAINITE","name":"SCOVILLAINITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":871,"symbol":"ITEM_BAXCALIBRITE","name":"BAXCALIBRITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":872,"symbol":"ITEM_TATSUGIRINITE","name":"TATSUGIRINITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
-{"kind":"item","id":873,"symbol":"ITEM_GLIMMORANITE","name":"GLIMMORANITE","mega_stone":true,"sources":[],"known_path_status":"not_yet_indexed"}
+{"kind":"item","id":829,"symbol":"ITEM_CLEFABLITE","name":"CLEFABLITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"MtMoon_1F_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_00","source":"data/maps/MtMoon_1F_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":830,"symbol":"ITEM_VICTREEBELITE","name":"VICTREEBELITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"CeladonCity_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_01","source":"data/maps/CeladonCity_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":831,"symbol":"ITEM_STARMINITE","name":"STARMINITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route20_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_02","source":"data/maps/Route20_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":832,"symbol":"ITEM_DRAGONINITE","name":"DRAGONINITE","mega_stone":true,"sources":[{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":833,"symbol":"ITEM_MEGANIUMITE","name":"MEGANIUMITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":834,"symbol":"ITEM_FERALIGITE","name":"FERALIGITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":835,"symbol":"ITEM_SKARMORITE","name":"SKARMORITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route45","flag":"FLAG_ANTHOLOGY_MEGA_STONE_17","source":"data/maps/Route45/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":836,"symbol":"ITEM_FROSLASSITE","name":"FROSLASSITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"IcePath_B1F","flag":"FLAG_ANTHOLOGY_MEGA_STONE_18","source":"data/maps/IcePath_B1F/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":837,"symbol":"ITEM_EMBOARITE","name":"EMBOARITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":838,"symbol":"ITEM_EXCADRITE","name":"EXCADRITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"UnionCave_1F","flag":"FLAG_ANTHOLOGY_MEGA_STONE_09","source":"data/maps/UnionCave_1F/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":839,"symbol":"ITEM_SCOLIPITE","name":"SCOLIPITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"IlexForest","flag":"FLAG_ANTHOLOGY_MEGA_STONE_10","source":"data/maps/IlexForest/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":840,"symbol":"ITEM_SCRAFTINITE","name":"SCRAFTINITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"GoldenrodCity_UndergroundTunnel","flag":"FLAG_ANTHOLOGY_MEGA_STONE_11","source":"data/maps/GoldenrodCity_UndergroundTunnel/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":841,"symbol":"ITEM_EELEKTROSSITE","name":"EELEKTROSSITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"NewMauville_Inside","flag":"FLAG_ANTHOLOGY_MEGA_STONE_22","source":"data/maps/NewMauville_Inside/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":842,"symbol":"ITEM_CHANDELURITE","name":"CHANDELURITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"PokemonTower_4F_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_03","source":"data/maps/PokemonTower_4F_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":843,"symbol":"ITEM_CHESNAUGHTITE","name":"CHESNAUGHTITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":844,"symbol":"ITEM_DELPHOXITE","name":"DELPHOXITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":845,"symbol":"ITEM_GRENINJITE","name":"GRENINJITE","mega_stone":true,"sources":[{"method":"battle_net_free_starter_choice","map":"RegionHub_2F","source":"src/battle_net.c"},{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":846,"symbol":"ITEM_PYROARITE","name":"PYROARITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"MtChimney","flag":"FLAG_ANTHOLOGY_MEGA_STONE_21","source":"data/maps/MtChimney/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":847,"symbol":"ITEM_FLOETTITE","name":"FLOETTITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"GoldenrodCity_FlowerShop","flag":"FLAG_ANTHOLOGY_MEGA_STONE_12","source":"data/maps/GoldenrodCity_FlowerShop/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":848,"symbol":"ITEM_MALAMARITE","name":"MALAMARITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"AbandonedShip_Rooms_1F","flag":"FLAG_ANTHOLOGY_MEGA_STONE_23","source":"data/maps/AbandonedShip_Rooms_1F/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":849,"symbol":"ITEM_BARBARACITE","name":"BARBARACITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route106","flag":"FLAG_ANTHOLOGY_MEGA_STONE_19","source":"data/maps/Route106/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":850,"symbol":"ITEM_DRAGALGITE","name":"DRAGALGITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Underwater_Route124","flag":"FLAG_ANTHOLOGY_MEGA_STONE_26","source":"data/maps/Underwater_Route124/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":851,"symbol":"ITEM_HAWLUCHANITE","name":"HAWLUCHANITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"SaffronCity_Dojo_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_04","source":"data/maps/SaffronCity_Dojo_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":852,"symbol":"ITEM_ZYGARDITE","name":"ZYGARDITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route101","flag":"FLAG_ANTHOLOGY_MEGA_STONE_36","source":"data/maps/Route101/map.json"},{"method":"scripted_pickup_candidate","map":"Route101","source":"data/maps/Route101/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":853,"symbol":"ITEM_DRAMPANITE","name":"DRAMPANITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"MtMortar_1F_South","flag":"FLAG_ANTHOLOGY_MEGA_STONE_15","source":"data/maps/MtMortar_1F_South/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":854,"symbol":"ITEM_FALINKSITE","name":"FALINKSITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route23_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_07","source":"data/maps/Route23_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":855,"symbol":"ITEM_HEATRANITE","name":"HEATRANITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"RockTunnel_B1F_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_37","source":"data/maps/RockTunnel_B1F_Frlg/map.json"},{"method":"scripted_pickup_candidate","map":"RockTunnel_B1F_Frlg","source":"data/maps/RockTunnel_B1F_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":856,"symbol":"ITEM_DARKRANITE","name":"DARKRANITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"PokemonTower_7F_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_38","source":"data/maps/PokemonTower_7F_Frlg/map.json"},{"method":"scripted_pickup_candidate","map":"PokemonTower_7F_Frlg","source":"data/maps/PokemonTower_7F_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":857,"symbol":"ITEM_ZERAORITE","name":"ZERAORITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"PowerPlant_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_39","source":"data/maps/PowerPlant_Frlg/map.json"},{"method":"scripted_pickup_candidate","map":"PowerPlant_Frlg","source":"data/maps/PowerPlant_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":858,"symbol":"ITEM_RAICHUNITE_X","name":"RAICHUNITE X","mega_stone":true,"sources":[{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":859,"symbol":"ITEM_RAICHUNITE_Y","name":"RAICHUNITE Y","mega_stone":true,"sources":[{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":860,"symbol":"ITEM_CHIMECHITE","name":"CHIMECHITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"MtPyre_5F","flag":"FLAG_ANTHOLOGY_MEGA_STONE_25","source":"data/maps/MtPyre_5F/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":861,"symbol":"ITEM_ABSOLITE_Z","name":"ABSOLITE Z","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"BurnedTower_1F","flag":"FLAG_ANTHOLOGY_MEGA_STONE_14","source":"data/maps/BurnedTower_1F/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":862,"symbol":"ITEM_STARAPTITE","name":"STARAPTITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route16_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_06","source":"data/maps/Route16_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":863,"symbol":"ITEM_GARCHOMPITE_Z","name":"GARCHOMPITE Z","mega_stone":true,"sources":[{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":864,"symbol":"ITEM_LUCARIONITE_Z","name":"LUCARIONITE Z","mega_stone":true,"sources":[{"method":"battle_net_vendor","map":"RegionHub_2F","source":"src/battle_net.c"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":865,"symbol":"ITEM_GOLURKITE","name":"GOLURKITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"RuinsOfAlph_Outside","flag":"FLAG_ANTHOLOGY_MEGA_STONE_13","source":"data/maps/RuinsOfAlph_Outside/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":866,"symbol":"ITEM_MEOWSTICITE","name":"MEOWSTICITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"SaffronCity_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_05","source":"data/maps/SaffronCity_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":867,"symbol":"ITEM_CRABOMINITE","name":"CRABOMINITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"ShoalCave_LowTideIceRoom","flag":"FLAG_ANTHOLOGY_MEGA_STONE_27","source":"data/maps/ShoalCave_LowTideIceRoom/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":868,"symbol":"ITEM_GOLISOPITE","name":"GOLISOPITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"WhirlIslands_1F","flag":"FLAG_ANTHOLOGY_MEGA_STONE_16","source":"data/maps/WhirlIslands_1F/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":869,"symbol":"ITEM_MAGEARNITE","name":"MAGEARNITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"SilphCo_7F_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_40","source":"data/maps/SilphCo_7F_Frlg/map.json"},{"method":"scripted_pickup_candidate","map":"SilphCo_7F_Frlg","source":"data/maps/SilphCo_7F_Frlg/scripts.inc"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":870,"symbol":"ITEM_SCOVILLAINITE","name":"SCOVILLAINITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route112","flag":"FLAG_ANTHOLOGY_MEGA_STONE_20","source":"data/maps/Route112/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":871,"symbol":"ITEM_BAXCALIBRITE","name":"BAXCALIBRITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"MeteorFalls_1F_1R","flag":"FLAG_ANTHOLOGY_MEGA_STONE_28","source":"data/maps/MeteorFalls_1F_1R/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":872,"symbol":"ITEM_TATSUGIRINITE","name":"TATSUGIRINITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"Route118","flag":"FLAG_ANTHOLOGY_MEGA_STONE_24","source":"data/maps/Route118/map.json"}],"known_path_status":"source_candidate_only"}
+{"kind":"item","id":873,"symbol":"ITEM_GLIMMORANITE","name":"GLIMMORANITE","mega_stone":true,"sources":[{"method":"overworld_item_ball","map":"VictoryRoad_2F_Frlg","flag":"FLAG_ANTHOLOGY_MEGA_STONE_08","source":"data/maps/VictoryRoad_2F_Frlg/map.json"}],"known_path_status":"source_candidate_only"}
 {"kind":"item","id":874,"symbol":"ITEM_POKEVIAL","name":"POKEVIAL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
 {"kind":"item","id":881,"symbol":"ITEM_GS_BALL","name":"GS BALL","mega_stone":false,"sources":[],"known_path_status":"not_yet_indexed"}
