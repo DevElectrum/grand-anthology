@@ -19,14 +19,6 @@ Underwater_Route128_AnthologyShowKoraidon::
 	clearflag FLAG_HIDE_ANTHOLOGY_KORAIDON
 	return
 
-Underwater_Route128_AnthologyHideKoraidon::
-	setflag FLAG_HIDE_ANTHOLOGY_KORAIDON
-	return
-
-Underwater_Route128_AnthologyShowKoraidon::
-	clearflag FLAG_HIDE_ANTHOLOGY_KORAIDON
-	return
-
 Underwater_Route128_EventScript_Koraidon::
 	lock
 	faceplayer
