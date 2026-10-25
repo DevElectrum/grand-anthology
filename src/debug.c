@@ -387,6 +387,7 @@ static void DebugAction_Randomizer_HandleSeed(u8 taskId);
 static void DebugAction_Give_MaxMoney(u8 taskId);
 static void DebugAction_Give_MaxCoins(u8 taskId);
 static void DebugAction_Give_MaxBattlePoints(u8 taskId);
+static void DebugAction_ToggleInfiniteBattlePoints(u8 taskId);
 static void DebugAction_Give_DayCareEgg(u8 taskId);
 
 static void DebugAction_Sound_SE(u8 taskId);
@@ -740,6 +741,8 @@ static const struct DebugMenuOption sPlayerCheatMenu_Main[] =
     { COMPOUND_STRING("Custom Pokémon"),  DebugAction_Give_PokemonComplex },
     { COMPOUND_STRING("Give Item"),       DebugAction_Give_Item },
     { COMPOUND_STRING("Max Money"),       DebugAction_Give_MaxMoney },
+    { COMPOUND_STRING("Max BP"),          DebugAction_Give_MaxBattlePoints },
+    { COMPOUND_STRING("Infinite BP ON/OFF"), DebugAction_ToggleInfiniteBattlePoints },
     { COMPOUND_STRING("Heal Party"),      DebugAction_Party_HealParty },
     { COMPOUND_STRING("Pokémon Tools…"),  DebugAction_OpenSubMenu, sPlayerCheatMenu_Pokemon },
     { COMPOUND_STRING("Randomizer…"),     DebugAction_OpenSubMenu, sPlayerCheatMenu_Randomizer },
@@ -4379,6 +4382,19 @@ static void DebugAction_Give_MaxCoins(u8 taskId)
 static void DebugAction_Give_MaxBattlePoints(u8 taskId)
 {
     gSaveBlock2Ptr->frontier.battlePoints = MAX_BATTLE_FRONTIER_POINTS;
+}
+
+static void DebugAction_ToggleInfiniteBattlePoints(u8 taskId)
+{
+    if (FlagGet(FLAG_ANTHOLOGY_INFINITE_BP))
+        FlagClear(FLAG_ANTHOLOGY_INFINITE_BP);
+    else
+    {
+        FlagSet(FLAG_ANTHOLOGY_INFINITE_BP);
+        gSaveBlock2Ptr->frontier.battlePoints = MAX_BATTLE_FRONTIER_POINTS;
+    }
+    Debug_DestroyMenu_Full(taskId);
+    ScriptContext_Enable();
 }
 
 static void DebugAction_Give_DayCareEgg(u8 taskId)
