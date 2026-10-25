@@ -355,7 +355,7 @@ RockTunnel_B1F_BigBatchHeatranResolved::
 RockTunnel_B1F_BigBatchHeatranRetreated::
 	release
 	end
-\n
+
 Anthology_MegaStone_HEATRANITE::
     getcaughtmon SPECIES_HEATRAN
     goto_if_ne VAR_RESULT, TRUE, Anthology_MegaStone_HEATRANITE_Locked
