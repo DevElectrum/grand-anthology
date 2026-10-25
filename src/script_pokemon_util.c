@@ -785,6 +785,70 @@ void ScrCmd_createmon(struct ScriptContext *ctx)
 
 #undef PARSE_FLAG
 
+
+// Route 27's paired guardians are always Zacian and Zamazenta, including when
+// seeded encounter randomization is on. The awarded Pokémon are those fought,
+// not a second random roll after victory.
+EWRAM_DATA static struct Pokemon sRoyalDuoRewards[2] = {0};
+
+void RoyalDuoCheckCapacity(void)
+{
+    u32 freeSlots = 0;
+    for (u32 i = 0; i < PARTY_SIZE; i++)
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_SPECIES) == SPECIES_NONE)
+            freeSlots++;
+
+    for (u32 box = 0; box < TOTAL_BOXES_COUNT && freeSlots < 2; box++)
+        for (u32 slot = 0; slot < IN_BOX_COUNT && freeSlots < 2; slot++)
+            if (GetBoxMonDataAt(box, slot, MON_DATA_SPECIES) == SPECIES_NONE)
+                freeSlots++;
+
+    gSpecialVar_Result = (freeSlots >= 2);
+}
+
+void RoyalDuoPrepareBattle(void)
+{
+    const enum Species species[2] = {SPECIES_ZACIAN_HERO, SPECIES_ZAMAZENTA_HERO};
+    const enum Item items[2] = {ITEM_RUSTED_SWORD, ITEM_RUSTED_SHIELD};
+
+    ZeroEnemyPartyMons();
+    for (u32 i = 0; i < 2; i++)
+    {
+        struct Pokemon *mon = &gParties[B_TRAINER_OPPONENT_A][i];
+        u32 personality = GetMonPersonality(species[i],
+            GetSynchronizedGender(STATIC_WILDMON_ORIGIN, species[i]),
+            GetSynchronizedNature(STATIC_WILDMON_ORIGIN, species[i]),
+            RANDOM_UNOWN_LETTER);
+        CreateMonWithIVs(mon, species[i], 50, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
+        GiveMonInitialMoveset(mon);
+        SetMonMoveSlot(mon, MOVE_IRON_HEAD, 0);
+        SetMonData(mon, MON_DATA_HELD_ITEM, &items[i]);
+        CopyMon(&sRoyalDuoRewards[i], mon, sizeof(struct Pokemon));
+    }
+}
+
+void RoyalDuoAwardVictory(void)
+{
+    // Recheck before any write; the same preflight occurs before the battle.
+    RoyalDuoCheckCapacity();
+    if (!gSpecialVar_Result)
+        return;
+
+    // Both originals were saved before the battle: no postbattle reroll.
+    for (u32 i = 0; i < 2; i++)
+    {
+        struct Pokemon mon;
+        CopyMon(&mon, &sRoyalDuoRewards[i], sizeof(struct Pokemon));
+        HealPokemon(&mon);
+        if (GiveScriptedMonToPlayer(&mon, PARTY_SIZE) == MON_CANT_GIVE)
+        {
+            gSpecialVar_Result = FALSE;
+            return;
+        }
+    }
+    gSpecialVar_Result = TRUE;
+}
+
 void Script_GetChosenMonOffensiveEVs(void)
 {
     ConvertIntToDecimalStringN(gStringVar1, GetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_ATK_EV), STR_CONV_MODE_LEFT_ALIGN, 3);
