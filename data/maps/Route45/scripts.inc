@@ -188,49 +188,10 @@ Route45_Text_Sign:
 
 // Multi-location acquisition batch: preserve canonical map scripts.
 Route45_BigBatchOnTransition::
-	getcaughtmon SPECIES_ZEKROM
-	call_if_eq VAR_RESULT, TRUE, Route45_BigBatchHideZekrom
-	call_if_ne VAR_RESULT, TRUE, Route45_BigBatchShowZekrom
 	getcaughtmon SPECIES_REGIDRAGO
 	call_if_eq VAR_RESULT, TRUE, Route45_BigBatchHideRegidrago
 	call_if_ne VAR_RESULT, TRUE, Route45_BigBatchShowRegidrago
 	return
-
-Route45_BigBatchHideZekrom::
-	setflag FLAG_HIDE_ANTHOLOGY_ZEKROM
-	return
-
-Route45_BigBatchShowZekrom::
-	clearflag FLAG_HIDE_ANTHOLOGY_ZEKROM
-	return
-
-Route45_EventScript_Zekrom::
-	lock
-	faceplayer
-	playmoncry SPECIES_ZEKROM, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_ZEKROM, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route45_BigBatchZekromRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route45_BigBatchZekromRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route45_BigBatchZekromResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route45_BigBatchZekromResolved
-	release
-	end
-
-Route45_BigBatchZekromResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_ZEKROM
-	setflag FLAG_HIDE_ANTHOLOGY_ZEKROM
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route45_BigBatchZekromRetreated::
-	release
-	end
 
 Route45_BigBatchHideRegidrago::
 	setflag FLAG_HIDE_ANTHOLOGY_REGIDRAGO
