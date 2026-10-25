@@ -231,7 +231,19 @@ const struct FieldEffectInfoOWE gOverworldWildEncounterFieldEffectInfo[] =
 
 void UpdateOverworldWildEncounter(void)
 {
-    //Check if possible to spawn.
+    // Cave encounters use ordinary step-based wild battles, not generated
+    // wandering sprites that can chase an idle player or crowd small rooms.
+    // Do not remove scripted static Pokemon: they are OWE_MANUAL or ordinary
+    // map objects, whereas only OWE_GENERATED is cleared here.
+    if (gMapHeader.mapType == MAP_TYPE_UNDERGROUND)
+    {
+        if (sOWESpawnCountdown != OWE_NO_ENCOUNTER_SET)
+        {
+            DespawnAllOverworldWildEncounters(OWE_GENERATED, 0);
+            sOWESpawnCountdown = OWE_NO_ENCOUNTER_SET;
+        }
+        return;
+    }
 
     bool32 shouldSpawnWaterMons = ShouldSpawnWaterOWE();
     

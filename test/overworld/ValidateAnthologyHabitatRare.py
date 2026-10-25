@@ -1007,3 +1007,22 @@ _necro = (root / "data/maps/CeruleanCave_2F_Frlg/scripts.inc").read_text()
 assert "seteventmon SPECIES_NECROZMA, 65" in _necro
 assert "CeruleanCave_2F_AnthologyOnTransition::" in _necro
 print("Kanto Dojo Marshadow requires true Koichi victory; Cerulean Cave Necrozma static PASS")
+
+# Prevent generated overworld wild Pokémon from filling enclosed cave rooms
+# or walking into the player while stationary. Normal step encounters remain
+# enabled, and authored static encounters are not evicted by the cave guard.
+owe_code = (root / "src/wild_encounter_ow.c").read_text()
+owe_header = (root / "include/wild_encounter_ow.h").read_text()
+wild_config = (root / "include/config/wild_encounter.h").read_text()
+cave_update = owe_code.split("void UpdateOverworldWildEncounter(void)", 1)[1]
+cave_guard = cave_update.split("bool32 shouldSpawnWaterMons = ShouldSpawnWaterOWE();", 1)[0]
+assert "gMapHeader.mapType == MAP_TYPE_UNDERGROUND" in cave_guard
+assert "DespawnAllOverworldWildEncounters(OWE_GENERATED, 0);" in cave_guard
+assert "sOWESpawnCountdown = OWE_NO_ENCOUNTER_SET;" in cave_guard
+assert "return;" in cave_guard
+assert "DespawnAllOverworldWildEncounters(OWE_ANY" not in cave_guard
+assert "#define WE_VANILLA_RANDOM           TRUE" in wild_config
+assert "#define WE_OW_ENCOUNTERS                        TRUE" in wild_config
+assert "#define OWE_SPAWNS_MAX                  4" in owe_header
+assert 'seteventmon SPECIES_DIANCIE, 18' in (root / "data/maps/GraniteCave_StevensRoom/scripts.inc").read_text()
+print("P0 cave ecology: no generated OWE swarms/idle chases, vanilla steps and static Diancie preserved PASS")
