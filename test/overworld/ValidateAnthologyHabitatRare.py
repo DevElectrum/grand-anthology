@@ -589,11 +589,26 @@ for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
         for hook in _transition_hooks
     ), (_dir, _n, "missing encounter transition hook")
     _part=_script.split(f"{_p}_EventScript_{_n}::")[1].split(f"{_p}_Anthology{_n}Retreated::")[0].split(f"{_p}_BigBatch{_n}Retreated::")[0].split(f"{_p}_SecondBatch{_n}Retreated::")[0].split(f"{_p}_Field{_n}Retreated::")[0]
-    for _token in (f"seteventmon SPECIES_{_species}","BattleSetup_StartLegendaryBattle",
-                   "GetBattleOutcome","B_OUTCOME_CAUGHT","B_OUTCOME_WON",
-                   "B_OUTCOME_RAN","B_OUTCOME_PLAYER_TELEPORTED",
-                   "removeobject "+_obj["local_id"],"setflag "+_hide):
-        assert _token in _part, (_dir,_n,_token)
+    if _dir == "PokemonMansion_1F_Frlg" and _n == "Mew":
+        # Mew is now a three-disguise endurance gauntlet followed by a
+        # catch-only final battle, not the old one-battle seteventmon.
+        for _token in ("MewGauntletRollDisguises", "MewGauntletPrepareBattle",
+                       "BattleSetup_StartMewGauntletBattle", "GetBattleOutcome",
+                       "B_OUTCOME_WON", "B_OUTCOME_CAUGHT",
+                       "goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_AnthologyMewResolved",
+                       "removeobject "+_obj["local_id"], "setflag "+_hide):
+            assert _token in _part, (_dir,_n,_token)
+        assert _part.count("special BattleSetup_StartMewGauntletBattle") == 4
+        assert _part.count("goto_if_ne VAR_RESULT, B_OUTCOME_WON") == 3
+        assert "goto_if_eq VAR_RESULT, B_OUTCOME_WON, PokemonMansion_1F_AnthologyMewResolved" not in _part
+        assert "BATTLE_TYPE_MEW_DISGUISE" in (root/"src/battle_setup.c").read_text()
+        assert "BATTLE_TYPE_MEW_DISGUISE" in (root/"src/item_use.c").read_text()
+    else:
+        for _token in (f"seteventmon SPECIES_{_species}","BattleSetup_StartLegendaryBattle",
+                       "GetBattleOutcome","B_OUTCOME_CAUGHT","B_OUTCOME_WON",
+                       "B_OUTCOME_RAN","B_OUTCOME_PLAYER_TELEPORTED",
+                       "removeobject "+_obj["local_id"],"setflag "+_hide):
+            assert _token in _part, (_dir,_n,_token)
     if _multiple:
         _claimed="FLAG_CAUGHT_ANTHOLOGY_"+_suffix
         assert "#define "+_claimed+" " in _p0_flags
