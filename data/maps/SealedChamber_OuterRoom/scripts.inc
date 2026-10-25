@@ -10,6 +10,7 @@ SealedChamber_OuterRoom_OnResume:
 	end
 
 SealedChamber_OuterRoom_OnTransition:
+	call SealedChamber_OuterRoom_ChiYuTransition
 	setflag FLAG_LANDMARK_SEALED_CHAMBER
 	end
 
@@ -104,3 +105,41 @@ SealedChamber_OuterRoom_EventScript_BrailleDigHere::
 	releaseall
 	end
 
+
+SealedChamber_OuterRoom_ChiYuTransition::
+	getcaughtmon SPECIES_CHI_YU
+	goto_if_eq VAR_RESULT, TRUE, SealedChamber_OuterRoom_HideChiYu
+	clearflag FLAG_HIDE_ANTHOLOGY_CHI_YU
+	return
+
+SealedChamber_OuterRoom_HideChiYu::
+	setflag FLAG_HIDE_ANTHOLOGY_CHI_YU
+	return
+
+SealedChamber_OuterRoom_EventScript_ChiYu::
+	lock
+	faceplayer
+	playmoncry SPECIES_CHI_YU, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_CHI_YU, 45
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, SealedChamber_OuterRoom_ChiYuRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, SealedChamber_OuterRoom_ChiYuRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SealedChamber_OuterRoom_ChiYuResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, SealedChamber_OuterRoom_ChiYuResolved
+	release
+	end
+
+SealedChamber_OuterRoom_ChiYuResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_CHI_YU
+	setflag FLAG_HIDE_ANTHOLOGY_CHI_YU
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+SealedChamber_OuterRoom_ChiYuRetreated::
+	release
+	end

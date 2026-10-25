@@ -6,7 +6,6 @@ FieryPath_OnTransition:
 	call FieryPath_PreLeagueOnTransition
 	call_if_unset FLAG_LANDMARK_FIERY_PATH, FieryPath_EventScript_MoveScottToFallarbor
 	setflag FLAG_LANDMARK_FIERY_PATH
-	call FieryPath_AnthologyOnTransition
 	end
 
 FieryPath_EventScript_MoveScottToFallarbor::
@@ -16,50 +15,6 @@ FieryPath_EventScript_MoveScottToFallarbor::
 
 // Cluster-first optional statics. The original cave boulders, passage,
 // weather, and Team Magma stories remain controlled by their native scripts.
-FieryPath_AnthologyOnTransition::
-	getcaughtmon SPECIES_CHI_YU
-	call_if_eq VAR_RESULT, TRUE, FieryPath_AnthologyHideChiYu
-	call_if_ne VAR_RESULT, TRUE, FieryPath_AnthologyShowChiYu
-	return
-
-FieryPath_AnthologyHideChiYu::
-	setflag FLAG_HIDE_ANTHOLOGY_CHI_YU
-	return
-
-FieryPath_AnthologyShowChiYu::
-	clearflag FLAG_HIDE_ANTHOLOGY_CHI_YU
-	return
-
-FieryPath_EventScript_ChiYu::
-	lock
-	faceplayer
-	playmoncry SPECIES_CHI_YU, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_CHI_YU, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, FieryPath_AnthologyChiYuRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, FieryPath_AnthologyChiYuRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, FieryPath_AnthologyChiYuResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, FieryPath_AnthologyChiYuResolved
-	release
-	end
-
-FieryPath_AnthologyChiYuResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_CHI_YU
-	setflag FLAG_HIDE_ANTHOLOGY_CHI_YU
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-FieryPath_AnthologyChiYuRetreated::
-	release
-	end
-
-// Alternate before-first-Champion capture source. Native legendary story,
- // puzzle and optional post-League site remain in their original maps.
 FieryPath_PreLeagueOnTransition::
 	goto_if_lt VAR_SOOTOPOLIS_CITY_STATE, 6, FieryPath_PreLeagueGROUDONHide
 	getcaughtmon SPECIES_GROUDON

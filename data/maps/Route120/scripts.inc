@@ -433,6 +433,7 @@ Route120_Text_RouteSign121:
 // scene. They respawn after a non-capture victory when the map is re-entered.
 // Hoenn pre-League sites independent of the original story interactions.
 Route120_SecondBatchOnTransition::
+	call Route120_WoChienTransition
 	getcaughtmon SPECIES_IRON_LEAVES
 	call_if_eq VAR_RESULT, TRUE, Route120_SecondBatchHideIronLeaves
 	call_if_ne VAR_RESULT, TRUE, Route120_SecondBatchShowIronLeaves
@@ -513,3 +514,41 @@ Route120_SecondBatchLatiosRetreated::
 	release
 	end
 
+
+Route120_WoChienTransition::
+	getcaughtmon SPECIES_WO_CHIEN
+	goto_if_eq VAR_RESULT, TRUE, Route120_HideWoChien
+	clearflag FLAG_HIDE_ANTHOLOGY_WO_CHIEN
+	return
+
+Route120_HideWoChien::
+	setflag FLAG_HIDE_ANTHOLOGY_WO_CHIEN
+	return
+
+Route120_EventScript_WoChien::
+	lock
+	faceplayer
+	playmoncry SPECIES_WO_CHIEN, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_WO_CHIEN, 36
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route120_WoChienRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route120_WoChienRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_WoChienResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route120_WoChienResolved
+	release
+	end
+
+Route120_WoChienResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_WO_CHIEN
+	setflag FLAG_HIDE_ANTHOLOGY_WO_CHIEN
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route120_WoChienRetreated::
+	release
+	end

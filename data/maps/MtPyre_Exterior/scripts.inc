@@ -32,9 +32,6 @@ MtPyre_Exterior_AnthologyOnTransition::
 	getcaughtmon SPECIES_YVELTAL
 	call_if_eq VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyHideYveltal
 	call_if_ne VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyShowYveltal
-	getcaughtmon SPECIES_WO_CHIEN
-	call_if_eq VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyHideWoChien
-	call_if_ne VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyShowWoChien
 	return
 
 MtPyre_Exterior_AnthologyHideYveltal::
@@ -70,42 +67,6 @@ MtPyre_Exterior_AnthologyYveltalResolved::
 	end
 
 MtPyre_Exterior_AnthologyYveltalRetreated::
-	release
-	end
-
-MtPyre_Exterior_AnthologyHideWoChien::
-	setflag FLAG_HIDE_ANTHOLOGY_WO_CHIEN
-	return
-
-MtPyre_Exterior_AnthologyShowWoChien::
-	clearflag FLAG_HIDE_ANTHOLOGY_WO_CHIEN
-	return
-
-MtPyre_Exterior_EventScript_WoChien::
-	lock
-	faceplayer
-	playmoncry SPECIES_WO_CHIEN, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_WO_CHIEN, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtPyre_Exterior_AnthologyWoChienRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtPyre_Exterior_AnthologyWoChienRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtPyre_Exterior_AnthologyWoChienResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtPyre_Exterior_AnthologyWoChienResolved
-	release
-	end
-
-MtPyre_Exterior_AnthologyWoChienResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_WO_CHIEN
-	setflag FLAG_HIDE_ANTHOLOGY_WO_CHIEN
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-MtPyre_Exterior_AnthologyWoChienRetreated::
 	release
 	end
 
