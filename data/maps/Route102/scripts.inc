@@ -1,5 +1,10 @@
 Route102_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, Route102_OnTransition
 	.byte 0
+
+Route102_OnTransition::
+	call Route102_JirachiTransition
+	end
 
 Route102_EventScript_LittleBoy::
 	msgbox Route102_Text_ImNotVeryTall, MSGBOX_NPC
@@ -107,3 +112,41 @@ Route102_Text_RouteSignOldale:
 Route102_Text_RouteSignPetalburg:
 	.string "ROUTE 102\n"
 	.string "{LEFT_ARROW} PETALBURG CITY$"
+
+Route102_JirachiTransition::
+	getcaughtmon SPECIES_JIRACHI
+	goto_if_eq VAR_RESULT, TRUE, Route102_HideJirachi
+	clearflag FLAG_HIDE_ANTHOLOGY_JIRACHI
+	return
+
+Route102_HideJirachi::
+	setflag FLAG_HIDE_ANTHOLOGY_JIRACHI
+	return
+
+Route102_EventScript_Jirachi::
+	lock
+	faceplayer
+	playmoncry SPECIES_JIRACHI, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_JIRACHI, 9
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route102_JirachiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route102_JirachiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route102_JirachiResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route102_JirachiResolved
+	release
+	end
+
+Route102_JirachiResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_JIRACHI
+	setflag FLAG_HIDE_ANTHOLOGY_JIRACHI
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route102_JirachiRetreated::
+	release
+	end

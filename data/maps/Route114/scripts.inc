@@ -6,6 +6,7 @@ Route114_MapScripts::
 
 Route114_OnTransition:
 	call Route114_AnthologyHuntTransition
+	call Route114_TerapagosTransition
 	call_if_eq VAR_SHOULD_END_ABNORMAL_WEATHER, 1, AbnormalWeather_EventScript_HideMapNamePopup
 	call_if_eq VAR_ABNORMAL_WEATHER_LOCATION, ABNORMAL_WEATHER_ROUTE_114_NORTH, AbnormalWeather_StartGroudonWeather
 	call_if_eq VAR_ABNORMAL_WEATHER_LOCATION, ABNORMAL_WEATHER_ROUTE_114_SOUTH, AbnormalWeather_StartGroudonWeather
@@ -236,5 +237,43 @@ Route114_MunkidoriResolved::
 	end
 
 Route114_MunkidoriRetreated::
+	release
+	end
+
+Route114_TerapagosTransition::
+	getcaughtmon SPECIES_TERAPAGOS_NORMAL
+	goto_if_eq VAR_RESULT, TRUE, Route114_HideTerapagos
+	clearflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS
+	return
+
+Route114_HideTerapagos::
+	setflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS
+	return
+
+Route114_EventScript_Terapagos::
+	lock
+	faceplayer
+	playmoncry SPECIES_TERAPAGOS_NORMAL, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_TERAPAGOS_NORMAL, 31
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route114_TerapagosRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route114_TerapagosRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route114_TerapagosResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route114_TerapagosResolved
+	release
+	end
+
+Route114_TerapagosResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_TERAPAGOS
+	setflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route114_TerapagosRetreated::
 	release
 	end

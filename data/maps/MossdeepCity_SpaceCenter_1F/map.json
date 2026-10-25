@@ -165,20 +165,6 @@
       "flag": "FLAG_HIDE_MOSSDEEP_CITY_SPACE_CENTER_1F_STEVEN"
     },
     {
-      "local_id": "LOCALID_ANTHOLOGY_JIRACHI",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(JIRACHI)",
-      "x": 4,
-      "y": 3,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "MossdeepCity_SpaceCenter_1F_EventScript_Jirachi",
-      "flag": "FLAG_HIDE_ANTHOLOGY_JIRACHI"
-    },
-    {
       "local_id": "LOCALID_ANTHOLOGY_DEOXYS",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(DEOXYS_NORMAL)",
       "x": 9,

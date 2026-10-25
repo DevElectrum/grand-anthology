@@ -4,7 +4,6 @@ MossdeepCity_SpaceCenter_2F_MapScripts::
 	.byte 0
 
 MossdeepCity_SpaceCenter_2F_OnTransition:
-	call MossdeepCity_SpaceCenter_2F_AnthologyOnTransition
 	call_if_eq VAR_MOSSDEEP_CITY_STATE, 2, MossdeepCity_SpaceCenter_2F_EventScript_MoveCivilians
 	call_if_eq VAR_MOSSDEEP_SPACE_CENTER_STATE, 2, MossdeepCity_SpaceCenter_2F_EventScript_MoveDefeatedGrunts
 	end
@@ -492,44 +491,3 @@ MossdeepCity_SpaceCenter_2F_Text_StevenThankYouComeSeeMeAtHome:
 
 // Special species sources added without replacing any canonical event or
 // scene. They respawn after a non-capture victory when the map is re-entered.
-MossdeepCity_SpaceCenter_2F_AnthologyOnTransition::
-	getcaughtmon SPECIES_TERAPAGOS_NORMAL
-	call_if_eq VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_2F_AnthologyHideTerapagos
-	call_if_ne VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_2F_AnthologyShowTerapagos
-	return
-
-MossdeepCity_SpaceCenter_2F_AnthologyHideTerapagos::
-	setflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS
-	return
-
-MossdeepCity_SpaceCenter_2F_AnthologyShowTerapagos::
-	clearflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS
-	return
-
-MossdeepCity_SpaceCenter_2F_EventScript_Terapagos::
-	lock
-	faceplayer
-	playmoncry SPECIES_TERAPAGOS_NORMAL, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_TERAPAGOS_NORMAL, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MossdeepCity_SpaceCenter_2F_AnthologyTerapagosRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MossdeepCity_SpaceCenter_2F_AnthologyTerapagosRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MossdeepCity_SpaceCenter_2F_AnthologyTerapagosResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MossdeepCity_SpaceCenter_2F_AnthologyTerapagosResolved
-	release
-	end
-
-MossdeepCity_SpaceCenter_2F_AnthologyTerapagosResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_TERAPAGOS
-	setflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-MossdeepCity_SpaceCenter_2F_AnthologyTerapagosRetreated::
-	release
-	end

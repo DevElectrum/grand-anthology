@@ -427,49 +427,10 @@ MossdeepCity_SpaceCenter_1F_Text_MagmaIntentToStealNotice:
 // Special species sources added without replacing any canonical event or
 // scene. They respawn after a non-capture victory when the map is re-entered.
 MossdeepCity_SpaceCenter_1F_AnthologyOnTransition::
-	getcaughtmon SPECIES_JIRACHI
-	call_if_eq VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_AnthologyHideJirachi
-	call_if_ne VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_AnthologyShowJirachi
 	getcaughtmon SPECIES_DEOXYS_NORMAL
 	call_if_eq VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys
 	call_if_ne VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_AnthologyShowDeoxys
 	return
-
-MossdeepCity_SpaceCenter_1F_AnthologyHideJirachi::
-	setflag FLAG_HIDE_ANTHOLOGY_JIRACHI
-	return
-
-MossdeepCity_SpaceCenter_1F_AnthologyShowJirachi::
-	clearflag FLAG_HIDE_ANTHOLOGY_JIRACHI
-	return
-
-MossdeepCity_SpaceCenter_1F_EventScript_Jirachi::
-	lock
-	faceplayer
-	playmoncry SPECIES_JIRACHI, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_JIRACHI, 35
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MossdeepCity_SpaceCenter_1F_AnthologyJirachiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MossdeepCity_SpaceCenter_1F_AnthologyJirachiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MossdeepCity_SpaceCenter_1F_AnthologyJirachiResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MossdeepCity_SpaceCenter_1F_AnthologyJirachiResolved
-	release
-	end
-
-MossdeepCity_SpaceCenter_1F_AnthologyJirachiResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_JIRACHI
-	setflag FLAG_HIDE_ANTHOLOGY_JIRACHI
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-MossdeepCity_SpaceCenter_1F_AnthologyJirachiRetreated::
-	release
-	end
 
 MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys::
 	setflag FLAG_HIDE_ANTHOLOGY_DEOXYS
