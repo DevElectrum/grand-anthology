@@ -5,6 +5,7 @@ Route114_MapScripts::
 	.byte 0
 
 Route114_OnTransition:
+	call Route114_AnthologyHuntTransition
 	call_if_eq VAR_SHOULD_END_ABNORMAL_WEATHER, 1, AbnormalWeather_EventScript_HideMapNamePopup
 	call_if_eq VAR_ABNORMAL_WEATHER_LOCATION, ABNORMAL_WEATHER_ROUTE_114_NORTH, AbnormalWeather_StartGroudonWeather
 	call_if_eq VAR_ABNORMAL_WEATHER_LOCATION, ABNORMAL_WEATHER_ROUTE_114_SOUTH, AbnormalWeather_StartGroudonWeather
@@ -197,3 +198,43 @@ Route114_Text_FossilManiacsHouseSign:
 Route114_Text_LanettesHouse:
 	.string "LANETTE'S HOUSE$"
 
+
+Route114_AnthologyHuntTransition::
+	getcaughtmon SPECIES_MUNKIDORI
+	goto_if_eq VAR_RESULT, TRUE, Route114_HideMunkidori
+	getcaughtmon SPECIES_OGERPON_TEAL
+	goto_if_ne VAR_RESULT, TRUE, Route114_HideMunkidori
+	clearflag FLAG_HIDE_ANTHOLOGY_MUNKIDORI
+	return
+
+Route114_HideMunkidori::
+	setflag FLAG_HIDE_ANTHOLOGY_MUNKIDORI
+	return
+
+Route114_EventScript_Munkidori::
+	lock
+	faceplayer
+	playmoncry SPECIES_MUNKIDORI, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_MUNKIDORI, 31
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route114_MunkidoriRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route114_MunkidoriRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route114_MunkidoriResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route114_MunkidoriResolved
+	release
+	end
+
+Route114_MunkidoriResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_MUNKIDORI
+	setflag FLAG_HIDE_ANTHOLOGY_MUNKIDORI
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route114_MunkidoriRetreated::
+	release
+	end

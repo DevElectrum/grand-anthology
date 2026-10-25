@@ -456,7 +456,7 @@ _p0_new_statics = (
 ("MossdeepCity_SpaceCenter_1F","MossdeepCity_SpaceCenter_1F","Deoxys","DEOXYS_NORMAL",9,4,"DEOXYS",False),
 ("MossdeepCity_SpaceCenter_2F","MossdeepCity_SpaceCenter_2F","Terapagos","TERAPAGOS_NORMAL",7,8,"TERAPAGOS",False),
 ("Route119","Route119","RagingBolt","RAGING_BOLT",24,111,"RAGING_BOLT",False),
-("Route120","Route120","Munkidori","MUNKIDORI",25,41,"MUNKIDORI",False),
+("Route114","Route114","Munkidori","MUNKIDORI",22,28,"MUNKIDORI",False),
 ("Route125","Route125","WalkingWake","WALKING_WAKE",9,22,"WALKING_WAKE",False),
 ("Route44","Route44","Tornadus","TORNADUS",57,24,"TORNADUS",False),
 ("Route41","Route41","Thundurus","THUNDURUS",17,56,"THUNDURUS",False),

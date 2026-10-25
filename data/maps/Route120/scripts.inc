@@ -55,7 +55,6 @@ Route120_EventScript_SetBridgeKecleonMovement::
 
 Route120_OnTransition:
 	call Route120_SecondBatchOnTransition
-	call Route120_AnthologyOnTransition
 	call GabbyAndTy_EventScript_UpdateLocation
 	call Route120_EventScript_SetWeather
 	end
@@ -432,48 +431,6 @@ Route120_Text_RouteSign121:
 
 // Special species sources added without replacing any canonical event or
 // scene. They respawn after a non-capture victory when the map is re-entered.
-Route120_AnthologyOnTransition::
-	getcaughtmon SPECIES_MUNKIDORI
-	call_if_eq VAR_RESULT, TRUE, Route120_AnthologyHideMunkidori
-	call_if_ne VAR_RESULT, TRUE, Route120_AnthologyShowMunkidori
-	return
-
-Route120_AnthologyHideMunkidori::
-	setflag FLAG_HIDE_ANTHOLOGY_MUNKIDORI
-	return
-
-Route120_AnthologyShowMunkidori::
-	clearflag FLAG_HIDE_ANTHOLOGY_MUNKIDORI
-	return
-
-Route120_EventScript_Munkidori::
-	lock
-	faceplayer
-	playmoncry SPECIES_MUNKIDORI, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_MUNKIDORI, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route120_AnthologyMunkidoriRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route120_AnthologyMunkidoriRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_AnthologyMunkidoriResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route120_AnthologyMunkidoriResolved
-	release
-	end
-
-Route120_AnthologyMunkidoriResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_MUNKIDORI
-	setflag FLAG_HIDE_ANTHOLOGY_MUNKIDORI
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route120_AnthologyMunkidoriRetreated::
-	release
-	end
-
 // Hoenn pre-League sites independent of the original story interactions.
 Route120_SecondBatchOnTransition::
 	getcaughtmon SPECIES_XERNEAS

@@ -606,20 +606,6 @@
       "flag": "FLAG_ITEM_ROUTE_120_REVIVE"
     },
     {
-      "local_id": "LOCALID_ANTHOLOGY_MUNKIDORI",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(MUNKIDORI)",
-      "x": 25,
-      "y": 41,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "Route120_EventScript_Munkidori",
-      "flag": "FLAG_HIDE_ANTHOLOGY_MUNKIDORI"
-    },
-    {
       "local_id": "LOCALID_ANTHOLOGY_XERNEAS",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(XERNEAS)",
       "x": 4,
