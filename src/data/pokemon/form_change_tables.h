@@ -2177,6 +2177,12 @@ static const struct FormChange sTerapagosFormChangeTable[] =
     {FORM_CHANGE_END_BATTLE,              SPECIES_TERAPAGOS_NORMAL},
     {FORM_CHANGE_TERMINATOR},
 };
+
+// Permanent encounter form, not a Terastallization: no battle-end/faint reversion.
+static const struct FormChange sTerapagosPermanentStellarFormChangeTable[] =
+{
+    {FORM_CHANGE_TERMINATOR},
+};
 #endif //P_FAMILY_TERAPAGOS
 
 #undef WHEN_LEARNED
