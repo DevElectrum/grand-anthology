@@ -370,7 +370,7 @@ Route101_Text_ZygardeCompleteGuardian:
 	.string "before you.\p"
 	.string "It seems to have sought you out,\n"
 	.string "the CHAMPION of HOENN...$"
-\n
+
 Anthology_MegaStone_ZYGARDITE::
     goto_if_unset FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_COMPLETE, Anthology_MegaStone_ZYGARDITE_Locked
     finditem ITEM_ZYGARDITE
