@@ -204,6 +204,7 @@ VermilionCity_Gym_EventScript_SetBeamsOn::
 VermilionCity_Gym_EventScript_LtSurge::
 	famechecker FAMECHECKER_LTSURGE, FCPICKSTATE_COLORED, UpdatePickStateFromSpecialVar8005
 	trainerbattle_single TRAINER_LEADER_LT_SURGE, VermilionCity_Gym_Text_LtSurgeIntro, VermilionCity_Gym_Text_LtSurgeDefeat, VermilionCity_Gym_EventScript_DefeatedLtSurge, NO_MUSIC
+	call BattleNet_EventScript_ThirdGymMegaGift
 	goto_if_unset FLAG_GOT_TM34_FROM_SURGE, VermilionCity_Gym_EventScript_GiveTM34
 	goto_if_set FLAG_KANTO_CHAMPION, VermilionCity_Gym_EventScript_OfferRematch
 	msgbox VermilionCity_Gym_Text_LtSurgePostBattle
@@ -216,6 +217,7 @@ VermilionCity_Gym_EventScript_DefeatedLtSurge::
 	clearflag FLAG_HIDE_FAME_CHECKER_LT_SURGE_JOURNAL
 	setflag FLAG_DEFEATED_LT_SURGE
 	setflag FLAG_KANTO_BADGE_3
+	call BattleNet_EventScript_ThirdGymMegaGift
 	set_gym_trainers_frlg 3
 	goto VermilionCity_Gym_EventScript_GiveTM34
 	end
