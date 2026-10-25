@@ -1,0 +1,44 @@
+{
+  "id": "MAP_ROUTE128_ANCIENT_GROTTO",
+  "name": "Route128_AncientGrotto",
+  "layout": "LAYOUT_GRANITE_CAVE_STEVENS_ROOM",
+  "music": "MUS_CAVE_OF_ORIGIN",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_ROUTE_128",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_UNDERGROUND",
+  "allow_cycling": true,
+  "allow_escaping": true,
+  "allow_running": true,
+  "show_map_name": true,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": null,
+  "object_events": [
+    {
+      "local_id": "LOCALID_ANTHOLOGY_KORAIDON",
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(KORAIDON)",
+      "x": 10,
+      "y": 9,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Route128_AncientGrotto_EventScript_Koraidon",
+      "flag": "FLAG_HIDE_ANTHOLOGY_KORAIDON"
+    }
+  ],
+  "warp_events": [
+    {
+      "x": 7,
+      "y": 3,
+      "elevation": 3,
+      "dest_map": "MAP_UNDERWATER_ROUTE128",
+      "dest_warp_id": "1"
+    }
+  ],
+  "coord_events": [],
+  "bg_events": []
+}

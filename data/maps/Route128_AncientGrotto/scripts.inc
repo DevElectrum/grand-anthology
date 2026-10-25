@@ -1,0 +1,49 @@
+Route128_AncientGrotto_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, Route128_AncientGrotto_AnthologyOnTransition
+	.byte 0
+
+
+Route128_AncientGrotto_AnthologyOnTransition::
+	goto_if_unset FLAG_BADGE07_GET, Route128_AncientGrotto_AnthologyHideKoraidon
+	goto_if_unset FLAG_DEFEATED_MAGMA_SPACE_CENTER, Route128_AncientGrotto_AnthologyHideKoraidon
+	getcaughtmon SPECIES_KORAIDON
+	call_if_eq VAR_RESULT, TRUE, Route128_AncientGrotto_AnthologyHideKoraidon
+	call_if_ne VAR_RESULT, TRUE, Route128_AncientGrotto_AnthologyShowKoraidon
+	end
+
+Route128_AncientGrotto_AnthologyHideKoraidon::
+	setflag FLAG_HIDE_ANTHOLOGY_KORAIDON
+	return
+
+Route128_AncientGrotto_AnthologyShowKoraidon::
+	clearflag FLAG_HIDE_ANTHOLOGY_KORAIDON
+	return
+
+Route128_AncientGrotto_EventScript_Koraidon::
+	lock
+	faceplayer
+	playmoncry SPECIES_KORAIDON, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_KORAIDON, 45
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route128_AncientGrotto_AnthologyKoraidonRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route128_AncientGrotto_AnthologyKoraidonRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route128_AncientGrotto_AnthologyKoraidonResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route128_AncientGrotto_AnthologyKoraidonResolved
+	release
+	end
+
+Route128_AncientGrotto_AnthologyKoraidonResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_KORAIDON
+	setflag FLAG_HIDE_ANTHOLOGY_KORAIDON
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route128_AncientGrotto_AnthologyKoraidonRetreated::
+	release
+	end
+

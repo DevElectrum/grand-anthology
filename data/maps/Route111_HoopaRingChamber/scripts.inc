@@ -1,0 +1,46 @@
+Route111_HoopaRingChamber_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, Route111_HoopaRingChamber_AnthologyOnTransition
+	.byte 0
+
+Route111_HoopaRingChamber_AnthologyOnTransition::
+	getcaughtmon SPECIES_HOOPA_CONFINED
+	call_if_eq VAR_RESULT, TRUE, Route111_HoopaRingChamber_AnthologyHideHoopa
+	call_if_ne VAR_RESULT, TRUE, Route111_HoopaRingChamber_AnthologyShowHoopa
+	return
+
+Route111_HoopaRingChamber_AnthologyHideHoopa::
+	setflag FLAG_HIDE_ANTHOLOGY_HOOPA
+	return
+
+Route111_HoopaRingChamber_AnthologyShowHoopa::
+	clearflag FLAG_HIDE_ANTHOLOGY_HOOPA
+	return
+
+Route111_HoopaRingChamber_EventScript_Hoopa::
+	lock
+	faceplayer
+	playmoncry SPECIES_HOOPA_CONFINED, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_HOOPA_CONFINED, 30
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route111_HoopaRingChamber_AnthologyHoopaRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route111_HoopaRingChamber_AnthologyHoopaRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route111_HoopaRingChamber_AnthologyHoopaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route111_HoopaRingChamber_AnthologyHoopaResolved
+	release
+	end
+
+Route111_HoopaRingChamber_AnthologyHoopaResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_HOOPA
+	setflag FLAG_HIDE_ANTHOLOGY_HOOPA
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route111_HoopaRingChamber_AnthologyHoopaRetreated::
+	release
+	end
+

@@ -440,9 +440,9 @@ _p0_new_statics = (
 ("MtMoon_B1F_Frlg","MtMoon_B1F","Palkia","PALKIA",43,29,"PALKIA",False),
 ("SeafoamIslands_B2F_Frlg","SeafoamIslands_B2F","Manaphy","MANAPHY",14,16,"MANAPHY",False),
 ("SeafoamIslands_B2F_Frlg","SeafoamIslands_B2F","TapuFini","TAPU_FINI",14,4,"TAPU_FINI",False),
-("Underwater_Route128","Underwater_Route128","Koraidon","KORAIDON",42,27,"KORAIDON",False),
+("Route128_AncientGrotto","Route128_AncientGrotto","Koraidon","KORAIDON",10,9,"KORAIDON",False),
 ("Route112","Route112","Okidogi","OKIDOGI",16,45,"OKIDOGI",False),
-("Route111","Route111","Hoopa","HOOPA_CONFINED",30,56,"HOOPA",False),
+("Route111_HoopaRingChamber","Route111_HoopaRingChamber","Hoopa","HOOPA_CONFINED",6,4,"HOOPA",False),
 ("Route111","Route111","TingLu","TING_LU",34,84,"TING_LU",False),
 ("MtChimney","MtChimney","Volcanion","VOLCANION",10,32,"VOLCANION",False),
 ("SealedChamber_OuterRoom","SealedChamber_OuterRoom","ChiYu","CHI_YU",16,15,"CHI_YU",False),
@@ -504,7 +504,7 @@ _p0_new_statics = (
 ("Route119","Route119","Xerneas","XERNEAS",31,88,"XERNEAS",False),
 ("Route120","Route120","IronLeaves","IRON_LEAVES",36,58,"IRON_LEAVES",False),
 ("MossdeepCity_SpaceCenter_1F","MossdeepCity_SpaceCenter_1F","Latios","LATIOS",9,4,"LATIOS",False),
-("NewMauville_Inside","NewMauville_Inside","Miraidon","MIRAIDON",34,24,"MIRAIDON",False),
+("NewMauville_GeneratorAnnex","NewMauville_GeneratorAnnex","Miraidon","MIRAIDON",4,2,"MIRAIDON",False),
 ("Route118","Route118","IronBoulder","IRON_BOULDER",50,11,"IRON_BOULDER",False),
 ("Route120","Route120","Latias","LATIAS",25,61,"LATIAS",False),
 ("Route38","Route38","GalarianZapdos","ZAPDOS_GALAR",25,18,"ZAPDOS_GALAR",True),
@@ -1149,3 +1149,24 @@ assert "FLAG_AMPHAROS_HEALED" in _olivine
 assert "OlivineCity_Lighthouse_AnthologyHideCobalion" not in _olivine
 assert "OlivineCity_Lighthouse_AnthologyShowCobalion" not in _olivine
 print("P0 relocated Cobalion: no dangling old-map event references PASS")
+
+# Permanent Hoenn side chambers: routes, exit links, and post-collapse access.
+_chambers = (
+    ("Route111", "Route111_HoopaRingChamber", (30,56), (30,57), "Route111_EventScript_RingEntrance"),
+    ("Underwater_Route128", "Route128_AncientGrotto", (42,27), (42,28), "Underwater_Route128_EventScript_GrottoEntrance"),
+    ("NewMauville_Inside", "NewMauville_GeneratorAnnex", (34,24), (34,25), "NewMauville_Inside_EventScript_AnnexEntrance"),
+)
+for _source,_room,_door,_landing,_portal in _chambers:
+    _outer = json.loads((root/"data/maps"/_source/"map.json").read_text())
+    _inner = json.loads((root/"data/maps"/_room/"map.json").read_text())
+    _portal_objs=[x for x in _outer["object_events"] if x.get("script")==_portal]
+    assert len(_portal_objs)==1 and (_portal_objs[0]["x"],_portal_objs[0]["y"])==_door
+    _links=[(i,x) for i,x in enumerate(_outer["warp_events"]) if x["dest_map"]==_inner["id"]]
+    assert len(_links)==1 and (_links[0][1]["x"],_links[0][1]["y"])==_landing
+    assert len(_inner["warp_events"])==1 and _inner["warp_events"][0]["dest_map"]==_outer["id"]
+    assert str(_inner["warp_events"][0]["dest_warp_id"])==str(_links[0][0])
+    _outer_source=(root/"data/maps"/_source/"scripts.inc").read_text()
+    assert f"warp {_inner['id']}," in _outer_source
+    assert f"{_portal}::" in _outer_source
+    assert not any(x.get("graphics_id","").startswith("OBJ_EVENT_GFX_SPECIES(") and x.get("script")==f"{_source}_EventScript_"+("Hoopa" if "Route111"==_source else "Koraidon" if _source=="Underwater_Route128" else "Miraidon") for x in _outer["object_events"])
+print("P0 Hoenn dedicated side-room portal, independent warps and encounter relocation PASS")

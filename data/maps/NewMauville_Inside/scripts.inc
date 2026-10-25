@@ -17,7 +17,6 @@ NewMauville_Inside_EventScript_TryRemoveVoltorb::
 	return
 
 NewMauville_Inside_OnTransition:
-	call NewMauville_Inside_AnthologyOnTransition
 	setvar VAR_TEMP_1, 0
 	setvar VAR_TEMP_2, 0
 	call_if_unset FLAG_DEFEATED_VOLTORB_1_NEW_MAUVILLE, NewMauville_Inside_EventScript_ShowVoltorb1
@@ -263,53 +262,34 @@ NewMauville_Inside_Text_SteppedOnSwitchGeneratorStopped:
 	.string "The generator appears to have\n"
 	.string "stopped…$"
 
-NewMauville_Inside_AnthologyOnTransition::
-	goto_if_unset FLAG_BADGE07_GET, NewMauville_Inside_SecondBatchHideMiraidon
-	goto_if_unset FLAG_DEFEATED_MAGMA_SPACE_CENTER, NewMauville_Inside_SecondBatchHideMiraidon
-	goto_if_ne VAR_NEW_MAUVILLE_STATE, 2, NewMauville_Inside_SecondBatchHideMiraidon
-	getcaughtmon SPECIES_MIRAIDON
-	call_if_eq VAR_RESULT, TRUE, NewMauville_Inside_SecondBatchHideMiraidon
-	call_if_ne VAR_RESULT, TRUE, NewMauville_Inside_SecondBatchShowMiraidon
-	return
 
-NewMauville_Inside_SecondBatchOnTransition::
-	getcaughtmon SPECIES_MIRAIDON
-	call_if_eq VAR_RESULT, TRUE, NewMauville_Inside_SecondBatchHideMiraidon
-	call_if_ne VAR_RESULT, TRUE, NewMauville_Inside_SecondBatchShowMiraidon
-	return
-
-NewMauville_Inside_SecondBatchHideMiraidon::
-	setflag FLAG_HIDE_ANTHOLOGY_MIRAIDON
-	return
-
-NewMauville_Inside_SecondBatchShowMiraidon::
-	clearflag FLAG_HIDE_ANTHOLOGY_MIRAIDON
-	return
-
-NewMauville_Inside_EventScript_Miraidon::
+NewMauville_Inside_EventScript_AnnexEntrance::
 	lock
 	faceplayer
-	playmoncry SPECIES_MIRAIDON, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_MIRAIDON, 45
-	special BattleSetup_StartLegendaryBattle
+	goto_if_unset FLAG_BADGE07_GET, NewMauville_Inside_EventScript_AnnexSealed
+	goto_if_unset FLAG_DEFEATED_MAGMA_SPACE_CENTER, NewMauville_Inside_EventScript_AnnexSealed
+	goto_if_ne VAR_NEW_MAUVILLE_STATE, 2, NewMauville_Inside_EventScript_AnnexSealed
+	msgbox NewMauville_Inside_Text_AnnexEntrance, MSGBOX_YESNO
+	goto_if_ne VAR_RESULT, YES, NewMauville_Inside_EventScript_AnnexCancel
+	closemessage
+	warp MAP_NEW_MAUVILLE_GENERATOR_ANNEX, 4, 4
 	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, NewMauville_Inside_SecondBatchMiraidonRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, NewMauville_Inside_SecondBatchMiraidonRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NewMauville_Inside_SecondBatchMiraidonResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NewMauville_Inside_SecondBatchMiraidonResolved
+	end
+
+NewMauville_Inside_EventScript_AnnexSealed::
+	msgbox NewMauville_Inside_Text_AnnexSealed, MSGBOX_DEFAULT
 	release
 	end
 
-NewMauville_Inside_SecondBatchMiraidonResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_MIRAIDON
-	setflag FLAG_HIDE_ANTHOLOGY_MIRAIDON
-	fadescreenswapbuffers FADE_FROM_BLACK
+NewMauville_Inside_EventScript_AnnexCancel::
 	release
 	end
 
-NewMauville_Inside_SecondBatchMiraidonRetreated::
-	release
-	end
+NewMauville_Inside_Text_AnnexEntrance:
+	.string "The auxiliary generator annex\\n"
+	.string "has unlocked at last.\\p"
+	.string "Enter the sealed annex?$"
+
+NewMauville_Inside_Text_AnnexSealed:
+	.string "A sealed generator annex.\\n"
+	.string "The security display is still red.$"

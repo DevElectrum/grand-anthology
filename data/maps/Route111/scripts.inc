@@ -45,7 +45,6 @@ Route111_OnTransition:
 	call_if_eq VAR_MIRAGE_TOWER_STATE, 2, Route111_EventScript_SetMirageTowerGone
 	call Route111_EventScript_CheckSetSandstorm
 	call GabbyAndTy_EventScript_UpdateLocation
-	call Route111_AnthologyOnTransition
 	call Route111_TingLuTransition
 	goto_if_not_defeated TRAINER_VICKY, Route111_EventScript_SetWinstratesNotDefeated
 	end
@@ -719,48 +718,6 @@ Route111_Text_TrainerHillSign:
 
 // Independent rare statics: caught status persists in the National Dex.
 // Fainting permits a rematch after map re-entry. Preserve original route story.
-Route111_AnthologyOnTransition::
-	getcaughtmon SPECIES_HOOPA_CONFINED
-	call_if_eq VAR_RESULT, TRUE, Route111_AnthologyHideHoopa
-	call_if_ne VAR_RESULT, TRUE, Route111_AnthologyShowHoopa
-	return
-
-Route111_AnthologyHideHoopa::
-	setflag FLAG_HIDE_ANTHOLOGY_HOOPA
-	return
-
-Route111_AnthologyShowHoopa::
-	clearflag FLAG_HIDE_ANTHOLOGY_HOOPA
-	return
-
-Route111_EventScript_Hoopa::
-	lock
-	faceplayer
-	playmoncry SPECIES_HOOPA_CONFINED, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_HOOPA_CONFINED, 30
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route111_AnthologyHoopaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route111_AnthologyHoopaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route111_AnthologyHoopaResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route111_AnthologyHoopaResolved
-	release
-	end
-
-Route111_AnthologyHoopaResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_HOOPA
-	setflag FLAG_HIDE_ANTHOLOGY_HOOPA
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route111_AnthologyHoopaRetreated::
-	release
-	end
-
 Route111_TingLuTransition::
 	getcaughtmon SPECIES_TING_LU
 	goto_if_eq VAR_RESULT, TRUE, Route111_HideTingLu
@@ -798,3 +755,32 @@ Route111_TingLuResolved::
 Route111_TingLuRetreated::
 	release
 	end
+
+Route111_EventScript_RingEntrance::
+	lock
+	faceplayer
+	goto_if_unset FLAG_BADGE04_GET, Route111_EventScript_RingNotReady
+	msgbox Route111_Text_RingEntrance, MSGBOX_YESNO
+	goto_if_ne VAR_RESULT, YES, Route111_EventScript_RingCancel
+	closemessage
+	warp MAP_ROUTE111_HOOPA_RING_CHAMBER, 2, 4
+	waitstate
+	end
+
+Route111_EventScript_RingNotReady::
+	msgbox Route111_Text_RingNotReady, MSGBOX_DEFAULT
+	release
+	end
+
+Route111_EventScript_RingCancel::
+	release
+	end
+
+Route111_Text_RingEntrance:
+	.string "A golden ring shimmers beside\\n"
+	.string "Mirage Tower's ancient ruins.\\p"
+	.string "Enter the Ring Chamber?$"
+
+Route111_Text_RingNotReady:
+	.string "The ring is dormant. It seems to\\n"
+	.string "await a seasoned desert explorer.$"

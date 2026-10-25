@@ -496,7 +496,10 @@
     "TerraCave_Entrance",
     "TerraCave_End",
     "AlteringCave",
-    "MeteorFalls_StevensCave"
+    "MeteorFalls_StevensCave",
+    "Route111_HoopaRingChamber",
+    "Route128_AncientGrotto",
+    "NewMauville_GeneratorAnnex"
   ],
   "gMapGroup_IndoorDynamic": [
     "SecretBase_RedCave1",
