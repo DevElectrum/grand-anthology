@@ -33,6 +33,9 @@ on:
       - "src/wild_encounter.c"
       # Static Pokémon source, encounter maps and fossil restoration must also
       # get a representative real-ROM/mGBA regression, not only source checks.
+      - "data/maps/TinTower_2F/**"
+      - "data/maps/DarkCave_NorthSide/**"
+      - "data/maps/IcePath_B1F/**"
       - "data/maps/GraniteCave_StevensRoom/map.json"
       - "data/maps/GraniteCave_StevensRoom/scripts.inc"
       - "data/maps/ShoalCave_LowTideIceRoom/map.json"
