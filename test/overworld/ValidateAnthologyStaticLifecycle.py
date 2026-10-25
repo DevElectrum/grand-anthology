@@ -80,10 +80,18 @@ def run(labels, entry, save, outcome=None, yes=True):
                 val = {"TRUE": True, "FALSE": False}.get(args[1], args[1])
                 if isinstance(val, str) and val.isdecimal():
                     val = int(val)
-                match = {
-                    "eq": actual == val, "ne": actual != val,
-                    "ge": actual >= val, "lt": actual < val,
-                }[op.split("_if_")[1]]
+                # Evaluate only the selected operation. Outcomes are strings,
+                # whereas caught-dex checks return bools, so eager numeric
+                # comparisons would raise TypeError even on an equality test.
+                comparison = op.split("_if_")[1]
+                if comparison == "eq":
+                    match = actual == val
+                elif comparison == "ne":
+                    match = actual != val
+                elif comparison == "ge":
+                    match = actual >= val
+                elif comparison == "lt":
+                    match = actual < val
                 dest = args[2]
             if match:
                 if op.startswith("call"):
