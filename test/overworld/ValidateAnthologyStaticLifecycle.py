@@ -223,9 +223,9 @@ for name in ("GalarianZapdos", "GalarianArticuno", "GalarianMoltres"):
     assert any(name in battle for _, _, battle, _, _ in SITES)
 
 # Johto and Hoenn Glastrier objects must both disappear on either capture.
-johto, shoal = blocks("Route44"), blocks("ShoalCave_LowTideIceRoom")
+johto, shoal = blocks("IcePath_B2F"), blocks("ShoalCave_LowTideIceRoom")
 shared = Save(caught={"SPECIES_GLASTRIER"})
-run(johto, "Route44_AnthologyOnTransition", shared)
+run(johto, "IcePath_B2F_AnthologyOnTransition", shared)
 run(shoal, "ShoalCave_LowTideIceRoom_OnTransition", shared)
 assert {"FLAG_HIDE_ANTHOLOGY_JOHTO_GLASTRIER", "FLAG_HIDE_ANTHOLOGY_GLASTRIER"} <= shared.flags
 
