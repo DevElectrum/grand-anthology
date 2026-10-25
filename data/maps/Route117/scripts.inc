@@ -6,6 +6,7 @@ Route117_MapScripts::
 	.byte 0
 
 Route117_OnTransition:
+	call Route117_AnthologyHuntTransition
 	call Route117_EventScript_TryMoveDayCareMan
 	@ set flags for OW daycare mons
 	setflag FLAG_TEMP_1
@@ -240,3 +241,85 @@ Route117_Text_RouteSignMauville:
 Route117_Text_DayCareSign:
 	.string "POKéMON DAY CARE\n"
 	.string "“Let us raise your POKéMON.”$"
+
+Route117_AnthologyHuntTransition::
+	getcaughtmon SPECIES_OGERPON_TEAL
+	goto_if_eq VAR_RESULT, TRUE, Route117_HideOgerpon
+	clearflag FLAG_HIDE_ANTHOLOGY_OGERPON
+	goto Route117_CheckPecharunt
+
+Route117_HideOgerpon::
+	setflag FLAG_HIDE_ANTHOLOGY_OGERPON
+Route117_CheckPecharunt::
+	getcaughtmon SPECIES_PECHARUNT
+	goto_if_eq VAR_RESULT, TRUE, Route117_HidePecharunt
+	getcaughtmon SPECIES_OGERPON_TEAL
+	goto_if_ne VAR_RESULT, TRUE, Route117_HidePecharunt
+	getcaughtmon SPECIES_OKIDOGI
+	goto_if_ne VAR_RESULT, TRUE, Route117_HidePecharunt
+	getcaughtmon SPECIES_FEZANDIPITI
+	goto_if_ne VAR_RESULT, TRUE, Route117_HidePecharunt
+	getcaughtmon SPECIES_MUNKIDORI
+	goto_if_ne VAR_RESULT, TRUE, Route117_HidePecharunt
+	clearflag FLAG_HIDE_ANTHOLOGY_PECHARUNT
+	return
+
+Route117_HidePecharunt::
+	setflag FLAG_HIDE_ANTHOLOGY_PECHARUNT
+	return
+
+Route117_EventScript_Ogerpon::
+	lock
+	faceplayer
+	playmoncry SPECIES_OGERPON_TEAL, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_OGERPON_TEAL, 20
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route117_AnthologyOgerponRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route117_AnthologyOgerponRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route117_AnthologyOgerponResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route117_AnthologyOgerponResolved
+	release
+	end
+
+Route117_AnthologyOgerponResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_OGERPON
+	setflag FLAG_HIDE_ANTHOLOGY_OGERPON
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route117_AnthologyOgerponRetreated::
+	release
+	end
+
+Route117_EventScript_Pecharunt::
+	lock
+	faceplayer
+	playmoncry SPECIES_PECHARUNT, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_PECHARUNT, 36
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route117_AnthologyPecharuntRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route117_AnthologyPecharuntRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route117_AnthologyPecharuntResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route117_AnthologyPecharuntResolved
+	release
+	end
+
+Route117_AnthologyPecharuntResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_PECHARUNT
+	setflag FLAG_HIDE_ANTHOLOGY_PECHARUNT
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route117_AnthologyPecharuntRetreated::
+	release
+	end

@@ -32,9 +32,6 @@ MtPyre_Exterior_AnthologyOnTransition::
 	getcaughtmon SPECIES_YVELTAL
 	call_if_eq VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyHideYveltal
 	call_if_ne VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyShowYveltal
-	getcaughtmon SPECIES_PECHARUNT
-	call_if_eq VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyHidePecharunt
-	call_if_ne VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyShowPecharunt
 	getcaughtmon SPECIES_WO_CHIEN
 	call_if_eq VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyHideWoChien
 	call_if_ne VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyShowWoChien
@@ -76,42 +73,6 @@ MtPyre_Exterior_AnthologyYveltalResolved::
 	end
 
 MtPyre_Exterior_AnthologyYveltalRetreated::
-	release
-	end
-
-MtPyre_Exterior_AnthologyHidePecharunt::
-	setflag FLAG_HIDE_ANTHOLOGY_PECHARUNT
-	return
-
-MtPyre_Exterior_AnthologyShowPecharunt::
-	clearflag FLAG_HIDE_ANTHOLOGY_PECHARUNT
-	return
-
-MtPyre_Exterior_EventScript_Pecharunt::
-	lock
-	faceplayer
-	playmoncry SPECIES_PECHARUNT, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_PECHARUNT, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtPyre_Exterior_AnthologyPecharuntRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtPyre_Exterior_AnthologyPecharuntRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtPyre_Exterior_AnthologyPecharuntResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtPyre_Exterior_AnthologyPecharuntResolved
-	release
-	end
-
-MtPyre_Exterior_AnthologyPecharuntResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_PECHARUNT
-	setflag FLAG_HIDE_ANTHOLOGY_PECHARUNT
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-MtPyre_Exterior_AnthologyPecharuntRetreated::
 	release
 	end
 

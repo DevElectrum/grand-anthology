@@ -660,20 +660,6 @@
       "trainer_sight_or_berry_tree_id": "0",
       "script": "Route120_EventScript_Latios",
       "flag": "FLAG_HIDE_ANTHOLOGY_LATIOS"
-    },
-    {
-      "local_id": "LOCALID_ANTHOLOGY_OGERPON",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(OGERPON_TEAL)",
-      "x": 7,
-      "y": 20,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "Route120_EventScript_Ogerpon",
-      "flag": "FLAG_HIDE_ANTHOLOGY_OGERPON"
     }
   ],
   "warp_events": [

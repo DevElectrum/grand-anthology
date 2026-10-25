@@ -364,6 +364,34 @@
       "trainer_sight_or_berry_tree_id": "VAR_TEMP_1",
       "script": "NULL",
       "flag": "FLAG_TEMP_2"
+    },
+    {
+      "local_id": "LOCALID_ANTHOLOGY_OGERPON",
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(OGERPON_TEAL)",
+      "x": 10,
+      "y": 9,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Route117_EventScript_Ogerpon",
+      "flag": "FLAG_HIDE_ANTHOLOGY_OGERPON"
+    },
+    {
+      "local_id": "LOCALID_ANTHOLOGY_PECHARUNT",
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(PECHARUNT)",
+      "x": 40,
+      "y": 11,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Route117_EventScript_Pecharunt",
+      "flag": "FLAG_HIDE_ANTHOLOGY_PECHARUNT"
     }
   ],
   "warp_events": [

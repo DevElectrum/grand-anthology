@@ -433,9 +433,6 @@ Route120_Text_RouteSign121:
 // Special species sources added without replacing any canonical event or
 // scene. They respawn after a non-capture victory when the map is re-entered.
 Route120_AnthologyOnTransition::
-	getcaughtmon SPECIES_OGERPON_TEAL
-	call_if_eq VAR_RESULT, TRUE, Route120_AnthologyHideOgerpon
-	call_if_ne VAR_RESULT, TRUE, Route120_AnthologyShowOgerpon
 	getcaughtmon SPECIES_MUNKIDORI
 	call_if_eq VAR_RESULT, TRUE, Route120_AnthologyHideMunkidori
 	call_if_ne VAR_RESULT, TRUE, Route120_AnthologyShowMunkidori
@@ -598,41 +595,3 @@ Route120_SecondBatchLatiosRetreated::
 	release
 	end
 
-// Kitakami's mask guardian on the accessible Route 120 forest path.
-// On faint/run the same object is eligible again on map re-entry; caught
-// National status hides it persistently across normal save/Continue.
-Route120_AnthologyHideOgerpon::
-	setflag FLAG_HIDE_ANTHOLOGY_OGERPON
-	return
-
-Route120_AnthologyShowOgerpon::
-	clearflag FLAG_HIDE_ANTHOLOGY_OGERPON
-	return
-
-Route120_EventScript_Ogerpon::
-	lock
-	faceplayer
-	playmoncry SPECIES_OGERPON_TEAL, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_OGERPON_TEAL, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route120_AnthologyOgerponRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route120_AnthologyOgerponRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_AnthologyOgerponResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route120_AnthologyOgerponResolved
-	release
-	end
-
-Route120_AnthologyOgerponResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_OGERPON
-	setflag FLAG_HIDE_ANTHOLOGY_OGERPON
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route120_AnthologyOgerponRetreated::
-	release
-	end
