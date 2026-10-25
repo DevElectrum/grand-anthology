@@ -194,6 +194,17 @@ for directory, prefix, name, species, x, y, suffix, multiple in table:
     scripts = blocks(directory)
     battle = prefix + "_EventScript_" + name
     hide = "FLAG_HIDE_ANTHOLOGY_" + suffix
+    if directory == "PokemonMansion_1F_Frlg" and name == "Mew":
+        # Mew is four sequential fights, with three compulsory victories and a
+        # catch-only fourth battle. One fixed outcome for all four rounds in
+        # this tiny interpreter would incorrectly model a failed gauntlet.
+        script = (ROOT / "data/maps" / directory / "scripts.inc").read_text()
+        full = script.split("PokemonMansion_1F_EventScript_Mew::")[1].split("PokemonMansion_1F_Text_MewChallenge::")[0]
+        assert full.count("special BattleSetup_StartMewGauntletBattle") == 4
+        assert full.count("goto_if_ne VAR_RESULT, B_OUTCOME_WON") == 3
+        assert "goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_AnthologyMewResolved" in full
+        assert "goto PokemonMansion_1F_AnthologyMewRetreated" in full
+        continue
     for outcome in ("B_OUTCOME_WON", "B_OUTCOME_CAUGHT",
                     "B_OUTCOME_RAN", "B_OUTCOME_PLAYER_TELEPORTED"):
         state = Save()
