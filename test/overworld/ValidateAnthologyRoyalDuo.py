@@ -93,7 +93,7 @@ for item, mon in (("ITEM_RUSTED_SWORD", "SPECIES_ZACIAN_CROWNED"),
                   ("ITEM_RUSTED_SHIELD", "SPECIES_ZAMAZENTA_CROWNED")):
     assert mon in forms and item in forms
     for map_path in (root / "data/maps").glob("*/map.json"):
-        for obj in json.loads(map_path.read_text())["object_events"]:
+        for obj in json.loads(map_path.read_text()).get("object_events", []):
             assert obj.get("trainer_sight_or_berry_tree_id") != item, (item, map_path)
     for script in (root / "data/maps").glob("*/scripts.inc"):
         text = script.read_text()
