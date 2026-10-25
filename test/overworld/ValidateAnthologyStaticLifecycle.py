@@ -189,7 +189,7 @@ table = next(
     if isinstance(node, ast.Assign)
     and any(isinstance(t, ast.Name) and t.id == "_p0_new_statics" for t in node.targets)
 )
-assert len(table) >= 85, f"Lost tracked static encounter coverage: {len(table)}"
+assert len(table) >= 83, f"Lost tracked individual statics (the Royal Duo moved to its paired-battle validator): {len(table)}"
 for directory, prefix, name, species, x, y, suffix, multiple in table:
     scripts = blocks(directory)
     battle = prefix + "_EventScript_" + name
