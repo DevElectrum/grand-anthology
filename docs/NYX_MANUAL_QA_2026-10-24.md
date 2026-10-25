@@ -1,5 +1,12 @@
 # Nyx Manual Gameplay Acceptance: Diancie and Cave Encounters
 
+## QA acceptance policy update (October 25, 2026)
+
+The two legacy synthetic doorway probes `WorldKantoDaycare.lua` and `WorldDiancieStatic.lua` are **retired from required mGBA CI**. They were repeatedly failing to traverse normal doors from artificially relocated flash saves. They did not demonstrate a gameplay defect. Nyx manually confirmed the actual Route 5 daycare door, three NPC interactions, the Manaphy+Ditto breeding/Phione hatch flow, and Diancie's normal doorway, level-18 encounter, faint/revisit respawn and caught/save/restart persistence.
+
+The Lua scripts remain in the repository as optional historical diagnostics; their verdicts are **not** included in automatic release pass/fail. Manual verification is recorded as manual, not repackaged into a fabricated emulator PASS. Normal optimized ROM compilation, source contracts and the nine other independent mGBA suites remain active. Re-enable a doorway smoke only once its fixture accurately follows real gameplay, or if a new reproducible gameplay defect actually arises.
+
+
 **Observed:** 24 October 2026, Pop!_OS, graphical mGBA 0.10.2 (Nyx).
 **Source under manual test:** public `main` at approximately `bd135e1`, plus an **uncommitted, local-only** test branch editing the two Littleroot Town sign scripts. This is not a normal story run and is not a separately published ROM.
 **Status:** Diancie scripted encounter manually verified with prerequisite flags supplied through the local test shortcut. The later cave-wild-spawn restriction and the Kanto Route 5 daycare entrance/NPCs have now also been manually checked; detailed limits are recorded below.

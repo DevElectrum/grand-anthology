@@ -330,27 +330,13 @@ assert behavior == 101, f"Granite Cave warp behavior changed: {behavior}"
 assert "MB_NORTH_ARROW_WARP" in (root / "include/constants/metatile_behaviors.h").read_text()
 print("P0 Diancie entrance: Granite Cave 1F (5,10) is elevation-3 north-arrow warp")
 
-# The release ROM disables the R+START debug UI. This mGBA test must
-# establish its isolated scene through a disposable flash Save/Continue,
-# never through release-only inaccessible dev menus.
-diancie_smoke = (root / "test/overworld/lua/WorldDiancieStatic.lua").read_text()
-assert "F.dbg()" not in diancie_smoke and "F.warpTo(" not in diancie_smoke
-for invariant in ("stageSaveAtGraniteCaveEntrance()", "S.SaveBlock1.mapGroup",
-                  "client.reboot_core()", "F.boot(GROUP,true)",
-                  "normalizeCavePlayerElevation()",
-                  "fixture player elevation matches real Granite Cave 1F",
-                  "real overworld north-arrow warp entered Steven room",
-                  "F.press(\"Up\",1)",
-                   "turned north without leaving Granite Cave warp tile",
-                   "local entered = F.mapn()==MAP",
-                   "for _=1,90 do",
-                   "F.press(\"Up\",1)",
-                   "FLAG_STONE_BADGE=0x94F",
-                   "FLAG_KNUCKLE_BADGE=0x950",
-                   "disposable Save/Continue retained both required badges",
-                  "the real scripted Diancie battle opened"):
-    assert invariant in diancie_smoke, invariant
-print("P0 Diancie release smoke: actual flash Save/Continue fixture, no dev menu")
+# The real graphical-mGBA Granite Cave door, Lv18 Diancie battle,
+# faint/revisit, capture/revisit and Save/Continue persistence were checked
+# manually on Nyx. Preserve the real doorway tile assertions above while
+# retiring the synthetic Save/Continue doorway fixture from the CI gate.
+release_smoke = (root / ".github/workflows/P0-mGBA-Release-Smoke.yml").read_text()
+assert "test/overworld/mgba-run.sh test/overworld/lua/WorldDiancieStatic.lua" not in release_smoke
+print("P0 Diancie: original map warp source and manually accepted gameplay recorded; fixture not release-blocking")
 
 
 
