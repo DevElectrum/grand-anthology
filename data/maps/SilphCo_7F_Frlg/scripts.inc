@@ -376,3 +376,14 @@ SilphCo_7F_Text_FloorSign::
 	.string "SILPH CO. HEAD OFFICE\n"
 	.string "7F$"
 
+\n
+Anthology_MegaStone_MAGEARNITE::
+    goto_if_unset FLAG_GOT_LAPRAS_FROM_SILPH, Anthology_MegaStone_MAGEARNITE_Locked
+    finditem ITEM_MAGEARNITE
+    end
+Anthology_MegaStone_MAGEARNITE_Locked::
+    msgbox Anthology_MegaStone_MAGEARNITE_LockedText, MSGBOX_DEFAULT
+    end
+Anthology_MegaStone_MAGEARNITE_LockedText::
+    .string "A special MEGA STONE resonates here.\p"
+    .string "Return when its guardian is yours.$"
