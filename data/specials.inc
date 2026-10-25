@@ -337,6 +337,10 @@ gSpecials::
 	def_special ShakeCamera
 	def_special StartGroudonKyogreBattle
 	def_special BattleSetup_StartLegendaryBattle, waitstate=1
+	def_special BattleSetup_StartRoyalDuoBattle, waitstate=1
+	def_special RoyalDuoCheckCapacity
+	def_special RoyalDuoPrepareBattle
+	def_special RoyalDuoAwardVictory
 	def_special StartRegiBattle, waitstate=1
 	def_special SetTrainerFacingDirection
 	def_special DoSealedChamberShakingEffect_Short, waitstate=1
