@@ -9,7 +9,7 @@
 An **unofficial, non-commercial, experimental hobby modification** built upon
 [Pokémon World](https://github.com/evilchinesefood/PKMN-World) by David A. and its contributors.
 
-[**Origins**](#our-origins-built-upon-pokémon-world) · [**Features**](#what-grand-anthology-adds) · [**Status**](#development-status-and-verification) · [**Build**](#building-locally) · [**Credits**](#credits-and-acknowledgments) · [**Roadmap**](#development-roadmap)
+[**Origins**](#our-origins-built-upon-pokémon-world) · [**Field Guide**](docs/GRAND_ANTHOLOGY_FIELD_GUIDE.md) · [**Features**](#what-grand-anthology-adds) · [**Status**](#development-status-and-verification) · [**Build**](#building-locally) · [**Credits**](#credits-and-acknowledgments) · [**Roadmap**](#development-roadmap)
 
 > **Development preview, not a completed release.** The illustration above is original AI-generated project concept artwork, **not an in-game screenshot**. Grand Anthology is independent of and not endorsed by Pokémon World or the Pokémon rights holders.
 
@@ -52,37 +52,39 @@ The following foundation is inherited from Pokémon World; Grand Anthology aims 
 | **Hoenn** | The Emerald adventure, its League and the Battle Frontier. |
 | **World Transit** | A hub linking the regions, with shared trainer systems and region-specific progression. |
 
-Grand Anthology's intended continuous adventure uses **one trainer, party, bag, Pokédex, PC and save**, preserving the active team when moving between regions while keeping regional badges and story progression distinct. Our preferred journey is **Kanto → Johto → Hoenn**; extensive cross-region and save/reload acceptance remains part of the development work.
+Grand Anthology's intended continuous adventure uses **one trainer, party, bag, Pokédex, PC and save**, preserving the active team when moving between regions while keeping regional badges and story progression distinct. Our preferred journey is **Kanto → Johto → Hoenn**; extensive cross-region and save/reload acceptance remains part of the development work. For a searchable Pokémon-and-item lookup across the three campaigns, use the **[Grand Anthology Field Guide](docs/GRAND_ANTHOLOGY_FIELD_GUIDE.md)**.
 
 ## What Grand Anthology adds
 
-The public `main` branch contains meaningful new source-level work, but **source integration is not proof of a playable or complete feature**.
+The public `main` branch has substantial source-level acquisition and encounter implementation. **Implemented in source** and **verified in gameplay** are different claims.
 
-| Area | Current evidence or scope |
+| Area | Current authored content |
 | --- | --- |
-| **All-generation roster** | All **1,025 National Pokédex species through Generation 9** are included in an optimistic source-level acquisition audit. Actual acquisition of every species has **not** been demonstrated in gameplay. |
-| **Ecological encounters** | Additional land, Surf and fishing habitats, plus planned sources for rare, legendary, mythical and other special Pokémon, are being integrated into the three existing regions. |
-| **Starter choices** | Expanded professor-starter selection source work covers **10 Kanto**, **9 Johto** and **9 Hoenn** choices. Complete in-game integration remains to be accepted. |
-| **Collection and evolution** | Regional Pokédex work, fossil sources, special-form acquisition and practical offline evolution methods are under development or audit. |
-| **Player convenience** | Source work includes selectable shiny odds and gameplay options such as randomization, editing and cheats. Individual channels and complete save behavior still need consolidated validation. |
+| **National Pokédex** | All **1,025 species through Generation 9** have optimistic source-level acquisition paths, including breeding/evolutions and postgame. This is not a completed in-emulator collection. |
+| **World ecology** | Native land, water, fishing and Rock Smash tables, plus rare and supplemental habitats across Kanto, Johto and Hoenn. Ultra Beasts and Paradox Pokémon can intentionally appear as rare natural species. |
+| **Legendary/Mythical hunts** | Scripted or original story encounters across all three regions, including Mew's four-battle Nine Masks, the Johto Tao Trio, added Hoenn side chambers and many static location assignments. |
+| **Royal Duo** | Zacian and Zamazenta stand together on **Johto Route 27 after eight Johto badges, before the Champion**. Interact with either; winning one level-50 double battle awards both, holding their **Rusted Sword and Rusted Shield**. Actual gameplay QA is pending. |
+| **Permanent special forms** | **Zygarde 10%** in Petalburg Woods, **50%** in Meteor Falls and a separate **permanent Complete Zygarde** on Hoenn Route 101 after Hoenn Champion. Regular Terapagos on Route 114 and a separate **permanent Stellar Terapagos** in Cave of Origin B1F after Hoenn Champion. |
+| **Mega Stones** | **92/92** Mega Stones have source-level acquisition references: **30** hard-rematch rewards, **21** Battle Net vendor options and **41** world pickups. Thirteen also have a free starter-choice option. Pickup accessibility and full gameplay function need testing. |
+| **Starter choices and convenience** | Source features include 10 Kanto, 9 Johto and 9 Hoenn starter options; offline evolution paths and player convenience systems. Full in-game acceptance remains a separate milestone. |
 
-**Current acquisition design (24 October 2026):** all 1,025 National species should be legitimately obtainable **eventually during the full Kanto / Johto / Hoenn adventure, including postgame**, without mandatory online trades. They do **not** all have to be available before the first Champion; ordinary story and postgame gates are fine. Legendary and Mythical Pokémon are intended as scripted statics, while Ultra Beasts and Paradox Pokémon are deliberately rare natural encounters. See the [source location audit](docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md). Source paths and gameplay remain unverified in part.
+### Player progression and locations
 
-**Approved regional Legendary/Mythical encounter design (24 October 2026):** The [full discussion ledger](docs/LEGENDARY_MYTHICAL_DESIGN_LEDGER_2026-10-24.md) records Kanto, Johto and Hoenn decisions, including capture dependencies, early encounters and deferred special form mechanics. Start with the [current design-ready handoff](docs/NEXT_ASTRA_HANDOFF_2026-10-24_DESIGN_READY.md) and [preimplementation design audit](docs/PREIMPLEMENTATION_DESIGN_AUDIT_2026-10-24.md). These are **design specifications, not proof that they have been implemented or play-tested**.
+**[Open the Grand Anthology Field Guide](docs/GRAND_ANTHOLOGY_FIELD_GUIDE.md)** for searchable National Pokédex entries, all numbered items, all 92 Mega Stone sources, a map-by-map index, major boss encounter requirements and the intended Kanto → Johto → Hoenn journey.
 
-For an accessible summary of scope, source evidence and unverified gameplay, see the [public development status](docs/PUBLIC_STATUS.md). Development can resume from the [public next-Astra engineering handoff](docs/NEXT_ASTRA_HANDOFF.md); private historical notes and branches are not part of this repository.
+The encounter engineering milestone **does not imply postgame placement**. The Royal Duo is explicitly **pre-Johto-Champion**. In contrast, permanent Complete Zygarde and permanent Stellar Terapagos unlock **after Hoenn Champion**. **Eternatus is still authored on Johto Route 44**; moving it to Victory Road with a Royal Duo requirement is a discussed design proposal, not a source-implemented change.
+
+For future engineering agents, the [machine-readable acquisition catalog](data/catalog/world_acquisition.jsonl) and [catalog instructions](data/catalog/README.md) are linked directly from [AGENTS.md](AGENTS.md). These source-indexed paths supersede older placement snapshots when those snapshots conflict with current code.
 
 ## Development status and verification
 
-**Status: public experimental source on `main`, with no completed Grand Anthology game or ROM release declared.**
+**Status (25 October 2026): public experimental source on `main`, not a finished ROM release or fully verified three-region game.**
 
-Source-only publication occurred on October 23, 2026 (October 24 UTC), from a single clean-history initial commit. The [public CI workflows](https://github.com/DevElectrum/grand-anthology/actions) provide source/build and actual emulator feedback; they are **development checks, not a playable-game guarantee**. The initial optimized source/build and validation jobs passed; the initial full mGBA smoke failed on a Granite Cave doorway navigation assertion before reaching the Diancie encounter. It does not prove a Diancie spawning defect.
+Source publication began on October 23, 2026. The [public GitHub Actions workflows](https://github.com/DevElectrum/grand-anthology/actions) run source validators, optimized GBA compilation and representative emulator smoke tests. The [October 25 optimized P0 build and source-validation run #40234899967](https://github.com/DevElectrum/grand-anthology/actions/runs/40234899967) **passed**. The earlier [mGBA smoke #40231997639](https://github.com/DevElectrum/grand-anthology/actions/runs/40231997639) **passed** on its own earlier commit; it did **not** execute end-to-end Royal Duo/92-stone/1,025-Pokémon acceptance.
 
-At the documented **October 23, 2026** source milestone, the acquisition audit reported **1,025/1,025 optimistic National species paths** (Kanto 346, Johto 352, Hoenn 327). The source-validator portion of the recorded private development CI run passed. This is an inventory of possible code paths, **not** a successful in-emulator living or completed Pokédex.
+The maintainer has separately reported a successful **Mew Nine Masks** sequence and final catch/revisit, recorded in [its implementation and manual QA note](docs/MEW_NINE_MASKS_IMPLEMENTATION_2026-10-25.md). This does not automatically validate other battles.
 
-The remaining work includes verifying forms and alternate evolutions, verifying eventual obtainability while preserving legitimate post-Champion access gates, reconciling settings and gameplay integration, and then running representative end-to-end emulator tests for encounters, catching, fainting, revisits, breeding, regional travel, saving and reloading. At development commit `45dc98d9`, the optimized full-ROM build passed. A later genuine mGBA test at `5667f5f` fixed the earlier missing-symbol error but exposed an actual Diancie visibility and field-spawn failure after Save/Continue. A subsequent repair is under emulator review; this encounter is **not** accepted until the repaired build passes. Other representative regional-travel and save tests passed. Independently verify the exact published source snapshot.
-
-A provisional internal engineering-readiness percentage exists in the tracker, but it is **not** advertised here as a measure of playable completeness.
+**Outstanding acceptance:** walkability and overworld object interactions; actual Royal Duo win/reward persistence, storage overflow and form changes; collectible Mega Stone pickups; story flags and encounters after region changes; breeding and evolution edges; catching/revisiting; full-game Pokedex source realization and save/reload reliability. The field guide and structured catalog are navigational/source aids, **not playtesting certificates**.
 
 ## Screenshots
 
@@ -102,7 +104,7 @@ cd grand-anthology
 make release -j4
 ```
 
-**Important:** The full-generation roster has previously required the optimized release-style build shown above to fit the GBA ROM size limit. This is **not a guarantee** that every in-progress commit compiles or runs correctly. The optimized GBA build passed on the October 23 source milestone; full gameplay validation remains unfinished. `make modern` is an inherited non-release invocation and should not be assumed to fit this development branch. Check the exact commit's CI and emulator evidence before treating a build as verified. Keep ROM outputs local; never upload them to GitHub Releases, Actions artifacts, or the repository.
+**Important:** The full-generation roster has previously required the optimized release-style build shown above to fit the GBA ROM size limit. This is **not a guarantee** that every in-progress commit compiles or runs correctly. The optimized GBA build and source-validation workflow passed on October 25, 2026, at [run #40234899967](https://github.com/DevElectrum/grand-anthology/actions/runs/40234899967); full gameplay validation remains unfinished. `make modern` is an inherited non-release invocation and should not be assumed to fit this development branch. Check the exact commit's CI and emulator evidence before treating a build as verified. Keep ROM outputs local; never upload them to GitHub Releases, Actions artifacts, or the repository.
 
 For source-level checks and test tooling, consult [INSTALL.md](INSTALL.md) and the project documentation. Never interpret a green static validator alone as full gameplay acceptance.
 
@@ -152,10 +154,10 @@ This is a **plan, not a promised schedule**. The [current project scope](docs/PU
 <details>
 <summary><strong>P0: finish the playable core</strong></summary>
 
-- Finish legitimate full-adventure acquisition routes for every National species, including postgame. Do not force all 1,025 before a first Champion.
-- Reconcile meaningful permanent forms, branch evolutions, offline requirements and story gates.
-- Complete essential player options and preserve original campaigns and regional continuity.
-- Perform consolidated emulator acceptance for catching, encounter persistence, breeding, fossils, Pokédex rewards, travel and saves.
+- Maintain the **1,025/1,025 optimistic source-level acquisition inventory**; do not imply all species are actually catchable merely because a route exists in code.
+- Validate the newly authored Royal Duo, permanent Complete Zygarde and Stellar Terapagos, Mega Stone world pickups, evolution branches, offline requirements and original story gates.
+- Reconcile proposed-but-unimplemented dependencies separately, notably Eternatus's potential Victory Road relocation.
+- Complete consolidated emulator acceptance for catching, encounter persistence, storage overflow, breeding, fossils, Pokédex rewards, regional travel and save/reload.
 
 </details>
 
