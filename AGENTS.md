@@ -1,3 +1,18 @@
+# Active Astra catalog entrypoint (25 October 2026)
+
+**Future Astras: search the current source-indexed acquisition atlas before editing Pokémon, item, shop, or reward placement.**
+
+- [Astra's catalog instructions and query recipes](data/catalog/README.md)
+- [Machine-readable acquisition index: all 1,025 National species + 874 numbered items](data/catalog/world_acquisition.jsonl)
+- [Player's searchable field guide](docs/GRAND_ANTHOLOGY_FIELD_GUIDE.md)
+- [Current Royal Duo contract](docs/ROYAL_DUO_ROUTE27_IMPLEMENTATION_2026-10-25.md)
+
+The JSONL is a **candidate-path inventory**. It is not proof that each encounter is reachable, catchable, persistent or accessible at any badge count. Cross-check map scripts, current source tests and reported gameplay. Maintain the Astra index and the human field guide **together** whenever encounters, rewards, prerequisites or item sources move. Old handoffs/ledgers below may describe retired positions or proposed-only features; live source and newest approved design take precedence.
+
+**October 25 source progress:** Royal Duo level-50 Crowned Zacian/Zamazenta double battle on Johto Route 27 after eight badges, held Rusted Sword/Shield gifts, source-validator PASS. Full optimized P0 build and source validator PASS at [run 40234899967](https://github.com/DevElectrum/grand-anthology/actions/runs/40234899967), and [mGBA baseline smoke 40231997639](https://github.com/DevElectrum/grand-anthology/actions/runs/40231997639) PASS on its earlier code SHA. No dedicated Royal Duo physical gameplay acceptance. **Eternatus remains on Route 44 in current source**; a conditional Victory Road relocation is discussed but not implemented. The catalogs are *documentation*, not an authorization to change gameplay.
+
+---
+
 > **25 OCT 2026, PERMANENT STELLAR TERAPAGOS SOURCE IMPLEMENTED:** [Focused engineering note](docs/PERMANENT_STELLAR_TERAPAGOS_2026-10-25.md) describes a second level-75 permanent Stellar encounter in Cave of Origin B1F post-Hoenn-Champion; original Route 114 normal Terapagos remains independently catchable even if the Stellar one was obtained first. The Stellar species now uses a no-reversion form-change table; Teraform Zero triggers on switch-in with no Tera activation. Added `test/overworld/ValidatePermanentStellarTerapagos.py`; exact optimized build and actual PC/save/battle gameplay evidence remain separate. Mega Stone source coverage is committed but map geometry and old Shoal Cave CI validation may still need later attention. Canonical public main only.
 
 > **CURRENT ACTIVE DISCUSSION (25 OCT 2026): Z-A MEGA STONE ACQUISITION.** Read [the 45-stone availability + split-distribution ledger](docs/ZA_MEGA_STONE_ACQUISITION_LEDGER_2026-10-25.md) and [fresh next-Astra handoff](docs/NEXT_ASTRA_HANDOFF_2026-10-25_ZA_MEGA_STONES.md) before the older engineering notes below. Maintainer wants a **mix of world/NPC locations and Battle Net vendor**, explicitly mentioning Clefable and Victreebel for world discovery. **This is a discussion, not approval to implement the ledger's illustrative categories.** Complete Zygarde source is newly committed at `12f99767`; 10%/50%/Complete gameplay tests are delegated to next Astra. Do not mistake source presence for actual stone acquisition.
@@ -26,13 +41,13 @@ private repository and its original `master`.
 
 ## Goal
 
-**Current override (24 October 2026): DESIGN DISCUSSION PAUSE.** Read this file, `docs/NEXT_ASTRA_HANDOFF.md` and `docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md`, then wait for the user. Do not write code, relocate encounters, run tests, or commit additional changes before explicit user approval. Older implementation-first instructions below describe future workflow, not present authorization.
+**Historical design-pause note (24 October 2026): superseded.** The maintainer subsequently authorized P0 engineering and, on October 25, specifically authorized this two-view catalog and README documentation update. For any **new** gameplay change, follow the latest direct user request; do not infer permission from an old handoff. Consult the source-indexed atlas above.
 
 Build an easy, casual, approachable single-trainer Pokémon GBA adventure
 covering the inherited Kanto, Johto and Hoenn campaigns. Do not pretend it
 covers nine regions. All 1,025 National Pokédex species should be obtainable **eventually across the complete adventure including postgame**, not necessarily before the first Champion. Source-level 1,025 path evidence is optimistic; actual in-game acquisition/integration acceptance is **not complete**.
 
-**Only after discussion and express user go-ahead**, prioritize substantial P0 implementation in sensible grouped batches,
+For future gameplay changes explicitly approved by the maintainer, prioritize substantial P0 implementation in sensible grouped batches,
 then consolidated gameplay verification. Commit meaningful changes and
 review existing tests; don't stall on individual encounter test cases.
 Original 420-slot storage remains for now. Optional later gimmicks and
