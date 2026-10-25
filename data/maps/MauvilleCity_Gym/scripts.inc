@@ -75,6 +75,7 @@ MauvilleCity_Gym_EventScript_DeactivatePuzzle::
 
 MauvilleCity_Gym_EventScript_Wattson::
 	trainerbattle_single TRAINER_WATTSON_1, MauvilleCity_Gym_Text_WattsonIntro, MauvilleCity_Gym_Text_WattsonDefeat, MauvilleCity_Gym_EventScript_WattsonDefeated, NO_MUSIC
+	call BattleNet_EventScript_ThirdGymMegaGift
 	goto_if_unset FLAG_RECEIVED_TM_SHOCK_WAVE, MauvilleCity_Gym_EventScript_GiveShockWave2
 	goto_if_eq VAR_NEW_MAUVILLE_STATE, 2, MauvilleCity_Gym_EventScript_CompletedNewMauville
 	goto_if_set FLAG_HOENN_CHAMPION, MauvilleCity_Gym_EventScript_OfferRematch
@@ -93,6 +94,7 @@ MauvilleCity_Gym_EventScript_WattsonDefeated::
 	clearflag FLAG_HIDE_VERDANTURF_TOWN_SCOTT
 	setflag FLAG_DEFEATED_MAUVILLE_GYM
 	setflag FLAG_BADGE03_GET
+	call BattleNet_EventScript_ThirdGymMegaGift
 	addvar VAR_PETALBURG_GYM_STATE, 1
 	call_if_eq VAR_PETALBURG_GYM_STATE, 6, Common_EventScript_ReadyPetalburgGymForBattle
 	setvar VAR_0x8008, 3
