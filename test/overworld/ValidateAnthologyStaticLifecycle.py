@@ -332,3 +332,23 @@ pre_fuji = Save(caught={"SPECIES_CRESSELIA"})
 run(blocks("PokemonTower_7F_Frlg"), "PokemonTower_7F_AnthologyOnTransition", pre_fuji)
 assert "FLAG_HIDE_ANTHOLOGY_DARKRAI" in pre_fuji.flags
 print("P0 Kanto relocated statics: caught prerequisite, Fuji rescue, KO/revisit and caught/revisit PASS")
+
+# Swords of Justice are independent captures, early to mid Johto, with the
+# same KO->revisit and caught->permanent-hide semantics as other statics.
+for _dir,_name in (("Route32","Keldeo"),("UnionCave_1F","Terrakion"),("NationalPark_Normal","Virizion"),("MtMortar_1F_South","Cobalion")):
+    _scripts = blocks(_dir)
+    _entry = _dir+"_AnthologyOnTransition"
+    _hide = "FLAG_HIDE_ANTHOLOGY_"+_name.upper()
+    _battle = _dir+"_EventScript_"+_name
+    _state = Save()
+    run(_scripts,_entry,_state)
+    assert _hide not in _state.flags, (_name,"requires an unapproved prerequisite")
+    run(_scripts,_battle,_state,"B_OUTCOME_WON")
+    assert _hide in _state.flags
+    run(_scripts,_entry,_state)
+    assert _hide not in _state.flags
+    run(_scripts,_battle,_state,"B_OUTCOME_CAUGHT")
+    assert _hide in _state.flags
+    run(_scripts,_entry,_state)
+    assert _hide in _state.flags
+print("P0 Johto independent Swords: KO/revisit and caught/revisit gates PASS")

@@ -462,8 +462,8 @@ _p0_new_statics = (
 ("Route39","Route39","Landorus","LANDORUS",21,1,"LANDORUS",False),
 ("Route39","Route39","Enamorus","ENAMORUS",30,1,"ENAMORUS",False),
 ("Route40","Route40","Lugia","LUGIA",28,15,"LUGIA",False),
-("Route42","Route42","Terrakion","TERRAKION",16,9,"TERRAKION",False),
-("Route42","Route42","Keldeo","KELDEO",69,11,"KELDEO",False),
+("UnionCave_1F","UnionCave_1F","Terrakion","TERRAKION",20,15,"TERRAKION",False),
+("Route32","Route32","Keldeo","KELDEO",18,35,"KELDEO",False),
 ("Route42","Route42","KubfuWest","KUBFU",14,14,"KUBFU_WEST",True),
 ("Route42","Route42","KubfuEast","KUBFU",74,8,"KUBFU_EAST",True),
 ("Route48","Route48","Victini","VICTINI",7,27,"VICTINI",False),
@@ -471,7 +471,7 @@ _p0_new_statics = (
 ("RuinsOfAlph_Outside","RuinsOfAlph_Outside","Zamazenta","ZAMAZENTA",20,14,"ZAMAZENTA",False),
 ("RuinsOfAlph_Outside","RuinsOfAlph_Outside","Regieleki","REGIELEKI",32,19,"REGIELEKI",False),
 ("EcruteakCity_Theater","EcruteakCity_Theater","Meloetta","MELOETTA",16,13,"MELOETTA",False),
-("OlivineCity_Lighthouse","OlivineCity_Lighthouse","Cobalion","COBALION",90,14,"COBALION",False),
+("MtMortar_1F_South","MtMortar_1F_South","Cobalion","COBALION",19,41,"COBALION",False),
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","Regigigas","REGIGIGAS",19,12,"REGIGIGAS",False),
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","Uxie","UXIE",16,20,"UXIE",False),
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","Mesprit","MESPRIT",44,13,"MESPRIT",False),
@@ -487,7 +487,7 @@ _p0_new_statics = (
 ("CeladonCity_Frlg","CeladonCity","TapuLele","TAPU_LELE",8,24,"TAPU_LELE",False),
 ("RockTunnel_B1F_Frlg","RockTunnel_B1F","Heatran","HEATRAN",9,27,"HEATRAN",False),
 ("VermilionCity_Frlg","VermilionCity","Meltan","MELTAN",35,15,"MELTAN",False),
-("Route36","Route36","Virizion","VIRIZION",36,15,"VIRIZION",False),
+("NationalPark_Normal","NationalPark_Normal","Virizion","VIRIZION",27,20,"VIRIZION",False),
 ("IlexForest","IlexForest","Zarude","ZARUDE",48,19,"ZARUDE",False),
 ("Route36","Route36","CalyrexNorth","CALYREX",23,15,"CALYREX_NORTH",True),
 ("Route36","Route36","CalyrexSouth","CALYREX",36,26,"CALYREX_SOUTH",True),
@@ -559,7 +559,7 @@ for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
     assert not any((o["x"],o["y"])==(_x,_y) for o in _m["warp_events"])
     # For the new location-cluster batch, verify the encounter can be walked
     # to from an actual pre-existing stair/warp on the same 3-elevation floor.
-    if _dir in {"MtMoon_B1F_Frlg", "SeafoamIslands_B2F_Frlg", "GraniteCave_B2F", "FieryPath", "JaggedPass", "MtPyre_Exterior"}:
+    if _dir in {"MtMoon_B1F_Frlg", "SeafoamIslands_B2F_Frlg", "GraniteCave_B2F", "FieryPath", "JaggedPass", "MtPyre_Exterior", "UnionCave_1F", "MtMortar_1F_South", "NationalPark_Normal", "Route32"}:
         assert len(_buf)==2*_w*_h, (_dir,_w,_h,len(_buf))
         def _walkable(pos):
             xx,yy=pos
@@ -1036,3 +1036,27 @@ assert _diancie_message in _diancie_suite
 assert _diancie_message in _diancie_ci
 assert "Diancie is visible after Steven letter before Champion" not in _diancie_ci
 print("P0 Diancie mGBA workflow: assertion text matches source, no false failure PASS")
+
+# Sword of Justice route placements must be on walkable paths, not locked
+# beyond hidden Waterfall/SURF regions. Mt Mortar's western entrance is
+# independently flooded: other doorways lead to disconnected map areas.
+_mortar = json.loads((root/"data/maps/MtMortar_1F_South/map.json").read_text())
+_mlayout = _p0_layouts[_mortar["layout"]]
+_mblock = (root/_mlayout["blockdata_filepath"]).read_bytes()
+_mw,_mh = _mlayout["width"], _mlayout["height"]
+def _mtwalk(x,y):
+    if not (0 <= x < _mw and 0 <= y < _mh): return False
+    v = _anthology_struct.unpack_from("<H", _mblock, 2*(y*_mw+x))[0]
+    return v >> 12 == 3 and ((v >> 10)&3) == 0
+_q=[(16,50)] # western Route 42 entrance
+_v=set()
+while _q:
+    x,y=_q.pop()
+    if (x,y) in _v or not _mtwalk(x,y): continue
+    _v.add((x,y))
+    _q.extend([(x+1,y),(x-1,y),(x,y+1),(x,y-1)])
+assert (19,41) in _v, "Cobalion must be reachable from Mt Mortar WEST, not another entrance"
+for _p,_old,_name in (("Route42","Route42","Keldeo"),("Route42","Route42","Terrakion"),("Route36","Route36","Virizion"),("OlivineCity_Lighthouse","OlivineCity_Lighthouse","Cobalion")):
+    _oldmap=json.loads((root/"data/maps"/_old/"map.json").read_text())
+    assert not any(o.get("script")==_p+"_EventScript_"+_name for o in _oldmap["object_events"])
+print("P0 Johto Swords: four early/mid reachable statics, western Mt Mortar access, no old duplicates PASS")

@@ -8,6 +8,7 @@ Route32_MapScripts::
 	.byte 0
 
 Route32_OnTransition: 
+	call Route32_AnthologyOnTransition
 	end
 
 Route32_EventScript_FisherJustin::
@@ -518,3 +519,49 @@ Route32_Text_Sign2:
 Route32_Text_Sign3:
 	.string "UNION CAVE\n"
 	.string "AHEAD$"
+
+// Independent early/mid-Johto Sword of Justice static. No sibling capture gate.
+Route32_AnthologyOnTransition::
+	getcaughtmon SPECIES_KELDEO
+	call_if_eq VAR_RESULT, TRUE, Route32_AnthologyHideKeldeo
+	call_if_ne VAR_RESULT, TRUE, Route32_AnthologyShowKeldeo
+	return
+
+Route32_AnthologyHideKeldeo::
+	setflag FLAG_HIDE_ANTHOLOGY_KELDEO
+	return
+
+Route32_AnthologyShowKeldeo::
+	clearflag FLAG_HIDE_ANTHOLOGY_KELDEO
+	return
+
+// Defeated => map re-entry rematch. Caught => permanent for this site.
+// Flee/teleport => stays.
+Route32_EventScript_Keldeo::
+	lock
+	faceplayer
+	playmoncry SPECIES_KELDEO, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_KELDEO, 18
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route32_AnthologyKeldeoRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route32_AnthologyKeldeoRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route32_AnthologyKeldeoResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route32_AnthologyKeldeoResolved
+	release
+	end
+
+Route32_AnthologyKeldeoResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_KELDEO
+	setflag FLAG_HIDE_ANTHOLOGY_KELDEO
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route32_AnthologyKeldeoRetreated::
+	release
+	end
+

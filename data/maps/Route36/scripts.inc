@@ -319,50 +319,11 @@ Route36_Text_Tips2:
 
 // Multi-location acquisition batch: preserve canonical map scripts.
 Route36_BigBatchOnTransition::
-	getcaughtmon SPECIES_VIRIZION
-	call_if_eq VAR_RESULT, TRUE, Route36_BigBatchHideVirizion
-	call_if_ne VAR_RESULT, TRUE, Route36_BigBatchShowVirizion
 	call_if_set FLAG_CAUGHT_ANTHOLOGY_CALYREX_NORTH, Route36_BigBatchHideCalyrexNorth
 	call_if_unset FLAG_CAUGHT_ANTHOLOGY_CALYREX_NORTH, Route36_BigBatchShowCalyrexNorth
 	call_if_set FLAG_CAUGHT_ANTHOLOGY_CALYREX_SOUTH, Route36_BigBatchHideCalyrexSouth
 	call_if_unset FLAG_CAUGHT_ANTHOLOGY_CALYREX_SOUTH, Route36_BigBatchShowCalyrexSouth
 	return
-
-Route36_BigBatchHideVirizion::
-	setflag FLAG_HIDE_ANTHOLOGY_VIRIZION
-	return
-
-Route36_BigBatchShowVirizion::
-	clearflag FLAG_HIDE_ANTHOLOGY_VIRIZION
-	return
-
-Route36_EventScript_Virizion::
-	lock
-	faceplayer
-	playmoncry SPECIES_VIRIZION, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_VIRIZION, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route36_BigBatchVirizionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route36_BigBatchVirizionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route36_BigBatchVirizionResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route36_BigBatchVirizionResolved
-	release
-	end
-
-Route36_BigBatchVirizionResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_VIRIZION
-	setflag FLAG_HIDE_ANTHOLOGY_VIRIZION
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route36_BigBatchVirizionRetreated::
-	release
-	end
 
 Route36_BigBatchHideCalyrexNorth::
 	setflag FLAG_HIDE_ANTHOLOGY_CALYREX_NORTH

@@ -6,7 +6,6 @@ OlivineCity_Lighthouse_MapScripts::
 	.byte 0
 
 OlivineCity_Lighthouse_OnTransition::
-	call OlivineCity_Lighthouse_AnthologyOnTransition
 	end
 
 OlivineLighthouse_EventScript_Item_Ether::
@@ -404,38 +403,3 @@ OlivineCity_Lighthouse_AnthologyOnTransition::
 	call_if_ne VAR_RESULT, TRUE, OlivineCity_Lighthouse_AnthologyShowCobalion
 	return
 
-OlivineCity_Lighthouse_AnthologyHideCobalion::
-	setflag FLAG_HIDE_ANTHOLOGY_COBALION
-	return
-
-OlivineCity_Lighthouse_AnthologyShowCobalion::
-	clearflag FLAG_HIDE_ANTHOLOGY_COBALION
-	return
-
-OlivineCity_Lighthouse_EventScript_Cobalion::
-	lock
-	faceplayer
-	playmoncry SPECIES_COBALION, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_COBALION, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, OlivineCity_Lighthouse_AnthologyCobalionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, OlivineCity_Lighthouse_AnthologyCobalionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, OlivineCity_Lighthouse_AnthologyCobalionResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, OlivineCity_Lighthouse_AnthologyCobalionResolved
-	release
-	end
-
-OlivineCity_Lighthouse_AnthologyCobalionResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_COBALION
-	setflag FLAG_HIDE_ANTHOLOGY_COBALION
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-OlivineCity_Lighthouse_AnthologyCobalionRetreated::
-	release
-	end

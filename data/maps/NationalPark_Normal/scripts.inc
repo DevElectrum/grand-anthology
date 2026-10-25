@@ -4,6 +4,7 @@ NationalPark_Normal_MapScripts::
 	.byte 0
 
 NationalPark_Normal_OnTransition: 
+	call NationalPark_Normal_AnthologyOnTransition
 	end
 
 NationalPark_Normal_EventScript_Lass::
@@ -196,3 +197,47 @@ NationalPark_Normal_Text_TrainerTips:
 	.string "TRAINER TIPS\p"
 	.string "Print out MAIL by opening it then\n"
 	.string "pressing START.$"
+
+// Independent early/mid-Johto Sword of Justice static. No sibling capture gate.
+NationalPark_Normal_AnthologyOnTransition::
+	getcaughtmon SPECIES_VIRIZION
+	call_if_eq VAR_RESULT, TRUE, NationalPark_Normal_AnthologyHideVirizion
+	call_if_ne VAR_RESULT, TRUE, NationalPark_Normal_AnthologyShowVirizion
+	return
+
+NationalPark_Normal_AnthologyHideVirizion::
+	setflag FLAG_HIDE_ANTHOLOGY_VIRIZION
+	return
+
+NationalPark_Normal_AnthologyShowVirizion::
+	clearflag FLAG_HIDE_ANTHOLOGY_VIRIZION
+	return
+
+NationalPark_Normal_EventScript_Virizion::
+	lock
+	faceplayer
+	playmoncry SPECIES_VIRIZION, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_VIRIZION, 23
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, NationalPark_Normal_AnthologyVirizionRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, NationalPark_Normal_AnthologyVirizionRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NationalPark_Normal_AnthologyVirizionResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NationalPark_Normal_AnthologyVirizionResolved
+	release
+	end
+
+NationalPark_Normal_AnthologyVirizionResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_VIRIZION
+	setflag FLAG_HIDE_ANTHOLOGY_VIRIZION
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+NationalPark_Normal_AnthologyVirizionRetreated::
+	release
+	end
+

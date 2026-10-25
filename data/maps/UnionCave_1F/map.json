@@ -130,6 +130,20 @@
       "trainer_sight_or_berry_tree_id": "0",
       "script": "UnionCave_1F_EventScript_Item_Xattack",
       "flag": "FLAG_ITEM_UNION_CAVE_X_ATTACK"
+    },
+    {
+      "local_id": "LOCALID_ANTHOLOGY_TERRAKION",
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(TERRAKION)",
+      "x": 20,
+      "y": 15,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "UnionCave_1F_EventScript_Terrakion",
+      "flag": "FLAG_HIDE_ANTHOLOGY_TERRAKION"
     }
   ],
   "warp_events": [

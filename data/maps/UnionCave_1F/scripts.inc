@@ -1,5 +1,10 @@
 UnionCave_1F_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, UnionCave_1F_OnTransition
 	.byte 0
+
+UnionCave_1F_OnTransition::
+	call UnionCave_1F_AnthologyOnTransition
+	end
 
 
 UnionCave_1F_Trigger_Monview::
@@ -131,3 +136,49 @@ UnionCave_1F_Text_FirebreatherRayBeaten:
 UnionCave_1F_Text_FirebreatherRayAfter:
 	.string "It's my POKéMON's fire that lights\n"
 	.string "up this cave.$"
+
+// Independent early/mid-Johto Sword of Justice static. No sibling capture gate.
+UnionCave_1F_AnthologyOnTransition::
+	getcaughtmon SPECIES_TERRAKION
+	call_if_eq VAR_RESULT, TRUE, UnionCave_1F_AnthologyHideTerrakion
+	call_if_ne VAR_RESULT, TRUE, UnionCave_1F_AnthologyShowTerrakion
+	return
+
+UnionCave_1F_AnthologyHideTerrakion::
+	setflag FLAG_HIDE_ANTHOLOGY_TERRAKION
+	return
+
+UnionCave_1F_AnthologyShowTerrakion::
+	clearflag FLAG_HIDE_ANTHOLOGY_TERRAKION
+	return
+
+// Defeated => map re-entry rematch. Caught => permanent for this site.
+// Flee/teleport => stays.
+UnionCave_1F_EventScript_Terrakion::
+	lock
+	faceplayer
+	playmoncry SPECIES_TERRAKION, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_TERRAKION, 20
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, UnionCave_1F_AnthologyTerrakionRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, UnionCave_1F_AnthologyTerrakionRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, UnionCave_1F_AnthologyTerrakionResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, UnionCave_1F_AnthologyTerrakionResolved
+	release
+	end
+
+UnionCave_1F_AnthologyTerrakionResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_TERRAKION
+	setflag FLAG_HIDE_ANTHOLOGY_TERRAKION
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+UnionCave_1F_AnthologyTerrakionRetreated::
+	release
+	end
+

@@ -252,93 +252,11 @@ Route42_Text_MtMortarSign1:
 
 // New static acquisition flags are independent of original Johto plot events.
 Route42_AnthologyOnTransition::
-	getcaughtmon SPECIES_TERRAKION
-	call_if_eq VAR_RESULT, TRUE, Route42_AnthologyHideTerrakion
-	call_if_ne VAR_RESULT, TRUE, Route42_AnthologyShowTerrakion
-	getcaughtmon SPECIES_KELDEO
-	call_if_eq VAR_RESULT, TRUE, Route42_AnthologyHideKeldeo
-	call_if_ne VAR_RESULT, TRUE, Route42_AnthologyShowKeldeo
 	call_if_set FLAG_CAUGHT_ANTHOLOGY_KUBFU_WEST, Route42_AnthologyHideKubfuWest
 	call_if_unset FLAG_CAUGHT_ANTHOLOGY_KUBFU_WEST, Route42_AnthologyShowKubfuWest
 	call_if_set FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST, Route42_AnthologyHideKubfuEast
 	call_if_unset FLAG_CAUGHT_ANTHOLOGY_KUBFU_EAST, Route42_AnthologyShowKubfuEast
 	return
-
-Route42_AnthologyHideTerrakion::
-	setflag FLAG_HIDE_ANTHOLOGY_TERRAKION
-	return
-
-Route42_AnthologyShowTerrakion::
-	clearflag FLAG_HIDE_ANTHOLOGY_TERRAKION
-	return
-
-// Defeated => map re-entry rematch. Caught => permanent for this site.
-// Flee/teleport => stays.
-Route42_EventScript_Terrakion::
-	lock
-	faceplayer
-	playmoncry SPECIES_TERRAKION, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_TERRAKION, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route42_AnthologyTerrakionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route42_AnthologyTerrakionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route42_AnthologyTerrakionResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route42_AnthologyTerrakionResolved
-	release
-	end
-
-Route42_AnthologyTerrakionResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_TERRAKION
-	setflag FLAG_HIDE_ANTHOLOGY_TERRAKION
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route42_AnthologyTerrakionRetreated::
-	release
-	end
-
-Route42_AnthologyHideKeldeo::
-	setflag FLAG_HIDE_ANTHOLOGY_KELDEO
-	return
-
-Route42_AnthologyShowKeldeo::
-	clearflag FLAG_HIDE_ANTHOLOGY_KELDEO
-	return
-
-// Defeated => map re-entry rematch. Caught => permanent for this site.
-// Flee/teleport => stays.
-Route42_EventScript_Keldeo::
-	lock
-	faceplayer
-	playmoncry SPECIES_KELDEO, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_KELDEO, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route42_AnthologyKeldeoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route42_AnthologyKeldeoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route42_AnthologyKeldeoResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route42_AnthologyKeldeoResolved
-	release
-	end
-
-Route42_AnthologyKeldeoResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_KELDEO
-	setflag FLAG_HIDE_ANTHOLOGY_KELDEO
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route42_AnthologyKeldeoRetreated::
-	release
-	end
 
 Route42_AnthologyHideKubfuWest::
 	setflag FLAG_HIDE_ANTHOLOGY_KUBFU_WEST
