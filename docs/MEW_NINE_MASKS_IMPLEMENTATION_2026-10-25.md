@@ -59,3 +59,10 @@
 **Not yet claimed as verified:** capturing Mew and proving its object disappears and remains absent after leaving/re-entering and save/reload; flee/loss/teleport paths; HP/PP/status carry-over measured directly; each of the other 23 random ordered triples. Do not mark these as tested or claim complete capture persistence based on Mew being fainted. This was a real player/manual pass, not an automated emulator result.
 
 The encounter's initial multi-battle sequence and catch gating have direct manual gameplay evidence. No gameplay code changes were required from this reported pass.
+
+
+## Final manual acceptance follow-up, October 25, 2026
+
+After the test above, the player replied **"Works"** to the request to verify Mew's successful capture, disappearance after leaving/re-entering Pokémon Mansion, and persistence after saving and reloading. Record this as **user-reported acceptance of the final catch/cleanup flow**, not as a separately instrumented or independently reproduced test. The earlier deliberately fainted Mew had remained available for another attempt as designed.
+
+**Mew Nine Masks: manually accepted for the user-requested gauntlet and catch/retry flow.** No additional gameplay changes were requested. Untested alternative RNG sequences and other edge cases remain outside this specific acceptance claim.
