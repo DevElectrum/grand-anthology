@@ -4291,7 +4291,10 @@
 #define FLAG_HIDE_ANTHOLOGY_PRELEAGUE_KYOGRE                     (FLAG_WORLD_MAP_BANK + 0xF6)
 #define FLAG_HIDE_ANTHOLOGY_JOHTO_GLASTRIER                     (FLAG_WORLD_MAP_BANK + 0xF7) // 0xE37
 #define FLAG_HIDE_ANTHOLOGY_OGERPON                          (FLAG_WORLD_MAP_BANK + 0xF8) // 0xE38
-// Next free world-map flag: 0xE39.
+#define FLAG_HIDE_ANTHOLOGY_ZYGARDE_10                 (FLAG_WORLD_MAP_BANK + 0xF9)
+#define FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_10               (FLAG_WORLD_MAP_BANK + 0xFA)
+#define FLAG_CAUGHT_ANTHOLOGY_ZYGARDE                  (FLAG_WORLD_MAP_BANK + 0xFB)
+// Next free world-map flag: 0xE3C.
 
 #undef FLAGS_COUNT
 #define FLAGS_COUNT 0x1030

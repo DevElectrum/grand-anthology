@@ -644,6 +644,6 @@ LilycoveCity_Harbor_Text_SailorFerryAvailable:
 	.string "Well, it's my turn to get busy now!$"
 
 LilycoveCity_Harbor_Text_RayquazaBirthIslandFerry:
-	.string "Your RAYQUAZA discovery opened a\\n"
-	.string "route to BIRTH ISLAND!\\p"
+	.string "Your RAYQUAZA discovery opened a\n"
+	.string "route to BIRTH ISLAND!\p"
 	.string "Sail there now?$"

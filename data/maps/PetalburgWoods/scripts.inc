@@ -1,4 +1,5 @@
 PetalburgWoods_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, PetalburgWoods_AnthologyOnTransition
 	.byte 0
 
 PetalburgWoods_EventScript_DevonResearcherLeft::
@@ -471,3 +472,46 @@ PetalburgWoods_Text_TrainerTipsPP:
 	.string "If a POKéMON runs out of PP, it must be\n"
 	.string "taken to a POKéMON CENTER.$"
 
+
+PetalburgWoods_AnthologyOnTransition::
+	call_if_set FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_10, PetalburgWoods_AnthologyHideZygarde10
+	call_if_unset FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_10, PetalburgWoods_AnthologyShowZygarde10
+	end
+
+PetalburgWoods_AnthologyHideZygarde10::
+	setflag FLAG_HIDE_ANTHOLOGY_ZYGARDE_10
+	return
+
+PetalburgWoods_AnthologyShowZygarde10::
+	clearflag FLAG_HIDE_ANTHOLOGY_ZYGARDE_10
+	return
+
+PetalburgWoods_EventScript_Zygarde10::
+	lock
+	faceplayer
+	playmoncry SPECIES_ZYGARDE_10_AURA_BREAK, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_ZYGARDE_10_AURA_BREAK, 10
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PetalburgWoods_AnthologyZygarde10Retreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PetalburgWoods_AnthologyZygarde10Retreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PetalburgWoods_AnthologyZygarde10Caught
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PetalburgWoods_AnthologyZygarde10Resolved
+	release
+	end
+
+PetalburgWoods_AnthologyZygarde10Caught::
+	setflag FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_10
+PetalburgWoods_AnthologyZygarde10Resolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_ZYGARDE_10
+	setflag FLAG_HIDE_ANTHOLOGY_ZYGARDE_10
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+PetalburgWoods_AnthologyZygarde10Retreated::
+	release
+	end

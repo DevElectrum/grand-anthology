@@ -1,4 +1,5 @@
 MeteorFalls_1F_1R_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, MeteorFalls_1F_1R_AnthologyOnTransition
 	map_script MAP_SCRIPT_ON_LOAD, MeteorFalls_1F_1R_OnLoad
 	.byte 0
 
@@ -307,3 +308,47 @@ MeteorFalls_1F_1R_Text_WhatsTeamMagmaDoingAtMtChimney:
 	.string "PROF. COZMO: But that TEAM MAGMA…\p"
 	.string "What are they going to do with that\n"
 	.string "METEORITE at MT. CHIMNEY?$"
+
+MeteorFalls_1F_1R_AnthologyOnTransition::
+	call_if_set FLAG_CAUGHT_ANTHOLOGY_ZYGARDE, MeteorFalls_1F_1R_AnthologyHideZygarde50
+	goto_if_unset FLAG_BADGE06_GET, MeteorFalls_1F_1R_AnthologyHideZygarde50
+	call_if_unset FLAG_CAUGHT_ANTHOLOGY_ZYGARDE, MeteorFalls_1F_1R_AnthologyShowZygarde50
+	end
+
+MeteorFalls_1F_1R_AnthologyHideZygarde50::
+	setflag FLAG_HIDE_ANTHOLOGY_ZYGARDE
+	return
+
+MeteorFalls_1F_1R_AnthologyShowZygarde50::
+	clearflag FLAG_HIDE_ANTHOLOGY_ZYGARDE
+	return
+
+MeteorFalls_1F_1R_EventScript_Zygarde50::
+	lock
+	faceplayer
+	playmoncry SPECIES_ZYGARDE_50_POWER_CONSTRUCT, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_ZYGARDE_50_POWER_CONSTRUCT, 44
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MeteorFalls_1F_1R_AnthologyZygarde50Retreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MeteorFalls_1F_1R_AnthologyZygarde50Retreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MeteorFalls_1F_1R_AnthologyZygarde50Caught
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MeteorFalls_1F_1R_AnthologyZygarde50Resolved
+	release
+	end
+
+MeteorFalls_1F_1R_AnthologyZygarde50Caught::
+	setflag FLAG_CAUGHT_ANTHOLOGY_ZYGARDE
+MeteorFalls_1F_1R_AnthologyZygarde50Resolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_ZYGARDE
+	setflag FLAG_HIDE_ANTHOLOGY_ZYGARDE
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+MeteorFalls_1F_1R_AnthologyZygarde50Retreated::
+	release
+	end
