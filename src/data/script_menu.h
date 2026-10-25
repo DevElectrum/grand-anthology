@@ -1220,23 +1220,35 @@ static const struct MenuAction MultichoiceList_OlivineHarbor[] =
 // matching change here.
 static const struct MenuAction MultichoiceList_BnetStarterStone[] =
 {
-    {COMPOUND_STRING("VENUSAURITE")},   {COMPOUND_STRING("CHARIZARDITE X")},
-    {COMPOUND_STRING("CHARIZARDITE Y")},{COMPOUND_STRING("BLASTOISINITE")},
-    {COMPOUND_STRING("SCEPTILITE")},    {COMPOUND_STRING("BLAZIKENITE")},
-    {COMPOUND_STRING("SWAMPERTITE")},   {gText_Exit},
+    {COMPOUND_STRING("VENUSAURITE")},
+    {COMPOUND_STRING("CHARIZARDITE X")},
+    {COMPOUND_STRING("CHARIZARDITE Y")},
+    {COMPOUND_STRING("BLASTOISINITE")},
+    {COMPOUND_STRING("SCEPTILITE")},
+    {COMPOUND_STRING("BLAZIKENITE")},
+    {COMPOUND_STRING("SWAMPERTITE")},
+    {COMPOUND_STRING("More Stones")},
+    {gText_Exit},
 };
 
-// Split across two pages on purpose. A static multichoice window is count * 2 tile rows
-// (src/script_menu.c, CreateWindowFromRect) on a 20-row screen, and the static path does not
-// scroll -- a single 11-row list rendered 22 rows tall and pushed EXIT off the bottom.
-// Index order here is load-bearing against sVendorStones[] in src/battle_net.c: page 1 maps
-// 1:1 to indices 0..4, page 2 maps to 5..9 via `addvar VAR_RESULT, 5` in the vendor script.
-// In both lists index 5 is the page toggle and index 6 is EXIT; the script must consume both
-// BEFORE calling BattleNetVendorStoneFromChoice, since 6 is otherwise a valid stone index.
+static const struct MenuAction MultichoiceList_BnetStarterStone2[] =
+{
+    {COMPOUND_STRING("MEGANIUMITE")},
+    {COMPOUND_STRING("FERALIGITE")},
+    {COMPOUND_STRING("EMBOARITE")},
+    {COMPOUND_STRING("CHESNAUGHTITE")},
+    {COMPOUND_STRING("DELPHOXITE")},
+    {COMPOUND_STRING("GRENINJITE")},
+    {COMPOUND_STRING("Back")},
+    {gText_Exit},
+};
+
 static const struct MenuAction MultichoiceList_BnetVendorStone[] =
 {
-    {COMPOUND_STRING("VENUSAURITE{CLEAR_TO 88}35")},    {COMPOUND_STRING("CHARIZARDITE X{CLEAR_TO 88}35")},
-    {COMPOUND_STRING("CHARIZARDITE Y{CLEAR_TO 88}35")}, {COMPOUND_STRING("BLASTOISINITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("VENUSAURITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("CHARIZARDITE X{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("CHARIZARDITE Y{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("BLASTOISINITE{CLEAR_TO 88}35")},
     {COMPOUND_STRING("SCEPTILITE{CLEAR_TO 88}35")},
     {COMPOUND_STRING("More Stones")},
     {gText_Exit},
@@ -1244,9 +1256,40 @@ static const struct MenuAction MultichoiceList_BnetVendorStone[] =
 
 static const struct MenuAction MultichoiceList_BnetVendorStone2[] =
 {
-    {COMPOUND_STRING("BLAZIKENITE{CLEAR_TO 88}35")},    {COMPOUND_STRING("SWAMPERTITE{CLEAR_TO 88}35")},
-    {COMPOUND_STRING("GARDEVOIRITE{CLEAR_TO 88}35")},   {COMPOUND_STRING("PINSIRITE{CLEAR_TO 88}20")},
+    {COMPOUND_STRING("BLAZIKENITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("SWAMPERTITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("GARDEVOIRITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("PINSIRITE{CLEAR_TO 88}20")},
     {COMPOUND_STRING("MAWILITE{CLEAR_TO 88}20")},
+    {COMPOUND_STRING("More Stones")},
+    {gText_Exit},
+};
+
+static const struct MenuAction MultichoiceList_BnetVendorStone3[] =
+{
+    {COMPOUND_STRING("MEGANIUMITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("FERALIGITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("EMBOARITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("CHESNAUGHTITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("DELPHOXITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("More Stones")},
+    {gText_Exit},
+};
+
+static const struct MenuAction MultichoiceList_BnetVendorStone4[] =
+{
+    {COMPOUND_STRING("GRENINJITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("DRAGONINITE{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("RAICHUNITE X{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("RAICHUNITE Y{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("GARCHOMPITE Z{CLEAR_TO 88}35")},
+    {COMPOUND_STRING("More Stones")},
+    {gText_Exit},
+};
+
+static const struct MenuAction MultichoiceList_BnetVendorStone5[] =
+{
+    {COMPOUND_STRING("LUCARIONITE Z{CLEAR_TO 88}35")},
     {COMPOUND_STRING("Back")},
     {gText_Exit},
 };
@@ -1521,8 +1564,12 @@ static const struct MultichoiceListStruct sMultichoiceLists[] =
     [MULTI_KURT_BALLS]                                 = MULTICHOICE(MultichoiceList_KurtBalls),
     [MULTI_OLIVINE_HARBOR]                             = MULTICHOICE(MultichoiceList_OlivineHarbor),
     [MULTI_BNET_STARTER_STONE]                         = MULTICHOICE(MultichoiceList_BnetStarterStone),
+    [MULTI_BNET_STARTER_STONE_2]                       = MULTICHOICE(MultichoiceList_BnetStarterStone2),
     [MULTI_BNET_VENDOR_STONE]                          = MULTICHOICE(MultichoiceList_BnetVendorStone),
     [MULTI_BNET_VENDOR_STONE_2]                        = MULTICHOICE(MultichoiceList_BnetVendorStone2),
+    [MULTI_BNET_VENDOR_STONE_3]                        = MULTICHOICE(MultichoiceList_BnetVendorStone3),
+    [MULTI_BNET_VENDOR_STONE_4]                        = MULTICHOICE(MultichoiceList_BnetVendorStone4),
+    [MULTI_BNET_VENDOR_STONE_5]                        = MULTICHOICE(MultichoiceList_BnetVendorStone5),
     [MULTI_BNET_SHARD_COLOR]                           = MULTICHOICE(MultichoiceList_BnetShardColor),
     [MULTI_BNET_SIM_MENU]                              = MULTICHOICE(MultichoiceList_BnetSimMenu),
     [MULTI_BNET_STREAK_MENU]                           = MULTICHOICE(MultichoiceList_BnetStreakMenu),
