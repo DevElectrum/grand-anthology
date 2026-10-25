@@ -519,6 +519,34 @@ _p0_new_statics = (
 _p0_layouts = {x["id"]: x for x in json.loads((root / "data/layouts/layouts.json").read_text())["layouts"] if x}
 _p0_flags = (root / "include/constants/flags.h").read_text()
 assert len(_p0_new_statics)==86 and len({(s[0],s[4],s[5]) for s in _p0_new_statics})==86
+# Proactively diagnose every invalid new static tile before the first assert.
+# This keeps region-wide batches repairable in one CI pass.
+for _dir,_prefix,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
+    _m = json.loads((root/"data/maps"/_dir/"map.json").read_text())
+    _lay = _p0_layouts[_m["layout"]]
+    _w, _h = _lay["width"], _lay["height"]
+    _raw = (root/_lay["blockdata_filepath"]).read_bytes()
+    def _open_tile(xx, yy):
+        if not (0 <= xx < _w and 0 <= yy < _h):
+            return False
+        _v = _anthology_struct.unpack_from("<H", _raw, 2 * (yy * _w + xx))[0]
+        return _v >> 12 == 3 and ((_v >> 10) & 3) == 0
+    _occupied = {(ob["x"], ob["y"]) for ob in _m["object_events"] if ob.get("script") != f"{_prefix}_EventScript_{_n}"}
+    _occupied.update((ob["x"], ob["y"]) for ob in _m["warp_events"])
+    _neighbors = ((1,0),(-1,0),(0,1),(0,-1))
+    if _open_tile(_x, _y) and sum(_open_tile(_x+dx,_y+dy) for dx,dy in _neighbors) >= 2:
+        continue
+    _options = []
+    for _cy in range(max(1,_y-14), min(_h-1,_y+15)):
+        for _cx in range(max(1,_x-14), min(_w-1,_x+15)):
+            if (_cx,_cy) in _occupied or not _open_tile(_cx,_cy):
+                continue
+            if sum(_open_tile(_cx+dx,_cy+dy) for dx,dy in _neighbors) < 2:
+                continue
+            _options.append((abs(_cx-_x)+abs(_cy-_y),_cx,_cy))
+    _options.sort()
+    print("INVALID BULK TILE", _dir, _n, (_x,_y), "nearest valid:", [(x,y) for _,x,y in _options[:16]], flush=True)
+
 for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
     _m=json.loads((root/"data/maps"/_dir/"map.json").read_text())
     _script=(root/"data/maps"/_dir/"scripts.inc").read_text()
