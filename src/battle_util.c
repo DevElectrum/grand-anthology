@@ -2988,6 +2988,14 @@ u32 AbilityBattleEffects(enum AbilityEffect caseID, enum BattlerId battler, enum
         gBattleScripting.battler = battler;
         switch (gLastUsedAbility)
         {
+        case ABILITY_TERAFORM_ZERO:
+            if (gBattleMons[battler].species == SPECIES_TERAPAGOS_STELLAR
+             && (gBattleWeather != WEATHER_NONE || gFieldStatuses & STATUS_FIELD_TERRAIN_ANY))
+            {
+                BattleScriptCall(BattleScript_ActivateTeraformZero);
+                effect++;
+            }
+            break;
         case ABILITY_TRACE:
             if (!gBattleMons[battler].volatiles.traceActivated)
             {
