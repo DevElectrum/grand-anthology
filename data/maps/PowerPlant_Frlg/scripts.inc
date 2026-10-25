@@ -214,7 +214,7 @@ PowerPlant_NativeZAPDOSUncaught::
 	clearflag FLAG_FOUGHT_ZAPDOS
 	clearflag FLAG_HIDE_ZAPDOS
 	return
-\n
+
 Anthology_MegaStone_ZERAORITE::
     getcaughtmon SPECIES_ZERAORA
     goto_if_ne VAR_RESULT, TRUE, Anthology_MegaStone_ZERAORITE_Locked
