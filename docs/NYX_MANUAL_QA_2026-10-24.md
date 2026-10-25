@@ -46,8 +46,17 @@ Code inspection confirmed `WE_VANILLA_RANDOM = TRUE` and `WE_OW_ENCOUNTERS = TRU
 - The user **entered the daycare building using its actual door**, rather than the direct-to-interior fallback shortcut.
 - The **original caretaker plus both additional NPCs** were visible, and **all three responded to interaction**.
 - Two NPCs offered Pokémon deposit dialogue, matching the original one-Pokémon caretaker and the newly added two-parent deposit service.
-- This confirms real in-game doorway access, three NPC presence, and interaction/dialogue availability. **It does not yet demonstrate accepted deposits, a compatible pair, generated Egg, pickup, hatching, or the resulting Phione.**
+- This confirms real in-game doorway access, three NPC presence, and interaction/dialogue availability. **Later Manaphy + Ditto testing additionally verified deposit, compatible parent recognition, developer-triggered Egg generation, daycare pickup, and successful Phione hatching; see below.**
 - The mGBA synthetic Route 5 Save/Continue navigation fixture still fails **3/4 at its door step**, despite this normal gameplay PASS. Keep it flagged as a test-fixture problem, not a daycare gameplay regression.
+
+**Manaphy + Ditto → Phione, further short Nyx manual test (same local daycare build):**
+
+- User added Manaphy and Ditto to the party with **CHEATS → Quick Pokémon**, then deposited both using the **new breeding lady** at Kanto Route 5.
+- Daycare man reported the parents **"don't seem to like each other much"**: low yet nonzero compatibility. Both test parents have the same Original Trainer ID.
+- To avoid an unnecessary 256-step breeding roll, the user exposed the *existing developer-only* `DebugAction_Give_DayCareEgg` through the local CHEATS → Pokémon Tools submenu, invoked it once with the two compatible parents already deposited, and collected an Egg from the daycare man.
+- The user likewise exposed and invoked the existing `Debug_HatchAnEgg` action and confirmed the on-screen message **"Phione hatched from the EGG!"** (Nyx screenshot).
+- **Verified:** shared two-parent deposit flow and compatible pairing, pending-Egg generation from the deposited parents using the game daycare routine, Egg handoff, egg/species construction, and Phione hatch in real graphical mGBA gameplay.
+- **Not verified:** unassisted random 20% / 256-step Egg production, ordinary incubation/hatch timing, long-term daycare state after cross-region travel/save-reload, or depositing species from normal acquisition rather than cheats. The egg and hatch were accelerated via *local-only* developer tools, which do not belong on public release `main`.
 
 **Reproduction hygiene:** These checks used local-only sign shortcuts and disposable/backup saves; they are not normal story progression proof. Do not put the altered Littleroot sign scripts on public `main`. Keep the user's starter save and test saves separately.
 
