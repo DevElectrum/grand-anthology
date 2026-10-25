@@ -76,8 +76,10 @@ RegionHub_EventScript_ArmIntroTour::
 @ all. ClearTempFieldEventData zeroes VAR_TEMP_D before this runs, so a
 @ championship earned mid-visit takes effect on the next map entry.
 RegionHub_EventScript_ArmStairsGate::
+	goto_if_set FLAG_BNET_DIRECTOR_INTRO, RegionHub_EventScript_StairsGateUnlock
 	callnative RegionHub_ScrIsAnyRegionChampion
 	goto_if_eq VAR_RESULT, FALSE, RegionHub_EventScript_StairsGateStayArmed
+RegionHub_EventScript_StairsGateUnlock::
 	setvar VAR_TEMP_D, 1
 RegionHub_EventScript_StairsGateStayArmed:
 	return
@@ -1788,7 +1790,7 @@ RegionHub_Text_TourStairs:
 	.string "The old link floor up there is the\n"
 	.string "BATTLE NET's flagship arena.\p"
 	.string "Fair warning: the escalator only\n"
-	.string "admits a region's CHAMPION.$"
+	.string "opens after your third BADGE.$"
 
 @ The closing line MUST route the player back to the counter BEFORE boarding: the HUB PASS
 @ has an attendant backstop at the gates, but the POKeVIAL's only source is this counter —
@@ -1870,5 +1872,5 @@ RegionHub_Movement_StairsBounceSouth:
 RegionHub_Text_StairsLocked:
 	.string "BATTLE NET - FLAGSHIP FLOOR\p"
 	.string "ACCESS DENIED.\n"
-	.string "Conquer at least one region's POKéMON\l"
-	.string "LEAGUE first.$"
+	.string "Earn three GYM BADGES in any\l"
+	.string "region first.$"
