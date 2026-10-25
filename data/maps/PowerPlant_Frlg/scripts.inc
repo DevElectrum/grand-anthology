@@ -214,3 +214,15 @@ PowerPlant_NativeZAPDOSUncaught::
 	clearflag FLAG_FOUGHT_ZAPDOS
 	clearflag FLAG_HIDE_ZAPDOS
 	return
+\n
+Anthology_MegaStone_ZERAORITE::
+    getcaughtmon SPECIES_ZERAORA
+    goto_if_ne VAR_RESULT, TRUE, Anthology_MegaStone_ZERAORITE_Locked
+    finditem ITEM_ZERAORITE
+    end
+Anthology_MegaStone_ZERAORITE_Locked::
+    msgbox Anthology_MegaStone_ZERAORITE_LockedText, MSGBOX_DEFAULT
+    end
+Anthology_MegaStone_ZERAORITE_LockedText::
+    .string "A special MEGA STONE resonates here.\p"
+    .string "Return when its guardian is yours.$"
