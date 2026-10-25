@@ -210,45 +210,24 @@ rematchable afterward.
 
 ## Battle Net and the Mega economy
 
-Become any region's Champion and the **Battle Net terminal** in the hub unlocks the flagship floor
-upstairs (RegionHub 2F) — the home of **Mega Evolution**.
+**Mega Ring + free starter stone:** The first third Gym badge of any region unlocks the Ring and a free choice of **13 starter-line Mega Stones**, awarded directly by Lt. Surge, Whitney or Wattson. Subsequent regions do not duplicate the gift. The original Battle Net Director remains a recovery point on eligible saves. Declined or Bag-full gifts remain claimable. Other choices remain permanently available at the vendor.
 
-**Stones and Shards**
+**Full Mega Stone availability (source implementation, pending compiled/emulator verification):** There are 92 distinct Mega Stones. Thirty originals remain rewards for real Gym/League rematches; twenty-one are sold by the Battle Net vendor (the original ten plus eleven Z-A additions); forty-one have one-time persistent item-ball discovery events across the three regions (29 ordinary Z-A stones, five guardian-linked Z-A stones and seven original acquisition gaps). The five guardian stones require their respective catches or Silph Co.'s Magearna gift. Stone flags are only consumed after successful pickup. Source coverage is checked by `test/overworld/ValidateAnthologyMegaStoneAcquisition.py`. Actual collision, path accessibility and all gameplay routes still require emulator acceptance.
 
-- The **Director** hands you the **Mega Ring** plus a free Mega Stone for your starter's line
-  (one-time; if your bag is full, both wait for you).
-- Every HARD gym-leader, Elite Four and Champion rematch win pays **Shards** — 1 for leaders, 2
-  for league members — repeatable.
-- The **first** HARD win against each of the **28 stone-holding leaders** also drops their
-  signature Mega Stone — the same stone their HARD party holds and Mega Evolves with against you.
-  The Kanto Champion rematch drops the **Mewtwonite X and Y** pair on top, though that party
-  doesn't use them. That is **30 stones** on the drop circuit in all, and the records board counts
-  them out of 30.
-- A full bag holds a stone for reclaim on a later win. A blocked Shard payout tells you and is
-  forfeited, so make room first.
-- The flagship **vendor** sells the remaining stones for Shards, and the **exchange clerk**
-  converts Battle Points to Shards at **4 BP each**. A handful of Shards are hidden in the world
-  for the Itemfinder.
+The Battle Net flagship floor opens after receiving the Mega Ring, rather than requiring Championship. The separately gated Battle Frontier travel and regional campaigns remain unchanged.
 
-**The sims**
+**Economy:** Shards of any color buy the vendor's 20- or 35-Shard stones. Simulation Battle Point rewards are five times the old values, and the exchange clerk now takes **2 BP per Shard**. Scaling simulations always award an additional random-color Shard. Actual Gym Leader rematches yield **5 Shards**, League/Champion rematches **10 Shards**, and a first eligible real rematch grants the one-time signature stone on **any difficulty**, not Hard-only. First Hoenn League clears are not rematches and do not grant signature stones. The 30 original reward flags and records remain intact.
 
-Simulated battles pay **full EXP** and trigger evolutions as usual, while no money changes hands,
-a loss never whites you out, and your party is restored around every match. That makes them the
-game's training grounds. On a Hard Mode save the badge level caps apply to sim EXP like all other
-EXP, so the sims train you up to your cap, not past it.
+**Player cheats:** Start → CHEATS includes **Max BP** (refill to 9,999) and **Infinite BP ON/OFF** (saved toggle; BP automatically refills while exploring and BP-for-Shard exchange no longer deducts points). These cheats never count as normal-game acquisition evidence.
 
-| Mode | Where | Pays |
+| Battle Net mode | Location | Updated reward |
 |---|---|---|
-| **Scaling Type Trainer** — 2–4 Pokémon of a type you pick, a few levels below your party | Any terminal | 1 BP + a 30% Shard drop |
-| **Leader Sim** — replays any gym leader's HARD rematch; unlocks per region with that region's championship | Any terminal | 2 BP (no Shards or stones — those stay on the real gym visits) |
-| **Tower Streak** — up to 7 sims in a row against random types, best run on the records board | Flagship floor | 1 BP per win, +5 BP for a perfect run |
-| **Lv50 / Monotype / Little Cup rooms** — three-mon sims; your party has to match the rule | Flagship floor | 2 BP a win |
+| Scaling Type Trainer | Any terminal | 5 BP and 1 guaranteed Shard |
+| Leader Simulation | Any terminal, as previously unlocked | 10 BP, no signature stone |
+| Tower Streak | Flagship floor | 5 BP per win and 25 bonus BP for a perfect seven |
+| Level-50, Monotype, Little Cup | Flagship floor | 10 BP per win |
 
-**Every Pokémon Center lobby** — 50 rooms in all, covering the three regions, the Sevii Islands,
-the league lobbies, Mt. Silver, the Battle Frontier and the hub — has a **Battle Net wall
-terminal** beside the PC carrying the Scaling Type Trainer and Leader Sim, so the sim economy
-travels with you. The old Center 2Fs (and the link-era rooms they hosted) are sealed off; the hub's
-flagship floor gained a real staircase.
+Simulations continue to give full EXP with no ordinary money loss/whiteout; party healing before/after sims is preserved. Sim terminals still appear in the existing Pokémon Center lobbies.
 
 ## Character customization
 
