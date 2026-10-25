@@ -1026,3 +1026,13 @@ assert "#define WE_OW_ENCOUNTERS                        TRUE" in wild_config
 assert "#define OWE_SPAWNS_MAX                  4" in owe_header
 assert 'seteventmon SPECIES_DIANCIE, 18' in (root / "data/maps/GraniteCave_StevensRoom/scripts.inc").read_text()
 print("P0 cave ecology: no generated OWE swarms/idle chases, vanilla steps and static Diancie preserved PASS")
+
+# The CI mGBA acceptance wrapper must check the exact current assertion,
+# otherwise a fully passing runtime test would still fail the workflow.
+_diancie_ci = (root / ".github/workflows/P0-mGBA-Release-Smoke.yml").read_text()
+_diancie_suite = (root / "test/overworld/lua/WorldDiancieStatic.lua").read_text()
+_diancie_message = "Diancie is visible after Steven letter and two badges before Champion"
+assert _diancie_message in _diancie_suite
+assert _diancie_message in _diancie_ci
+assert "Diancie is visible after Steven letter before Champion" not in _diancie_ci
+print("P0 Diancie mGBA workflow: assertion text matches source, no false failure PASS")
