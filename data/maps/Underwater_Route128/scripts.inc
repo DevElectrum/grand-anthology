@@ -1,3 +1,57 @@
 Underwater_Route128_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, Underwater_Route128_AnthologyOnTransition
 	.byte 0
+
+
+Underwater_Route128_AnthologyOnTransition::
+	goto_if_unset FLAG_BADGE07_GET, Underwater_Route128_AnthologyHideKoraidon
+	goto_if_unset FLAG_DEFEATED_MAGMA_SPACE_CENTER, Underwater_Route128_AnthologyHideKoraidon
+	getcaughtmon SPECIES_KORAIDON
+	call_if_eq VAR_RESULT, TRUE, Underwater_Route128_AnthologyHideKoraidon
+	call_if_ne VAR_RESULT, TRUE, Underwater_Route128_AnthologyShowKoraidon
+	end
+
+Underwater_Route128_AnthologyHideKoraidon::
+	setflag FLAG_HIDE_ANTHOLOGY_KORAIDON
+	return
+
+Underwater_Route128_AnthologyShowKoraidon::
+	clearflag FLAG_HIDE_ANTHOLOGY_KORAIDON
+	return
+
+Underwater_Route128_AnthologyHideKoraidon::
+	setflag FLAG_HIDE_ANTHOLOGY_KORAIDON
+	return
+
+Underwater_Route128_AnthologyShowKoraidon::
+	clearflag FLAG_HIDE_ANTHOLOGY_KORAIDON
+	return
+
+Underwater_Route128_EventScript_Koraidon::
+	lock
+	faceplayer
+	playmoncry SPECIES_KORAIDON, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_KORAIDON, 45
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Underwater_Route128_AnthologyKoraidonRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Underwater_Route128_AnthologyKoraidonRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Underwater_Route128_AnthologyKoraidonResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Underwater_Route128_AnthologyKoraidonResolved
+	release
+	end
+
+Underwater_Route128_AnthologyKoraidonResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_KORAIDON
+	setflag FLAG_HIDE_ANTHOLOGY_KORAIDON
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Underwater_Route128_AnthologyKoraidonRetreated::
+	release
+	end
 

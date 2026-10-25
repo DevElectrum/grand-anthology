@@ -153,8 +153,8 @@
     {
       "local_id": "LOCALID_ANTHOLOGY_ZYGARDE",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(ZYGARDE_50_POWER_CONSTRUCT)",
-      "x": 15,
-      "y": 23,
+      "x": 14,
+      "y": 27,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
       "movement_range_x": 0,

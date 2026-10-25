@@ -9,7 +9,6 @@ Route110_OnResume:
 	end
 
 Route110_OnTransition:
-	call Route110_SecondBatchOnTransition
 	call Common_EventScript_SetupRivalGfxId
 	call Common_EventScript_SetupRivalOnBikeGfxId
 	call_if_eq VAR_CYCLING_CHALLENGE_STATE, 1, Route110_EventScript_SaveCyclingMusic
@@ -993,44 +992,3 @@ Route110_Text_KeepAnEyeOutForRival:
 	.string "See you again, {PLAYER}{KUN}!$"
 
 // Hoenn pre-League sites independent of the original story interactions.
-Route110_SecondBatchOnTransition::
-	getcaughtmon SPECIES_MIRAIDON
-	call_if_eq VAR_RESULT, TRUE, Route110_SecondBatchHideMiraidon
-	call_if_ne VAR_RESULT, TRUE, Route110_SecondBatchShowMiraidon
-	return
-
-Route110_SecondBatchHideMiraidon::
-	setflag FLAG_HIDE_ANTHOLOGY_MIRAIDON
-	return
-
-Route110_SecondBatchShowMiraidon::
-	clearflag FLAG_HIDE_ANTHOLOGY_MIRAIDON
-	return
-
-Route110_EventScript_Miraidon::
-	lock
-	faceplayer
-	playmoncry SPECIES_MIRAIDON, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_MIRAIDON, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route110_SecondBatchMiraidonRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route110_SecondBatchMiraidonRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route110_SecondBatchMiraidonResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route110_SecondBatchMiraidonResolved
-	release
-	end
-
-Route110_SecondBatchMiraidonResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_MIRAIDON
-	setflag FLAG_HIDE_ANTHOLOGY_MIRAIDON
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route110_SecondBatchMiraidonRetreated::
-	release
-	end

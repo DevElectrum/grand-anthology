@@ -720,49 +720,10 @@ Route111_Text_TrainerHillSign:
 // Independent rare statics: caught status persists in the National Dex.
 // Fainting permits a rematch after map re-entry. Preserve original route story.
 Route111_AnthologyOnTransition::
-	getcaughtmon SPECIES_KORAIDON
-	call_if_eq VAR_RESULT, TRUE, Route111_AnthologyHideKoraidon
-	call_if_ne VAR_RESULT, TRUE, Route111_AnthologyShowKoraidon
 	getcaughtmon SPECIES_HOOPA_CONFINED
 	call_if_eq VAR_RESULT, TRUE, Route111_AnthologyHideHoopa
 	call_if_ne VAR_RESULT, TRUE, Route111_AnthologyShowHoopa
 	return
-
-Route111_AnthologyHideKoraidon::
-	setflag FLAG_HIDE_ANTHOLOGY_KORAIDON
-	return
-
-Route111_AnthologyShowKoraidon::
-	clearflag FLAG_HIDE_ANTHOLOGY_KORAIDON
-	return
-
-Route111_EventScript_Koraidon::
-	lock
-	faceplayer
-	playmoncry SPECIES_KORAIDON, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_KORAIDON, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route111_AnthologyKoraidonRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route111_AnthologyKoraidonRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route111_AnthologyKoraidonResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route111_AnthologyKoraidonResolved
-	release
-	end
-
-Route111_AnthologyKoraidonResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_KORAIDON
-	setflag FLAG_HIDE_ANTHOLOGY_KORAIDON
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route111_AnthologyKoraidonRetreated::
-	release
-	end
 
 Route111_AnthologyHideHoopa::
 	setflag FLAG_HIDE_ANTHOLOGY_HOOPA
