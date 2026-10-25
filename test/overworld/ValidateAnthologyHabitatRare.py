@@ -442,7 +442,7 @@ _p0_new_statics = (
 ("SeafoamIslands_B2F_Frlg","SeafoamIslands_B2F","TapuFini","TAPU_FINI",14,4,"TAPU_FINI",False),
 ("Route128_AncientGrotto","Route128_AncientGrotto","Koraidon","KORAIDON",10,9,"KORAIDON",False),
 ("Route112","Route112","Okidogi","OKIDOGI",16,45,"OKIDOGI",False),
-("Route111_HoopaRingChamber","Route111_HoopaRingChamber","Hoopa","HOOPA_CONFINED",6,4,"HOOPA",False),
+("Route111_HoopaRingChamber","Route111_HoopaRingChamber","Hoopa","HOOPA_CONFINED",6,7,"HOOPA",False),
 ("Route111","Route111","TingLu","TING_LU",34,84,"TING_LU",False),
 ("MtChimney","MtChimney","Volcanion","VOLCANION",10,32,"VOLCANION",False),
 ("SealedChamber_OuterRoom","SealedChamber_OuterRoom","ChiYu","CHI_YU",16,15,"CHI_YU",False),

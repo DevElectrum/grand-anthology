@@ -19,7 +19,7 @@
       "local_id": "LOCALID_ANTHOLOGY_HOOPA",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(HOOPA_CONFINED)",
       "x": 6,
-      "y": 4,
+      "y": 7,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
       "movement_range_x": 0,
