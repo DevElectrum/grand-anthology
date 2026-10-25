@@ -188,8 +188,12 @@ enum
     // specials: a menu opened from a special is asynchronous, so the script would read
     // VAR_RESULT before the player ever picked. The specials stay pure data.
     MULTI_BNET_STARTER_STONE,
+    MULTI_BNET_STARTER_STONE_2,
     MULTI_BNET_VENDOR_STONE,
     MULTI_BNET_VENDOR_STONE_2,
+    MULTI_BNET_VENDOR_STONE_3,
+    MULTI_BNET_VENDOR_STONE_4,
+    MULTI_BNET_VENDOR_STONE_5,
     MULTI_BNET_SHARD_COLOR,
     // Battle Net P3: sim terminal + streak attendant menus. The three type pages
     // hold 6 types each in sBnetTypes order (src/battle_net.c) - index 6 pages,
