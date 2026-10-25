@@ -396,10 +396,4 @@ OlivineLighthouse_Text_AmphyBreathingLabored:
 OlivineLighthouse_Text_AmphyPaluPalulu:
 	.string "AMPHY: Palu! Palulu!$"
 
-// Independent special encounter flags; keep native events authoritative.
-OlivineCity_Lighthouse_AnthologyOnTransition::
-	getcaughtmon SPECIES_COBALION
-	call_if_eq VAR_RESULT, TRUE, OlivineCity_Lighthouse_AnthologyHideCobalion
-	call_if_ne VAR_RESULT, TRUE, OlivineCity_Lighthouse_AnthologyShowCobalion
-	return
 
