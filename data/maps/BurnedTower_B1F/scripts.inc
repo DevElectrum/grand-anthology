@@ -218,3 +218,7 @@ BurnedTower_B1F_EventScript_Item_UltraBall::
 
 
 // Restore uncaught statics on entry; let the original map scripts run.
+
+// Legacy beast-awakening callback: Spectrier moved to Cliff Cave.
+BurnedTower_B1F_AnthologyOnTransition::
+	return

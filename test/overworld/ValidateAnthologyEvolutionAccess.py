@@ -88,6 +88,9 @@ for family_file in family_files:
                 family_file.name, match.group(1), target, "no offline item evolution")
 
 assert len(trade_edges) >= 30, f"Trade-edge audit unexpectedly shrank: {len(trade_edges)}"
+# One-time story scrolls are exempt from the universal shop inventory.
+# They remain valid item evolutions; their independent acquisition is checked above.
+evolution_items.difference_update({"ITEM_SCROLL_OF_DARKNESS", "ITEM_SCROLL_OF_WATERS"})
 for shop in shops:
     inventory = set(re.findall(r"\.2byte\s+(ITEM_[A-Z0-9_]+)", source(shop)))
     # The same item is named Upgrade / Up-Grade in different generations.
