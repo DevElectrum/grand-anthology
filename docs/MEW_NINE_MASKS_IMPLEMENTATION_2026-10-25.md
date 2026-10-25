@@ -43,3 +43,19 @@
 - `data/specials.inc`: registers the new special functions, appended to avoid renumbering existing specials.
 
 **Implementation-only handoff:** The user explicitly prohibited testing in this pass. No build, emulator run, or validation was requested or performed. The commit is source implementation, not independently verified gameplay acceptance.
+
+
+## Manual graphical mGBA acceptance, October 25, 2026
+
+**Player-reported on Nyx, testing the public-main Mew gauntlet with a disposable edited save.** The test save required a follow-up correction to its **Kanto badge flags** so the high-level borrowed party would obey. This badge problem was a testing-save construction error, not a gameplay defect in the gauntlet.
+
+**Confirmed in play:**
+
+- All three disguised rounds advanced consecutively: **Tapu Bulu (weak) → Volcanion (medium) → Rayquaza (strong)**.
+- Poké Ball use was unavailable against all three disguises.
+- The fourth battle was against genuine Mew; the player had the option to catch it.
+- Player **fainted Mew** instead of capturing it. Afterward the overworld Mew object was **still present**, matching the catch-only completion design.
+
+**Not yet claimed as verified:** capturing Mew and proving its object disappears and remains absent after leaving/re-entering and save/reload; flee/loss/teleport paths; HP/PP/status carry-over measured directly; each of the other 23 random ordered triples. Do not mark these as tested or claim complete capture persistence based on Mew being fainted. This was a real player/manual pass, not an automated emulator result.
+
+The encounter's initial multi-battle sequence and catch gating have direct manual gameplay evidence. No gameplay code changes were required from this reported pass.
