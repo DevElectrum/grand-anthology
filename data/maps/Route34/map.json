@@ -289,7 +289,7 @@
       "local_id": "LOCALID_ANTHOLOGY_KUBFU_EAST",
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(KUBFU)",
       "x": 39,
-      "y": 34,
+      "y": 33,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
       "movement_range_x": 0,
