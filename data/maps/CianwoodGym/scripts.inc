@@ -94,7 +94,7 @@ CianwoodGym_EventScript_ScrollComplete::
 	end
 
 CianwoodGym_Text_WaterScrollReward:
-	.string "WAHAHA! You earned the WATER\\n"
+	.string "WAHAHA! You earned the WATER\n"
 	.string "scroll from our Gym challenge!$"
 
 

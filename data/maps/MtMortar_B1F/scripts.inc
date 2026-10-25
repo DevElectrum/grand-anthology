@@ -58,7 +58,7 @@ MountMortar4_EventScript_GiveDarkScroll::
 	end
 
 MountMortar4_Text_DarkScrollReward:
-	.string "The DARKNESS scroll is yours!\\n"
+	.string "The DARKNESS scroll is yours!\n"
 	.string "Train each KUBFU wisely.$"
 
 
