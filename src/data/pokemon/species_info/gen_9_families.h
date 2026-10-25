@@ -8511,7 +8511,7 @@ const struct SpeciesInfo gSpeciesInfoGen9[] =
         .levelUpLearnset = sTerapagosLevelUpLearnset,
         .teachableLearnset = sTerapagosTeachableLearnset,
         .formSpeciesIdTable = sTerapagosFormSpeciesIdTable,
-        .formChangeTable = sTerapagosFormChangeTable,
+        .formChangeTable = sTerapagosPermanentStellarFormChangeTable,
     },
 #endif //P_FAMILY_TERAPAGOS
 
