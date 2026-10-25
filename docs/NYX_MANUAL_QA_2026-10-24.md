@@ -2,7 +2,7 @@
 
 **Observed:** 24 October 2026, Pop!_OS, graphical mGBA 0.10.2 (Nyx).
 **Source under manual test:** public `main` at approximately `bd135e1`, plus an **uncommitted, local-only** test branch editing the two Littleroot Town sign scripts. This is not a normal story run and is not a separately published ROM.
-**Status:** Diancie scripted encounter manually verified with prerequisite flags supplied through the local test shortcut. Automatic cave-wild-spawn restriction is a subsequent change and has not been manually retested here.
+**Status:** Diancie scripted encounter manually verified with prerequisite flags supplied through the local test shortcut. The later cave-wild-spawn restriction and the Kanto Route 5 daycare entrance/NPCs have now also been manually checked; detailed limits are recorded below.
 
 ## Manually passed
 
@@ -30,6 +30,26 @@ During this manual test, the user observed **moving ordinary wild Pokémon sprit
 Code inspection confirmed `WE_VANILLA_RANDOM = TRUE` and `WE_OW_ENCOUNTERS = TRUE`, with a nominal maximum of **four generated OWE slots** (`OWE_SPAWNS_MAX = 4`). The report does not prove more than four generated OWEs were simultaneously active: other object sprites, transient effects, and encounter replacement would require a separate count to diagnose.
 
 **Follow-up implementation:** the cave-only spawn guard in `src/wild_encounter_ow.c` blocks generated OWEs on `MAP_TYPE_UNDERGROUND` maps and clears any active generated OWEs during update. Standard step-based encounters remain enabled globally. Scripted static encounters are not targeted. This is an intentionally scoped fix and must be verified in play.
+
+## Further Nyx manual verification (24 October 2026 local session)
+
+**Cave ecology fix on updated public `main`, commit `919cbfd`, gameplay mGBA 0.10.2:**
+
+- Ordinary wild encounters **still occur while walking** on eligible cave encounter tiles.
+- Generated roaming wild Pokémon sprites no longer appear/crowd cave rooms.
+- Standing still did not trigger a wild battle during the user's observation period. This is observed no-battle behavior, not a mathematical guarantee for indefinite time.
+- An authored Legendary **Ting-Lu overworld sprite remains visible** at Granite Cave B2F (player screenshot), independently confirming that the generated-OWE suppression did not indiscriminately remove authored statics. **Ting-Lu's battle itself was not tested.**
+
+**Kanto Route 5 daycare, local-only Littleroot sign shortcut (same graphical mGBA):**
+
+- Town sign warped to Route 5 exterior just south of the daycare entrance at `(23,26)`.
+- The user **entered the daycare building using its actual door**, rather than the direct-to-interior fallback shortcut.
+- The **original caretaker plus both additional NPCs** were visible, and **all three responded to interaction**.
+- Two NPCs offered Pokémon deposit dialogue, matching the original one-Pokémon caretaker and the newly added two-parent deposit service.
+- This confirms real in-game doorway access, three NPC presence, and interaction/dialogue availability. **It does not yet demonstrate accepted deposits, a compatible pair, generated Egg, pickup, hatching, or the resulting Phione.**
+- The mGBA synthetic Route 5 Save/Continue navigation fixture still fails **3/4 at its door step**, despite this normal gameplay PASS. Keep it flagged as a test-fixture problem, not a daycare gameplay regression.
+
+**Reproduction hygiene:** These checks used local-only sign shortcuts and disposable/backup saves; they are not normal story progression proof. Do not put the altered Littleroot sign scripts on public `main`. Keep the user's starter save and test saves separately.
 
 ## Existing automated test remains blocked
 
