@@ -717,7 +717,7 @@ gSpecials::
 	def_special UpdateBattleNetStreak
 	def_special BufferBattleNetStreak
 
-// Pokémon Mansion: four-stage Mew illusion encounter.
+@ Pokémon Mansion: four-stage Mew illusion encounter.
 	def_special MewGauntletRollDisguises
 	def_special MewGauntletPrepareBattle
 	def_special BattleSetup_StartMewGauntletBattle, waitstate=1

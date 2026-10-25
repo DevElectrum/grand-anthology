@@ -123,20 +123,20 @@ PokemonMansion_1F_EventScript_Mew::
 	goto PokemonMansion_1F_AnthologyMewRetreated
 
 PokemonMansion_1F_Text_MewChallenge::
-	.string "MEW looks at you curiously...\\p"
+	.string "MEW looks at you curiously...\p"
 	.string "It begins to change shape!$"
 
 PokemonMansion_1F_Text_MewDisguise::
-	.string "MEW transformed into\\n"
+	.string "MEW transformed into\n"
 	.string "{STR_VAR_1}!$"
 
 PokemonMansion_1F_Text_MewDisguiseAgain::
-	.string "The illusion fades...\\p"
-	.string "MEW transformed into\\n"
+	.string "The illusion fades...\p"
+	.string "MEW transformed into\n"
 	.string "{STR_VAR_1}!$"
 
 PokemonMansion_1F_Text_MewRevealed::
-	.string "All three illusions are gone!\\p"
+	.string "All three illusions are gone!\p"
 	.string "The real MEW appeared!$"
 
 PokemonMansion_1F_AnthologyMewResolved::
