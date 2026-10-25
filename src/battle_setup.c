@@ -663,6 +663,19 @@ void BattleSetup_StartScriptedWildBattle(void)
     TryUpdateGymLeaderRematchFromWild();
 }
 
+void BattleSetup_StartRoyalDuoBattle(void)
+{
+    if (RefuseScriptedWildBattleIfPartyless())
+        return;
+    LockPlayerFieldControls();
+    gMain.savedCallback = CB2_EndScriptedWildBattle;
+    gBattleTypeFlags = BATTLE_TYPE_DOUBLE | BATTLE_TYPE_LEGENDARY;
+    CreateBattleStartTask(GetWildBattleTransition(), 0);
+    IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    IncrementGameStat(GAME_STAT_WILD_BATTLES);
+    IncrementDailyWildBattles();
+}
+
 void BattleSetup_StartScriptedDoubleWildBattle(void)
 {
     if (RefuseScriptedWildBattleIfPartyless())
@@ -868,6 +881,8 @@ static void CB2_EndWildBattle(void)
 
 static void CB2_EndScriptedWildBattle(void)
 {
+    // Also reset on defeat/whiteout, when the event script may not resume.
+    FlagClear(FLAG_ANTHOLOGY_ROYAL_DUO_NO_CATCH);
     CpuFill16(0, (void *)(BG_PLTT), BG_PLTT_SIZE);
     ResetOamRange(0, 128);
 
