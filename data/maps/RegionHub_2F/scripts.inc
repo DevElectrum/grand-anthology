@@ -8,70 +8,12 @@ RegionHub_2F_MapScripts::
 
 @ ---------- Director: free Mega Ring + one starter-line stone, first visit as a champion ----------
 BattleNet_EventScript_Director::
-	lock
-	faceplayer
-	goto_if_set FLAG_BNET_DIRECTOR_INTRO, BattleNet_EventScript_DirectorRepeat
-	msgbox BattleNet_Text_DirectorIntro, MSGBOX_DEFAULT
-	@ The MEGA RING is POCKET_KEY_ITEMS and this is its ONLY source in the ROM, so a silent
-	@ giveitem failure would kill Mega Evolution permanently. Check space before giving.
-	@ Ring failures get their own text: the player was just offered the MEGA RING, and the
-	@ shared "free stone" line left it ambiguous whether the RING was given.
-	checkitemspace ITEM_MEGA_RING, 1
-	goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_DirectorRingBagFull
-	giveitem ITEM_MEGA_RING
-	goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_DirectorRingBagFull
-	@ The ring is handed over HERE, so its guard flag advances HERE. It used to be set only
-	@ after a confirmed stone give, so both non-give exits below returned with the flag clear
-	@ and the next talk re-ran the intro and printed another ring. checkitemspace does not
-	@ stop that: BagPocket_GetFreeSpaceForItem uses MAX_BAG_ITEM_CAPACITY for KEY ITEMS too,
-	@ so already holding a ring still reports space.
-	setflag FLAG_BNET_DIRECTOR_INTRO
-@ The starter stone gets its OWN flag so declining it (or hitting a full pocket) leaves it
-@ claimable on a later talk. Re-entered from DirectorRepeat / DirectorRegiveRing.
-BattleNet_EventScript_DirectorStoneOffer::
-	msgbox BattleNet_Text_DirectorStoneOffer, MSGBOX_DEFAULT
-	@ Script-level multichoice, NOT a special: a menu opened from a special is asynchronous,
-	@ so the script would read VAR_RESULT before the player picked. multichoice blocks.
-	multichoice 0, 0, MULTI_BNET_STARTER_STONE, FALSE
-	special BattleNetStarterStoneFromChoice  @ VAR_RESULT index -> VAR_0x8008 item, VAR_RESULT 1/0
-	goto_if_eq VAR_RESULT, 0, BattleNet_EventScript_DirectorStoneLater
-	giveitem VAR_0x8008
-	goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_DirectorBagFull
-	setflag FLAG_BNET_DIRECTOR_STONE
-	msgbox BattleNet_Text_DirectorDone, MSGBOX_DEFAULT
-	release
-	end
-BattleNet_EventScript_DirectorStoneLater::
-	msgbox BattleNet_Text_DirectorStoneLater, MSGBOX_DEFAULT
-	release
-	end
-BattleNet_EventScript_DirectorBagFull::
-	msgbox BattleNet_Text_DirectorBagFull, MSGBOX_DEFAULT
-	release
-	end
-BattleNet_EventScript_DirectorRingBagFull::
-	msgbox BattleNet_Text_DirectorRingBagFull, MSGBOX_DEFAULT
-	release
-	end
-BattleNet_EventScript_DirectorRepeat::
-	@ Self-heal: a save from before the checkitemspace guard above could have had the ring
-	@ silently eaten while the intro flag was still set. Re-give it if it is missing.
-	checkitem ITEM_MEGA_RING, 1
-	goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_DirectorRegiveRing
-	@ Stone still unclaimed (declined, or a full pocket last time) -> re-offer it.
-	goto_if_unset FLAG_BNET_DIRECTOR_STONE, BattleNet_EventScript_DirectorStoneOffer
-	msgbox BattleNet_Text_DirectorRepeat, MSGBOX_DEFAULT
-	release
-	end
-
-BattleNet_EventScript_DirectorRegiveRing::
-	checkitemspace ITEM_MEGA_RING, 1
-	goto_if_eq VAR_RESULT, FALSE, BattleNet_EventScript_DirectorRingBagFull
-	giveitem ITEM_MEGA_RING
-	goto_if_unset FLAG_BNET_DIRECTOR_STONE, BattleNet_EventScript_DirectorStoneOffer
-	msgbox BattleNet_Text_DirectorRepeat, MSGBOX_DEFAULT
-	release
-	end
+    lock
+    faceplayer
+    call BattleNet_EventScript_ThirdGymMegaGift
+    msgbox BattleNet_Text_DirectorRepeat, MSGBOX_DEFAULT
+    release
+    end
 
 @ ---------- Stone vendor: the 10 non-drop stones for shards (any color mix) ----------
 BattleNet_EventScript_StoneVendor::
@@ -86,17 +28,39 @@ BattleNet_EventScript_StoneVendor::
 @ script rebased page 2 with `addvar VAR_RESULT, 5` and the special saw an absolute index, where
 @ rows 5 and 6 were valid sVendorStones[] entries - BLAZIKENITE and SWAMPERTITE.)
 BattleNet_EventScript_VendorLoop::
-	setvar VAR_0x8005, 0
-	multichoice 0, 0, MULTI_BNET_VENDOR_STONE, FALSE
-	goto_if_eq VAR_RESULT, 5, BattleNet_EventScript_VendorPage2
-	goto_if_ge VAR_RESULT, 6, BattleNet_EventScript_VendorDone
-	goto BattleNet_EventScript_VendorBuy
+    setvar VAR_0x8005, 0
+    multichoice 0, 0, MULTI_BNET_VENDOR_STONE, FALSE
+    goto_if_eq VAR_RESULT, 5, BattleNet_EventScript_VendorPage2
+    goto_if_ge VAR_RESULT, 6, BattleNet_EventScript_VendorDone
+    goto BattleNet_EventScript_VendorBuy
 
 BattleNet_EventScript_VendorPage2::
-	setvar VAR_0x8005, 1
-	multichoice 0, 0, MULTI_BNET_VENDOR_STONE_2, FALSE
-	goto_if_eq VAR_RESULT, 5, BattleNet_EventScript_VendorLoop
-	goto_if_ge VAR_RESULT, 6, BattleNet_EventScript_VendorDone
+    setvar VAR_0x8005, 1
+    multichoice 0, 0, MULTI_BNET_VENDOR_STONE_2, FALSE
+    goto_if_eq VAR_RESULT, 5, BattleNet_EventScript_VendorPage3
+    goto_if_ge VAR_RESULT, 6, BattleNet_EventScript_VendorDone
+    goto BattleNet_EventScript_VendorBuy
+
+BattleNet_EventScript_VendorPage3::
+    setvar VAR_0x8005, 2
+    multichoice 0, 0, MULTI_BNET_VENDOR_STONE_3, FALSE
+    goto_if_eq VAR_RESULT, 5, BattleNet_EventScript_VendorPage4
+    goto_if_ge VAR_RESULT, 6, BattleNet_EventScript_VendorDone
+    goto BattleNet_EventScript_VendorBuy
+
+BattleNet_EventScript_VendorPage4::
+    setvar VAR_0x8005, 3
+    multichoice 0, 0, MULTI_BNET_VENDOR_STONE_4, FALSE
+    goto_if_eq VAR_RESULT, 5, BattleNet_EventScript_VendorPage5
+    goto_if_ge VAR_RESULT, 6, BattleNet_EventScript_VendorDone
+    goto BattleNet_EventScript_VendorBuy
+
+BattleNet_EventScript_VendorPage5::
+    setvar VAR_0x8005, 4
+    multichoice 0, 0, MULTI_BNET_VENDOR_STONE_5, FALSE
+    goto_if_eq VAR_RESULT, 1, BattleNet_EventScript_VendorLoop
+    goto_if_ge VAR_RESULT, 2, BattleNet_EventScript_VendorDone
+    goto BattleNet_EventScript_VendorBuy
 
 BattleNet_EventScript_VendorBuy::
 	special BattleNetVendorStoneFromChoice  @ index -> VAR_0x8008 item, VAR_0x8009 price, VAR_RESULT 1/0
@@ -229,7 +193,7 @@ BattleNet_EventScript_StreakCleared:
 	@ VAR_RESULT = bonus BP actually applied. Anything short of the full bonus means the
 	@ 9999 cap ate part of it (or the wins payout was itself only partly applied), so the
 	@ "7 BP plus a 5 BP bonus" line would be promising BP the player never received.
-	goto_if_ne VAR_RESULT, BNET_STREAK_BONUS, BattleNet_EventScript_StreakPerfectCapped
+	goto_if_ne VAR_RESULT, 25, BattleNet_EventScript_StreakPerfectCapped
 	msgbox BattleNet_Text_StreakPerfect, MSGBOX_DEFAULT
 	goto BattleNet_EventScript_StreakMenu
 BattleNet_EventScript_StreakPerfectCapped:
@@ -299,7 +263,7 @@ BattleNet_Text_DirectorStoneOffer:
 	.string "POKéMON line - on the house!$"
 BattleNet_Text_DirectorDone:
 	.string "Shards buy the rest at our vendor.\n"
-	.string "Leaders on HARD rematches drop their\l"
+	.string "Leaders on rematches drop their\l"
 	.string "signature stones - go collect them all!$"
 BattleNet_Text_DirectorStoneLater:
 	.string "Changed your mind? Come back anytime\n"
@@ -312,14 +276,14 @@ BattleNet_Text_DirectorRingBagFull:
 	.string "I can hand you the MEGA RING.$"
 BattleNet_Text_DirectorRepeat:
 	.string "How's the MEGA RING treating you?\p"
-	.string "HARD rematch wins pay shards, and\n"
+	.string "rematch wins pay shards, and\n"
 	.string "each leader's first drops a stone.$"
 BattleNet_Text_VendorIntro:
 	.string "MEGA STONES for SHARDS - any color\n"
 	.string "spends the same here.$"
 BattleNet_Text_VendorPoor:
 	.string "Not enough SHARDS, sorry.\p"
-	.string "HARD rematches, the sim terminals,\n"
+	.string "rematches, the sim terminals,\n"
 	.string "and cave corners all pay out.$"
 BattleNet_Text_VendorBagFull:
 	.string "No BAG space for it!$"
@@ -329,7 +293,7 @@ BattleNet_Text_VendorBye:
 	.string "Go mega-size something!$"
 BattleNet_Text_BpClerkIntro:
 	.string "I exchange BATTLE POINTS for SHARDS.\n"
-	.string "4 BP per SHARD, any color.$"
+	.string "2 BP per SHARD, any color.$"
 BattleNet_Text_BpClerkPoor:
 	.string "You need at least 4 BP.$"
 BattleNet_Text_BpClerkAnother:
@@ -340,7 +304,7 @@ BattleNet_Text_BpClerkBye:
 @ stones + the champion trio's MEWTWONITE pair. Opaque "/39" and "/30" read as noise.
 BattleNet_Text_Records:
 	.string "BATTLE NET RECORDS\p"
-	.string "Total HARD rematch wins: {STR_VAR_1}\p"
+	.string "Total rematch wins: {STR_VAR_1}\p"
 	.string "Leaders, ELITE FOUR and champions\n"
 	.string "bested on HARD: {STR_VAR_2}/39\p"
 	.string "Signature MEGA STONES claimed:\n"
@@ -363,7 +327,7 @@ BattleNet_Text_StreakWinN:
 	.string "Win {STR_VAR_1} of 7!$"
 BattleNet_Text_StreakEnded:
 	.string "Run over - {STR_VAR_1} straight wins.\n"
-	.string "1 BP paid per win.$"
+	.string "5 BP paid per win.$"
 BattleNet_Text_StreakNoWins:
 	.string "Run over - no wins this time,\n"
 	.string "so no BP. Try again!$"
@@ -377,7 +341,7 @@ BattleNet_Text_RoomWonCapped:
 	.string "at 9,999. No BP added.$"
 BattleNet_Text_StreakPerfect:
 	.string "A PERFECT 7!\p"
-	.string "7 BP for the wins plus a 5 BP bonus.\n"
+	.string "35 BP for wins, plus a 25 BP bonus.\n"
 	.string "The records board will remember this.$"
 BattleNet_Text_StreakPerfectCapped:
 	.string "A PERFECT 7!\p"
@@ -389,7 +353,7 @@ BattleNet_Text_StreakNoParty:
 	.string "detected in your party.$"
 BattleNet_Text_RoomWon:
 	.string "RULESET CLEARED - you win!\n"
-	.string "2 BATTLE POINTS awarded.$"
+	.string "10 BATTLE POINTS awarded.$"
 BattleNet_Text_RoomLost:
 	.string "The room's champion sim holds.\n"
 	.string "No BP this time.$"
