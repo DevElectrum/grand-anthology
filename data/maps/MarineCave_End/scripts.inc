@@ -15,7 +15,7 @@ MarineCave_End_EventScript_TryRemoveKyogre::
 
 MarineCave_End_OnTransition:
 	getcaughtmon SPECIES_KYOGRE
-	call_if_eq VAR_RESULT, TRUE, MarineCave_End_NativeKYOGRECaught
+	goto_if_eq VAR_RESULT, TRUE, MarineCave_End_NativeKYOGRECaught
 	getcaughtmon SPECIES_RAYQUAZA
 	call_if_eq VAR_RESULT, TRUE, MarineCave_End_NativeKYOGREUncaught
 	call_if_ne VAR_RESULT, TRUE, MarineCave_End_NativeKYOGRELocked

@@ -809,14 +809,15 @@ for _loc, _prefix, _species, _defeated, _hide in _native_legendary_persistence:
     _native=(root/"data/maps"/_loc/"scripts.inc").read_text()
     _base=f"{_prefix}_Native{_species}"
     assert "getcaughtmon SPECIES_"+_species in _native
-    assert f"call_if_eq VAR_RESULT, TRUE, {_base}Caught" in _native
     if _species in ("GROUDON", "KYOGRE"):
+        assert f"goto_if_eq VAR_RESULT, TRUE, {_base}Caught" in _native
         assert "getcaughtmon SPECIES_RAYQUAZA" in _native
         assert f"call_if_eq VAR_RESULT, TRUE, {_base}Uncaught" in _native
         assert f"call_if_ne VAR_RESULT, TRUE, {_base}Locked" in _native
         assert f"{_base}Locked::" in _native
         assert "setflag "+_hide in _native.split(f"{_base}Locked::")[1]
     else:
+        assert f"call_if_eq VAR_RESULT, TRUE, {_base}Caught" in _native
         assert f"call_if_ne VAR_RESULT, TRUE, {_base}Uncaught" in _native
     _caught=_native.split(f"{_base}Caught::")[1].split(f"{_base}Uncaught::")[0]
     _uncaught=_native.split(f"{_base}Uncaught::")[1]

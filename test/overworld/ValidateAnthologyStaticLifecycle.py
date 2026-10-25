@@ -394,3 +394,61 @@ for _map, _name, _species, _suffix, _prereqs in _hunt:
     run(_labels, _entry, _reloaded)
     assert _hide in _reloaded.flags, (_name, "reappeared after save/revisit")
 print("P0 Ogerpon + Loyal Three + Pecharunt: independent gates, retry, capture and save/revisit source interpretation PASS")
+
+for area, species, hide in (
+    ("TerraCave_End", "GROUDON", "FLAG_HIDE_TERRA_CAVE_GROUDON"),
+    ("MarineCave_End", "KYOGRE", "FLAG_HIDE_MARINE_CAVE_KYOGRE"),
+):
+    entry = area + "_OnTransition"
+    scripts = blocks(area)
+    player = Save()
+    run(scripts, entry, player)
+    assert hide in player.flags, (area, "Rayquaza not yet caught")
+    player.caught.add("SPECIES_RAYQUAZA")
+    run(scripts, entry, player)
+    assert hide not in player.flags, (area, "caught Rayquaza unlocks native cavern")
+    player.caught.add("SPECIES_" + species)
+    run(scripts, entry, player)
+    assert hide in player.flags, (area, "caught legendary must not respawn")
+print("P0 Hoenn weather trio: prerequisite and permanent catch persistence PASS")
+
+location_gates = (
+    ("PetalburgWoods", "PetalburgWoods_AnthologyOnTransition",
+     "FLAG_HIDE_ANTHOLOGY_ZYGARDE_10", (), None, "FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_10"),
+    ("MeteorFalls_1F_1R", "MeteorFalls_1F_1R_AnthologyOnTransition",
+     "FLAG_HIDE_ANTHOLOGY_ZYGARDE", ("FLAG_BADGE06_GET",), None, "FLAG_CAUGHT_ANTHOLOGY_ZYGARDE"),
+    ("Underwater_Route128", "Underwater_Route128_AnthologyOnTransition",
+     "FLAG_HIDE_ANTHOLOGY_KORAIDON", ("FLAG_BADGE07_GET", "FLAG_DEFEATED_MAGMA_SPACE_CENTER"), None, "SPECIES_KORAIDON"),
+    ("NewMauville_Inside", "NewMauville_Inside_AnthologyOnTransition",
+     "FLAG_HIDE_ANTHOLOGY_MIRAIDON", ("FLAG_BADGE07_GET", "FLAG_DEFEATED_MAGMA_SPACE_CENTER"), 2, "SPECIES_MIRAIDON"),
+    ("MossdeepCity_SpaceCenter_1F", "MossdeepCity_SpaceCenter_1F_AnthologyOnTransition",
+     "FLAG_HIDE_ANTHOLOGY_LATIOS", ("FLAG_DEFEATED_MAGMA_SPACE_CENTER",), None, "SPECIES_LATIOS"),
+)
+for area, transition, hide, prereqs, generator, claimed in location_gates:
+    scripts = blocks(area)
+    state = Save(flags={hide})
+    if prereqs or generator is not None:
+        run(scripts, transition, state)
+        assert hide in state.flags, (area, "early gate")
+    state.flags.update(prereqs)
+    if generator is not None:
+        state.variables["VAR_NEW_MAUVILLE_STATE"] = generator
+    run(scripts, transition, state)
+    assert hide not in state.flags, (area, "unlocked")
+    if claimed.startswith("SPECIES_"):
+        state.caught.add(claimed)
+    else:
+        state.flags.add(claimed)
+    run(scripts, transition, state)
+    assert hide in state.flags, (area, "caught/form flag must hide permanently")
+print("P0 Hoenn location/form gates: both Zygarde forms, cover legendaries and Latios PASS")
+
+birth = blocks("BirthIsland_Exterior")
+harbor = (ROOT / "data/maps/LilycoveCity_Harbor/scripts.inc").read_text()
+assert "getcaughtmon SPECIES_DEOXYS_NORMAL" in (ROOT / "data/maps/BirthIsland_Exterior/scripts.inc").read_text()
+assert "BirthIsland_Exterior_EventScript_Triangle" in birth
+assert "goto_if_eq VAR_RESULT, TRUE, LilycoveCity_Harbor_EventScript_SailorBirthIsland" in harbor
+assert "getcaughtmon SPECIES_RAYQUAZA" in harbor
+assert "warp MAP_BIRTH_ISLAND_HARBOR, 8, 4" in harbor
+assert "setvar VAR_FERRY_DEPARTURE, FERRY_DEPART_LILYCOVE" in harbor
+print("P0 Deoxys: native triangle plus ticket-free Rayquaza ferry source contract PASS")

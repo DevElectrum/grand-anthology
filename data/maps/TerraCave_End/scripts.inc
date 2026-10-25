@@ -15,7 +15,7 @@ TerraCave_End_EventScript_TryRemoveGroudon::
 
 TerraCave_End_OnTransition:
 	getcaughtmon SPECIES_GROUDON
-	call_if_eq VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONCaught
+	goto_if_eq VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONCaught
 	getcaughtmon SPECIES_RAYQUAZA
 	call_if_eq VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONUncaught
 	call_if_ne VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONLocked
