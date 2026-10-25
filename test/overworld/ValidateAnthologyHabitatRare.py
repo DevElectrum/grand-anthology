@@ -1092,7 +1092,9 @@ print("P0 Johto Swords: four early/mid reachable statics, western Mt Mortar acce
 # A moved static must not leave dead transition labels or undefined call targets
 # behind on a former map; source-level checks run before the costly ROM link.
 _olivine = (root/"data/maps/OlivineCity_Lighthouse/scripts.inc").read_text()
-assert "OlivineCity_Lighthouse_AnthologyOnTransition::" not in _olivine
+assert "OlivineCity_Lighthouse_AnthologyOnTransition::" in _olivine
+assert "getcaughtmon SPECIES_REGIELEKI" in _olivine
+assert "FLAG_AMPHAROS_HEALED" in _olivine
 assert "OlivineCity_Lighthouse_AnthologyHideCobalion" not in _olivine
 assert "OlivineCity_Lighthouse_AnthologyShowCobalion" not in _olivine
 print("P0 relocated Cobalion: no dangling old-map event references PASS")
