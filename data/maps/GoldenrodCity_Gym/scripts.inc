@@ -72,6 +72,7 @@ GoldenrodCity_Gym_EventScript_WhitneyBadge::
 	call Common_EventScript_PlayGymBadgeFanfare
 	msgbox GoldenrodCity_Gym_Text_WhitneyPlainBadge, MSGBOX_DEFAULT
 	setflag FLAG_JOHTO_BADGE_3
+	call BattleNet_EventScript_ThirdGymMegaGift
 	setflag FLAG_DEFEATED_GOLDENROD_CITY_GYM
 	addvar VAR_NUM_BADGES, 1
 	setvar VAR_0x8008, 3
@@ -92,6 +93,7 @@ GoldenrodCity_Gym_EventScript_GiveTM::
 GoldenrodCity_Gym_EventScript_WhitneyDefeated::
 	lock
 	faceplayer
+	call BattleNet_EventScript_ThirdGymMegaGift
 	goto_if_unset FLAG_GOT_TM_ATTRACT, GoldenrodCity_Gym_EventScript_GiveTM
 	goto_if_set FLAG_JOHTO_CHAMPION, GoldenrodCity_Gym_EventScript_OfferRematch
 	msgbox GoldenrodCity_Gym_Text_WhitneyGoodCry, MSGBOX_DEFAULT
