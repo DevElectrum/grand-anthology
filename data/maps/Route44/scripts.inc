@@ -165,9 +165,6 @@ Route44_Text_Sign2:
 
 // Rare encounter locations near their original home regions.
 Route44_AnthologyOnTransition::
-	getcaughtmon SPECIES_KYUREM
-	call_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideKyurem
-	call_if_ne VAR_RESULT, TRUE, Route44_AnthologyShowKyurem
 	getcaughtmon SPECIES_ETERNATUS
 	call_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideEternatus
 	call_if_ne VAR_RESULT, TRUE, Route44_AnthologyShowEternatus
@@ -175,42 +172,6 @@ Route44_AnthologyOnTransition::
 	call_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideGlastrierJohto
 	call_if_ne VAR_RESULT, TRUE, Route44_AnthologyShowGlastrierJohto
 	return
-
-Route44_AnthologyHideKyurem::
-	setflag FLAG_HIDE_ANTHOLOGY_KYUREM
-	return
-
-Route44_AnthologyShowKyurem::
-	clearflag FLAG_HIDE_ANTHOLOGY_KYUREM
-	return
-
-Route44_EventScript_Kyurem::
-	lock
-	faceplayer
-	playmoncry SPECIES_KYUREM, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_KYUREM, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route44_AnthologyKyuremRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route44_AnthologyKyuremRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route44_AnthologyKyuremResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route44_AnthologyKyuremResolved
-	release
-	end
-
-Route44_AnthologyKyuremResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_KYUREM
-	setflag FLAG_HIDE_ANTHOLOGY_KYUREM
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route44_AnthologyKyuremRetreated::
-	release
-	end
 
 Route44_AnthologyHideEternatus::
 	setflag FLAG_HIDE_ANTHOLOGY_ETERNATUS
