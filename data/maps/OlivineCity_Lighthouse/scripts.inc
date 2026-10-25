@@ -6,6 +6,7 @@ OlivineCity_Lighthouse_MapScripts::
 	.byte 0
 
 OlivineCity_Lighthouse_OnTransition::
+	call OlivineCity_Lighthouse_AnthologyOnTransition
 	end
 
 OlivineLighthouse_EventScript_Item_Ether::
@@ -397,3 +398,42 @@ OlivineLighthouse_Text_AmphyPaluPalulu:
 	.string "AMPHY: Palu! Palulu!$"
 
 
+
+OlivineCity_Lighthouse_AnthologyOnTransition::
+	goto_if_unset FLAG_AMPHAROS_HEALED, OlivineCity_Lighthouse_HideRegieleki
+	getcaughtmon SPECIES_REGIELEKI
+	goto_if_eq VAR_RESULT, TRUE, OlivineCity_Lighthouse_HideRegieleki
+	clearflag FLAG_HIDE_ANTHOLOGY_REGIELEKI
+	return
+
+OlivineCity_Lighthouse_HideRegieleki::
+	setflag FLAG_HIDE_ANTHOLOGY_REGIELEKI
+	return
+
+OlivineCity_Lighthouse_EventScript_Regieleki::
+	lock
+	faceplayer
+	playmoncry SPECIES_REGIELEKI, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_REGIELEKI, 37
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, OlivineCity_Lighthouse_RegielekiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, OlivineCity_Lighthouse_RegielekiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, OlivineCity_Lighthouse_RegielekiResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, OlivineCity_Lighthouse_RegielekiResolved
+	release
+	end
+
+OlivineCity_Lighthouse_RegielekiResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_REGIELEKI
+	setflag FLAG_HIDE_ANTHOLOGY_REGIELEKI
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+OlivineCity_Lighthouse_RegielekiRetreated::
+	release
+	end

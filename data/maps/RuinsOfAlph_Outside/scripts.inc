@@ -161,9 +161,6 @@ RuinsOfAlph_Outside_AnthologyOnTransition::
 	getcaughtmon SPECIES_ZAMAZENTA
 	call_if_eq VAR_RESULT, TRUE, RuinsOfAlph_Outside_AnthologyHideZamazenta
 	call_if_ne VAR_RESULT, TRUE, RuinsOfAlph_Outside_AnthologyShowZamazenta
-	getcaughtmon SPECIES_REGIELEKI
-	call_if_eq VAR_RESULT, TRUE, RuinsOfAlph_Outside_AnthologyHideRegieleki
-	call_if_ne VAR_RESULT, TRUE, RuinsOfAlph_Outside_AnthologyShowRegieleki
 	return
 
 RuinsOfAlph_Outside_AnthologyHideZamazenta::
@@ -202,38 +199,3 @@ RuinsOfAlph_Outside_AnthologyZamazentaRetreated::
 	release
 	end
 
-RuinsOfAlph_Outside_AnthologyHideRegieleki::
-	setflag FLAG_HIDE_ANTHOLOGY_REGIELEKI
-	return
-
-RuinsOfAlph_Outside_AnthologyShowRegieleki::
-	clearflag FLAG_HIDE_ANTHOLOGY_REGIELEKI
-	return
-
-RuinsOfAlph_Outside_EventScript_Regieleki::
-	lock
-	faceplayer
-	playmoncry SPECIES_REGIELEKI, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_REGIELEKI, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, RuinsOfAlph_Outside_AnthologyRegielekiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, RuinsOfAlph_Outside_AnthologyRegielekiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RuinsOfAlph_Outside_AnthologyRegielekiResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, RuinsOfAlph_Outside_AnthologyRegielekiResolved
-	release
-	end
-
-RuinsOfAlph_Outside_AnthologyRegielekiResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_REGIELEKI
-	setflag FLAG_HIDE_ANTHOLOGY_REGIELEKI
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-RuinsOfAlph_Outside_AnthologyRegielekiRetreated::
-	release
-	end

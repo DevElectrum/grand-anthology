@@ -2,8 +2,13 @@
 .set LOCALID_DEN_CLAIR, 35
 
 DragonsDen_Cavern_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, DragonsDen_Cavern_OnTransition
 	@map_script MAP_SCRIPT_ON_FRAME_TABLE, DragonsDen_Cavern_OnFrame
 	.byte 0
+
+DragonsDen_Cavern_OnTransition::
+	call DragonsDen_Cavern_AnthologyOnTransition
+	end
 
 DragonsDen_Cavern_OnFrame::
 	map_script_2 VAR_BLACKTHORN_CITY_STATE, 3, DragonsDen_Cavern_EventScript_Clair
@@ -275,3 +280,41 @@ DragonsDen_Cavern_Text_TwinsLeaandPia2Beaten:
 DragonsDen_Cavern_Text_TwinsLeaandPia2After:
     .string "We'll tell on you.\p"
     .string "MASTER will be angry with you.$"
+
+DragonsDen_Cavern_AnthologyOnTransition::
+	getcaughtmon SPECIES_REGIDRAGO
+	goto_if_eq VAR_RESULT, TRUE, DragonsDen_Cavern_HideRegidrago
+	clearflag FLAG_HIDE_ANTHOLOGY_REGIDRAGO
+	return
+
+DragonsDen_Cavern_HideRegidrago::
+	setflag FLAG_HIDE_ANTHOLOGY_REGIDRAGO
+	return
+
+DragonsDen_Cavern_EventScript_Regidrago::
+	lock
+	faceplayer
+	playmoncry SPECIES_REGIDRAGO, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_REGIDRAGO, 46
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, DragonsDen_Cavern_RegidragoRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, DragonsDen_Cavern_RegidragoRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, DragonsDen_Cavern_RegidragoResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, DragonsDen_Cavern_RegidragoResolved
+	release
+	end
+
+DragonsDen_Cavern_RegidragoResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_REGIDRAGO
+	setflag FLAG_HIDE_ANTHOLOGY_REGIDRAGO
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+DragonsDen_Cavern_RegidragoRetreated::
+	release
+	end

@@ -3,7 +3,6 @@ Route45_MapScripts::
 	.byte 0
 
 Route45_OnTransition::
-	call Route45_BigBatchOnTransition
 	end
 
 Route45_EventScript_Erik::
@@ -187,44 +186,3 @@ Route45_Text_Sign:
     .string "MOUNTAIN RD. AHEAD$"
 
 // Multi-location acquisition batch: preserve canonical map scripts.
-Route45_BigBatchOnTransition::
-	getcaughtmon SPECIES_REGIDRAGO
-	call_if_eq VAR_RESULT, TRUE, Route45_BigBatchHideRegidrago
-	call_if_ne VAR_RESULT, TRUE, Route45_BigBatchShowRegidrago
-	return
-
-Route45_BigBatchHideRegidrago::
-	setflag FLAG_HIDE_ANTHOLOGY_REGIDRAGO
-	return
-
-Route45_BigBatchShowRegidrago::
-	clearflag FLAG_HIDE_ANTHOLOGY_REGIDRAGO
-	return
-
-Route45_EventScript_Regidrago::
-	lock
-	faceplayer
-	playmoncry SPECIES_REGIDRAGO, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_REGIDRAGO, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route45_BigBatchRegidragoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route45_BigBatchRegidragoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route45_BigBatchRegidragoResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route45_BigBatchRegidragoResolved
-	release
-	end
-
-Route45_BigBatchRegidragoResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_REGIDRAGO
-	setflag FLAG_HIDE_ANTHOLOGY_REGIDRAGO
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route45_BigBatchRegidragoRetreated::
-	release
-	end
