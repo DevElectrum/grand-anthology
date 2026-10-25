@@ -286,10 +286,10 @@ NewMauville_Inside_EventScript_AnnexCancel::
 	end
 
 NewMauville_Inside_Text_AnnexEntrance:
-	.string "The auxiliary generator annex\\n"
-	.string "has unlocked at last.\\p"
+	.string "The auxiliary generator annex\n"
+	.string "has unlocked at last.\p"
 	.string "Enter the sealed annex?$"
 
 NewMauville_Inside_Text_AnnexSealed:
-	.string "A sealed generator annex.\\n"
+	.string "A sealed generator annex.\n"
 	.string "The security display is still red.$"

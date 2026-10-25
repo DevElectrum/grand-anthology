@@ -23,10 +23,10 @@ Underwater_Route128_EventScript_GrottoCancel::
 	end
 
 Underwater_Route128_Text_GrottoEntrance:
-	.string "Behind the sea-worn rock, an\\n"
-	.string "ancient cavern lies hidden.\\p"
+	.string "Behind the sea-worn rock, an\n"
+	.string "ancient cavern lies hidden.\p"
 	.string "Enter the grotto?$"
 
 Underwater_Route128_Text_GrottoSealed:
-	.string "A deep current blocks the grotto.\\n"
+	.string "A deep current blocks the grotto.\n"
 	.string "Its ancient seal has not faded.$"

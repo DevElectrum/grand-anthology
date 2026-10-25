@@ -777,10 +777,10 @@ Route111_EventScript_RingCancel::
 	end
 
 Route111_Text_RingEntrance:
-	.string "A golden ring shimmers beside\\n"
-	.string "Mirage Tower's ancient ruins.\\p"
+	.string "A golden ring shimmers beside\n"
+	.string "Mirage Tower's ancient ruins.\p"
 	.string "Enter the Ring Chamber?$"
 
 Route111_Text_RingNotReady:
-	.string "The ring is dormant. It seems to\\n"
+	.string "The ring is dormant. It seems to\n"
 	.string "await a seasoned desert explorer.$"
