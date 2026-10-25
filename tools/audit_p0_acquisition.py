@@ -141,6 +141,16 @@ for path in (ROOT/"data/maps").glob("*/scripts.inc"):
     for mon in re.findall(r"(?m)^\s*(?:setwildbattle|seteventmon|givepokemon|givemon)\s+SPECIES_([A-Z0-9_]+)\b",text):
         add(loc,mon,"script")
 
+# Mew's Mansion catch is now a special four-battle gauntlet, rather than a
+# seteventmon instruction. The disguise species cannot be caught; only the
+# final Mew grants a source route when the capture branch is actually present.
+mew_mansion = read("data/maps/PokemonMansion_1F_Frlg/scripts.inc")
+mew_preparation = read("src/script_pokemon_util.c")
+if ("special MewGauntletPrepareBattle" in mew_mansion
+    and "goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_AnthologyMewResolved" in mew_mansion
+    and "{SPECIES_MEW, 35," in mew_preparation):
+    add("MAP_POKEMON_MANSION_1F", "MEW", "script_mew_gauntlet")
+
 # Starter menu source is useful but not independent runtime proof.
 for named in set(re.findall(r"\bSPECIES_([A-Z0-9_]+)\b",read("src/starter_choose.c"))):
     mon = actual_species(named)
