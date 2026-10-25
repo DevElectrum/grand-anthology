@@ -580,4 +580,9 @@
 // Bill's receipt is separate from Celadon's Kanto Eevee flag. Formerly unused.
 #define FLAG_GOT_BILLS_EEVEE                        FLAG_JOHTO_SLICE(0x25e)
 
+// Approved one-time exploration rewards, no new save-format fields.
+#define FLAG_GOT_SCROLL_OF_WATERS                  FLAG_JOHTO_SLICE(0x25f)
+#define FLAG_GOT_SCROLL_OF_DARKNESS                FLAG_JOHTO_SLICE(0x260)
+#define FLAG_ITEM_RUINSOFALPH_REINS_OF_UNITY      FLAG_JOHTO_SLICE(0x261)
+
 #endif // GUARD_CONSTANTS_JOHTO_FLAGS_H

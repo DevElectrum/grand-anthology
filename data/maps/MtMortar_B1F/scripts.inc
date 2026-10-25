@@ -43,10 +43,23 @@ MountMortar4_EventScript_KiyoTryGiveTyrogue::
 	waitfanfare
 	setflag FLAG_GOT_TYROGUE
 MountMortar4_EventScript_KiyoAfter::
+	goto_if_unset FLAG_GOT_SCROLL_OF_DARKNESS, MountMortar4_EventScript_GiveDarkScroll
 	msgbox MountMortar4_Text_KiyoGotTyrogue, MSGBOX_DEFAULT
 	closemessage
 	release
 	end
+
+MountMortar4_EventScript_GiveDarkScroll::
+	msgbox MountMortar4_Text_DarkScrollReward, MSGBOX_DEFAULT
+	giveitem ITEM_SCROLL_OF_DARKNESS
+	goto_if_eq VAR_RESULT, FALSE, Common_EventScript_ShowBagIsFull
+	setflag FLAG_GOT_SCROLL_OF_DARKNESS
+	release
+	end
+
+MountMortar4_Text_DarkScrollReward:
+	.string "The DARKNESS scroll is yours!\\n"
+	.string "Train each KUBFU wisely.$"
 
 
 MountMortar4_Text_KiyoIntro:

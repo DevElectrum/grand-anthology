@@ -80,8 +80,22 @@ CianwoodGym_EventScript_GiveTM::
 	setflag FLAG_GOT_TM_FOCUS_PUNCH
 	msgbox CianwoodGym_Text_ChuckTMSpeech, MSGBOX_DEFAULT
 	closemessage
+	goto CianwoodGym_EventScript_GiveWaterScroll
+	end
+
+CianwoodGym_EventScript_GiveWaterScroll::
+	goto_if_set FLAG_GOT_SCROLL_OF_WATERS, CianwoodGym_EventScript_ScrollComplete
+	msgbox CianwoodGym_Text_WaterScrollReward, MSGBOX_DEFAULT
+	giveitem ITEM_SCROLL_OF_WATERS
+	goto_if_eq VAR_RESULT, FALSE, Common_EventScript_ShowBagIsFull
+	setflag FLAG_GOT_SCROLL_OF_WATERS
+CianwoodGym_EventScript_ScrollComplete::
 	release
 	end
+
+CianwoodGym_Text_WaterScrollReward:
+	.string "WAHAHA! You earned the WATER\\n"
+	.string "scroll from our Gym challenge!$"
 
 
 CianwoodGym_EventScript_ChuckAtDojo::
@@ -116,6 +130,7 @@ CianwoodGym_EventScript_Chuck_Battle3::
 
 CianwoodGym_EventScript_Chuck_Defeated::
 	goto_if_unset FLAG_GOT_TM_FOCUS_PUNCH, CianwoodGym_EventScript_GiveTM
+	goto_if_unset FLAG_GOT_SCROLL_OF_WATERS, CianwoodGym_EventScript_GiveWaterScroll
 	goto_if_set FLAG_JOHTO_CHAMPION, CianwoodGym_EventScript_OfferRematch
 	msgbox CianwoodGym_Text_ChuckAfter, MSGBOX_DEFAULT
 	closemessage

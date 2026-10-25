@@ -491,3 +491,8 @@ RuinsOfAlph_EventScript_Item_LumBerry2::
 RuinsOfAlph_EventScript_Item_WaterStone::
 	finditem ITEM_WATER_STONE
 	end
+
+// Aerodactyl/Flash reward room; existing puzzle and rewards remain intact.
+RuinsOfAlph_EventScript_Item_ReinsOfUnity::
+	finditem ITEM_REINS_OF_UNITY
+	end

@@ -37,17 +37,33 @@ assert "required[dn >> 3] |= 1 << (dn & 7)" in pokedex
 assert "GetSetPokedexFlag(dn, FLAG_GET_CAUGHT)" in pokedex
 print("P0 anthology evolution access and national completion source guards: PASS")
 
-# The zero-price important/key-item Kubfu scrolls previously listed in marts
-# were not reliable purchases. Both are ordinary purchasable evolution items.
+# Kubfu's two ordinary evolution items are one-time exploration rewards,
+# not mass-sold merchandise. Both independently obtainable in Johto.
 for item in ("SCROLL_OF_DARKNESS", "SCROLL_OF_WATERS"):
     block = source("src/data/items.h").split(f"[ITEM_{item}] =", 1)[1].split("\n    },", 1)[0]
     assert ".price = 6000," in block
     assert ".pocket = POCKET_ITEMS," in block
     assert ".importance = 1," not in block
     assert "ItemUseOutOfBattle_EvolutionStone" in block
-for item in ["FIRE_STONE","WATER_STONE","THUNDER_STONE","LEAF_STONE","MOON_STONE","SUN_STONE","SHINY_STONE","DAWN_STONE","ICE_STONE","METAL_COAT","KINGS_ROCK","DRAGON_SCALE","UP_GRADE","DUBIOUS_DISC","PRISM_SCALE","DEEP_SEA_TOOTH","DEEP_SEA_SCALE","ELECTIRIZER","MAGMARIZER","PROTECTOR","REAPER_CLOTH","RAZOR_CLAW","RAZOR_FANG","LINKING_CORD","OVAL_STONE","TART_APPLE","SWEET_APPLE","SYRUPY_APPLE","GALARICA_CUFF","GALARICA_WREATH","PEAT_BLOCK","BLACK_AUGURITE","METAL_ALLOY","SCROLL_OF_DARKNESS","SCROLL_OF_WATERS","STRAWBERRY_SWEET","LOVE_SWEET","BERRY_SWEET","CLOVER_SWEET","FLOWER_SWEET","STAR_SWEET","RIBBON_SWEET","CRACKED_POT","CHIPPED_POT","UNREMARKABLE_TEACUP","MASTERPIECE_TEACUP"]:
+for item in ["FIRE_STONE","WATER_STONE","THUNDER_STONE","LEAF_STONE","MOON_STONE","SUN_STONE","SHINY_STONE","DAWN_STONE","ICE_STONE","METAL_COAT","KINGS_ROCK","DRAGON_SCALE","UP_GRADE","DUBIOUS_DISC","PRISM_SCALE","DEEP_SEA_TOOTH","DEEP_SEA_SCALE","ELECTIRIZER","MAGMARIZER","PROTECTOR","REAPER_CLOTH","RAZOR_CLAW","RAZOR_FANG","LINKING_CORD","OVAL_STONE","TART_APPLE","SWEET_APPLE","SYRUPY_APPLE","GALARICA_CUFF","GALARICA_WREATH","PEAT_BLOCK","BLACK_AUGURITE","METAL_ALLOY","STRAWBERRY_SWEET","LOVE_SWEET","BERRY_SWEET","CLOVER_SWEET","FLOWER_SWEET","STAR_SWEET","RIBBON_SWEET","CRACKED_POT","CHIPPED_POT","UNREMARKABLE_TEACUP","MASTERPIECE_TEACUP"]:
     assert f".2byte ITEM_{item}" in source(shops[1]), item
-print("P0 Goldenrod pre-League complete evolutionary item supplies and purchasable Kubfu scrolls PASS")
+print("P0 Goldenrod pre-League general evolutionary item supplies PASS")
+
+for item in ("SCROLL_OF_WATERS", "SCROLL_OF_DARKNESS"):
+    for shop in shops + ("data/maps/MahoganyTown_Shop/scripts.inc",):
+        assert f".2byte ITEM_{item}" not in source(shop), (shop, item)
+chuck = source("data/maps/CianwoodGym/scripts.inc")
+kiyo = source("data/maps/MtMortar_B1F/scripts.inc")
+assert "giveitem ITEM_SCROLL_OF_WATERS" in chuck
+assert "FLAG_GOT_SCROLL_OF_WATERS" in chuck
+assert "FLAG_DEFEATED_CIANWOOD_GYM" in chuck
+assert "giveitem ITEM_SCROLL_OF_DARKNESS" in kiyo
+assert "FLAG_GOT_SCROLL_OF_DARKNESS" in kiyo
+assert "FLAG_BEAT_KIYO" in kiyo
+ruins = source("data/maps/RuinsOfAlph_PuzzleAndRewardChambers/scripts.inc")
+assert "finditem ITEM_REINS_OF_UNITY" in ruins
+assert "ITEM_REINS_OF_UNITY" in source("src/data/items.h")
+print("P0 Johto Kubfu scroll rewards and Ruins of Alph Reins source guards PASS")
 
 
 # P0 offline-acquisition contract: a trade-specific evolution with no EVO_ITEM
