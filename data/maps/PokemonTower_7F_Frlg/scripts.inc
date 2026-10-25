@@ -1,5 +1,21 @@
 PokemonTower_7F_Frlg_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, PokemonTower_7F_OnTransition
 	.byte 0
+
+PokemonTower_7F_OnTransition::
+	call PokemonTower_7F_AnthologyOnTransition
+	end
+
+// The Rocket/Mr. Fuji rescue is native and unchanged. Darkrai remains hidden
+// until Fuji is actually rescued and Cresselia has been registered caught.
+PokemonTower_7F_AnthologyOnTransition::
+	goto_if_unset FLAG_RESCUED_MR_FUJI, PokemonTower_7F_AnthologyHideDarkrai
+	getcaughtmon SPECIES_CRESSELIA
+	goto_if_ne VAR_RESULT, TRUE, PokemonTower_7F_AnthologyHideDarkrai
+	getcaughtmon SPECIES_DARKRAI
+	call_if_eq VAR_RESULT, TRUE, PokemonTower_7F_AnthologyHideDarkrai
+	call_if_ne VAR_RESULT, TRUE, PokemonTower_7F_AnthologyShowDarkrai
+	return
 
 PokemonTower_7F_EventScript_MrFuji::
 	lock
@@ -279,4 +295,42 @@ PokemonTower_7F_Text_MrFujiThankYouFollowMe::
 	.string "concern.\p"
 	.string "Follow me to my home, POKéMON\n"
 	.string "HOUSE, at the foot of this tower.$"
+
+
+// Static encounter is on the 7F public aisle, separate from Fuji's script.
+PokemonTower_7F_AnthologyHideDarkrai::
+	setflag FLAG_HIDE_ANTHOLOGY_DARKRAI
+	return
+
+PokemonTower_7F_AnthologyShowDarkrai::
+	clearflag FLAG_HIDE_ANTHOLOGY_DARKRAI
+	return
+
+PokemonTower_7F_EventScript_Darkrai::
+	lock
+	faceplayer
+	playmoncry SPECIES_DARKRAI, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_DARKRAI, 45
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PokemonTower_7F_AnthologyDarkraiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PokemonTower_7F_AnthologyDarkraiRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonTower_7F_AnthologyDarkraiResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PokemonTower_7F_AnthologyDarkraiResolved
+	release
+	end
+
+PokemonTower_7F_AnthologyDarkraiResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_DARKRAI
+	setflag FLAG_HIDE_ANTHOLOGY_DARKRAI
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+PokemonTower_7F_AnthologyDarkraiRetreated::
+	release
+	end
 

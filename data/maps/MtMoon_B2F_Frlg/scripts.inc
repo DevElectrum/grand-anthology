@@ -7,6 +7,7 @@ MtMoon_B2F_OnTransition::
 	call_if_unset FLAG_GOT_DOME_FOSSIL, MtMoon_B2F_EventScript_ShowDomeFossil
 	call_if_set FLAG_GOT_HELIX_FOSSIL, MtMoon_B2F_EventScript_HideHelixFossil
 	call_if_unset FLAG_GOT_HELIX_FOSSIL, MtMoon_B2F_EventScript_ShowHelixFossil
+	call MtMoon_B2F_AnthologyOnTransition
 	end
 
 MtMoon_B2F_EventScript_ShowDomeFossil::
@@ -239,3 +240,51 @@ MtMoon_B2F_Text_JamesDefeat:
 MtMoon_B2F_Text_JessieJamesBlastOff:
 	.string "MEOWTH: We're blasting off\n"
 	.string "agaaain!$"
+
+// Giratina waits in Mt. Moon's remote cave after both creation siblings are caught.
+MtMoon_B2F_AnthologyOnTransition::
+	getcaughtmon SPECIES_DIALGA
+	goto_if_ne VAR_RESULT, TRUE, MtMoon_B2F_AnthologyHideGiratina
+	getcaughtmon SPECIES_PALKIA
+	goto_if_ne VAR_RESULT, TRUE, MtMoon_B2F_AnthologyHideGiratina
+	getcaughtmon SPECIES_GIRATINA
+	call_if_eq VAR_RESULT, TRUE, MtMoon_B2F_AnthologyHideGiratina
+	call_if_ne VAR_RESULT, TRUE, MtMoon_B2F_AnthologyShowGiratina
+	return
+
+MtMoon_B2F_AnthologyHideGiratina::
+	setflag FLAG_HIDE_ANTHOLOGY_GIRATINA
+	return
+
+MtMoon_B2F_AnthologyShowGiratina::
+	clearflag FLAG_HIDE_ANTHOLOGY_GIRATINA
+	return
+
+MtMoon_B2F_EventScript_Giratina::
+	lock
+	faceplayer
+	playmoncry SPECIES_GIRATINA, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_GIRATINA, 52
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMoon_B2F_AnthologyGiratinaRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMoon_B2F_AnthologyGiratinaRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B2F_AnthologyGiratinaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMoon_B2F_AnthologyGiratinaResolved
+	release
+	end
+
+MtMoon_B2F_AnthologyGiratinaResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_GIRATINA
+	setflag FLAG_HIDE_ANTHOLOGY_GIRATINA
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+MtMoon_B2F_AnthologyGiratinaRetreated::
+	release
+	end
+

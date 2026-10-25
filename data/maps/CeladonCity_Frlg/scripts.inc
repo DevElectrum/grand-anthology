@@ -4,7 +4,15 @@ CeladonCity_Frlg_MapScripts::
 
 CeladonCity_OnTransition::
 	setworldmapflag FLAG_WORLD_MAP_CELADON_CITY
+	call CeladonCity_AnthologyOnTransition
 	end
+
+// Tapu Lele may be discovered naturally in Celadon's flowers near Erika's Gym.
+CeladonCity_AnthologyOnTransition::
+	getcaughtmon SPECIES_TAPU_LELE
+	call_if_eq VAR_RESULT, TRUE, CeladonCity_AnthologyHideTapuLele
+	call_if_ne VAR_RESULT, TRUE, CeladonCity_AnthologyShowTapuLele
+	return
 
 CeladonCity_EventScript_LittleGirl::
 	msgbox CeladonCity_Text_GotMyKoffingInCinnabar, MSGBOX_NPC
@@ -215,4 +223,41 @@ CeladonCity_Text_SomeoneStoleSilphScope::
 	.string "I'm sure of it.\p"
 	.string "But I lost sight of him!\n"
 	.string "Where'd he go?$"
+
+
+CeladonCity_AnthologyHideTapuLele::
+	setflag FLAG_HIDE_ANTHOLOGY_TAPU_LELE
+	return
+
+CeladonCity_AnthologyShowTapuLele::
+	clearflag FLAG_HIDE_ANTHOLOGY_TAPU_LELE
+	return
+
+CeladonCity_EventScript_TapuLele::
+	lock
+	faceplayer
+	playmoncry SPECIES_TAPU_LELE, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_TAPU_LELE, 36
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, CeladonCity_AnthologyTapuLeleRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, CeladonCity_AnthologyTapuLeleRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, CeladonCity_AnthologyTapuLeleResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, CeladonCity_AnthologyTapuLeleResolved
+	release
+	end
+
+CeladonCity_AnthologyTapuLeleResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_TAPU_LELE
+	setflag FLAG_HIDE_ANTHOLOGY_TAPU_LELE
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+CeladonCity_AnthologyTapuLeleRetreated::
+	release
+	end
 

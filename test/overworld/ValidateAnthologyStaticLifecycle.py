@@ -294,3 +294,41 @@ caught = Save(flags={"FLAG_RELEASED_BEASTS"}, caught=set(done) | {"SPECIES_HO_OH
 run(tower, "TinTower_RoofDay_MapScript_HoohPostStoryGone", caught)
 assert "FLAG_HIDE_HO_OH" in caught.flags
 print("P0 native Ho-Oh after faint: immediate re-entry retry and permanent caught hide PASS")
+
+
+# Kanto's three formerly clustered Rock Tunnel encounters were relocated.
+# Verify caught-Dex gates, post-faint retry, and caught persistence without
+# assuming that matching Pokémon have to remain in the player's party.
+for new_map, entry, battle, hide, prereq in (
+    ("MtMoon_B2F_Frlg", "MtMoon_B2F_AnthologyOnTransition", "MtMoon_B2F_EventScript_Giratina",
+     "FLAG_HIDE_ANTHOLOGY_GIRATINA", {"SPECIES_DIALGA", "SPECIES_PALKIA"}),
+    ("PokemonTower_7F_Frlg", "PokemonTower_7F_AnthologyOnTransition", "PokemonTower_7F_EventScript_Darkrai",
+     "FLAG_HIDE_ANTHOLOGY_DARKRAI", {"SPECIES_CRESSELIA"}),
+    ("CeladonCity_Frlg", "CeladonCity_AnthologyOnTransition", "CeladonCity_EventScript_TapuLele",
+     "FLAG_HIDE_ANTHOLOGY_TAPU_LELE", set()),
+):
+    labels = blocks(new_map)
+    preflags = {"FLAG_RESCUED_MR_FUJI"} if "Darkrai" in battle else set()
+    missing = Save(flags=set(preflags))
+    run(labels, entry, missing)
+    if prereq:
+        assert hide in missing.flags, (new_map, "appeared before prerequisites")
+    eligible = Save(flags=set(preflags), caught=set(prereq))
+    run(labels, entry, eligible)
+    assert hide not in eligible.flags, (new_map, "hidden despite prerequisites")
+    run(labels, battle, eligible, "B_OUTCOME_WON")
+    assert hide in eligible.flags, (new_map, "fainted object did not hide")
+    run(labels, entry, eligible)
+    assert hide not in eligible.flags, (new_map, "fainted encounter cannot retry")
+    run(labels, battle, eligible, "B_OUTCOME_CAUGHT")
+    assert hide in eligible.flags, (new_map, "caught object did not hide")
+    run(labels, entry, eligible)
+    assert hide in eligible.flags, (new_map, "caught encounter respawned")
+    assert all(member in eligible.caught for member in prereq)
+assert "RockTunnel_B1F_EventScript_Giratina" not in (ROOT / "data/maps/RockTunnel_B1F_Frlg/scripts.inc").read_text()
+assert "RockTunnel_B1F_EventScript_Darkrai" not in (ROOT / "data/maps/RockTunnel_B1F_Frlg/scripts.inc").read_text()
+assert "RockTunnel_B1F_EventScript_TapuLele" not in (ROOT / "data/maps/RockTunnel_B1F_Frlg/scripts.inc").read_text()
+pre_fuji = Save(caught={"SPECIES_CRESSELIA"})
+run(blocks("PokemonTower_7F_Frlg"), "PokemonTower_7F_AnthologyOnTransition", pre_fuji)
+assert "FLAG_HIDE_ANTHOLOGY_DARKRAI" in pre_fuji.flags
+print("P0 Kanto relocated statics: caught prerequisite, Fuji rescue, KO/revisit and caught/revisit PASS")
