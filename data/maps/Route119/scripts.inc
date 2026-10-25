@@ -617,6 +617,7 @@ Route119_Text_TrainerTipsDecoration:
 // Special species sources added without replacing any canonical event or
 // scene. They respawn after a non-capture victory when the map is re-entered.
 Route119_AnthologyOnTransition::
+	call Route119_XerneasTransition
 	getcaughtmon SPECIES_RAGING_BOLT
 	call_if_eq VAR_RESULT, TRUE, Route119_AnthologyHideRagingBolt
 	call_if_ne VAR_RESULT, TRUE, Route119_AnthologyShowRagingBolt
@@ -655,5 +656,43 @@ Route119_AnthologyRagingBoltResolved::
 	end
 
 Route119_AnthologyRagingBoltRetreated::
+	release
+	end
+
+Route119_XerneasTransition::
+	getcaughtmon SPECIES_XERNEAS
+	goto_if_eq VAR_RESULT, TRUE, Route119_HideXerneas
+	clearflag FLAG_HIDE_ANTHOLOGY_XERNEAS
+	return
+
+Route119_HideXerneas::
+	setflag FLAG_HIDE_ANTHOLOGY_XERNEAS
+	return
+
+Route119_EventScript_Xerneas::
+	lock
+	faceplayer
+	playmoncry SPECIES_XERNEAS, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_XERNEAS, 35
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route119_XerneasRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route119_XerneasRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route119_XerneasResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route119_XerneasResolved
+	release
+	end
+
+Route119_XerneasResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_XERNEAS
+	setflag FLAG_HIDE_ANTHOLOGY_XERNEAS
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route119_XerneasRetreated::
 	release
 	end

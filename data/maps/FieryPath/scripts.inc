@@ -17,49 +17,10 @@ FieryPath_EventScript_MoveScottToFallarbor::
 // Cluster-first optional statics. The original cave boulders, passage,
 // weather, and Team Magma stories remain controlled by their native scripts.
 FieryPath_AnthologyOnTransition::
-	getcaughtmon SPECIES_VOLCANION
-	call_if_eq VAR_RESULT, TRUE, FieryPath_AnthologyHideVolcanion
-	call_if_ne VAR_RESULT, TRUE, FieryPath_AnthologyShowVolcanion
 	getcaughtmon SPECIES_CHI_YU
 	call_if_eq VAR_RESULT, TRUE, FieryPath_AnthologyHideChiYu
 	call_if_ne VAR_RESULT, TRUE, FieryPath_AnthologyShowChiYu
 	return
-
-FieryPath_AnthologyHideVolcanion::
-	setflag FLAG_HIDE_ANTHOLOGY_VOLCANION
-	return
-
-FieryPath_AnthologyShowVolcanion::
-	clearflag FLAG_HIDE_ANTHOLOGY_VOLCANION
-	return
-
-FieryPath_EventScript_Volcanion::
-	lock
-	faceplayer
-	playmoncry SPECIES_VOLCANION, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_VOLCANION, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, FieryPath_AnthologyVolcanionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, FieryPath_AnthologyVolcanionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, FieryPath_AnthologyVolcanionResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, FieryPath_AnthologyVolcanionResolved
-	release
-	end
-
-FieryPath_AnthologyVolcanionResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_VOLCANION
-	setflag FLAG_HIDE_ANTHOLOGY_VOLCANION
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-FieryPath_AnthologyVolcanionRetreated::
-	release
-	end
 
 FieryPath_AnthologyHideChiYu::
 	setflag FLAG_HIDE_ANTHOLOGY_CHI_YU

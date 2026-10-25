@@ -433,9 +433,6 @@ Route120_Text_RouteSign121:
 // scene. They respawn after a non-capture victory when the map is re-entered.
 // Hoenn pre-League sites independent of the original story interactions.
 Route120_SecondBatchOnTransition::
-	getcaughtmon SPECIES_XERNEAS
-	call_if_eq VAR_RESULT, TRUE, Route120_SecondBatchHideXerneas
-	call_if_ne VAR_RESULT, TRUE, Route120_SecondBatchShowXerneas
 	getcaughtmon SPECIES_IRON_LEAVES
 	call_if_eq VAR_RESULT, TRUE, Route120_SecondBatchHideIronLeaves
 	call_if_ne VAR_RESULT, TRUE, Route120_SecondBatchShowIronLeaves
@@ -443,42 +440,6 @@ Route120_SecondBatchOnTransition::
 	call_if_eq VAR_RESULT, TRUE, Route120_SecondBatchHideLatios
 	call_if_ne VAR_RESULT, TRUE, Route120_SecondBatchShowLatios
 	return
-
-Route120_SecondBatchHideXerneas::
-	setflag FLAG_HIDE_ANTHOLOGY_XERNEAS
-	return
-
-Route120_SecondBatchShowXerneas::
-	clearflag FLAG_HIDE_ANTHOLOGY_XERNEAS
-	return
-
-Route120_EventScript_Xerneas::
-	lock
-	faceplayer
-	playmoncry SPECIES_XERNEAS, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_XERNEAS, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route120_SecondBatchXerneasRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route120_SecondBatchXerneasRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_SecondBatchXerneasResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route120_SecondBatchXerneasResolved
-	release
-	end
-
-Route120_SecondBatchXerneasResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_XERNEAS
-	setflag FLAG_HIDE_ANTHOLOGY_XERNEAS
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route120_SecondBatchXerneasRetreated::
-	release
-	end
 
 Route120_SecondBatchHideIronLeaves::
 	setflag FLAG_HIDE_ANTHOLOGY_IRON_LEAVES

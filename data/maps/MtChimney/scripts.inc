@@ -4,6 +4,7 @@ MtChimney_MapScripts::
 	.byte 0
 
 MtChimney_OnTransition:
+	call MtChimney_VolcanionTransition
 	setvar VAR_JAGGED_PASS_ASH_WEATHER, 1
 	end
 
@@ -851,3 +852,41 @@ MtChimney_Text_SawyerRematchDefeat:
 MtChimney_Text_SawyerPostRematch:
 	.string "Actually, it really is hot here.\n"
 	.string "I'm overdressed for these parts.$"
+
+MtChimney_VolcanionTransition::
+	getcaughtmon SPECIES_VOLCANION
+	goto_if_eq VAR_RESULT, TRUE, MtChimney_HideVolcanion
+	clearflag FLAG_HIDE_ANTHOLOGY_VOLCANION
+	return
+
+MtChimney_HideVolcanion::
+	setflag FLAG_HIDE_ANTHOLOGY_VOLCANION
+	return
+
+MtChimney_EventScript_Volcanion::
+	lock
+	faceplayer
+	playmoncry SPECIES_VOLCANION, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_VOLCANION, 32
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtChimney_VolcanionRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtChimney_VolcanionRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtChimney_VolcanionResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtChimney_VolcanionResolved
+	release
+	end
+
+MtChimney_VolcanionResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_VOLCANION
+	setflag FLAG_HIDE_ANTHOLOGY_VOLCANION
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+MtChimney_VolcanionRetreated::
+	release
+	end
