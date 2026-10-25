@@ -47,6 +47,7 @@ SootopolisCity_OnTransition:
 	call_if_eq VAR_SOOTOPOLIS_CITY_STATE, 4, SootopolisCity_EventScript_SetExitCaveOfOriginObjPos
 	call_if_eq VAR_SOOTOPOLIS_CITY_STATE, 5, SootopolisCity_EventScript_SetOutsideGymObjPos
 	call_if_eq VAR_SOOTOPOLIS_CITY_STATE, 6, SootopolisCity_EventScript_SetExpertBlockCaveEntrance
+	call_if_set FLAG_HOENN_CHAMPION, SootopolisCity_EventScript_ReopenCaveForChampion
 	end
 
 SootopolisCity_EventScript_HideMapNamePopup::
@@ -138,6 +139,10 @@ SootopolisCity_EventScript_SetWallaceLeft::
 
 SootopolisCity_EventScript_SetExpertBlockCaveEntrance::
 	setobjectxyperm LOCALID_SOOTOPOLIS_EXPERT, 31, 18
+	return
+
+SootopolisCity_EventScript_ReopenCaveForChampion::
+	setobjectxyperm LOCALID_SOOTOPOLIS_EXPERT, 30, 18
 	return
 
 SootopolisCity_OnWarp:
@@ -661,6 +666,7 @@ SootopolisCity_Movement_UnusedPanBack:
 SootopolisCity_EventScript_CaveOfOriginExpert::
 	lock
 	faceplayer
+	goto_if_set FLAG_HOENN_CHAMPION, SootopolisCity_EventScript_ExpertChampion
 	goto_if_ge VAR_SOOTOPOLIS_CITY_STATE, 6, SootopolisCity_EventScript_ExpertPostLegendaries
 	goto_if_eq VAR_SOOTOPOLIS_CITY_STATE, 5, SootopolisCity_EventScript_ExpertLegendaries
 	goto_if_ge VAR_SOOTOPOLIS_CITY_STATE, 2, SootopolisCity_EventScript_ExpertLeadToCave
@@ -675,6 +681,11 @@ SootopolisCity_EventScript_ExpertLeadToCave::
 
 SootopolisCity_EventScript_ExpertPostLegendaries::
 	msgbox SootopolisCity_Text_CaveOfOriginSleepsToo, MSGBOX_DEFAULT
+	release
+	end
+
+SootopolisCity_EventScript_ExpertChampion::
+	msgbox SootopolisCity_Text_CaveOfOriginChampion, MSGBOX_DEFAULT
 	release
 	end
 
@@ -1521,6 +1532,10 @@ SootopolisCity_Text_AwakenedPokemonClash:
 	.string "The clash between the two awakened\n"
 	.string "POKéMON was quelled by the awakening\l"
 	.string "of a third POKéMON…$"
+
+SootopolisCity_Text_CaveOfOriginChampion:
+	.string "CHAMPION, the CAVE OF ORIGIN has\n"
+	.string "opened its depths to you once more.$"
 
 SootopolisCity_Text_CaveOfOriginSleepsToo:
 	.string "This is the CAVE OF ORIGIN…\p"
