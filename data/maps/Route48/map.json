@@ -102,20 +102,6 @@
       "trainer_sight_or_berry_tree_id": "0",
       "script": "NULL",
       "flag": "0"
-    },
-    {
-      "local_id": "LOCALID_ANTHOLOGY_ZACIAN",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(ZACIAN)",
-      "x": 8,
-      "y": 15,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_WALK_IN_PLACE_DOWN",
-      "movement_range_x": 0,
-      "movement_range_y": 0,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "Route48_EventScript_Zacian",
-      "flag": "FLAG_HIDE_ANTHOLOGY_ZACIAN"
     }
   ],
   "warp_events": [],
