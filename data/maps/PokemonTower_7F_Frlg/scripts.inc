@@ -334,7 +334,7 @@ PokemonTower_7F_AnthologyDarkraiRetreated::
 	release
 	end
 
-\n
+
 Anthology_MegaStone_DARKRANITE::
     getcaughtmon SPECIES_DARKRAI
     goto_if_ne VAR_RESULT, TRUE, Anthology_MegaStone_DARKRANITE_Locked
