@@ -79,16 +79,65 @@ PokemonMansion_1F_EventScript_Mew::
 	faceplayer
 	playmoncry SPECIES_MEW, CRY_MODE_ENCOUNTER
 	waitmoncry
-	seteventmon SPECIES_MEW, 35
-	special BattleSetup_StartLegendaryBattle
+	msgbox PokemonMansion_1F_Text_MewChallenge, MSGBOX_DEFAULT
+	special MewGauntletRollDisguises
+	setvar VAR_0x8004, 0
+	special MewGauntletPrepareBattle
+	msgbox PokemonMansion_1F_Text_MewDisguise, MSGBOX_DEFAULT
+	playmoncry VAR_0x8005, CRY_MODE_ENCOUNTER
+	waitmoncry
+	special BattleSetup_StartMewGauntletBattle
 	waitstate
 	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PokemonMansion_1F_AnthologyMewRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PokemonMansion_1F_AnthologyMewRetreated
+	goto_if_ne VAR_RESULT, B_OUTCOME_WON, PokemonMansion_1F_AnthologyMewRetreated
+
+	setvar VAR_0x8004, 1
+	special MewGauntletPrepareBattle
+	msgbox PokemonMansion_1F_Text_MewDisguiseAgain, MSGBOX_DEFAULT
+	playmoncry VAR_0x8005, CRY_MODE_ENCOUNTER
+	waitmoncry
+	special BattleSetup_StartMewGauntletBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_ne VAR_RESULT, B_OUTCOME_WON, PokemonMansion_1F_AnthologyMewRetreated
+
+	setvar VAR_0x8004, 2
+	special MewGauntletPrepareBattle
+	msgbox PokemonMansion_1F_Text_MewDisguiseAgain, MSGBOX_DEFAULT
+	playmoncry VAR_0x8005, CRY_MODE_ENCOUNTER
+	waitmoncry
+	special BattleSetup_StartMewGauntletBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_ne VAR_RESULT, B_OUTCOME_WON, PokemonMansion_1F_AnthologyMewRetreated
+
+	setvar VAR_0x8004, 3
+	special MewGauntletPrepareBattle
+	msgbox PokemonMansion_1F_Text_MewRevealed, MSGBOX_DEFAULT
+	playmoncry SPECIES_MEW, CRY_MODE_ENCOUNTER
+	waitmoncry
+	special BattleSetup_StartMewGauntletBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_AnthologyMewResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PokemonMansion_1F_AnthologyMewResolved
-	release
-	end
+	goto PokemonMansion_1F_AnthologyMewRetreated
+
+PokemonMansion_1F_Text_MewChallenge::
+	.string "MEW looks at you curiously...\\p"
+	.string "It begins to change shape!$"
+
+PokemonMansion_1F_Text_MewDisguise::
+	.string "MEW transformed into\\n"
+	.string "{STR_VAR_1}!$"
+
+PokemonMansion_1F_Text_MewDisguiseAgain::
+	.string "The illusion fades...\\p"
+	.string "MEW transformed into\\n"
+	.string "{STR_VAR_1}!$"
+
+PokemonMansion_1F_Text_MewRevealed::
+	.string "All three illusions are gone!\\p"
+	.string "The real MEW appeared!$"
 
 PokemonMansion_1F_AnthologyMewResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

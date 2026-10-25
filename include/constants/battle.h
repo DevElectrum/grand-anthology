@@ -113,6 +113,7 @@ enum BattleSide
 #define BATTLE_TYPE_RAID               (1 << 12)
 #define BATTLE_TYPE_LEGENDARY          (1 << 13)
 #define BATTLE_TYPE_14                 (1 << 14)
+#define BATTLE_TYPE_MEW_DISGUISE       BATTLE_TYPE_14 // Pokémon Mansion gauntlet: cannot throw Poké Balls
 #define BATTLE_TYPE_TWO_OPPONENTS      (1 << 15)
 #define BATTLE_TYPE_DOME               (1 << 16)
 #define BATTLE_TYPE_PALACE             (1 << 17)

@@ -758,6 +758,25 @@ void BattleSetup_StartLegendaryBattle(void)
     TryUpdateGymLeaderRematchFromWild();
 }
 
+
+void BattleSetup_StartMewGauntletBattle(void)
+{
+    if (RefuseScriptedWildBattleIfPartyless())
+        return;
+
+    LockPlayerFieldControls();
+    gMain.savedCallback = CB2_EndScriptedWildBattle;
+    gBattleTypeFlags = BATTLE_TYPE_LEGENDARY;
+    if (gSpecialVar_0x8004 < 3)
+        gBattleTypeFlags |= BATTLE_TYPE_MEW_DISGUISE;
+
+    CreateBattleStartTask(B_TRANSITION_GRID_SQUARES, MUS_VS_MEW);
+    IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    IncrementGameStat(GAME_STAT_WILD_BATTLES);
+    IncrementDailyWildBattles();
+    TryUpdateGymLeaderRematchFromWild();
+}
+
 void StartGroudonKyogreBattle(void)
 {
     LockPlayerFieldControls();

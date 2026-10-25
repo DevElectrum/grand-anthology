@@ -171,6 +171,59 @@ static enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot)
     return original;
 }
 
+
+struct MewGauntletForm
+{
+    enum Species species;
+    u8 level;
+    enum Move moves[MAX_MON_MOVES];
+};
+
+// Each challenge rolls exactly one mask from each strength tier.
+// The disguise roster is not subject to the global static-encounter randomizer.
+static const struct MewGauntletForm sMewGauntletForms[] =
+{
+    {SPECIES_TAPU_BULU, 30, {MOVE_HORN_LEECH, MOVE_DAZZLING_GLEAM, MOVE_BRICK_BREAK, MOVE_SCARY_FACE}},
+    {SPECIES_REGIROCK, 30, {MOVE_ROCK_SLIDE, MOVE_BULLDOZE, MOVE_STOMP, MOVE_CHARGE_BEAM}},
+    {SPECIES_RAIKOU, 30, {MOVE_SPARK, MOVE_BITE, MOVE_QUICK_ATTACK, MOVE_REFLECT}},
+    {SPECIES_LUNALA, 31, {MOVE_SHADOW_BALL, MOVE_AIR_SLASH, MOVE_CONFUSION, MOVE_NIGHT_SHADE}},
+    {SPECIES_VOLCANION, 32, {MOVE_WATER_PULSE, MOVE_FLAME_CHARGE, MOVE_STOMP, MOVE_HAZE}},
+    {SPECIES_GENESECT, 32, {MOVE_X_SCISSOR, MOVE_METAL_CLAW, MOVE_FLAME_CHARGE, MOVE_QUICK_ATTACK}},
+    {SPECIES_URSHIFU_SINGLE_STRIKE, 32, {MOVE_WICKED_BLOW, MOVE_BRICK_BREAK, MOVE_AERIAL_ACE, MOVE_HEADBUTT}},
+    {SPECIES_RAYQUAZA, 34, {MOVE_DRAGON_CLAW, MOVE_AIR_SLASH, MOVE_CRUNCH, MOVE_ANCIENT_POWER}},
+    {SPECIES_GROUDON, 34, {MOVE_EARTHQUAKE, MOVE_LAVA_PLUME, MOVE_ANCIENT_POWER, MOVE_SLASH}},
+    {SPECIES_MEW, 35, {MOVE_PSYCHIC, MOVE_SWIFT, MOVE_ANCIENT_POWER, MOVE_LIGHT_SCREEN}},
+};
+
+// Transient for the current four-battle encounter. The script cannot be saved mid-challenge.
+EWRAM_DATA static u8 sMewGauntletChoices[3] = {0};
+
+void MewGauntletRollDisguises(void)
+{
+    sMewGauntletChoices[0] = Random() % 3;
+    sMewGauntletChoices[1] = 3 + Random() % 4;
+    sMewGauntletChoices[2] = 7 + Random() % 2;
+}
+
+void MewGauntletPrepareBattle(void)
+{
+    u16 phase = gSpecialVar_0x8004;
+    u8 formIndex = phase < 3 ? sMewGauntletChoices[phase] : 9;
+    const struct MewGauntletForm *form = &sMewGauntletForms[formIndex];
+    u32 personality = GetMonPersonality(form->species, MON_GENDER_RANDOM, NATURE_HARDY, RANDOM_UNOWN_LETTER);
+    struct Pokemon *opponent = &gParties[B_TRAINER_OPPONENT_A][0];
+    u32 slot;
+
+    ZeroEnemyPartyMons();
+    CreateMonWithIVs(opponent, form->species, form->level, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
+    for (slot = 0; slot < MAX_MON_MOVES; slot++)
+        SetMonMoveSlot(opponent, form->moves[slot], slot);
+
+    // The script uses this for the cry and dialogue announcing the new disguise.
+    VarSet(VAR_0x8005, form->species);
+    StringCopy(gStringVar1, GetSpeciesName(form->species));
+}
+
 void CreateScriptedWildMon(enum Species species, u8 level, enum Item item)
 {
     u8 heldItem[2];
