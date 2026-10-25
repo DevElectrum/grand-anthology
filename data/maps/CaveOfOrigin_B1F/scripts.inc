@@ -1,5 +1,16 @@
 CaveOfOrigin_B1F_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, CaveOfOrigin_B1F_AnthologyStellarOnTransition
 	.byte 0
+
+CaveOfOrigin_B1F_AnthologyStellarOnTransition::
+	goto_if_unset FLAG_HOENN_CHAMPION, CaveOfOrigin_B1F_HideStellar
+	goto_if_set FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_STELLAR, CaveOfOrigin_B1F_HideStellar
+	clearflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS_STELLAR
+	return
+
+CaveOfOrigin_B1F_HideStellar::
+	setflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS_STELLAR
+	return
 
 CaveOfOrigin_B1F_EventScript_Wallace::
 	lock
@@ -116,3 +127,44 @@ CaveOfOrigin_B1F_Text_WellHeadToSkyPillar:
 	.string "{PLAYER}{KUN}, there's not a moment to lose!\n"
 	.string "We'll head to the SKY PILLAR right away!$"
 
+
+
+@ A second, permanently Stellar individual. The original Route 114 Terapagos is untouched.
+CaveOfOrigin_B1F_EventScript_StellarTerapagos::
+    lock
+    faceplayer
+    msgbox CaveOfOrigin_B1F_Text_StellarTerapagos, MSGBOX_DEFAULT
+    closemessage
+    playmoncry SPECIES_TERAPAGOS_STELLAR, CRY_MODE_ENCOUNTER
+    waitmoncry
+    seteventmon SPECIES_TERAPAGOS_STELLAR, 75
+    special BattleSetup_StartLegendaryBattle
+    waitstate
+    specialvar VAR_RESULT, GetBattleOutcome
+    goto_if_eq VAR_RESULT, B_OUTCOME_RAN, CaveOfOrigin_B1F_StellarRetreated
+    goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, CaveOfOrigin_B1F_StellarRetreated
+    goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, CaveOfOrigin_B1F_StellarCaught
+    goto_if_eq VAR_RESULT, B_OUTCOME_WON, CaveOfOrigin_B1F_StellarResolved
+    release
+    end
+
+CaveOfOrigin_B1F_StellarCaught::
+    setflag FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_STELLAR
+    goto CaveOfOrigin_B1F_StellarResolved
+
+CaveOfOrigin_B1F_StellarResolved::
+    fadescreenswapbuffers FADE_TO_BLACK
+    removeobject LOCALID_ANTHOLOGY_TERAPAGOS_STELLAR
+    setflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS_STELLAR
+    fadescreenswapbuffers FADE_FROM_BLACK
+    release
+    end
+
+CaveOfOrigin_B1F_StellarRetreated::
+    release
+    end
+
+CaveOfOrigin_B1F_Text_StellarTerapagos:
+    .string "A radiant shell glimmers through\l"
+    .string "the ancient crystals.\p"
+    .string "TERAPAGOS awakens in STELLAR form!$"
