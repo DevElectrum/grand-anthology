@@ -548,6 +548,37 @@ for _dir,_prefix,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
     _options.sort()
     print("INVALID BULK TILE", _dir, _n, (_x,_y), "nearest valid:", [(x,y) for _,x,y in _options[:16]], flush=True)
 
+# Inspect every Hoenn route-entrance connected component before asserting
+# on the first location. A legal metatile alone is not enough for gameplay.
+for _dd, _anchor in (("Route119", (18,139)), ("Route120", (0,27))):
+    _map = json.loads((root / "data/maps" / _dd / "map.json").read_text())
+    _lay = _p0_layouts[_map["layout"]]
+    _w, _h = _lay["width"], _lay["height"]
+    _raw = (root / _lay["blockdata_filepath"]).read_bytes()
+    def _on_route(xx,yy):
+        if not (0<=xx<_w and 0<=yy<_h):
+            return False
+        val = _anthology_struct.unpack_from("<H", _raw, 2*(yy*_w+xx))[0]
+        return val>>12 == 3 and ((val>>10)&3) == 0
+    _reach=set()
+    _pending=[_anchor]
+    while _pending:
+        _u=_pending.pop()
+        if _u in _reach or not _on_route(*_u):
+            continue
+        _reach.add(_u)
+        ux,uy=_u
+        _pending.extend(((ux+1,uy),(ux-1,uy),(ux,uy+1),(ux,uy-1)))
+    _blocked={(ob["x"],ob["y"]) for ob in _map["object_events"]}
+    _blocked.update((ob["x"],ob["y"]) for ob in _map["warp_events"])
+    for _dir,_prefix,_name,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
+        if _dir != _dd or (_x,_y) in _reach:
+            continue
+        _candidates=sorted((abs(a-_x)+abs(b-_y),a,b) for a,b in _reach
+                           if (a,b) not in _blocked)
+        print("DISCONNECTED HOENN STATIC", _dd, _name, (_x,_y),
+              "nearest connected:", [(a,b) for _,a,b in _candidates[:20]], flush=True)
+
 for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
     _m=json.loads((root/"data/maps"/_dir/"map.json").read_text())
     _script=(root/"data/maps"/_dir/"scripts.inc").read_text()
