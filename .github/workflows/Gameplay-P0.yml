@@ -63,6 +63,7 @@ jobs:
           python3 tools/audit_p0_acquisition.py
           python3 test/overworld/ValidateAnthologyHabitatRare.py
           python3 test/overworld/ValidateAnthologyStaticLifecycle.py
+          python3 test/overworld/ValidateAnthologyMegaStoneAcquisition.py
           python3 test/overworld/ValidateAnthologyTaoTrio.py
           python3 test/overworld/ValidateAnthologyNativeSlots.py
           python3 test/overworld/ValidateAnthologyEvolutionAccess.py
