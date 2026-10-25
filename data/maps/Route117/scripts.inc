@@ -250,6 +250,8 @@ Route117_AnthologyHuntTransition::
 
 Route117_HideOgerpon::
 	setflag FLAG_HIDE_ANTHOLOGY_OGERPON
+	goto Route117_CheckPecharunt
+
 Route117_CheckPecharunt::
 	getcaughtmon SPECIES_PECHARUNT
 	goto_if_eq VAR_RESULT, TRUE, Route117_HidePecharunt

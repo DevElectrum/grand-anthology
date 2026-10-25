@@ -360,3 +360,42 @@ for _dir,_name in (("Route32","Keldeo"),("UnionCave_1F","Terrakion"),("NationalP
     run(_scripts,_entry,_state)
     assert _hide in _state.flags
 print("P0 Johto independent Swords: KO/revisit and caught/revisit gates PASS")
+
+
+# Hoenn's optional Ogerpon hunt: first capture unlocks each Loyal Three
+# independently, and only all four caught-Dex bits unlock Pecharunt.
+# A party or PC ownership check would wrongly block released Pokémon.
+_hunt = (
+    ("Route117", "Ogerpon", "OGERPON_TEAL", "OGERPON", set()),
+    ("Route112", "Okidogi", "OKIDOGI", "OKIDOGI", {"SPECIES_OGERPON_TEAL"}),
+    ("Route113", "Fezandipiti", "FEZANDIPITI", "FEZANDIPITI", {"SPECIES_OGERPON_TEAL"}),
+    ("Route114", "Munkidori", "MUNKIDORI", "MUNKIDORI", {"SPECIES_OGERPON_TEAL"}),
+    ("Route117", "Pecharunt", "PECHARUNT", "PECHARUNT",
+     {"SPECIES_OGERPON_TEAL", "SPECIES_OKIDOGI",
+      "SPECIES_FEZANDIPITI", "SPECIES_MUNKIDORI"}),
+)
+for _map, _name, _species, _suffix, _prereqs in _hunt:
+    _labels = blocks(_map)
+    _entry = _map + "_AnthologyHuntTransition"
+    _battle = _map + "_EventScript_" + _name
+    _hide = "FLAG_HIDE_ANTHOLOGY_" + _suffix
+    for _one_missing in _prereqs:
+        _state = Save(caught=set(_prereqs) - {_one_missing})
+        run(_labels, _entry, _state)
+        assert _hide in _state.flags, (_name, "appeared without", _one_missing)
+    _state = Save(caught=set(_prereqs))
+    run(_labels, _entry, _state)
+    assert _hide not in _state.flags, (_name, "gated despite prerequisites")
+    run(_labels, _battle, _state, "B_OUTCOME_WON")
+    assert _hide in _state.flags, (_name, "faint didn't hide")
+    run(_labels, _entry, _state)
+    assert _hide not in _state.flags, (_name, "faint didn't retry")
+    run(_labels, _battle, _state, "B_OUTCOME_RAN")
+    assert _hide not in _state.flags, (_name, "flee incorrectly hid")
+    run(_labels, _battle, _state, "B_OUTCOME_CAUGHT")
+    assert _hide in _state.flags, (_name, "capture didn't hide")
+    assert "SPECIES_" + _species in _state.caught, (_name, "no caught registration")
+    _reloaded = Save(set(_state.flags), set(_state.caught), dict(_state.variables))
+    run(_labels, _entry, _reloaded)
+    assert _hide in _reloaded.flags, (_name, "reappeared after save/revisit")
+print("P0 Ogerpon + Loyal Three + Pecharunt: independent gates, retry, capture and save/revisit source interpretation PASS")
