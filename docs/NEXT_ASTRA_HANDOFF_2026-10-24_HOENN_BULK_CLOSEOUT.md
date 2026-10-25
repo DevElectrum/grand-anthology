@@ -1,3 +1,5 @@
+> **NEWER HOENN LOCATION AND FORM HANDOFF:** [`docs/NEXT_ASTRA_HANDOFF_2026-10-24_HOENN_LOCATION_BATCH.md`](NEXT_ASTRA_HANDOFF_2026-10-24_HOENN_LOCATION_BATCH.md). Source commits through `b9b4bc5c` relocated the Eon duo, retained original Birth Island Deoxys, separated both Zygarde catches, moved Koraidon/Miraidon toward their Hoenn destinations, corrected Rayquaza prerequisites, and removed pre-League Groudon/Kyogre duplicates. **The last fully green optimized build still requires fresh verification**; previous green was `3295e1a6`. Treat source, ROM, and mGBA as different acceptance stages.
+
 # NEXT ASTRA: Johto rewards and Hoenn bulk engineering closeout
 
 **Written:** 24 October 2026 (US Central) / 25 October UTC.  

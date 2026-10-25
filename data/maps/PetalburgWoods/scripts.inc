@@ -504,6 +504,7 @@ PetalburgWoods_EventScript_Zygarde10::
 
 PetalburgWoods_AnthologyZygarde10Caught::
 	setflag FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_10
+	goto PetalburgWoods_AnthologyZygarde10Resolved
 PetalburgWoods_AnthologyZygarde10Resolved::
 	fadescreenswapbuffers FADE_TO_BLACK
 	removeobject LOCALID_ANTHOLOGY_ZYGARDE_10

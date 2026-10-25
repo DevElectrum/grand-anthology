@@ -341,6 +341,7 @@ MeteorFalls_1F_1R_EventScript_Zygarde50::
 
 MeteorFalls_1F_1R_AnthologyZygarde50Caught::
 	setflag FLAG_CAUGHT_ANTHOLOGY_ZYGARDE
+	goto MeteorFalls_1F_1R_AnthologyZygarde50Resolved
 MeteorFalls_1F_1R_AnthologyZygarde50Resolved::
 	fadescreenswapbuffers FADE_TO_BLACK
 	removeobject LOCALID_ANTHOLOGY_ZYGARDE
