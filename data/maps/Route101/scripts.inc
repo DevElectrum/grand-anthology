@@ -5,6 +5,7 @@ Route101_MapScripts::
 
 Route101_OnTransition:
 	call ProfBirch_EventScript_UpdateLocation
+	call Route101_AnthologyZygardeCompleteOnTransition
 	end
 
 Route101_OnFrame:
@@ -317,3 +318,55 @@ Route101_Text_RouteSign:
 	.string "ROUTE 101\n"
 	.string "{UP_ARROW} OLDALE TOWN$"
 
+
+@ Post-Champion guardian: an independent permanent Complete Forme catch.
+@ The separate 10% and 50% Zygarde flags do not affect this encounter.
+Route101_AnthologyZygardeCompleteOnTransition::
+	goto_if_set FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_COMPLETE, Route101_AnthologyHideZygardeComplete
+	goto_if_unset FLAG_HOENN_CHAMPION, Route101_AnthologyHideZygardeComplete
+	clearflag FLAG_HIDE_ANTHOLOGY_ZYGARDE_COMPLETE
+	return
+
+Route101_AnthologyHideZygardeComplete::
+	setflag FLAG_HIDE_ANTHOLOGY_ZYGARDE_COMPLETE
+	return
+
+Route101_EventScript_ZygardeComplete::
+	lock
+	faceplayer
+	msgbox Route101_Text_ZygardeCompleteGuardian, MSGBOX_DEFAULT
+	closemessage
+	playmoncry SPECIES_ZYGARDE_COMPLETE, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_ZYGARDE_COMPLETE, 70
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route101_AnthologyZygardeCompleteRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route101_AnthologyZygardeCompleteRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route101_AnthologyZygardeCompleteCaught
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route101_AnthologyZygardeCompleteResolved
+	release
+	end
+
+Route101_AnthologyZygardeCompleteCaught::
+	setflag FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_COMPLETE
+	goto Route101_AnthologyZygardeCompleteResolved
+
+Route101_AnthologyZygardeCompleteResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_ZYGARDE_COMPLETE
+	setflag FLAG_HIDE_ANTHOLOGY_ZYGARDE_COMPLETE
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route101_AnthologyZygardeCompleteRetreated::
+	release
+	end
+
+Route101_Text_ZygardeCompleteGuardian:
+	.string "A powerful guardian stands silently\\n"
+	.string "before you.\\p"
+	.string "It seems to have sought you out,\\n"
+	.string "the CHAMPION of HOENN...$"
