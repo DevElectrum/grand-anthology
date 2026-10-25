@@ -4296,7 +4296,9 @@
 #define FLAG_CAUGHT_ANTHOLOGY_ZYGARDE                  (FLAG_WORLD_MAP_BANK + 0xFB)
 #define FLAG_HIDE_ANTHOLOGY_ZYGARDE_COMPLETE            (FLAG_WORLD_MAP_BANK + 0xFC)
 #define FLAG_CAUGHT_ANTHOLOGY_ZYGARDE_COMPLETE          (FLAG_WORLD_MAP_BANK + 0xFD)
-// Next free world-map flag: 0xE3C.
+#define FLAG_ANTHOLOGY_INFINITE_BP (FLAG_WORLD_MAP_BANK + 0xFE)
+#define FLAG_ANTHOLOGY_MEGA_STONE_BASE (FLAG_WORLD_MAP_BANK + 0xFF)
+// Reserved stone find flags: +0xFF through +0x126; next available +0x127.
 
 #undef FLAGS_COUNT
 #define FLAGS_COUNT 0x1030
