@@ -241,8 +241,7 @@ Route114_MunkidoriRetreated::
 	end
 
 Route114_TerapagosTransition::
-	getcaughtmon SPECIES_TERAPAGOS_NORMAL
-	goto_if_eq VAR_RESULT, TRUE, Route114_HideTerapagos
+	goto_if_set FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_NORMAL, Route114_HideTerapagos
 	clearflag FLAG_HIDE_ANTHOLOGY_TERAPAGOS
 	return
 
@@ -261,10 +260,14 @@ Route114_EventScript_Terapagos::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route114_TerapagosRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route114_TerapagosRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route114_TerapagosResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route114_TerapagosCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route114_TerapagosResolved
 	release
 	end
+
+Route114_TerapagosCaught::
+	setflag FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_NORMAL
+	goto Route114_TerapagosResolved
 
 Route114_TerapagosResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
