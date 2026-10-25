@@ -16,6 +16,7 @@ Route105_CloseRegiEntrance::
 	return
 
 Route105_OnTransition:
+	call Route105_ChienPaoTransition
 	call_if_eq VAR_SHOULD_END_ABNORMAL_WEATHER, 1, AbnormalWeather_EventScript_HideMapNamePopup
 	call_if_eq VAR_ABNORMAL_WEATHER_LOCATION, ABNORMAL_WEATHER_ROUTE_105_NORTH, AbnormalWeather_StartKyogreWeather
 	call_if_eq VAR_ABNORMAL_WEATHER_LOCATION, ABNORMAL_WEATHER_ROUTE_105_SOUTH, AbnormalWeather_StartKyogreWeather
@@ -95,3 +96,41 @@ Route104_Text_DadPokenavCall:
 Route104_Text_RegisteredDadInPokenav:
 	.string "Registered DAD NORMAN\n"
 	.string "in the POKéNAV.$"
+
+Route105_ChienPaoTransition::
+	getcaughtmon SPECIES_CHIEN_PAO
+	goto_if_eq VAR_RESULT, TRUE, Route105_HideChienPao
+	clearflag FLAG_HIDE_ANTHOLOGY_CHIEN_PAO
+	return
+
+Route105_HideChienPao::
+	setflag FLAG_HIDE_ANTHOLOGY_CHIEN_PAO
+	return
+
+Route105_EventScript_ChienPao::
+	lock
+	faceplayer
+	playmoncry SPECIES_CHIEN_PAO, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_CHIEN_PAO, 33
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route105_ChienPaoRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route105_ChienPaoRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route105_ChienPaoResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route105_ChienPaoResolved
+	release
+	end
+
+Route105_ChienPaoResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_CHIEN_PAO
+	setflag FLAG_HIDE_ANTHOLOGY_CHIEN_PAO
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route105_ChienPaoRetreated::
+	release
+	end

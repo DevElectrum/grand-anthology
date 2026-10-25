@@ -46,6 +46,7 @@ Route111_OnTransition:
 	call Route111_EventScript_CheckSetSandstorm
 	call GabbyAndTy_EventScript_UpdateLocation
 	call Route111_AnthologyOnTransition
+	call Route111_TingLuTransition
 	goto_if_not_defeated TRAINER_VICKY, Route111_EventScript_SetWinstratesNotDefeated
 	end
 
@@ -796,5 +797,43 @@ Route111_AnthologyHoopaResolved::
 	end
 
 Route111_AnthologyHoopaRetreated::
+	release
+	end
+
+Route111_TingLuTransition::
+	getcaughtmon SPECIES_TING_LU
+	goto_if_eq VAR_RESULT, TRUE, Route111_HideTingLu
+	clearflag FLAG_HIDE_ANTHOLOGY_TING_LU
+	return
+
+Route111_HideTingLu::
+	setflag FLAG_HIDE_ANTHOLOGY_TING_LU
+	return
+
+Route111_EventScript_TingLu::
+	lock
+	faceplayer
+	playmoncry SPECIES_TING_LU, CRY_MODE_ENCOUNTER
+	waitmoncry
+	seteventmon SPECIES_TING_LU, 34
+	special BattleSetup_StartLegendaryBattle
+	waitstate
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route111_TingLuRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route111_TingLuRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route111_TingLuResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route111_TingLuResolved
+	release
+	end
+
+Route111_TingLuResolved::
+	fadescreenswapbuffers FADE_TO_BLACK
+	removeobject LOCALID_ANTHOLOGY_TING_LU
+	setflag FLAG_HIDE_ANTHOLOGY_TING_LU
+	fadescreenswapbuffers FADE_FROM_BLACK
+	release
+	end
+
+Route111_TingLuRetreated::
 	release
 	end
