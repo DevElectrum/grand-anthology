@@ -188,9 +188,6 @@ Route45_Text_Sign:
 
 // Multi-location acquisition batch: preserve canonical map scripts.
 Route45_BigBatchOnTransition::
-	getcaughtmon SPECIES_RESHIRAM
-	call_if_eq VAR_RESULT, TRUE, Route45_BigBatchHideReshiram
-	call_if_ne VAR_RESULT, TRUE, Route45_BigBatchShowReshiram
 	getcaughtmon SPECIES_ZEKROM
 	call_if_eq VAR_RESULT, TRUE, Route45_BigBatchHideZekrom
 	call_if_ne VAR_RESULT, TRUE, Route45_BigBatchShowZekrom
@@ -198,42 +195,6 @@ Route45_BigBatchOnTransition::
 	call_if_eq VAR_RESULT, TRUE, Route45_BigBatchHideRegidrago
 	call_if_ne VAR_RESULT, TRUE, Route45_BigBatchShowRegidrago
 	return
-
-Route45_BigBatchHideReshiram::
-	setflag FLAG_HIDE_ANTHOLOGY_RESHIRAM
-	return
-
-Route45_BigBatchShowReshiram::
-	clearflag FLAG_HIDE_ANTHOLOGY_RESHIRAM
-	return
-
-Route45_EventScript_Reshiram::
-	lock
-	faceplayer
-	playmoncry SPECIES_RESHIRAM, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_RESHIRAM, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route45_BigBatchReshiramRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route45_BigBatchReshiramRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route45_BigBatchReshiramResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route45_BigBatchReshiramResolved
-	release
-	end
-
-Route45_BigBatchReshiramResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_RESHIRAM
-	setflag FLAG_HIDE_ANTHOLOGY_RESHIRAM
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route45_BigBatchReshiramRetreated::
-	release
-	end
 
 Route45_BigBatchHideZekrom::
 	setflag FLAG_HIDE_ANTHOLOGY_ZEKROM
