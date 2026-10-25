@@ -2,6 +2,9 @@
 #define GUARD_SCRIPT_POKEMON_UTIL_H
 
 u32 ScriptGiveMon(enum Species species, u8 level, enum Item item);
+void RoyalDuoCheckCapacity(void);
+void RoyalDuoPrepareBattle(void);
+void RoyalDuoAwardVictory(void);
 u8 ScriptGiveEgg(enum Species species);
 void CreateScriptedWildMon(enum Species species, u8 level, enum Item item);
 void MewGauntletRollDisguises(void);
