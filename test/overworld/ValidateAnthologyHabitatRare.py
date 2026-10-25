@@ -1170,3 +1170,12 @@ for _source,_room,_door,_landing,_portal in _chambers:
     assert f"{_portal}::" in _outer_source
     assert not any(x.get("graphics_id","").startswith("OBJ_EVENT_GFX_SPECIES(") and x.get("script")==f"{_source}_EventScript_"+("Hoopa" if "Route111"==_source else "Koraidon" if _source=="Underwater_Route128" else "Miraidon") for x in _outer["object_events"])
 print("P0 Hoenn dedicated side-room portal, independent warps and encounter relocation PASS")
+
+# A registered map's script labels must also be assembled into data/event_scripts.o.
+# Omitting an include is invisible to source-only map validation but fails ROM linking.
+_event_scripts = (root/"data/event_scripts.s").read_text()
+for _src,_new_room,*_rest in _chambers:
+    _directive = f'.include "data/maps/{_new_room}/scripts.inc"'
+    assert _event_scripts.count(_directive) == 1, ("missing or duplicated event-script include", _new_room)
+print("P0 Hoenn side-room event assembly linkage PASS")
+
