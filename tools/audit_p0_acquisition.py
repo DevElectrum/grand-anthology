@@ -151,6 +151,24 @@ if ("special MewGauntletPrepareBattle" in mew_mansion
     and "{SPECIES_MEW, 35," in mew_preparation):
     add("MAP_POKEMON_MANSION_1F", "MEW", "script_mew_gauntlet")
 
+# Route 27 awards both Crowned guardians as gifts after a special double battle.
+# Verify the actual battle, preflight, and atomic award paths before counting
+# this as a source; neither wolf has a separate wild static any longer.
+royal_route = read("data/maps/Route27/scripts.inc")
+royal_reward = read("src/script_pokemon_util.c")
+if (all(term in royal_route for term in (
+        "special RoyalDuoPrepareBattle",
+        "special BattleSetup_StartRoyalDuoBattle",
+        "goto_if_ne VAR_RESULT, B_OUTCOME_WON, Route27_RoyalDuoRetry",
+        "special RoyalDuoAwardVictory",
+        "goto_if_unset FLAG_JOHTO_BADGE_8, Route27_RoyalDuoHide"))
+    and "SPECIES_ZACIAN_HERO, SPECIES_ZAMAZENTA_HERO" in royal_reward
+    and "ITEM_RUSTED_SWORD, ITEM_RUSTED_SHIELD" in royal_reward
+    and "GiveScriptedMonToPlayer(&mon, PARTY_SIZE)" in royal_reward
+    and "freeSlots >= 2" in royal_reward):
+    add("MAP_ROUTE27", "ZACIAN_HERO", "royal_duo_defeat_reward")
+    add("MAP_ROUTE27", "ZAMAZENTA_HERO", "royal_duo_defeat_reward")
+
 # Starter menu source is useful but not independent runtime proof.
 for named in set(re.findall(r"\bSPECIES_([A-Z0-9_]+)\b",read("src/starter_choose.c"))):
     mon = actual_species(named)
