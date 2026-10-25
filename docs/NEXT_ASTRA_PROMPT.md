@@ -1,27 +1,28 @@
-> **BULK JOHTO LOCATION ENGINEERING, newer than all three-at-a-time notes (24 Oct local / 25 Oct UTC):** The maintainer explicitly requires BIG, location-clustered passes (roughly 10–20 scripted encounters per regional batch), not family-by-family signoffs. Source commits on public `main`: [Forces of Nature / Enamorus gate](https://github.com/DevElectrum/grand-anthology/commit/1445e80b23fe346856a73a38888a031054a07654), [two Kubfu + Spectrier](https://github.com/DevElectrum/grand-anthology/commit/22ae8b9c72397480d079b25624743a7dd000bb3f), [Glastrier + Victini](https://github.com/DevElectrum/grand-anthology/commit/8e2c5374889ee350c508592be9a937efabb8a1fe), and [two Regis](https://github.com/DevElectrum/grand-anthology/commit/1d156588d0ecb427b1bfe9d85637057af5ef24b8). **11 source encounter relocations/gates implemented in one sweep**, prior Tao Trio was 3 more. `docs/JOHTO_BULK_2026-10-24.md` records sites, flags, CI status and remaining verification. **Do not call them gameplay PASS merely because committed.** Follow optimized ROM/source CI to repair incorrect collision coordinates or script errors. The mGBA regression contains unrelated old Diancie/daycare synthetic doorway fixture failures despite Nyx physical PASS. Avoid stalling on these. Continue substantive region-wide gameplay batches while isolating specific runtime blockers. Only canonical public repo, keep private archive untouched.
-
-**Newest source checkpoint:** Johto Tao Trio implemented in public main through `79937e62`; see `docs/JOHTO_TAO_TRIO_2026-10-24.md`. Do not reimplement it. Verify builds/emulator and continue approved ledger only after reconciling results. Older “Tao is next” text below is historical.
-
 Astra, continue **Pokémon Grand Anthology**! 🎮
 
-**Repository:** `DevElectrum/grand-anthology`, public `main`. Do not touch the old private archive `DevElectrum/pokemon-grand-anthology` or import its history.
+**Canonical public repository:** `DevElectrum/grand-anthology`
+**Branch:** `main`
+**Last VERIFIED gameplay-code head (before handoff documentation):** `3295e1a6e266923fc6b7335747ad2bdcf38b44fb`
+**CI: P0 Gameplay Build #40159598930 PASSED** source validators and optimized GBA ROM build.
+**Never touch/import the old private repo:** `DevElectrum/pokemon-grand-anthology`.
 
-**First read directly from GitHub:**
+### First, read directly from GitHub
 1. `AGENTS.md`
-2. **`docs/NEXT_ASTRA_HANDOFF_2026-10-24_ACTIVE.md`** (our current full project/test/design handoff)
-3. `docs/NEXT_ASTRA_HANDOFF.md`
-4. **ALL** of `docs/LEGENDARY_MYTHICAL_DESIGN_LEDGER_2026-10-24.md`, especially the final delegated location section, not just older tentative design tables
-5. `docs/NYX_MANUAL_QA_2026-10-24.md`, `docs/PUBLIC_STATUS.md`, `docs/PREIMPLEMENTATION_DESIGN_AUDIT_2026-10-24.md`, `docs/LEGENDARY_MYTHICAL_LOCATION_AUDIT_2026-10-24.md`
-6. `README.md`, `FEATURES.md`, current map/scripts/flags/layouts and CI results.
+2. **`docs/NEXT_ASTRA_HANDOFF_2026-10-24_HOENN_BULK_CLOSEOUT.md`** (newest complete handoff, higher precedence than older "next" notes)
+3. `docs/NEXT_ASTRA_HANDOFF_2026-10-24_ACTIVE.md` and `docs/NEXT_ASTRA_HANDOFF.md`
+4. **ALL** of `docs/LEGENDARY_MYTHICAL_DESIGN_LEDGER_2026-10-24.md`, especially FINAL delegated locations, not earlier tentative suggestions
+5. `docs/JOHTO_BULK_2026-10-24.md`, `docs/JOHTO_TAO_TRIO_2026-10-24.md`, `docs/NYX_MANUAL_QA_2026-10-24.md`, `docs/PUBLIC_STATUS.md`
+6. Inspect latest `main`, map events/scripts/layouts, `test/overworld/ValidateAnthologyHabitatRare.py`, lifecycle validator and Actions jobs.
 
-**Latest completed gameplay baseline:** `6621cd852e09038377654611d8bd7a0a36a22db7` (Johto Swords linker repair), with later docs-only handoff commits. Refresh current `main` before editing. [Optimized build + validations #40151749582](https://github.com/DevElectrum/grand-anthology/actions/runs/40151749582) **PASSED**. [Same-SHA mGBA #40151749580](https://github.com/DevElectrum/grand-anthology/actions/runs/40151749580) passed nine normal suites and stayed red only on the old synthetic Diancie/daycare door fixtures. Both doors were independently manually verified in actual gameplay on Nyx, with Diancie lifecycle and daycare Manaphy+Ditto→Phione hatch both tested. **Do not mistake a bad fixture for broken gameplay or claim CI fully green.**
+### Priority: substantial P0 engineering, large groups
+We **JUST FINISHED** source/optimized CI green for Johto's Tao Trio, another 11 Johto encounter changes, the Kubfu scroll/Calyrex Reins rewards, and a substantial Hoenn Ogerpon hunt + early encounter + Treasures of Ruin batch. **Do not duplicate already implemented encounters or spend an entire response on three Pokémon.**
 
-**Implemented already:** Giratina to Mt Moon B2F with caught Dialga+Palkia; Darkrai to Lavender Tower7F after caught Cresselia+Fuji rescue; Tapu Lele Celadon garden; four independent early/mid Johto Swords Keldeo Route32 Lv18, Terrakion UnionCave1F Lv20, Virizion National Park Lv23, Cobalion Mt Mortar 1F South Lv28. Linker correction finished and ROM build PASS. No need to redo them. New static battles remain to be accepted with gameplay.
+Audit remaining approved Hoenn static/gating gaps against CURRENT public source, group them by actual location/access, then **implement roughly 10–20+ ordinary encounter/reward changes per batch**, with meaningful commits and coherent bulk source validation. Next candidates include Hoopa's persistent Mirage Tower base room, Deoxys Birth Island ferry after Rayquaza caught, Koraidon Route128 Dive grotto, Miraidon New Mauville annex, other unresolved Hoenn approved entries. Preserve original story/puzzles. Follow the ledger, including catch-based gates and independent repeated-species/form flags. Native P0 faint/revisit/catch/save semantics matter.
 
-**Next code batch:** Johto **Tao trio**. Reshiram independently lower Bell/Tin Tower after natural late-Johto tower admission (not Ho-Oh caught-beasts roof gate); Zekrom independently Dark Cave Blackthorn/Route45-side; Kyurem Ice Path B1F after *both Reshiram and Zekrom dex registered caught*, **before Johto Champion**. No old Route45/Route44 duplicate statics. Reward DNA Splicers on Kyurem catch and preserve reversible White/Black Kyurem and constituents. Verify actual access, original stories, puzzles, source/object flags and item mechanics before committing. Use substantive grouped implementation, validation, optimized builds and emulator tests.
+**Evidence honesty:** Exact Gameplay Build #40159598930 is all green. Latest checked mGBA run #40159186927 (an EARLIER commit) is red ONLY for the old Kanto daycare/Diancie synthetic doorway fixtures after nine baseline suites passed; those doors were manually verified on Nyx. New Hoenn statics are SOURCE VERIFIED, **NOT** independently end-to-end emulator-caught. Run targeted mGBA where feasible and only summon the user for a preprepared 2–5 minute local Nyx check when genuinely blocked.
 
-**Project contract:** one persistent trainer/team/PC through original Kanto/Johto/Hoenn, casual/no forced scaling/resets, 1,025 species obtainable eventually including postgame (not necessarily pre-first-Champion); Legendaries/Mythicals usually deliberate statics; rare existing wild species may remain if actual lore justifies multiple individuals (e.g., Zarude, whose special static still moves to Ilex Forest). Ultra Beasts/Paradox ordinary rare wild allowed; **optional randomizer exempt from lore, automatic Research/discovery is NOT**. Distinct catch flags for multiple copies/forms, caught-dex prerequisites, faint/revisit rematch, caught/save/reload permanent hide. Honor full ledger, preserve story and puzzles. Three especially complex final implementation tasks are Zacian+Zamazenta paired battle, permanent postgame Complete Zygarde, permanent postgame Stellar Terapagos.
+**Do not implement now:** Zacian+Zamazenta joint double battle, permanently Complete Zygarde, permanently Stellar Terapagos. Ordinary Zygarde 10%/50% and regular Terapagos remain normal-priority.
 
-**QA agreement:** Automate as much as possible. The user can happily handle an occasional **2–5 minute Nyx manual test** with prepared local-only teleport flags, quick Pokémon and protected saves; do not make them grind or spend their evening fighting a broken test fixture. Never commit local-only sign or Egg developer cheats. Distinguish source pass, build pass, emulator pass, and manual pass.
+Update public `main`, keep docs/handoff current, report concrete progress and commit SHAs. No private archive access, no ROM/save uploads, no repeat of settled design debate. The owner wants **BIG engineering steps, not little ones**.
 
-The user already said **“Begin”** and **“Continue”**. The old design-only “wait” directives in archived docs have been superseded. Continue implementing without reopening settled discussions, but ask if a substantial new decision is genuinely unclear. Keep the user informed when working. **Big steps, better mistakes, even better solutions.**
+Big steps, better mistakes, even better solutions.
