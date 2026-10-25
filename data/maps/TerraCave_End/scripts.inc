@@ -16,7 +16,9 @@ TerraCave_End_EventScript_TryRemoveGroudon::
 TerraCave_End_OnTransition:
 	getcaughtmon SPECIES_GROUDON
 	call_if_eq VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONCaught
-	call_if_ne VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONUncaught
+	getcaughtmon SPECIES_RAYQUAZA
+	call_if_eq VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONUncaught
+	call_if_ne VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONLocked
 	end
 
 TerraCave_End_EventScript_ShowGroudon::
@@ -83,4 +85,8 @@ TerraCave_End_NativeGROUDONUncaught::
 	clearflag FLAG_DEFEATED_GROUDON
 	clearflag FLAG_HIDE_TERRA_CAVE_GROUDON
 	setvar VAR_TEMP_1, 1
+	return
+
+TerraCave_End_NativeGROUDONLocked::
+	setflag FLAG_HIDE_TERRA_CAVE_GROUDON
 	return

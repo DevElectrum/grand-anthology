@@ -165,8 +165,8 @@
       "flag": "FLAG_HIDE_MOSSDEEP_CITY_SPACE_CENTER_1F_STEVEN"
     },
     {
-      "local_id": "LOCALID_ANTHOLOGY_DEOXYS",
-      "graphics_id": "OBJ_EVENT_GFX_SPECIES(DEOXYS_NORMAL)",
+      "local_id": "LOCALID_ANTHOLOGY_LATIOS",
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(LATIOS)",
       "x": 9,
       "y": 4,
       "elevation": 3,
@@ -175,8 +175,8 @@
       "movement_range_y": 0,
       "trainer_type": "TRAINER_TYPE_NONE",
       "trainer_sight_or_berry_tree_id": "0",
-      "script": "MossdeepCity_SpaceCenter_1F_EventScript_Deoxys",
-      "flag": "FLAG_HIDE_ANTHOLOGY_DEOXYS"
+      "script": "MossdeepCity_SpaceCenter_1F_EventScript_Latios",
+      "flag": "FLAG_HIDE_ANTHOLOGY_LATIOS"
     }
   ],
   "warp_events": [

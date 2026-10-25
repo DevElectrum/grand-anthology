@@ -16,7 +16,9 @@ MarineCave_End_EventScript_TryRemoveKyogre::
 MarineCave_End_OnTransition:
 	getcaughtmon SPECIES_KYOGRE
 	call_if_eq VAR_RESULT, TRUE, MarineCave_End_NativeKYOGRECaught
-	call_if_ne VAR_RESULT, TRUE, MarineCave_End_NativeKYOGREUncaught
+	getcaughtmon SPECIES_RAYQUAZA
+	call_if_eq VAR_RESULT, TRUE, MarineCave_End_NativeKYOGREUncaught
+	call_if_ne VAR_RESULT, TRUE, MarineCave_End_NativeKYOGRELocked
 	end
 
 MarineCave_End_EventScript_ShowKyogre::
@@ -83,4 +85,8 @@ MarineCave_End_NativeKYOGREUncaught::
 	clearflag FLAG_DEFEATED_KYOGRE
 	clearflag FLAG_HIDE_MARINE_CAVE_KYOGRE
 	setvar VAR_TEMP_1, 1
+	return
+
+MarineCave_End_NativeKYOGRELocked::
+	setflag FLAG_HIDE_MARINE_CAVE_KYOGRE
 	return

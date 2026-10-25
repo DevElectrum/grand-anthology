@@ -437,9 +437,9 @@ Route120_SecondBatchOnTransition::
 	getcaughtmon SPECIES_IRON_LEAVES
 	call_if_eq VAR_RESULT, TRUE, Route120_SecondBatchHideIronLeaves
 	call_if_ne VAR_RESULT, TRUE, Route120_SecondBatchShowIronLeaves
-	getcaughtmon SPECIES_LATIOS
-	call_if_eq VAR_RESULT, TRUE, Route120_SecondBatchHideLatios
-	call_if_ne VAR_RESULT, TRUE, Route120_SecondBatchShowLatios
+	getcaughtmon SPECIES_LATIAS
+	call_if_eq VAR_RESULT, TRUE, Route120_SecondBatchHideLatias
+	call_if_ne VAR_RESULT, TRUE, Route120_SecondBatchShowLatias
 	return
 
 Route120_SecondBatchHideIronLeaves::
@@ -478,39 +478,39 @@ Route120_SecondBatchIronLeavesRetreated::
 	release
 	end
 
-Route120_SecondBatchHideLatios::
-	setflag FLAG_HIDE_ANTHOLOGY_LATIOS
+Route120_SecondBatchHideLatias::
+	setflag FLAG_HIDE_ANTHOLOGY_LATIAS
 	return
 
-Route120_SecondBatchShowLatios::
-	clearflag FLAG_HIDE_ANTHOLOGY_LATIOS
+Route120_SecondBatchShowLatias::
+	clearflag FLAG_HIDE_ANTHOLOGY_LATIAS
 	return
 
-Route120_EventScript_Latios::
+Route120_EventScript_Latias::
 	lock
 	faceplayer
-	playmoncry SPECIES_LATIOS, CRY_MODE_ENCOUNTER
+	playmoncry SPECIES_LATIAS, CRY_MODE_ENCOUNTER
 	waitmoncry
-	seteventmon SPECIES_LATIOS, 45
+	seteventmon SPECIES_LATIAS, 35
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route120_SecondBatchLatiosRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route120_SecondBatchLatiosRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_SecondBatchLatiosResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route120_SecondBatchLatiosResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route120_SecondBatchLatiasRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route120_SecondBatchLatiasRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_SecondBatchLatiasResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route120_SecondBatchLatiasResolved
 	release
 	end
 
-Route120_SecondBatchLatiosResolved::
+Route120_SecondBatchLatiasResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_LATIOS
-	setflag FLAG_HIDE_ANTHOLOGY_LATIOS
+	removeobject LOCALID_ANTHOLOGY_LATIAS
+	setflag FLAG_HIDE_ANTHOLOGY_LATIAS
 	fadescreenswapbuffers FADE_FROM_BLACK
 	release
 	end
 
-Route120_SecondBatchLatiosRetreated::
+Route120_SecondBatchLatiasRetreated::
 	release
 	end
 

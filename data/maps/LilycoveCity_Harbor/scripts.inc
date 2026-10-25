@@ -471,8 +471,23 @@ LilycoveCity_Harbor_Movement_UnusedBoardFerry:
 LilycoveCity_Harbor_EventScript_Sailor::
 	lock
 	faceplayer
+	getcaughtmon SPECIES_RAYQUAZA
+	goto_if_eq VAR_RESULT, TRUE, LilycoveCity_Harbor_EventScript_SailorBirthIsland
 	goto_if_set FLAG_HOENN_CHAMPION, LilycoveCity_Harbor_EventScript_SailorFerryAvailable
 	msgbox LilycoveCity_Harbor_Text_SailorFerryUnavailable, MSGBOX_DEFAULT
+	release
+	end
+
+LilycoveCity_Harbor_EventScript_SailorBirthIsland::
+	msgbox LilycoveCity_Harbor_Text_RayquazaBirthIslandFerry, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, LilycoveCity_Harbor_EventScript_SailorBirthIslandNo
+	setvar VAR_FERRY_DEPARTURE, FERRY_DEPART_LILYCOVE
+	warp MAP_BIRTH_ISLAND_HARBOR, 8, 4
+	waitstate
+	release
+	end
+
+LilycoveCity_Harbor_EventScript_SailorBirthIslandNo::
 	release
 	end
 
@@ -627,3 +642,8 @@ LilycoveCity_Harbor_Text_SailorFerryAvailable:
 	.string "The folks at the SHIPYARD in SLATEPORT\n"
 	.string "must've worked extra hard.\p"
 	.string "Well, it's my turn to get busy now!$"
+
+LilycoveCity_Harbor_Text_RayquazaBirthIslandFerry:
+	.string "Your RAYQUAZA discovery opened a\\n"
+	.string "route to BIRTH ISLAND!\\p"
+	.string "Sail there now?$"

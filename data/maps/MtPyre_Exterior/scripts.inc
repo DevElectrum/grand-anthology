@@ -47,7 +47,7 @@ MtPyre_Exterior_EventScript_Yveltal::
 	faceplayer
 	playmoncry SPECIES_YVELTAL, CRY_MODE_ENCOUNTER
 	waitmoncry
-	seteventmon SPECIES_YVELTAL, 50
+	seteventmon SPECIES_YVELTAL, 39
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	specialvar VAR_RESULT, GetBattleOutcome

@@ -777,7 +777,7 @@ Route111_EventScript_Hoopa::
 	faceplayer
 	playmoncry SPECIES_HOOPA_CONFINED, CRY_MODE_ENCOUNTER
 	waitmoncry
-	seteventmon SPECIES_HOOPA_CONFINED, 45
+	seteventmon SPECIES_HOOPA_CONFINED, 30
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	specialvar VAR_RESULT, GetBattleOutcome

@@ -333,9 +333,6 @@ Route118_SecondBatchOnTransition::
 	getcaughtmon SPECIES_IRON_BOULDER
 	call_if_eq VAR_RESULT, TRUE, Route118_SecondBatchHideIronBoulder
 	call_if_ne VAR_RESULT, TRUE, Route118_SecondBatchShowIronBoulder
-	getcaughtmon SPECIES_LATIAS
-	call_if_eq VAR_RESULT, TRUE, Route118_SecondBatchHideLatias
-	call_if_ne VAR_RESULT, TRUE, Route118_SecondBatchShowLatias
 	return
 
 Route118_SecondBatchHideIronBoulder::
@@ -374,38 +371,3 @@ Route118_SecondBatchIronBoulderRetreated::
 	release
 	end
 
-Route118_SecondBatchHideLatias::
-	setflag FLAG_HIDE_ANTHOLOGY_LATIAS
-	return
-
-Route118_SecondBatchShowLatias::
-	clearflag FLAG_HIDE_ANTHOLOGY_LATIAS
-	return
-
-Route118_EventScript_Latias::
-	lock
-	faceplayer
-	playmoncry SPECIES_LATIAS, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_LATIAS, 45
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route118_SecondBatchLatiasRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route118_SecondBatchLatiasRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route118_SecondBatchLatiasResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route118_SecondBatchLatiasResolved
-	release
-	end
-
-Route118_SecondBatchLatiasResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_LATIAS
-	setflag FLAG_HIDE_ANTHOLOGY_LATIAS
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route118_SecondBatchLatiasRetreated::
-	release
-	end

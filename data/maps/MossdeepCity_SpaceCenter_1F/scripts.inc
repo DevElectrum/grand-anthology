@@ -427,43 +427,44 @@ MossdeepCity_SpaceCenter_1F_Text_MagmaIntentToStealNotice:
 // Special species sources added without replacing any canonical event or
 // scene. They respawn after a non-capture victory when the map is re-entered.
 MossdeepCity_SpaceCenter_1F_AnthologyOnTransition::
-	getcaughtmon SPECIES_DEOXYS_NORMAL
+	getcaughtmon SPECIES_LATIOS
 	call_if_eq VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys
+	goto_if_unset FLAG_DEFEATED_MAGMA_SPACE_CENTER, MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys
 	call_if_ne VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_AnthologyShowDeoxys
 	return
 
 MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys::
-	setflag FLAG_HIDE_ANTHOLOGY_DEOXYS
+	setflag FLAG_HIDE_ANTHOLOGY_LATIOS
 	return
 
 MossdeepCity_SpaceCenter_1F_AnthologyShowDeoxys::
-	clearflag FLAG_HIDE_ANTHOLOGY_DEOXYS
+	clearflag FLAG_HIDE_ANTHOLOGY_LATIOS
 	return
 
-MossdeepCity_SpaceCenter_1F_EventScript_Deoxys::
+MossdeepCity_SpaceCenter_1F_EventScript_Latios::
 	lock
 	faceplayer
-	playmoncry SPECIES_DEOXYS_NORMAL, CRY_MODE_ENCOUNTER
+	playmoncry SPECIES_LATIOS, CRY_MODE_ENCOUNTER
 	waitmoncry
-	seteventmon SPECIES_DEOXYS_NORMAL, 45
+	seteventmon SPECIES_LATIOS, 40
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MossdeepCity_SpaceCenter_1F_AnthologyDeoxysRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MossdeepCity_SpaceCenter_1F_AnthologyDeoxysRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MossdeepCity_SpaceCenter_1F_AnthologyDeoxysResolved
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MossdeepCity_SpaceCenter_1F_AnthologyDeoxysResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MossdeepCity_SpaceCenter_1F_AnthologyLatiosRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MossdeepCity_SpaceCenter_1F_AnthologyLatiosRetreated
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MossdeepCity_SpaceCenter_1F_AnthologyLatiosResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MossdeepCity_SpaceCenter_1F_AnthologyLatiosResolved
 	release
 	end
 
-MossdeepCity_SpaceCenter_1F_AnthologyDeoxysResolved::
+MossdeepCity_SpaceCenter_1F_AnthologyLatiosResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_DEOXYS
-	setflag FLAG_HIDE_ANTHOLOGY_DEOXYS
+	removeobject LOCALID_ANTHOLOGY_LATIOS
+	setflag FLAG_HIDE_ANTHOLOGY_LATIOS
 	fadescreenswapbuffers FADE_FROM_BLACK
 	release
 	end
 
-MossdeepCity_SpaceCenter_1F_AnthologyDeoxysRetreated::
+MossdeepCity_SpaceCenter_1F_AnthologyLatiosRetreated::
 	release
 	end
