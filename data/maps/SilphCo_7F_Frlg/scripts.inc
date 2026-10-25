@@ -376,7 +376,7 @@ SilphCo_7F_Text_FloorSign::
 	.string "SILPH CO. HEAD OFFICE\n"
 	.string "7F$"
 
-\n
+
 Anthology_MegaStone_MAGEARNITE::
     goto_if_unset FLAG_GOT_LAPRAS_FROM_SILPH, Anthology_MegaStone_MAGEARNITE_Locked
     finditem ITEM_MAGEARNITE
