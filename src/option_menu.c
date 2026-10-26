@@ -4,6 +4,7 @@
 #include "new_game.h"
 #include "oak_speech.h"
 #include "main_menu.h"
+#include "string_util.h"
 
 #include "bg.h"
 #include "event_data.h"
@@ -563,7 +564,7 @@ static void Task_OptionMenuFadeOut(u8 taskId)
             else
             {
                 CancelNewGameSetup();
-                SetMainCallback2(CB2_ReinitMainMenu);
+                SetMainCallback2(CB2_InitMainMenu);
             }
             return;
         }
