@@ -120,7 +120,50 @@ bool8 DoesPartyHaveEnigmaBerry(void)
 // legendary/mythical event species intact, since their scene scripts can
 // require the original form for flags, quest items or overworld graphics.
 // Scripted battles not routed through these two constructors stay unchanged.
-static enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot)
+static bool32 IsLegendaryStaticSpecies(enum Species species)
+{
+    return gSpeciesInfo[species].isRestrictedLegendary
+        || gSpeciesInfo[species].isSubLegendary
+        || gSpeciesInfo[species].isMythical;
+}
+
+// One-to-one permutation of the valid legendary/mythical species pool. The
+// mapping is independent of location and interaction order. Do not choose
+// arbitrary species for each Legendary Shuffle slot independently.
+static enum Species WorldShuffleLegendarySpecies(enum Species original)
+{
+    u32 count = 0, index = 0, i, multiplier, offset;
+    if (!IsLegendaryStaticSpecies(original))
+        return original;
+    for (i = 1; i < NUM_SPECIES; i++)
+    {
+        if (IsLegendaryStaticSpecies(i) && WorldIsFieldStableDiscoverySpecies(i))
+        {
+            if (i == original)
+                index = count;
+            count++;
+        }
+    }
+    if (!count || !WorldIsFieldStableDiscoverySpecies(original))
+        return original;
+    // A cyclic permutation is bijective even if the legendary pool size
+    // changes. It preserves every source species once when sources cover it.
+    multiplier = 1;
+    offset = (gSaveBlock2Ptr->randomizerSeed % count);
+    index = (index * multiplier + offset) % count;
+    for (i = 1; i < NUM_SPECIES; i++)
+    {
+        if (IsLegendaryStaticSpecies(i) && WorldIsFieldStableDiscoverySpecies(i))
+        {
+            if (index == 0)
+                return i;
+            index--;
+        }
+    }
+    return original;
+}
+
+enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot)
 {
 #if ALL_REGIONS
     u32 hash;
@@ -132,13 +175,22 @@ static enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot)
      || original == SPECIES_NONE || original == SPECIES_EGG
      || original == SPECIES_SNORLAX
      || original == SPECIES_SUDOWOODO
-     || original == SPECIES_KECLEON
-     || gSpeciesInfo[original].isRestrictedLegendary
-     || gSpeciesInfo[original].isSubLegendary
-     || gSpeciesInfo[original].isMythical
-     || gSpeciesInfo[original].isUltraBeast
-     || gSpeciesInfo[original].isParadox)
+     || original == SPECIES_KECLEON)
         return original;
+
+    if (gSaveBlock2Ptr->randomizerVersion == 0
+     || gSaveBlock2Ptr->randomizerStaticMode == 0)
+    {
+        // Preserve the exact v12 legacy semantics for existing saves.
+        if (gSpeciesInfo[original].isRestrictedLegendary
+         || gSpeciesInfo[original].isSubLegendary
+         || gSpeciesInfo[original].isMythical
+         || gSpeciesInfo[original].isUltraBeast
+         || gSpeciesInfo[original].isParadox)
+            return original;
+    }
+    else if (gSaveBlock2Ptr->randomizerStaticMode == 1)
+        return WorldShuffleLegendarySpecies(original);
 
     // Fixed seed/map/original/slot mixing, not a global encounter RNG call.
     hash = 0x9E3779B9u ^ (u32)gSaveBlock2Ptr->randomizerSeed;
@@ -205,6 +257,11 @@ void MewGauntletRollDisguises(void)
     sMewGauntletChoices[2] = 7 + Random() % 2;
 }
 
+void MewGauntletShouldRun(void)
+{
+    gSpecialVar_Result = (WorldRandomizeStaticSpecies(SPECIES_MEW, 0) == SPECIES_MEW);
+}
+
 void MewGauntletPrepareBattle(void)
 {
     u16 phase = gSpecialVar_0x8004;
@@ -236,6 +293,10 @@ void CreateScriptedWildMon(enum Species species, u8 level, enum Item item)
         RANDOM_UNOWN_LETTER);
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], species, level, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
+    if (species == SPECIES_ZACIAN_HERO)
+        item = ITEM_RUSTED_SWORD;
+    else if (species == SPECIES_ZAMAZENTA_HERO)
+        item = ITEM_RUSTED_SHIELD;
     if (item)
     {
         heldItem[0] = item;
@@ -249,7 +310,7 @@ void CreateScriptedDoubleWildMon(enum Species species1, u8 level1, enum Item ite
     u8 heldItem2[2];
 
     species1 = WorldRandomizeStaticSpecies(species1, 0);
-    species2 = WorldRandomizeStaticSpecies(species2, 1);
+    species2 = WorldRandomizeStaticSpecies(species2, 0);
     ZeroEnemyPartyMons();
     u32 personality = GetMonPersonality(species1,
         GetSynchronizedGender(STATIC_WILDMON_ORIGIN, species1),
@@ -808,21 +869,29 @@ void RoyalDuoCheckCapacity(void)
 
 void RoyalDuoPrepareBattle(void)
 {
-    const enum Species species[2] = {SPECIES_ZACIAN_HERO, SPECIES_ZAMAZENTA_HERO};
-    const enum Item items[2] = {ITEM_RUSTED_SWORD, ITEM_RUSTED_SHIELD};
+    const enum Species original[2] = {SPECIES_ZACIAN_HERO, SPECIES_ZAMAZENTA_HERO};
 
     ZeroEnemyPartyMons();
     for (u32 i = 0; i < 2; i++)
     {
         struct Pokemon *mon = &gParties[B_TRAINER_OPPONENT_A][i];
-        u32 personality = GetMonPersonality(species[i],
-            GetSynchronizedGender(STATIC_WILDMON_ORIGIN, species[i]),
-            GetSynchronizedNature(STATIC_WILDMON_ORIGIN, species[i]),
+        enum Species species = WorldRandomizeStaticSpecies(original[i], i);
+        enum Item item = ITEM_NONE;
+        u32 personality = GetMonPersonality(species,
+            GetSynchronizedGender(STATIC_WILDMON_ORIGIN, species),
+            GetSynchronizedNature(STATIC_WILDMON_ORIGIN, species),
             RANDOM_UNOWN_LETTER);
-        CreateMonWithIVs(mon, species[i], 50, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
+        CreateMonWithIVs(mon, species, 50, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
         GiveMonInitialMoveset(mon);
-        SetMonMoveSlot(mon, MOVE_IRON_HEAD, 0);
-        SetMonData(mon, MON_DATA_HELD_ITEM, &items[i]);
+        if (species == SPECIES_ZACIAN_HERO)
+            item = ITEM_RUSTED_SWORD;
+        else if (species == SPECIES_ZAMAZENTA_HERO)
+            item = ITEM_RUSTED_SHIELD;
+        if (item != ITEM_NONE)
+        {
+            SetMonMoveSlot(mon, MOVE_IRON_HEAD, 0);
+            SetMonData(mon, MON_DATA_HELD_ITEM, &item);
+        }
         CopyMon(&sRoyalDuoRewards[i], mon, sizeof(struct Pokemon));
     }
 }

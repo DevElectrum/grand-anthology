@@ -58,9 +58,8 @@ PokemonMansion_1F_Text_JohnsonPostBattle::
 
 // Independent pre-League encounters; preserve original local puzzle/story.
 PokemonMansion_1F_AnthologyOnTransition::
-	getcaughtmon SPECIES_MEW
-	call_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyHideMew
-	call_if_ne VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyShowMew
+	@ Encounter ownership is location-based: catching a random Mew elsewhere
+	@ must not erase whichever static inhabits this Mansion location.
 	getcaughtmon SPECIES_TYPE_NULL
 	call_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyHideTypeNull
 	call_if_ne VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyShowTypeNull
@@ -77,6 +76,8 @@ PokemonMansion_1F_AnthologyShowMew::
 PokemonMansion_1F_EventScript_Mew::
 	lock
 	faceplayer
+	special MewGauntletShouldRun
+	goto_if_eq VAR_RESULT, FALSE, PokemonMansion_1F_RandomizedMewStatic
 	playmoncry SPECIES_MEW, CRY_MODE_ENCOUNTER
 	waitmoncry
 	msgbox PokemonMansion_1F_Text_MewChallenge, MSGBOX_DEFAULT
@@ -121,6 +122,16 @@ PokemonMansion_1F_EventScript_Mew::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_AnthologyMewResolved
 	goto PokemonMansion_1F_AnthologyMewRetreated
+
+PokemonMansion_1F_RandomizedMewStatic::
+    @ No illusion battle unless the resident species really is Mew.
+    seteventmon SPECIES_MEW, 45
+    special BattleSetup_StartLegendaryBattle
+    waitstate
+    specialvar VAR_RESULT, GetBattleOutcome
+    goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_AnthologyMewResolved
+    @ Fainting/fleeing does not consume the static location.
+    goto PokemonMansion_1F_AnthologyMewRetreated
 
 PokemonMansion_1F_Text_MewChallenge::
 	.string "MEW looks at you curiously...\p"

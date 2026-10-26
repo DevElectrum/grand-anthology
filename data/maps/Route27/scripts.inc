@@ -288,13 +288,12 @@ Route27_RoyalDuoNotReady::
     end
 
 Route27_Text_RoyalDuoChallenge:
-    .string "ZACIAN and ZAMAZENTA guard the\l"
+    .string "Two guardian POKéMON guard the\l"
     .string "road to the POKéMON LEAGUE!\p"
     .string "Defeat them both to earn their trust!$"
 
 Route27_Text_RoyalDuoGift:
-    .string "ZACIAN and ZAMAZENTA join you!\p"
-    .string "Both carry their sacred relics.$"
+    .string "Both guardian POKéMON join you!$"
 
 Route27_Text_RoyalDuoNoRoom:
     .string "You need space for TWO POKéMON.\p"

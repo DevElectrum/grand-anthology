@@ -36,6 +36,7 @@
 #include "region_map.h"
 #include "rtc.h"
 #include "script.h"
+#include "script_pokemon_util.h"
 #include "sound.h"
 #include "sprite.h"
 #include "task.h"
@@ -2025,8 +2026,25 @@ u8 TrySpawnObjectEventTemplate(const struct ObjectEventTemplate *objectEventTemp
     struct SpriteFrameImage spriteFrameImage;
     const struct ObjectEventGraphicsInfo *graphicsInfo;
     const struct SubspriteTable *subspriteTables = NULL;
-    const struct ObjectEventTemplate objectEventTemplateLocal = TryGetObjectEventTemplateForOWE(objectEventTemplate);
+    struct ObjectEventTemplate objectEventTemplateLocal = TryGetObjectEventTemplateForOWE(objectEventTemplate);
     u16 graphicsId = objectEventTemplateLocal.graphicsId;
+#if ALL_REGIONS
+    if (gSaveBlock2Ptr != NULL && gSaveBlock2Ptr->randomizerStatics
+     && objectEventTemplateLocal.kind == OBJ_KIND_NORMAL
+     && objectEventTemplateLocal.trainerType == TRAINER_TYPE_NONE
+     && objectEventTemplateLocal.script != NULL
+     && objectEventTemplateLocal.flagId != 0
+     && (graphicsId & OBJ_EVENT_MON))
+    {
+        enum Species original = graphicsId & OBJ_EVENT_MON_SPECIES_MASK;
+        enum Species replacement = WorldRandomizeStaticSpecies(original, 0);
+        if (replacement != original && SpeciesToGraphicsInfo(replacement, FALSE, FALSE) != NULL)
+        {
+            graphicsId = GetGraphicsIdForMon(replacement, FALSE, FALSE);
+            objectEventTemplateLocal.graphicsId = graphicsId;
+        }
+    }
+#endif
 
     if (IsObstacleGraphicsId(graphicsId))
     {

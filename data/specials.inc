@@ -339,6 +339,7 @@ gSpecials::
 	def_special BattleSetup_StartLegendaryBattle, waitstate=1
 	def_special BattleSetup_StartRoyalDuoBattle, waitstate=1
 	def_special RoyalDuoCheckCapacity
+	def_special MewGauntletShouldRun
 	def_special RoyalDuoPrepareBattle
 	def_special RoyalDuoAwardVictory
 	def_special StartRegiBattle, waitstate=1
