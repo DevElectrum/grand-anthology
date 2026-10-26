@@ -27,6 +27,7 @@ class Save:
     flags: set = field(default_factory=set)
     caught: set = field(default_factory=set)
     variables: dict = field(default_factory=dict)
+    seeded: bool = False
 
 
 def run(labels, entry, save, outcome=None, yes=True):
@@ -47,8 +48,10 @@ def run(labels, entry, save, outcome=None, yes=True):
             return
         if op == "getcaughtmon":
             result = args[0] in save.caught
+        elif op == "callnative" and args[0] == "AnthologyStaticRandomizerIsOn":
+            result = save.seeded
         elif op == "seteventmon":
-            active_species = args[0]
+            active_species = "SPECIES_SEEDED_REPLACEMENT" if save.seeded else args[0]
         elif op == "specialvar" and args[-1] == "GetBattleOutcome":
             result = outcome
             # The battle engine registers the species when the ball succeeds,
@@ -463,3 +466,141 @@ assert "getcaughtmon SPECIES_RAYQUAZA" in harbor
 assert "warp MAP_BIRTH_ISLAND_HARBOR, 8, 4" in harbor
 assert "setvar VAR_FERRY_DEPARTURE, FERRY_DEPART_LILYCOVE" in harbor
 print("P0 Deoxys: native triangle plus ticket-free Rayquaza ferry source contract PASS")
+
+
+# Test the actual event-command branches with seeded catches. The current
+# original-species Pokédex may contain a species caught at another location,
+# but only this exact source site's successful capture may set its completion.
+# A KO must disappear for the visit and respawn on re-entry; run/teleport
+# never consume the encounter. This is source interpreter evidence, not mGBA.
+SEED_SITES = (
+    # map, transition, battle, original species, hide flag, captured-site bit, flags, vars
+    ("PokemonMansion_1F_Frlg", "PokemonMansion_1F_AnthologyOnTransition",
+     "PokemonMansion_1F_RandomizedMewStatic", "MEW", "FLAG_HIDE_ANTHOLOGY_MEW",
+     "FLAG_CAUGHT_RANDOM_MANSION_MEW", set(), {}),
+    ("PokemonMansion_1F_Frlg", "PokemonMansion_1F_AnthologyOnTransition",
+     "PokemonMansion_1F_EventScript_TypeNull", "TYPE_NULL", "FLAG_HIDE_ANTHOLOGY_TYPE_NULL",
+     "FLAG_CAUGHT_RANDOM_MANSION_TYPE_NULL", set(), {}),
+    ("IlexForest", "IlexForest_AnthologyOnTransition",
+     "IlexForest_EventScript_Zarude", "ZARUDE", "FLAG_HIDE_ANTHOLOGY_ZARUDE",
+     "FLAG_CAUGHT_RANDOM_ILEX_ZARUDE", set(), {}),
+    ("Route38", "Route38_FieldSyncRaikouReserve",
+     "Route38_EventScript_RaikouReserve", "RAIKOU", "FLAG_HIDE_ANTHOLOGY_BEAST_RAIKOU",
+     "FLAG_CAUGHT_RANDOM_ROUTE38_RAIKOU", {"FLAG_RELEASED_BEASTS"}, {}),
+    ("MtMortar_2F", "MtMortar_2F_FieldSyncEnteiReserve",
+     "MtMortar_2F_EventScript_EnteiReserve", "ENTEI", "FLAG_HIDE_ANTHOLOGY_BEAST_ENTEI",
+     "FLAG_CAUGHT_RANDOM_MTMORTAR_2F_ENTEI", {"FLAG_RELEASED_BEASTS"}, {}),
+    ("LakeOfRage", "LakeOfRage_FieldSyncSuicuneReserve",
+     "LakeOfRage_EventScript_SuicuneReserve", "SUICUNE", "FLAG_HIDE_ANTHOLOGY_BEAST_SUICUNE",
+     "FLAG_CAUGHT_RANDOM_LAKEOFRAGE_SUICUNE", {"FLAG_RELEASED_BEASTS"}, {"VAR_MAHOGANY_TOWN_STATE": 14}),
+    ("Route40", "Route40_AnthologyOnTransition",
+     "Route40_EventScript_Lugia", "LUGIA", "FLAG_HIDE_ANTHOLOGY_LUGIA",
+     "FLAG_CAUGHT_RANDOM_ROUTE40_LUGIA", set(), {}),
+    ("ShoalCave_LowTideIceRoom", "ShoalCave_LowTideIceRoom_OnTransition",
+     "ShoalCave_LowTideIceRoom_EventScript_Glastrier", "GLASTRIER",
+     "FLAG_HIDE_ANTHOLOGY_GLASTRIER", "FLAG_CAUGHT_RANDOM_SHOALCAVE_GLASTRIER", set(), {}),
+    ("Route118", "Route118_SecondBatchOnTransition",
+     "Route118_EventScript_IronBoulder", "IRON_BOULDER", "FLAG_HIDE_ANTHOLOGY_IRON_BOULDER",
+     "FLAG_CAUGHT_RANDOM_ROUTE118_IRON_BOULDER", set(), {}),
+    ("Route119", "Route119_AnthologyOnTransition",
+     "Route119_EventScript_RagingBolt", "RAGING_BOLT", "FLAG_HIDE_ANTHOLOGY_RAGING_BOLT",
+     "FLAG_CAUGHT_RANDOM_ROUTE119_RAGING_BOLT", set(), {}),
+    ("Route119", "Route119_XerneasTransition",
+     "Route119_EventScript_Xerneas", "XERNEAS", "FLAG_HIDE_ANTHOLOGY_XERNEAS",
+     "FLAG_CAUGHT_RANDOM_ROUTE119_XERNEAS", set(), {}),
+    ("Route120", "Route120_SecondBatchOnTransition",
+     "Route120_EventScript_IronLeaves", "IRON_LEAVES", "FLAG_HIDE_ANTHOLOGY_IRON_LEAVES",
+     "FLAG_CAUGHT_RANDOM_ROUTE120_IRON_LEAVES", set(), {}),
+    ("Route120", "Route120_SecondBatchOnTransition",
+     "Route120_EventScript_Latias", "LATIAS", "FLAG_HIDE_ANTHOLOGY_LATIAS",
+     "FLAG_CAUGHT_RANDOM_ROUTE120_LATIAS", set(), {}),
+    ("Route120", "Route120_WoChienTransition",
+     "Route120_EventScript_WoChien", "WO_CHIEN", "FLAG_HIDE_ANTHOLOGY_WO_CHIEN",
+     "FLAG_CAUGHT_RANDOM_ROUTE120_WO_CHIEN", set(), {}),
+    ("Route128_AncientGrotto", "Route128_AncientGrotto_AnthologyOnTransition",
+     "Route128_AncientGrotto_EventScript_Koraidon", "KORAIDON",
+     "FLAG_HIDE_ANTHOLOGY_KORAIDON", "FLAG_CAUGHT_RANDOM_ANCIENTGROTTO_KORAIDON",
+     {"FLAG_BADGE07_GET", "FLAG_DEFEATED_MAGMA_SPACE_CENTER"}, {}),
+    ("CeladonCity_Frlg", "CeladonCity_AnthologyOnTransition",
+     "CeladonCity_EventScript_TapuLele", "TAPU_LELE", "FLAG_HIDE_ANTHOLOGY_TAPU_LELE",
+     "FLAG_CAUGHT_RANDOM_CELADON_TAPU_LELE", set(), {}),
+    ("Route25_Frlg", "Route25_Frlg_OnTransition",
+     "Route25_EventScript_Suicune", "SUICUNE", "FLAG_HIDE_ROUTE25_SUICUNE",
+     "FLAG_CAUGHT_RANDOM_ROUTE25_SUICUNE", {"FLAG_JOHTO_CHAMPION"}, {"VAR_SUICUNE_ENCOUNTERS": 3}),
+)
+constants = (ROOT / "include/constants/flags.h").read_text()
+for directory, transition, battle, original, hidden, bit, gates, variables in SEED_SITES:
+    script = blocks(directory)
+    assert "#define " + bit in constants
+    assert bit not in gates
+    assert "setflag " + bit in (ROOT / "data/maps" / directory / "scripts.inc").read_text()
+    for outcome in ("B_OUTCOME_WON", "B_OUTCOME_RAN", "B_OUTCOME_PLAYER_TELEPORTED", "B_OUTCOME_CAUGHT"):
+        # Caught entry elsewhere must not suppress this source location.
+        state = Save(flags=set(gates), caught={"SPECIES_" + original},
+                     variables=dict(variables), seeded=True)
+        run(script, transition, state)
+        assert hidden not in state.flags, (directory, original, "original species from elsewhere hid site")
+        run(script, battle, state, outcome)
+        assert (bit in state.flags) == (outcome == "B_OUTCOME_CAUGHT"), (
+            directory, original, outcome, "incorrect source completion")
+        assert (hidden in state.flags) == (outcome in ("B_OUTCOME_WON", "B_OUTCOME_CAUGHT")), (
+            directory, original, outcome, "wrong same-visit hide")
+        saved = Save(flags=set(state.flags), caught=set(state.caught),
+                     variables=dict(state.variables), seeded=True)
+        run(script, transition, saved)
+        assert (hidden in saved.flags) == (outcome == "B_OUTCOME_CAUGHT"), (
+            directory, original, outcome, "wrong saved/revisited visibility")
+        if outcome == "B_OUTCOME_CAUGHT":
+            assert "SPECIES_SEEDED_REPLACEMENT" in saved.caught, (directory, "original used despite seed")
+print(f"P0 seeded source-site lifecycle: {len(SEED_SITES)} sites x 4 outcomes, re-entry/save and unrelated species ownership PASS")
+
+# Two Mew source sites feed one Mewtwo prerequisite. No unrelated Mew Dex
+# ownership can bypass the source-lifecycle gates.
+mewtwo = blocks("CeruleanCave_B1F_Frlg")
+for completion in (set(), {"FLAG_CAUGHT_RANDOM_MANSION_MEW"},
+                   {"FLAG_CAUGHT_RANDOM_FARAWAY_MEW"}):
+    state = Save(flags=set(completion), caught={"SPECIES_MEW"}, seeded=True)
+    run(mewtwo, "CeruleanCave_B1F_OnTransition", state)
+    assert ("FLAG_HIDE_MEWTWO" in state.flags) == (not completion)
+    if completion:
+        run(mewtwo, "CeruleanCave_B1F_EventScript_Mewtwo", state, "B_OUTCOME_CAUGHT")
+        assert "FLAG_CAUGHT_RANDOM_CERULEAN_MEWTWO" in state.flags
+        run(mewtwo, "CeruleanCave_B1F_OnTransition", state)
+        assert "FLAG_HIDE_MEWTWO" in state.flags
+print("P0 seeded Mew/Mewtwo source prerequisite and captured Mewtwo persistence PASS")
+
+# Johto's two Celebi sources are independent in seeded mode. The second
+# source retains the Champion/Azalea prerequisites while unrelated captures
+# of original Celebi cannot consume either source.
+ilex = blocks("IlexForest")
+shrine = Save(flags={"FLAG_JOHTO_CHAMPION"}, caught={"SPECIES_CELEBI"},
+              variables={"VAR_AZALEA_TOWN_STATE": 10}, seeded=True)
+run(ilex, "IlexForest_EventScript_CelebiRematch", shrine, "B_OUTCOME_CAUGHT")
+assert "FLAG_CAUGHT_RANDOM_ILEX_SHRINE_CELEBI" in shrine.flags
+assert "FLAG_CAUGHT_RANDOM_ILEX_SECOND_CELEBI" not in shrine.flags
+run(ilex, "IlexForest_EventScript_SecondCelebi", shrine, "B_OUTCOME_CAUGHT")
+assert "FLAG_CAUGHT_RANDOM_ILEX_SECOND_CELEBI" in shrine.flags
+run(ilex, "IlexForest_EventScript_SyncSecondCelebi", shrine)
+assert "FLAG_HIDE_ILEX_FOREST_SECOND_CELEBI" in shrine.flags
+print("P0 seeded two-site Celebi capture independence PASS")
+
+# Ho-Oh may only appear after catching all three beast SOURCE locations, not
+# merely after owning the original Raikou/Entei/Suicune dex entries.
+roof = blocks("TinTower_RoofDay")
+beast_sites = {"FLAG_CAUGHT_RANDOM_ROUTE38_RAIKOU",
+               "FLAG_CAUGHT_RANDOM_MTMORTAR_2F_ENTEI",
+               "FLAG_CAUGHT_RANDOM_LAKEOFRAGE_SUICUNE"}
+for absent in beast_sites:
+    state = Save(flags={"FLAG_RELEASED_BEASTS"} | (beast_sites - {absent}),
+                 caught={"SPECIES_RAIKOU", "SPECIES_ENTEI", "SPECIES_SUICUNE"},
+                 seeded=True)
+    run(roof, "TinTower_RoofDay_AnthologyHoOhGate", state)
+    assert "FLAG_HIDE_HO_OH" in state.flags
+state = Save(flags={"FLAG_RELEASED_BEASTS"} | beast_sites, seeded=True)
+run(roof, "TinTower_RoofDay_AnthologyHoOhGate", state)
+assert "FLAG_HIDE_HO_OH" not in state.flags
+run(roof, "TinTower_RoofDay_EventScript_CaughtHooh", state)
+assert "FLAG_CAUGHT_RANDOM_TINTOWER_HO_OH" in state.flags
+run(roof, "TinTower_RoofDay_AnthologyHoOhGate", state)
+assert "FLAG_HIDE_HO_OH" in state.flags
+print("P0 seeded Ho-Oh beast-source prerequisite, capture and repeat prevention PASS")
