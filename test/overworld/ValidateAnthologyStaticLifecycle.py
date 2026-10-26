@@ -607,3 +607,51 @@ assert "FLAG_CAUGHT_RANDOM_TINTOWER_HO_OH" in state.flags
 run(roof, "TinTower_RoofDay_AnthologyHoOhGate", state)
 assert "FLAG_HIDE_HO_OH" in state.flags
 print("P0 seeded Ho-Oh beast-source prerequisite, capture and repeat prevention PASS")
+
+
+# Native weather trio: neither a Rayquaza from elsewhere nor an original
+# Groudon/Kyogre in the Dex can unlock/consume the seeded local source.
+for area, native, species, bit, hidden in (
+    ("SkyPillar_Top", "Rayquaza", "RAYQUAZA",
+     "FLAG_CAUGHT_RANDOM_SKYPILLAR_RAYQUAZA", "FLAG_HIDE_SKY_PILLAR_TOP_RAYQUAZA_STILL"),
+    ("TerraCave_End", "Groudon", "GROUDON",
+     "FLAG_CAUGHT_RANDOM_TERRACAVE_GROUDON", "FLAG_HIDE_TERRA_CAVE_GROUDON"),
+    ("MarineCave_End", "Kyogre", "KYOGRE",
+     "FLAG_CAUGHT_RANDOM_MARINECAVE_KYOGRE", "FLAG_HIDE_MARINE_CAVE_KYOGRE"),
+):
+    script = blocks(area)
+    state = Save(caught={"SPECIES_RAYQUAZA", "SPECIES_" + species},
+                 seeded=True)
+    if area != "SkyPillar_Top":
+        run(script, area + "_OnTransition", state)
+        assert hidden in state.flags, (area, "unrelated Rayquaza capture bypassed cave gate")
+        state.flags.add("FLAG_CAUGHT_RANDOM_SKYPILLAR_RAYQUAZA")
+        run(script, area + "_OnTransition", state)
+        assert hidden not in state.flags, (area, "source Rayquaza failed to open native cave")
+    else:
+        state.variables["VAR_SKY_PILLAR_STATE"] = 2
+        run(script, "SkyPillar_Top_EventScript_TryShowRayquaza", state)
+        assert hidden not in state.flags, (area, "unrelated Rayquaza captured elsewhere")
+    run(script, area + "_EventScript_" + native, state, "B_OUTCOME_CAUGHT")
+    assert bit in state.flags, (area, "native captured source bit absent")
+    check = (area + "_OnTransition" if area != "SkyPillar_Top"
+             else "SkyPillar_Top_EventScript_TryShowRayquaza")
+    run(script, check, state)
+    assert hidden in state.flags, (area, "caught native source reappeared")
+print("P0 seeded native Rayquaza, Groudon and Kyogre prereqs and captures PASS")
+
+tower = blocks("EmbeddedTower")
+for native, source_flag, hidden in (
+    ("Rayquaza", "FLAG_CAUGHT_RANDOM_EMBEDDED_RAYQUAZA", "FLAG_HIDE_RAYQUAZA"),
+    ("Groudon", "FLAG_CAUGHT_RANDOM_EMBEDDED_GROUDON", "FLAG_HIDE_GROUDON"),
+    ("Kyogre", "FLAG_CAUGHT_RANDOM_EMBEDDED_KYOGRE", "FLAG_HIDE_KYOGRE"),
+):
+    state = Save(caught={"SPECIES_" + native.upper()}, seeded=True)
+    run(tower, "EmbeddedTower_OnTransition", state)
+    assert source_flag not in state.flags, ("embedded premature completion", native)
+    run(tower, "EmbeddedTower_EventScript_" + native, state, "B_OUTCOME_CAUGHT")
+    assert source_flag in state.flags, ("embedded missing source bit", native)
+    saved = Save(set(state.flags), set(state.caught), dict(state.variables), True)
+    run(tower, "EmbeddedTower_OnTransition", saved)
+    assert hidden in saved.flags, ("embedded captured source respawned", native)
+print("P0 seeded three independent Embedded Tower captures PASS")
