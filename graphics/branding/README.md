@@ -25,3 +25,7 @@ wordmark: it has no Pokémon lettering to align against and keeps its own center
 
 The current 20-image gallery lives in [`screenshots/showcase/`](screenshots/showcase/README.md),
 with ROM/capture hashes. The six original screenshots are retained as historical assets.
+
+## Grand Anthology redesign candidates
+
+The full-resolution [standalone project logo and simplified regional title-screen concepts](concepts/README.md) from 26 October 2026 are archived for future branding and GBA art work. They are **not yet applied** to the game, the README banner, or the existing Pokémon World logo pipeline.
