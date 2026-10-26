@@ -110,3 +110,8 @@ Six source flags cover Route 32 Keldeo, Vermilion Meltan, Mt Chimney Volcanion, 
 ## Source sweep: duplicate legendary islands (26 October)
 
 Eight additional source-specific seeded flags cover two Navel Rock Ho-Oh sites, two Navel Rock Lugia sites, Southern Island's story-selected Latios/Latias, Mt Silver's native Moltres, Whirl Islands Lugia, and the alternate FRLG Birth Island Deoxys. Their randomized captures no longer consume their sibling locations merely by original-species ownership. Story gates, native cutscenes, puzzle interactions and original-mode flags remain; seeded noncapture paths leave local caught flags unset. No tests requested or performed.
+
+
+## Source-only sweep completion checkpoint
+
+The 2026-10-26 sweep adds **28 more captured-source slots** to the earlier 72, reaching **100** sequential randomizer-on site flags in the pre-existing saved world-map bank, offsets `0x12D..0x190` (next free `0x191`). The registry validator no longer hardcodes 72; it derives its expected end offset from the next-free marker. Existing ordinary/form/duo captured-site flags are separate and are not counted in the 100. This source sweep deliberately avoids testing, per the maintainer's instruction. Do not claim successful compilation, emulator acceptance, or full gameplay persistence on these commits.

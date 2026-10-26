@@ -169,9 +169,15 @@ source_defs = re.findall(
     r"^#define (FLAG_CAUGHT_RANDOM_[A-Z0-9_]+) \(FLAG_WORLD_MAP_BANK \+ 0x([0-9A-Fa-f]+)\)$",
     flag_source, re.M)
 source_slots = {int(value, 16): name for name, value in source_defs}
-assert len(source_defs) == len(source_slots) == 72, (
-    "Seeded location flags must have 72 unique saved offsets", len(source_defs), len(source_slots))
-assert set(source_slots) == set(range(0x12D, 0x175)), "Noncontiguous source flag bank or accidental reuse"
+next_free_match = re.search(
+    r"^// Next free world-map flag: bank \+ 0x([0-9A-Fa-f]+)\.$",
+    flag_source, re.M)
+assert next_free_match, "Missing explicit seeded capture-site flag allocation boundary"
+next_free_offset = int(next_free_match.group(1), 16)
+assert len(source_defs) == len(source_slots), "Duplicate seeded source flag save offset"
+assert set(source_slots) == set(range(0x12D, next_free_offset)), (
+    "Noncontiguous seeded source flags or incorrect next-free marker",
+    len(source_slots), hex(next_free_offset))
 assert 0xD40 + max(source_slots) < 0x1030, "Source flags exceed saved FLAGS_COUNT"
 all_world_map_flags = re.findall(
     r"^#define (FLAG_[A-Z0-9_]+) \(FLAG_WORLD_MAP_BANK \+ 0x([0-9A-Fa-f]+)\)$",
@@ -184,4 +190,4 @@ for other, value in all_world_map_flags:
 map_scripts = "\n".join(path.read_text() for path in (root / "data/maps").glob("*/scripts.inc"))
 for flag in source_slots.values():
     assert "setflag " + flag in map_scripts, ("Caught-source flag never written in map scripts", flag)
-print("P0 all 72 seeded source-caught flags: contiguous, noncolliding, inside save bank, written from game scripts PASS")
+print(f"P0 all {len(source_slots)} seeded source-caught flags: contiguous, noncolliding, inside save bank, written from game scripts PASS")

@@ -1,5 +1,5 @@
 
-> **Randomizer repair checkpoint (26 Oct 2026):** Read [current repair progress and unresolved static-persistence work](docs/NEW_GAME_RANDOMIZER_REPAIR_PROGRESS_2026-10-26.md) before further New Game/randomizer changes. Approved title artwork and converter are integrated in source; verify the precise CI build and title display in mGBA before declaring visual acceptance. Static persistence remains incomplete.
+> **Randomizer source-sweep checkpoint (26 Oct 2026):** Read [current repair progress](docs/NEW_GAME_RANDOMIZER_REPAIR_PROGRESS_2026-10-26.md) and [the static source-sweep ledger](docs/STATIC_PERSISTENCE_SOURCE_SWEEP_2026-10-26.md) before further encounter edits. The Grand Anthology title screen already passed real mGBA 25/25 checks on an earlier verified SHA. The 2026-10-26 source sweep has **100 independent seeded static capture-site flags** at offsets `0x12D..0x190`, plus existing form/duo flags. The maintainer explicitly requested **no testing during the sweep**: do not present these newest edits as compiled or gameplay-verified.
 # Active Astra catalog entrypoint (25 October 2026)
 
 **Future Astras: search the current source-indexed acquisition atlas before editing Pokémon, item, shop, or reward placement.**
