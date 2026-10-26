@@ -19,7 +19,7 @@ fresh=read("src/new_game.c")
 version=read("include/constants/global.h")
 wild=read("src/wild_encounter.c")
 menu=read("src/debug.c")
-require("#define SAVE_FORMAT_VERSION 12", version)
+require("#define SAVE_FORMAT_VERSION 13", version)
 for statement in ("u8 randomizerWild:1;", "u8 randomizerTrainers:1;", "u8 randomizerStatics:1;", "u8 randomizerGifts:1;", "u8 randomizerStarters:1;",
                   "/*0x96*/ u16 randomizerSeed;", "sizeof(struct SaveBlock2) == 0xF2C"):
     require(statement, layout)

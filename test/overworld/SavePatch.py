@@ -90,7 +90,7 @@ FLASH_SIZE = SECTOR_SIZE * 32                            # 131072
 ID_SB2, ID_SB1_START, ID_SB1_END = 0, 1, 4
 ID_PK_START, ID_PK_END = 5, 13
 
-SAVE_FORMAT_VERSION = 12
+SAVE_FORMAT_VERSION = 13
 SAVE_FORMAT_LAYOUT_MIN = 7
 
 # --- v9 -> v10 (issue #195) ---------------------------------------------------
@@ -727,6 +727,15 @@ def migrate(sv):
             struct.pack_into('<H', sv.sb2, seed_off, 2026)
             log.append('v11->v12 randomizer modes OFF and seed=2026 '
                        f'(intro bits {prior & 7:#x} preserved)')
+
+        # v12 -> v13: the upper six bits of 0x16 used to be padding.
+        # Initialize static mode=ordinary, locked=yes, algorithm=legacy.
+        # Preserve EXP, catch, Hard Mode, nicknames, and shiny settings.
+        if ver < 13:
+            option_bits = int.from_bytes(sv.sb2[0x16:0x18], 'little')
+            option_bits = (option_bits & 0x03FF) | (1 << 12)
+            struct.pack_into('<H', sv.sb2, 0x16, option_bits)
+            log.append('v12->v13 randomizer mode=ordinary, lock=ON, algorithm=legacy')
 
         sv.sb2[V['SB2.saveVersion']] = SAVE_FORMAT_VERSION
         log.append(f'saveVersion {ver} -> {SAVE_FORMAT_VERSION}')

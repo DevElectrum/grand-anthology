@@ -23,7 +23,7 @@ need(layout, "u8 randomizerGifts:1;")
 need(layout, "u8 randomizerStarters:1;")
 need(layout, "/*0x96*/ u16 randomizerSeed")
 need(layout, "sizeof(struct SaveBlock2) == 0xF2C")
-need(src("include/constants/global.h"), "#define SAVE_FORMAT_VERSION 12")
+need(src("include/constants/global.h"), "#define SAVE_FORMAT_VERSION 13")
 need(migrate, "if (savedVersion < 12)")
 migration=migrate.split("if (savedVersion < 12)",1)[1].split("gSaveBlock2Ptr->saveVersion = SAVE_FORMAT_VERSION",1)[0]
 for name in ("randomizerWild", "randomizerTrainers", "randomizerStatics"):

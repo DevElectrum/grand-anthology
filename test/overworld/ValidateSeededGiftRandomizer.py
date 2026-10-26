@@ -22,7 +22,7 @@ need(layout,"sizeof(struct SaveBlock2) == 0xF2C")
 need(migrate,"if (savedVersion < 12)")
 for block in (migrate, fresh):
     need(block,"gSaveBlock2Ptr->randomizerGifts = FALSE;")
-need(src("include/constants/global.h"),"#define SAVE_FORMAT_VERSION 12")
+need(src("include/constants/global.h"),"#define SAVE_FORMAT_VERSION 13")
 need(src("test/overworld/SavePatch.py"),"sv.sb2[bits_off] &= 0x07")
 need(gift,"static enum Species WorldRandomizeOptionalGiftSpecies(enum Species original)")
 need(gift,"!gSaveBlock2Ptr->randomizerGifts")
