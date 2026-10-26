@@ -60,9 +60,6 @@ PokemonMansion_1F_Text_JohnsonPostBattle::
 PokemonMansion_1F_AnthologyOnTransition::
 	callnative AnthologyStaticRandomizerIsOn
 	goto_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologySeededTransition
-	getcaughtmon SPECIES_MEW
-	call_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyHideMew
-	call_if_ne VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyShowMew
 	getcaughtmon SPECIES_TYPE_NULL
 	call_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyHideTypeNull
 	call_if_ne VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyShowTypeNull
