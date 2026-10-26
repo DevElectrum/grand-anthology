@@ -35,8 +35,24 @@ FarawayIsland_Interior_EventScript_TryRemoveMew::
 FarawayIsland_Interior_OnTransition:
 	setvar VAR_FARAWAY_ISLAND_STEP_COUNTER, 0
 	setvar VAR_TEMP_1, 1
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, FarawayIsland_Interior_OnSeededTransition
 	call_if_unset FLAG_CAUGHT_MEW, FarawayIsland_Interior_EventScript_TryShowMew
 	end
+
+FarawayIsland_Interior_OnSeededTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_FARAWAY_MEW, FarawayIsland_Interior_EventScript_HideCaughtMew
+	call_if_unset FLAG_CAUGHT_RANDOM_FARAWAY_MEW, FarawayIsland_Interior_EventScript_ShowSeededMew
+	end
+
+FarawayIsland_Interior_EventScript_HideCaughtMew::
+	setflag FLAG_HIDE_MEW
+	return
+
+FarawayIsland_Interior_EventScript_ShowSeededMew::
+	clearflag FLAG_HIDE_MEW
+	setvar VAR_TEMP_1, 0
+	return
 
 FarawayIsland_Interior_EventScript_TryShowMew::
 	goto_if_set FLAG_DEFEATED_MEW, Common_EventScript_NopReturn
@@ -136,7 +152,14 @@ FarawayIsland_Interior_EventScript_Mew::
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, FarawayIsland_Interior_EventScript_PlayerOrMewRan
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, FarawayIsland_Interior_EventScript_PlayerOrMewRan
 	goto_if_eq VAR_RESULT, B_OUTCOME_MON_TELEPORTED, FarawayIsland_Interior_EventScript_PlayerOrMewRan
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, FarawayIsland_Interior_EventScript_MewCaughtSeeded
 	setflag FLAG_CAUGHT_MEW
+	release
+	end
+
+FarawayIsland_Interior_EventScript_MewCaughtSeeded::
+	setflag FLAG_CAUGHT_RANDOM_FARAWAY_MEW
 	release
 	end
 

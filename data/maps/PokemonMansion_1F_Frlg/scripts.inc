@@ -58,11 +58,21 @@ PokemonMansion_1F_Text_JohnsonPostBattle::
 
 // Independent pre-League encounters; preserve original local puzzle/story.
 PokemonMansion_1F_AnthologyOnTransition::
-	@ Encounter ownership is location-based: catching a random Mew elsewhere
-	@ must not erase whichever static inhabits this Mansion location.
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologySeededTransition
+	getcaughtmon SPECIES_MEW
+	call_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyHideMew
+	call_if_ne VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyShowMew
 	getcaughtmon SPECIES_TYPE_NULL
 	call_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyHideTypeNull
 	call_if_ne VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyShowTypeNull
+	return
+
+PokemonMansion_1F_AnthologySeededTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_MANSION_MEW, PokemonMansion_1F_AnthologyHideMew
+	call_if_unset FLAG_CAUGHT_RANDOM_MANSION_MEW, PokemonMansion_1F_AnthologyShowMew
+	call_if_set FLAG_CAUGHT_RANDOM_MANSION_TYPE_NULL, PokemonMansion_1F_AnthologyHideTypeNull
+	call_if_unset FLAG_CAUGHT_RANDOM_MANSION_TYPE_NULL, PokemonMansion_1F_AnthologyShowTypeNull
 	return
 
 PokemonMansion_1F_AnthologyHideMew::
@@ -151,12 +161,18 @@ PokemonMansion_1F_Text_MewRevealed::
 	.string "The real MEW appeared!$"
 
 PokemonMansion_1F_AnthologyMewResolved::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyMarkSeededMew
 	fadescreenswapbuffers FADE_TO_BLACK
 	removeobject LOCALID_ANTHOLOGY_MEW
 	setflag FLAG_HIDE_ANTHOLOGY_MEW
 	fadescreenswapbuffers FADE_FROM_BLACK
 	release
 	end
+
+PokemonMansion_1F_AnthologyMarkSeededMew::
+	setflag FLAG_CAUGHT_RANDOM_MANSION_MEW
+	return
 
 PokemonMansion_1F_AnthologyMewRetreated::
 	release
@@ -181,10 +197,19 @@ PokemonMansion_1F_EventScript_TypeNull::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PokemonMansion_1F_AnthologyTypeNullRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PokemonMansion_1F_AnthologyTypeNullRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_AnthologyTypeNullResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PokemonMansion_1F_AnthologyTypeNullCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PokemonMansion_1F_AnthologyTypeNullResolved
 	release
 	end
+
+PokemonMansion_1F_AnthologyTypeNullCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, PokemonMansion_1F_AnthologyMarkSeededTypeNull
+	goto PokemonMansion_1F_AnthologyTypeNullResolved
+
+PokemonMansion_1F_AnthologyMarkSeededTypeNull::
+	setflag FLAG_CAUGHT_RANDOM_MANSION_TYPE_NULL
+	return
 
 PokemonMansion_1F_AnthologyTypeNullResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

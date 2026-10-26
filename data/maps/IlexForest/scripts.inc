@@ -17,6 +17,8 @@ IlexForest_OnTransition:
 	call_if_eq VAR_ILEX_FOREST_FARFETCHD, 1, IlexForest_EventScript_ReenterWhenFarfetchdLeaving
 	call_if_eq VAR_ILEX_FOREST_FARFETCHD, 2, IlexForest_EventScript_ReenterDuringCutScene
 	call_if_lt VAR_AZALEA_TOWN_STATE, 9, IlexForest_EventScript_HideShrineCast
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IlexForest_SeededCaughtTransition
 	getcaughtmon SPECIES_CELEBI
 	call_if_eq VAR_RESULT, TRUE, IlexForest_EventScript_Shrine_Caught
 	call IlexForest_EventScript_SyncSecondCelebi
@@ -29,13 +31,31 @@ IlexForest_OnTransition:
 @ three for new files; ON_TRANSITION runs before objects spawn, so this is what repairs a
 @ save that already exists. These only ever SET - the clears stay with the scripts that own
 @ the encounter, so this can never hand out an encounter the player has not earned.
+IlexForest_SeededCaughtTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ILEX_SHRINE_CELEBI, IlexForest_EventScript_HideCaughtShrine
+	call IlexForest_EventScript_SyncSecondCelebi
+	call IlexForest_AnthologyOnTransition
+	end
+
+IlexForest_EventScript_HideCaughtShrine::
+	setflag FLAG_HIDE_CELEBI
+	return
+
 IlexForest_EventScript_HideShrineCast::
 	setflag FLAG_HIDE_CELEBI
 	setflag FLAG_HIDE_ILEX_FOREST_KURT
 	return
 
 IlexForest_EventScript_SyncSecondCelebi::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IlexForest_EventScript_SeededSecondCelebi
 	goto_if_set FLAG_CAUGHT_CELEBI, IlexForest_EventScript_HideSecondCelebi
+	goto IlexForest_EventScript_SecondCelebiGate
+
+IlexForest_EventScript_SeededSecondCelebi::
+	goto_if_set FLAG_CAUGHT_RANDOM_ILEX_SECOND_CELEBI, IlexForest_EventScript_HideSecondCelebi
+
+IlexForest_EventScript_SecondCelebiGate::
 	goto_if_unset FLAG_JOHTO_CHAMPION, IlexForest_EventScript_HideSecondCelebi
 	goto_if_lt VAR_AZALEA_TOWN_STATE, 10, IlexForest_EventScript_HideSecondCelebi
 	return
@@ -352,8 +372,16 @@ IlexForest_EventScript_Kurt::
 // Completing Kurt's first shrine cutscene does not consume an uncaught
 // Celebi.  Later shrine interactions use a short, story-safe rematch instead.
 IlexForest_EventScript_CelebiRematch::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IlexForest_EventScript_SeededShrineRematch
 	getcaughtmon SPECIES_CELEBI
 	goto_if_eq VAR_RESULT, TRUE, IlexForest_EventScript_ShrineRegularText
+	goto IlexForest_EventScript_BeginShrineRematch
+
+IlexForest_EventScript_SeededShrineRematch::
+	goto_if_set FLAG_CAUGHT_RANDOM_ILEX_SHRINE_CELEBI, IlexForest_EventScript_ShrineRegularText
+
+IlexForest_EventScript_BeginShrineRematch::
 	msgbox IlexForest_Text_ShrineCelebiEvent, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, FALSE, IlexForest_EventScript_Shrine_Cancel
 	playmoncry SPECIES_CELEBI, CRY_MODE_ENCOUNTER
@@ -367,7 +395,13 @@ IlexForest_EventScript_CelebiRematch::
 	end
 
 IlexForest_EventScript_Shrine_Caught::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IlexForest_EventScript_ShrineSeededCaught
 	setflag FLAG_CAUGHT_CELEBI
+	return
+
+IlexForest_EventScript_ShrineSeededCaught::
+	setflag FLAG_CAUGHT_RANDOM_ILEX_SHRINE_CELEBI
 	return
 
 IlexForest_EventScript_Shrine_Cancel::
@@ -390,13 +424,23 @@ waitstate
 	@ Record the catch here too. The Hall of Fame rematch branch re-runs SetGameClearFlags on
 	@ every subsequent championship, so without this marker a player who caught the second
 	@ Celebi would have the hide flag cleared again and again - a farmable duplicate.
-	call_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IlexForest_EventScript_Shrine_Caught
+	call_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IlexForest_EventScript_SecondCelebiCaught
 	fadescreenswapbuffers FADE_TO_BLACK
 	removeobject LOCALID_ILEX_FOREST_SECOND_CELEBI
 	setflag FLAG_HIDE_ILEX_FOREST_SECOND_CELEBI
 	fadescreenswapbuffers FADE_FROM_BLACK
 	release
 	end
+
+IlexForest_EventScript_SecondCelebiCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IlexForest_EventScript_SecondSeededCaught
+	setflag FLAG_CAUGHT_CELEBI
+	return
+
+IlexForest_EventScript_SecondSeededCaught::
+	setflag FLAG_CAUGHT_RANDOM_ILEX_SECOND_CELEBI
+	return
 
 IlexForest_EventScript_SecondCelebiRan::
 	release
@@ -885,9 +929,16 @@ IlexForest_Text_Kimono_Girl5:
 @ Zarude inhabits forest troops. This local rare individual is deliberately
 @ discoverable as a static and is independent of Celebi's shrine story.
 IlexForest_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IlexForest_SeededZarudeTransition
 	getcaughtmon SPECIES_ZARUDE
 	call_if_eq VAR_RESULT, TRUE, IlexForest_AnthologyHideZarude
 	call_if_ne VAR_RESULT, TRUE, IlexForest_AnthologyShowZarude
+	return
+
+IlexForest_SeededZarudeTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ILEX_ZARUDE, IlexForest_AnthologyHideZarude
+	call_if_unset FLAG_CAUGHT_RANDOM_ILEX_ZARUDE, IlexForest_AnthologyShowZarude
 	return
 
 IlexForest_AnthologyHideZarude::
@@ -909,10 +960,19 @@ IlexForest_EventScript_Zarude::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, IlexForest_AnthologyZarudeRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, IlexForest_AnthologyZarudeRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IlexForest_AnthologyZarudeResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IlexForest_AnthologyZarudeCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, IlexForest_AnthologyZarudeResolved
 	release
 	end
+
+IlexForest_AnthologyZarudeCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, IlexForest_MarkSeededZarude
+	goto IlexForest_AnthologyZarudeResolved
+
+IlexForest_MarkSeededZarude::
+	setflag FLAG_CAUGHT_RANDOM_ILEX_ZARUDE
+	return
 
 IlexForest_AnthologyZarudeResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

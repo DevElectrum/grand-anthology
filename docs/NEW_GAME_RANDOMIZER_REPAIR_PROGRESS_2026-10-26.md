@@ -62,6 +62,10 @@ In randomized games, Hoenn's native Regirock/Regice/Registeel rooms, Rock Tunnel
 Integrated the **approved** 240 × 160, 239-color indexed title image with Oak, Elm, Birch, seated trainer, Arcanine, Eevee, Pikachu, Mudkip and Rowlet. Its precise PNG Git blob is `fa073c5748d3602411fa2e8c16aa97eaa9439727` (SHA-256 `b23ffce8b56cda032dc88e46e8d7fabec5207b6021fea00a077af7a01f9a9967`). `tools/build_anthology_title.py` converts it into native BG0 tiles, palette and map before `src/title_screen_world.c` is compiled, using a Makefile stamp. Original World scenery/fog render paths and duplicate prompt sprites are no longer loaded; credits remain in their existing flow. A, Start, save clear, RTC, SELECT quickstart and title music paths remain in source. The image's PRESS START is static. **Build and actual mGBA screen acceptance must be verified from the exact integration commit; source review is not runtime proof.**
 
 
+## 26 October 2026 seed-mode source-location story repair
+
+The mansion Mew and Type: Null, Faraway Island Mew, Cerulean Cave Mewtwo, Ilex Forest first shrine Celebi, Hall-of-Fame second Celebi and Ilex Zarude receive independent capture-source flags. Mewtwo's randomizer-on Mew prerequisite accepts either Mansion or Faraway captured source, not an unrelated original-species catch. Original mode retains original species-Dex/plot paths. Flee/KO cannot set new flags. Script-level capture/revisit and plot acceptance is still needed.
+
 ## Final title-screen and CI verification (26 October 2026)
 
 - Approved PNG SHA-256: `b23ffce8b56cda032dc88e46e8d7fabec5207b6021fea00a077af7a01f9a9967`.
