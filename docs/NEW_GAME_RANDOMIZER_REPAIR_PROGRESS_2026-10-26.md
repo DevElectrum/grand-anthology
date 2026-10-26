@@ -66,6 +66,10 @@ Integrated the **approved** 240 × 160, 239-color indexed title image with Oak, 
 
 The mansion Mew and Type: Null, Faraway Island Mew, Cerulean Cave Mewtwo, Ilex Forest first shrine Celebi, Hall-of-Fame second Celebi and Ilex Zarude receive independent capture-source flags. Mewtwo's randomizer-on Mew prerequisite accepts either Mansion or Faraway captured source, not an unrelated original-species catch. Original mode retains original species-Dex/plot paths. Flee/KO cannot set new flags. Script-level capture/revisit and plot acceptance is still needed.
 
+## 26 October 2026 beast quest and duplicate-source sweep
+
+Six more source-caught flags isolate Raikou (Route 38), Entei (Mt. Mortar 2F), Suicune (Lake of Rage), Ho-Oh (Tin Tower rooftop), Lugia (Route 40), and the Shoal Cave Glastrier from overlapping original-species ownership. In seeded mode Ho-Oh requires the three **source-location beast catches** plus their released story flag; Off mode keeps the original caught-Dex gates. The Ice Path and Shoal Cave Glastrier sites remain independent in seeded mode. These are source fixes, not yet representative gameplay acceptance.
+
 ## Final title-screen and CI verification (26 October 2026)
 
 - Approved PNG SHA-256: `b23ffce8b56cda032dc88e46e8d7fabec5207b6021fea00a077af7a01f9a9967`.

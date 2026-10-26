@@ -207,8 +207,14 @@ Route38_FieldGalarianZapdosRetreated::
 // Approved fixed Raikou encounter after the Burned Tower awakening.
 Route38_FieldSyncRaikouReserve::
 	goto_if_unset FLAG_RELEASED_BEASTS, Route38_FieldHideRaikouReserve
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route38_FieldSyncSeededRaikouReserve
 	getcaughtmon SPECIES_RAIKOU
 	goto_if_eq VAR_RESULT, TRUE, Route38_FieldHideRaikouReserve
+	goto Route38_FieldShowRaikouReserve
+
+Route38_FieldSyncSeededRaikouReserve::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE38_RAIKOU, Route38_FieldHideRaikouReserve
 	goto Route38_FieldShowRaikouReserve
 
 Route38_FieldHideRaikouReserve::
@@ -230,10 +236,19 @@ Route38_EventScript_RaikouReserve::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route38_FieldRaikouReserveRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route38_FieldRaikouReserveRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route38_FieldRaikouReserveResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route38_FieldRaikouReserveCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route38_FieldRaikouReserveResolved
 	release
 	end
+
+Route38_FieldRaikouReserveCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route38_MarkSeededRaikou
+	goto Route38_FieldRaikouReserveResolved
+
+Route38_MarkSeededRaikou::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE38_RAIKOU
+	return
 
 Route38_FieldRaikouReserveResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

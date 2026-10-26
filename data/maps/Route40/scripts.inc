@@ -199,9 +199,16 @@ Rotue40_EventScript_MonicaCompleted::
 
 // New static acquisition flags are independent of original Johto plot events.
 Route40_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route40_SeededLugiaTransition
 	getcaughtmon SPECIES_LUGIA
 	call_if_eq VAR_RESULT, TRUE, Route40_AnthologyHideLugia
 	call_if_ne VAR_RESULT, TRUE, Route40_AnthologyShowLugia
+	return
+
+Route40_SeededLugiaTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE40_LUGIA, Route40_AnthologyHideLugia
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE40_LUGIA, Route40_AnthologyShowLugia
 	return
 
 Route40_AnthologyHideLugia::
@@ -225,10 +232,19 @@ Route40_EventScript_Lugia::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route40_AnthologyLugiaRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route40_AnthologyLugiaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route40_AnthologyLugiaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route40_AnthologyLugiaCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route40_AnthologyLugiaResolved
 	release
 	end
+
+Route40_AnthologyLugiaCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route40_MarkSeededLugia
+	goto Route40_AnthologyLugiaResolved
+
+Route40_MarkSeededLugia::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE40_LUGIA
+	return
 
 Route40_AnthologyLugiaResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

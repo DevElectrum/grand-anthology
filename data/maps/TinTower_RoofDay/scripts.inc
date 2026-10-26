@@ -38,10 +38,19 @@ TinTower_RoofDay_MapScript_HoohStory::
 
 TinTower_RoofDay_MapScript_HoohPostStoryGone::
 	setflag FLAG_HIDE_TIN_TOWER_KIMONO_GIRLS
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, TinTower_RoofDay_SeededPostStoryCaught
 	getcaughtmon SPECIES_HO_OH
 	goto_if_eq VAR_RESULT, TRUE, TinTower_RoofDay_MapScript_HoohAlreadyCaught
 	// Defeated, not caught: retry on the very next room visit. The native
 	// cinematic is already complete; keep the post-story encounter instead.
+	setvar VAR_COMPLETED_HO_OH, 4
+	call TinTower_RoofDay_AnthologyHoOhGate
+	setobjectxyperm LOCALID_HO_OH, 10, 6
+	end
+
+TinTower_RoofDay_SeededPostStoryCaught::
+	goto_if_set FLAG_CAUGHT_RANDOM_TINTOWER_HO_OH, TinTower_RoofDay_MapScript_HoohAlreadyCaught
 	setvar VAR_COMPLETED_HO_OH, 4
 	call TinTower_RoofDay_AnthologyHoOhGate
 	setobjectxyperm LOCALID_HO_OH, 10, 6
@@ -61,6 +70,8 @@ TinTower_RoofDay_MapScript_HoohPostStoryEncounter::
 @ Raikou, Entei, and Suicune have each been REGISTERED CAUGHT, regardless
 @ of whether any remains in the party or boxes. Previous KOs respawn safely.
 TinTower_RoofDay_AnthologyHoOhGate::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, TinTower_RoofDay_SeededHoOhGate
 	getcaughtmon SPECIES_HO_OH
 	goto_if_eq VAR_RESULT, TRUE, TinTower_RoofDay_AnthologyHideHoOh
 	goto_if_unset FLAG_RELEASED_BEASTS, TinTower_RoofDay_AnthologyHideHoOh
@@ -70,6 +81,15 @@ TinTower_RoofDay_AnthologyHoOhGate::
 	goto_if_ne VAR_RESULT, TRUE, TinTower_RoofDay_AnthologyHideHoOh
 	getcaughtmon SPECIES_SUICUNE
 	goto_if_ne VAR_RESULT, TRUE, TinTower_RoofDay_AnthologyHideHoOh
+	clearflag FLAG_HIDE_HO_OH
+	return
+
+TinTower_RoofDay_SeededHoOhGate::
+	goto_if_set FLAG_CAUGHT_RANDOM_TINTOWER_HO_OH, TinTower_RoofDay_AnthologyHideHoOh
+	goto_if_unset FLAG_RELEASED_BEASTS, TinTower_RoofDay_AnthologyHideHoOh
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE38_RAIKOU, TinTower_RoofDay_AnthologyHideHoOh
+	goto_if_unset FLAG_CAUGHT_RANDOM_MTMORTAR_2F_ENTEI, TinTower_RoofDay_AnthologyHideHoOh
+	goto_if_unset FLAG_CAUGHT_RANDOM_LAKEOFRAGE_SUICUNE, TinTower_RoofDay_AnthologyHideHoOh
 	clearflag FLAG_HIDE_HO_OH
 	return
 
@@ -286,6 +306,8 @@ TinTower_RoofDay_EventScript_HoohFlewAway::
 	return
 
 TinTower_RoofDay_EventScript_CaughtHooh::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, TinTower_RoofDay_MarkSeededHoOh
 	setflag FLAG_CAUGHT_HO_OH
 	fadescreenswapbuffers FADE_TO_BLACK
 	removeobject LOCALID_HO_OH
@@ -293,6 +315,10 @@ TinTower_RoofDay_EventScript_CaughtHooh::
 	doweather
 	setflag FLAG_HIDE_HO_OH
 	fadescreenswapbuffers FADE_FROM_BLACK
+	return
+
+TinTower_RoofDay_MarkSeededHoOh::
+	setflag FLAG_CAUGHT_RANDOM_TINTOWER_HO_OH
 	return
 
 TinTower_RoofDay_EventScript_RanFromHoOh::

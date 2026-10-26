@@ -3,8 +3,15 @@ ShoalCave_LowTideIceRoom_MapScripts::
 	.byte 0
 
 ShoalCave_LowTideIceRoom_OnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, ShoalCave_LowTideIceRoom_SeededTransition
 	getcaughtmon SPECIES_GLASTRIER
 	goto_if_eq VAR_RESULT, TRUE, ShoalCave_LowTideIceRoom_HideGlastrier
+	clearflag FLAG_HIDE_ANTHOLOGY_GLASTRIER
+	end
+
+ShoalCave_LowTideIceRoom_SeededTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_SHOALCAVE_GLASTRIER, ShoalCave_LowTideIceRoom_HideGlastrier
 	clearflag FLAG_HIDE_ANTHOLOGY_GLASTRIER
 	end
 
@@ -26,10 +33,19 @@ ShoalCave_LowTideIceRoom_EventScript_Glastrier::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, ShoalCave_LowTideIceRoom_LegendaryRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, ShoalCave_LowTideIceRoom_LegendaryRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, ShoalCave_LowTideIceRoom_LegendaryResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, ShoalCave_LowTideIceRoom_LegendaryCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, ShoalCave_LowTideIceRoom_LegendaryResolved
 	release
 	end
+
+ShoalCave_LowTideIceRoom_LegendaryCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, ShoalCave_LowTideIceRoom_MarkSeededGlastrier
+	goto ShoalCave_LowTideIceRoom_LegendaryResolved
+
+ShoalCave_LowTideIceRoom_MarkSeededGlastrier::
+	setflag FLAG_CAUGHT_RANDOM_SHOALCAVE_GLASTRIER
+	return
 
 ShoalCave_LowTideIceRoom_LegendaryResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

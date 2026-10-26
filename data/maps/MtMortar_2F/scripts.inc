@@ -58,8 +58,14 @@ MtMortar_2F_AnthologyFieldTransition::
 
 MtMortar_2F_FieldSyncEnteiReserve::
 	goto_if_unset FLAG_RELEASED_BEASTS, MtMortar_2F_FieldHideEnteiReserve
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MtMortar_2F_FieldSyncSeededEnteiReserve
 	getcaughtmon SPECIES_ENTEI
 	goto_if_eq VAR_RESULT, TRUE, MtMortar_2F_FieldHideEnteiReserve
+	goto MtMortar_2F_FieldShowEnteiReserve
+
+MtMortar_2F_FieldSyncSeededEnteiReserve::
+	goto_if_set FLAG_CAUGHT_RANDOM_MTMORTAR_2F_ENTEI, MtMortar_2F_FieldHideEnteiReserve
 	goto MtMortar_2F_FieldShowEnteiReserve
 
 MtMortar_2F_FieldHideEnteiReserve::
@@ -81,10 +87,19 @@ MtMortar_2F_EventScript_EnteiReserve::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMortar_2F_FieldEnteiReserveRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMortar_2F_FieldEnteiReserveRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMortar_2F_FieldEnteiReserveResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMortar_2F_FieldEnteiReserveCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMortar_2F_FieldEnteiReserveResolved
 	release
 	end
+
+MtMortar_2F_FieldEnteiReserveCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, MtMortar_2F_MarkSeededEntei
+	goto MtMortar_2F_FieldEnteiReserveResolved
+
+MtMortar_2F_MarkSeededEntei::
+	setflag FLAG_CAUGHT_RANDOM_MTMORTAR_2F_ENTEI
+	return
 
 MtMortar_2F_FieldEnteiReserveResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

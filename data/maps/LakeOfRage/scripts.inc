@@ -456,8 +456,14 @@ LakeOfRage_AnthologyFieldTransition::
 LakeOfRage_FieldSyncSuicuneReserve::
 	goto_if_unset FLAG_RELEASED_BEASTS, LakeOfRage_FieldHideSuicuneReserve
 	goto_if_lt VAR_MAHOGANY_TOWN_STATE, 14, LakeOfRage_FieldHideSuicuneReserve
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, LakeOfRage_FieldSyncSeededSuicuneReserve
 	getcaughtmon SPECIES_SUICUNE
 	goto_if_eq VAR_RESULT, TRUE, LakeOfRage_FieldHideSuicuneReserve
+	goto LakeOfRage_FieldShowSuicuneReserve
+
+LakeOfRage_FieldSyncSeededSuicuneReserve::
+	goto_if_set FLAG_CAUGHT_RANDOM_LAKEOFRAGE_SUICUNE, LakeOfRage_FieldHideSuicuneReserve
 	goto LakeOfRage_FieldShowSuicuneReserve
 
 LakeOfRage_FieldHideSuicuneReserve::
@@ -479,10 +485,19 @@ LakeOfRage_EventScript_SuicuneReserve::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, LakeOfRage_FieldSuicuneReserveRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, LakeOfRage_FieldSuicuneReserveRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, LakeOfRage_FieldSuicuneReserveResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, LakeOfRage_FieldSuicuneReserveCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, LakeOfRage_FieldSuicuneReserveResolved
 	release
 	end
+
+LakeOfRage_FieldSuicuneReserveCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, LakeOfRage_MarkSeededSuicune
+	goto LakeOfRage_FieldSuicuneReserveResolved
+
+LakeOfRage_MarkSeededSuicune::
+	setflag FLAG_CAUGHT_RANDOM_LAKEOFRAGE_SUICUNE
+	return
 
 LakeOfRage_FieldSuicuneReserveResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
