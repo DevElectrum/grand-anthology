@@ -1293,9 +1293,14 @@ static void Randomizer_ProcessSeedInput(u8 taskId)
         seed = gSaveBlock2Ptr->randomizerSeed;
         digit = (seed / powers[sSeedDigit]) % 10;
         if (JOY_NEW(DPAD_UP))
-            seed = seed + ((digit == 9 ? 0 : digit + 1) - digit) * powers[sSeedDigit];
-        else
-            seed -= (digit == 0 ? 0 : 1) * powers[sSeedDigit];
+        {
+            if (digit < 9)
+                seed += powers[sSeedDigit];
+            else
+                seed -= 9 * powers[sSeedDigit];
+        }
+        else if (digit > 0)
+            seed -= powers[sSeedDigit];
         if (seed <= 65535)
             gSaveBlock2Ptr->randomizerSeed = seed;
     }
