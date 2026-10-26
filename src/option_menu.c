@@ -531,10 +531,8 @@ static void Task_OptionMenuProcessInput(u8 taskId)
 
 static void Task_OptionMenuSave(u8 taskId)
 {
-    // optionsBattleSceneOff, optionsSound and optionsHardMode are intentionally NOT written
-    // here: Battle Scene / Sound are baked (animations ON, stereo) and Hard Mode is chosen once
-    // at new-game setup. Their menu entries are gone, so leaving these untouched freezes each
-    // save's existing value (old saves keep whatever they had) instead of clobbering it with 0.
+    // Sound and Battle Scene are baked to stereo/animations; Hard Mode
+    // updates directly via the shared Options selector rather than task data.
     gSaveBlock2Ptr->optionsTextSpeed = gTasks[taskId].tTextSpeed;
     gSaveBlock2Ptr->optionsBattleStyle = gTasks[taskId].tBattleStyle;
     gSaveBlock2Ptr->optionsButtonMode = gTasks[taskId].tButtonMode;
@@ -1230,7 +1228,9 @@ static void Randomizer_ProcessInput(u8 item)
 {
     u32 seed;
     u32 delta;
-    if (!IsNewGameSetupActive())
+    // All ordinary gameplay options remain editable. Only the randomizer
+    // categories, static mode and seed become read-only after confirmation.
+    if (item != MENUITEM_HARDMODE && !IsNewGameSetupActive())
         return;
     if (!(JOY_NEW(DPAD_LEFT | DPAD_RIGHT | L_BUTTON | R_BUTTON)))
         return;

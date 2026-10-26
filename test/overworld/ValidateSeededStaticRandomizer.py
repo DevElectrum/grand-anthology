@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guard the production P0 seeded static-encounter feature without scene-by-scene tests.
+"""Guard the production v13 seeded static-encounter feature without scene-by-scene tests.
 
 This checks v12 save layout, legacy migration, source-level story protection,
 ordinary scripted single/double battle integration and deterministic seed

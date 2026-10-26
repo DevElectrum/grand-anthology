@@ -2063,6 +2063,10 @@ u8 TrySpawnObjectEventTemplate(const struct ObjectEventTemplate *objectEventTemp
             case OBJ_EVENT_GFX_LATIOS: original = SPECIES_LATIOS; break;
             case OBJ_EVENT_GFX_MEW: original = SPECIES_MEW; break;
             case OBJ_EVENT_GFX_DEOXYS: original = SPECIES_DEOXYS; break;
+            case OBJ_EVENT_GFX_SNORLAX: original = SPECIES_SNORLAX; break;
+            case OBJ_EVENT_GFX_SUDOWOODO: original = SPECIES_SUDOWOODO; break;
+            case OBJ_EVENT_GFX_KECLEON: original = SPECIES_KECLEON; break;
+            case OBJ_EVENT_GFX_CELEBI: original = SPECIES_CELEBI; break;
             default: break;
             }
         }

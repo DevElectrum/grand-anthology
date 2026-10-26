@@ -172,16 +172,23 @@ enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot)
 
     if (gSaveBlock2Ptr == NULL || gSaveBlock1Ptr == NULL
      || !gSaveBlock2Ptr->randomizerStatics
-     || original == SPECIES_NONE || original == SPECIES_EGG
-     || original == SPECIES_SNORLAX
-     || original == SPECIES_SUDOWOODO
-     || original == SPECIES_KECLEON)
+     || original == SPECIES_NONE || original == SPECIES_EGG)
+        return original;
+
+    // v12 saves retain their exact existing mapping and protected blockers.
+    // New v13 Full Chaos intentionally includes Snorlax, Sudowoodo and
+    // Kecleon. Their location-specific awakening/visibility gates stay put.
+    if (gSaveBlock2Ptr->randomizerVersion == 0
+     && (original == SPECIES_SNORLAX
+      || original == SPECIES_SUDOWOODO
+      || original == SPECIES_KECLEON))
         return original;
 
     if (gSaveBlock2Ptr->randomizerVersion == 0
      || gSaveBlock2Ptr->randomizerStaticMode == 0)
     {
-        // Preserve the exact v12 legacy semantics for existing saves.
+        // Ordinary statics preserve authored legendary/mythical encounters;
+        // legacy v12 also protected Ultra Beasts and Paradox Pokémon.
         if (gSpeciesInfo[original].isRestrictedLegendary
          || gSpeciesInfo[original].isSubLegendary
          || gSpeciesInfo[original].isMythical
@@ -208,13 +215,20 @@ enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot)
 
     for (attempts = 0; attempts < NUM_SPECIES - 1; attempts++)
     {
-        if (result != SPECIES_EGG && IsSpeciesEnabled(result)
-         && !gSpeciesInfo[result].isMegaEvolution
-         && !gSpeciesInfo[result].isPrimalReversion
-         && !gSpeciesInfo[result].isUltraBurst
-         && !gSpeciesInfo[result].isGigantamax
-         && !gSpeciesInfo[result].isTeraForm
-         && !gSpeciesInfo[result].isTotem)
+        // Modern randomizer excludes transient battle-only forms as well as
+        // ordinary illegal forms. The v12 path remains byte-for-byte stable.
+        if (gSaveBlock2Ptr->randomizerVersion != 0)
+        {
+            if (WorldIsFieldStableDiscoverySpecies(result))
+                return result;
+        }
+        else if (result != SPECIES_EGG && IsSpeciesEnabled(result)
+              && !gSpeciesInfo[result].isMegaEvolution
+              && !gSpeciesInfo[result].isPrimalReversion
+              && !gSpeciesInfo[result].isUltraBurst
+              && !gSpeciesInfo[result].isGigantamax
+              && !gSpeciesInfo[result].isTeraForm
+              && !gSpeciesInfo[result].isTotem)
             return result;
         if (++result >= NUM_SPECIES)
             result = 1;
@@ -281,6 +295,19 @@ void MewGauntletPrepareBattle(void)
     StringCopy(gStringVar1, GetSpeciesName(form->species));
 }
 
+// Zacian and Zamazenta bring their relics wherever their encounter moves.
+// Never leave a sword/shield on an unrelated randomized replacement.
+static enum Item ResolveRandomizedStaticRelic(enum Species species, enum Item scriptedItem)
+{
+    if (species == SPECIES_ZACIAN_HERO)
+        return ITEM_RUSTED_SWORD;
+    if (species == SPECIES_ZAMAZENTA_HERO)
+        return ITEM_RUSTED_SHIELD;
+    if (scriptedItem == ITEM_RUSTED_SWORD || scriptedItem == ITEM_RUSTED_SHIELD)
+        return ITEM_NONE;
+    return scriptedItem;
+}
+
 void CreateScriptedWildMon(enum Species species, u8 level, enum Item item)
 {
     u8 heldItem[2];
@@ -293,10 +320,7 @@ void CreateScriptedWildMon(enum Species species, u8 level, enum Item item)
         RANDOM_UNOWN_LETTER);
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], species, level, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
-    if (species == SPECIES_ZACIAN_HERO)
-        item = ITEM_RUSTED_SWORD;
-    else if (species == SPECIES_ZAMAZENTA_HERO)
-        item = ITEM_RUSTED_SHIELD;
+    item = ResolveRandomizedStaticRelic(species, item);
     if (item)
     {
         heldItem[0] = item;
@@ -318,6 +342,7 @@ void CreateScriptedDoubleWildMon(enum Species species1, u8 level1, enum Item ite
         RANDOM_UNOWN_LETTER);
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], species1, level1, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
+    item1 = ResolveRandomizedStaticRelic(species1, item1);
     if (item1)
     {
         heldItem1[0] = item1;
@@ -331,10 +356,7 @@ void CreateScriptedDoubleWildMon(enum Species species1, u8 level1, enum Item ite
         RANDOM_UNOWN_LETTER);
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][1], species2, level2, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][1]);
-    if (species2 == SPECIES_ZACIAN_HERO)
-        item2 = ITEM_RUSTED_SWORD;
-    else if (species2 == SPECIES_ZAMAZENTA_HERO)
-        item2 = ITEM_RUSTED_SHIELD;
+    item2 = ResolveRandomizedStaticRelic(species2, item2);
     if (item2)
     {
         heldItem2[0] = item2;
