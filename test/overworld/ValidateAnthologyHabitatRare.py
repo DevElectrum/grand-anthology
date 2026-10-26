@@ -295,8 +295,11 @@ stable_check = stable_source.split("bool8 WorldIsFieldStableDiscoverySpecies(enu
 for temporary in ("GRENINJA_ASH", "AEGISLASH_BLADE", "WISHIWASHI_SCHOOL", "MIMIKYU_BUSTED", "PALAFIN_HERO", "CRAMORANT_GULPING", "CRAMORANT_GORGING", "MORPEKO_HANGRY", "ZYGARDE_COMPLETE", "CASTFORM_SUNNY", "CASTFORM_RAINY", "CASTFORM_SNOWY", "DARMANITAN_ZEN", "DARMANITAN_GALAR_ZEN", "CHERRIM_SUNSHINE", "EISCUE_NOICE", "MINIOR_CORE_RED", "MINIOR_CORE_ORANGE", "MINIOR_CORE_YELLOW", "MINIOR_CORE_GREEN", "MINIOR_CORE_BLUE", "MINIOR_CORE_INDIGO", "MINIOR_CORE_VIOLET"):
     assert "case SPECIES_" + temporary + ":" in stable_check, temporary
 assert "case SPECIES_GRENINJA_BATTLE_BOND:" not in stable_check
-randomizer_check = stable_source.split("static enum Species WorldRandomizeWildSpecies(", 1)[1].split("// Natural, pre-Champion rare habitat", 1)[0]
+# The explicit-map resolver owns the species eligibility check; the old
+# WorldRandomizeWildSpecies function is now only a current-map wrapper.
+randomizer_check = stable_source.split("enum Species WorldRandomizeWildSpeciesAtMap(", 1)[1].split("// The original API remains", 1)[0]
 assert "if (WorldIsFieldStableDiscoverySpecies(result))" in randomizer_check
+assert "return WorldRandomizeWildSpeciesAtMap(original, slot, area," in stable_source
 print("P0 permanent field form vs temporary battle transformation: shared randomizer/discovery policy PASS")
 
 
