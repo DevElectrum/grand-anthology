@@ -137,7 +137,7 @@ static void SetSpecialMapHasMon(u16, u16);
 static mapsec_u16_t GetRegionMapSectionId(u8, u8);
 static bool8 MapHasSpecies(const struct WildPokemonHeader *, u32, enum Species);
 static const struct WildPokemonInfo *ResolveAreaTable(const struct WildPokemonInfo *, const struct WildPokemonInfo *);
-static bool8 MonListHasSpecies(const struct WildPokemonInfo *, enum Species, u16);
+static bool8 MonListHasSpecies(const struct WildPokemonInfo *, enum Species, u16, enum WildPokemonArea, u8, u8);
 static void DoAreaGlow(void);
 static void Task_ShowPokedexAreaScreen(u8 taskId);
 static void Task_UpdatePokedexAreaScreen(u8 taskId);
@@ -521,44 +521,44 @@ static bool8 MapHasSpecies(const struct WildPokemonHeader *header, u32 headerSec
             return FALSE;
     }
 
-    if (MonListHasSpecies(ResolveAreaTable(info->landMonsInfo, fallback->landMonsInfo), species, NUM_LAND_MONS_ENCOUNTER_SLOTS))
+    if (MonListHasSpecies(ResolveAreaTable(info->landMonsInfo, fallback->landMonsInfo), species, NUM_LAND_MONS_ENCOUNTER_SLOTS, WILD_AREA_LAND, header->mapGroup, header->mapNum))
         return TRUE;
     // Include special and ordinary Anthology habitats on the regional map.
-    if (AnthologyMapHasHabitatSpecies(header->mapGroup, header->mapNum,
+    if ((!gSaveBlock2Ptr || !gSaveBlock2Ptr->randomizerWild) && AnthologyMapHasHabitatSpecies(header->mapGroup, header->mapNum,
                                     species, ResolveAreaTable(info->landMonsInfo, fallback->landMonsInfo)))
         return TRUE;
-    if (MonListHasSpecies(ResolveAreaTable(info->waterMonsInfo, fallback->waterMonsInfo), species, NUM_WATER_MONS_ENCOUNTER_SLOTS))
+    if (MonListHasSpecies(ResolveAreaTable(info->waterMonsInfo, fallback->waterMonsInfo), species, NUM_WATER_MONS_ENCOUNTER_SLOTS, WILD_AREA_WATER, header->mapGroup, header->mapNum))
         return TRUE;
-    if (AnthologyMapHasAquaticHabitatSpecies(header->mapGroup, header->mapNum, WILD_AREA_WATER,
+    if ((!gSaveBlock2Ptr || !gSaveBlock2Ptr->randomizerWild) && AnthologyMapHasAquaticHabitatSpecies(header->mapGroup, header->mapNum, WILD_AREA_WATER,
                                             species, ResolveAreaTable(info->waterMonsInfo, fallback->waterMonsInfo)))
         return TRUE;
-    if (AnthologyMapHasAquaticHabitatSpecies(header->mapGroup, header->mapNum, WILD_AREA_FISHING,
+    if ((!gSaveBlock2Ptr || !gSaveBlock2Ptr->randomizerWild) && AnthologyMapHasAquaticHabitatSpecies(header->mapGroup, header->mapNum, WILD_AREA_FISHING,
                                             species, ResolveAreaTable(info->fishingMonsInfo, fallback->fishingMonsInfo)))
         return TRUE;
 // When searching the fishing encounters, this incorrectly uses the size of the land encounters.
 // As a result it's reading out of bounds of the fishing encounters tables.
 #ifdef BUGFIX
-    if (MonListHasSpecies(ResolveAreaTable(info->fishingMonsInfo, fallback->fishingMonsInfo), species, NUM_FISHING_MONS_ENCOUNTER_SLOTS))
+    if (MonListHasSpecies(ResolveAreaTable(info->fishingMonsInfo, fallback->fishingMonsInfo), species, NUM_FISHING_MONS_ENCOUNTER_SLOTS, WILD_AREA_FISHING, header->mapGroup, header->mapNum))
 #else
-    if (MonListHasSpecies(ResolveAreaTable(info->fishingMonsInfo, fallback->fishingMonsInfo), species, NUM_LAND_MONS_ENCOUNTER_SLOTS))
+    if (MonListHasSpecies(ResolveAreaTable(info->fishingMonsInfo, fallback->fishingMonsInfo), species, NUM_LAND_MONS_ENCOUNTER_SLOTS, WILD_AREA_FISHING, header->mapGroup, header->mapNum))
 #endif
         return TRUE;
-    if (MonListHasSpecies(ResolveAreaTable(info->rockSmashMonsInfo, fallback->rockSmashMonsInfo), species, NUM_ROCK_SMASH_MONS_ENCOUNTER_SLOTS))
+    if (MonListHasSpecies(ResolveAreaTable(info->rockSmashMonsInfo, fallback->rockSmashMonsInfo), species, NUM_ROCK_SMASH_MONS_ENCOUNTER_SLOTS, WILD_AREA_ROCKS, header->mapGroup, header->mapNum))
         return TRUE;
     return FALSE;
 }
 
-static bool8 MonListHasSpecies(const struct WildPokemonInfo *info, enum Species species, u16 size)
+static bool8 MonListHasSpecies(const struct WildPokemonInfo *info, enum Species species, u16 size,
+                               enum WildPokemonArea area, u8 mapGroup, u8 mapNum)
 {
     u16 i;
-    if (info != NULL)
-    {
-        for (i = 0; i < size; i++)
-        {
-            if (info->wildPokemon[i].species == species)
-                return TRUE;
-        }
-    }
+    if (info == NULL)
+        return FALSE;
+    if (area == WILD_AREA_FISHING && size > NUM_FISHING_MONS_ENCOUNTER_SLOTS)
+        size = NUM_FISHING_MONS_ENCOUNTER_SLOTS;
+    for (i = 0; i < size; i++)
+        if (WorldRandomizeWildSpeciesAtMap(info->wildPokemon[i].species, i, area, mapGroup, mapNum) == species)
+            return TRUE;
     return FALSE;
 }
 
