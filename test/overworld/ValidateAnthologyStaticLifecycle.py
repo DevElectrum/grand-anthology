@@ -553,7 +553,11 @@ for directory, transition, battle, original, hidden, bit, gates, variables in SE
         saved = Save(flags=set(state.flags), caught=set(state.caught),
                      variables=dict(state.variables), seeded=True)
         run(script, transition, saved)
-        assert (hidden in saved.flags) == (outcome == "B_OUTCOME_CAUGHT"), (
+        # Route 25 Suicune intentionally waits for its Champion/story reset
+        # after a knockout. Other sites here retry on the next room entry.
+        saved_hidden = (outcome == "B_OUTCOME_CAUGHT"
+                        or (directory == "Route25_Frlg" and outcome == "B_OUTCOME_WON"))
+        assert (hidden in saved.flags) == saved_hidden, (
             directory, original, outcome, "wrong saved/revisited visibility")
         if outcome == "B_OUTCOME_CAUGHT":
             assert "SPECIES_SEEDED_REPLACEMENT" in saved.caught, (directory, "original used despite seed")
