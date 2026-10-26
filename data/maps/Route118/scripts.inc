@@ -330,9 +330,16 @@ Route118_Text_JessieJamesBlastOff:
 
 // Hoenn pre-League sites independent of the original story interactions.
 Route118_SecondBatchOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route118_SeededIronBoulderTransition
 	getcaughtmon SPECIES_IRON_BOULDER
 	call_if_eq VAR_RESULT, TRUE, Route118_SecondBatchHideIronBoulder
 	call_if_ne VAR_RESULT, TRUE, Route118_SecondBatchShowIronBoulder
+	return
+
+Route118_SeededIronBoulderTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE118_IRON_BOULDER, Route118_SecondBatchHideIronBoulder
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE118_IRON_BOULDER, Route118_SecondBatchShowIronBoulder
 	return
 
 Route118_SecondBatchHideIronBoulder::
@@ -354,10 +361,19 @@ Route118_EventScript_IronBoulder::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route118_SecondBatchIronBoulderRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route118_SecondBatchIronBoulderRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route118_SecondBatchIronBoulderResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route118_SeededIronBoulderCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route118_SecondBatchIronBoulderResolved
 	release
 	end
+
+Route118_SeededIronBoulderCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route118_MarkSeededIronBoulder
+	goto Route118_SecondBatchIronBoulderResolved
+
+Route118_MarkSeededIronBoulder::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE118_IRON_BOULDER
+	return
 
 Route118_SecondBatchIronBoulderResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

@@ -9,6 +9,8 @@ CeladonCity_OnTransition::
 
 // Tapu Lele may be discovered naturally in Celadon's flowers near Erika's Gym.
 CeladonCity_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, CeladonCity_SeededTapuLeleTransition
 	getcaughtmon SPECIES_TAPU_LELE
 	call_if_eq VAR_RESULT, TRUE, CeladonCity_AnthologyHideTapuLele
 	call_if_ne VAR_RESULT, TRUE, CeladonCity_AnthologyShowTapuLele
@@ -225,6 +227,11 @@ CeladonCity_Text_SomeoneStoleSilphScope::
 	.string "Where'd he go?$"
 
 
+CeladonCity_SeededTapuLeleTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_CELADON_TAPU_LELE, CeladonCity_AnthologyHideTapuLele
+	call_if_unset FLAG_CAUGHT_RANDOM_CELADON_TAPU_LELE, CeladonCity_AnthologyShowTapuLele
+	return
+
 CeladonCity_AnthologyHideTapuLele::
 	setflag FLAG_HIDE_ANTHOLOGY_TAPU_LELE
 	return
@@ -244,10 +251,19 @@ CeladonCity_EventScript_TapuLele::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, CeladonCity_AnthologyTapuLeleRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, CeladonCity_AnthologyTapuLeleRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, CeladonCity_AnthologyTapuLeleResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, CeladonCity_SeededTapuLeleCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, CeladonCity_AnthologyTapuLeleResolved
 	release
 	end
+
+CeladonCity_SeededTapuLeleCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, CeladonCity_MarkSeededTapuLele
+	goto CeladonCity_AnthologyTapuLeleResolved
+
+CeladonCity_MarkSeededTapuLele::
+	setflag FLAG_CAUGHT_RANDOM_CELADON_TAPU_LELE
+	return
 
 CeladonCity_AnthologyTapuLeleResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

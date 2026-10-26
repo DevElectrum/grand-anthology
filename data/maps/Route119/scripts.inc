@@ -618,9 +618,16 @@ Route119_Text_TrainerTipsDecoration:
 // scene. They respawn after a non-capture victory when the map is re-entered.
 Route119_AnthologyOnTransition::
 	call Route119_XerneasTransition
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route119_SeededRagingBoltTransition
 	getcaughtmon SPECIES_RAGING_BOLT
 	call_if_eq VAR_RESULT, TRUE, Route119_AnthologyHideRagingBolt
 	call_if_ne VAR_RESULT, TRUE, Route119_AnthologyShowRagingBolt
+	return
+
+Route119_SeededRagingBoltTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE119_RAGING_BOLT, Route119_AnthologyHideRagingBolt
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE119_RAGING_BOLT, Route119_AnthologyShowRagingBolt
 	return
 
 Route119_AnthologyHideRagingBolt::
@@ -642,10 +649,19 @@ Route119_EventScript_RagingBolt::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route119_AnthologyRagingBoltRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route119_AnthologyRagingBoltRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route119_AnthologyRagingBoltResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route119_SeededRagingBoltCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route119_AnthologyRagingBoltResolved
 	release
 	end
+
+Route119_SeededRagingBoltCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route119_MarkSeededRagingBolt
+	goto Route119_AnthologyRagingBoltResolved
+
+Route119_MarkSeededRagingBolt::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE119_RAGING_BOLT
+	return
 
 Route119_AnthologyRagingBoltResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -660,8 +676,15 @@ Route119_AnthologyRagingBoltRetreated::
 	end
 
 Route119_XerneasTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route119_SeededXerneasTransition
 	getcaughtmon SPECIES_XERNEAS
 	goto_if_eq VAR_RESULT, TRUE, Route119_HideXerneas
+	clearflag FLAG_HIDE_ANTHOLOGY_XERNEAS
+	return
+
+Route119_SeededXerneasTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE119_XERNEAS, Route119_HideXerneas
 	clearflag FLAG_HIDE_ANTHOLOGY_XERNEAS
 	return
 
@@ -680,10 +703,19 @@ Route119_EventScript_Xerneas::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route119_XerneasRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route119_XerneasRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route119_XerneasResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route119_SeededXerneasCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route119_XerneasResolved
 	release
 	end
+
+Route119_SeededXerneasCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route119_MarkSeededXerneas
+	goto Route119_XerneasResolved
+
+Route119_MarkSeededXerneas::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE119_XERNEAS
+	return
 
 Route119_XerneasResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

@@ -70,6 +70,10 @@ The mansion Mew and Type: Null, Faraway Island Mew, Cerulean Cave Mewtwo, Ilex F
 
 Six more source-caught flags isolate Raikou (Route 38), Entei (Mt. Mortar 2F), Suicune (Lake of Rage), Ho-Oh (Tin Tower rooftop), Lugia (Route 40), and the Shoal Cave Glastrier from overlapping original-species ownership. In seeded mode Ho-Oh requires the three **source-location beast catches** plus their released story flag; Off mode keeps the original caught-Dex gates. The Ice Path and Shoal Cave Glastrier sites remain independent in seeded mode. These are source fixes, not yet representative gameplay acceptance.
 
+## 26 October 2026 cross-region ordinary-static sweep
+
+Nine more source-specific capture sites patched: Iron Boulder (Route 118), Raging Bolt/Xerneas (Route 119), Iron Leaves/Latias/Wo-Chien (Route 120), Koraidon (Route 128 Ancient Grotto, preserving badges/Space Center flags), Tapu Lele (Celadon flowers), and Route 25 second-chance Suicune independent from the Lake of Rage encounter. Statics Off retains the original species-Dex behavior and native story gates. This is source integration pending exact-commit CI and gameplay acceptance.
+
 ## Final title-screen and CI verification (26 October 2026)
 
 - Approved PNG SHA-256: `b23ffce8b56cda032dc88e46e8d7fabec5207b6021fea00a077af7a01f9a9967`.

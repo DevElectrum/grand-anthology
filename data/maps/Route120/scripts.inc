@@ -434,12 +434,21 @@ Route120_Text_RouteSign121:
 // Hoenn pre-League sites independent of the original story interactions.
 Route120_SecondBatchOnTransition::
 	call Route120_WoChienTransition
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route120_SecondBatchSeededTransition
 	getcaughtmon SPECIES_IRON_LEAVES
 	call_if_eq VAR_RESULT, TRUE, Route120_SecondBatchHideIronLeaves
 	call_if_ne VAR_RESULT, TRUE, Route120_SecondBatchShowIronLeaves
 	getcaughtmon SPECIES_LATIAS
 	call_if_eq VAR_RESULT, TRUE, Route120_SecondBatchHideLatias
 	call_if_ne VAR_RESULT, TRUE, Route120_SecondBatchShowLatias
+	return
+
+Route120_SecondBatchSeededTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE120_IRON_LEAVES, Route120_SecondBatchHideIronLeaves
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE120_IRON_LEAVES, Route120_SecondBatchShowIronLeaves
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE120_LATIAS, Route120_SecondBatchHideLatias
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE120_LATIAS, Route120_SecondBatchShowLatias
 	return
 
 Route120_SecondBatchHideIronLeaves::
@@ -461,10 +470,19 @@ Route120_EventScript_IronLeaves::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route120_SecondBatchIronLeavesRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route120_SecondBatchIronLeavesRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_SecondBatchIronLeavesResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_SeededIronLeavesCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route120_SecondBatchIronLeavesResolved
 	release
 	end
+
+Route120_SeededIronLeavesCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route120_MarkSeededIronLeaves
+	goto Route120_SecondBatchIronLeavesResolved
+
+Route120_MarkSeededIronLeaves::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE120_IRON_LEAVES
+	return
 
 Route120_SecondBatchIronLeavesResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -497,10 +515,19 @@ Route120_EventScript_Latias::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route120_SecondBatchLatiasRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route120_SecondBatchLatiasRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_SecondBatchLatiasResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_SeededLatiasCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route120_SecondBatchLatiasResolved
 	release
 	end
+
+Route120_SeededLatiasCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route120_MarkSeededLatias
+	goto Route120_SecondBatchLatiasResolved
+
+Route120_MarkSeededLatias::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE120_LATIAS
+	return
 
 Route120_SecondBatchLatiasResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -516,8 +543,15 @@ Route120_SecondBatchLatiasRetreated::
 
 
 Route120_WoChienTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route120_SeededWoChienTransition
 	getcaughtmon SPECIES_WO_CHIEN
 	goto_if_eq VAR_RESULT, TRUE, Route120_HideWoChien
+	clearflag FLAG_HIDE_ANTHOLOGY_WO_CHIEN
+	return
+
+Route120_SeededWoChienTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE120_WO_CHIEN, Route120_HideWoChien
 	clearflag FLAG_HIDE_ANTHOLOGY_WO_CHIEN
 	return
 
@@ -536,10 +570,19 @@ Route120_EventScript_WoChien::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route120_WoChienRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route120_WoChienRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_WoChienResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route120_SeededWoChienCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route120_WoChienResolved
 	release
 	end
+
+Route120_SeededWoChienCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route120_MarkSeededWoChien
+	goto Route120_WoChienResolved
+
+Route120_MarkSeededWoChien::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE120_WO_CHIEN
+	return
 
 Route120_WoChienResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

@@ -8,8 +8,18 @@ Route25_Frlg_MapScripts::
 @ the durable completion marker. FLAG_FOUGHT_SUICUNE means the current encounter
 @ was resolved; the Hall of Fame helper clears it only when Suicune was not caught.
 Route25_Frlg_OnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route25_SeededSuicuneTransition
 	getcaughtmon SPECIES_SUICUNE
 	goto_if_eq VAR_RESULT, TRUE, Route25_EventScript_HideCaughtSuicune
+	goto_if_set FLAG_FOUGHT_SUICUNE, Route25_EventScript_HideSuicune
+	goto_if_unset FLAG_JOHTO_CHAMPION, Route25_EventScript_HideSuicune
+	goto_if_lt VAR_SUICUNE_ENCOUNTERS, 3, Route25_EventScript_HideSuicune
+	clearflag FLAG_HIDE_ROUTE25_SUICUNE
+	end
+
+Route25_SeededSuicuneTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE25_SUICUNE, Route25_EventScript_HideCaughtSuicune
 	goto_if_set FLAG_FOUGHT_SUICUNE, Route25_EventScript_HideSuicune
 	goto_if_unset FLAG_JOHTO_CHAMPION, Route25_EventScript_HideSuicune
 	goto_if_lt VAR_SUICUNE_ENCOUNTERS, 3, Route25_EventScript_HideSuicune
@@ -39,6 +49,9 @@ Route25_EventScript_Suicune::
 	end
 
 Route25_EventScript_SuicuneCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route25_MarkSeededSuicune
+
 Route25_EventScript_SuicuneDefeated::
 	setflag FLAG_FOUGHT_SUICUNE
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -47,6 +60,10 @@ Route25_EventScript_SuicuneDefeated::
 	fadescreenswapbuffers FADE_FROM_BLACK
 	release
 	end
+
+Route25_MarkSeededSuicune::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE25_SUICUNE
+	return
 
 Route25_EventScript_SuicuneRan::
 	release
