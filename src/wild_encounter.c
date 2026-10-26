@@ -1001,6 +1001,20 @@ void CreateWildMon(enum Species species, u8 level)
     u32 personality = GetMonPersonality(species, GetSynchronizedGender(WILDMON_ORIGIN, species), PickWildMonNature(species), RANDOM_UNOWN_LETTER);
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], species, level, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
+#if ALL_REGIONS
+    // The Royal Duo relics belong to their species, not an original spawn
+    // location. Wild-randomized Zacian/Zamazenta retain their signature items.
+    if (gSaveBlock2Ptr != NULL && gSaveBlock2Ptr->randomizerWild)
+    {
+        enum Item item = ITEM_NONE;
+        if (species == SPECIES_ZACIAN_HERO)
+            item = ITEM_RUSTED_SWORD;
+        else if (species == SPECIES_ZAMAZENTA_HERO)
+            item = ITEM_RUSTED_SHIELD;
+        if (item != ITEM_NONE)
+            SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_HELD_ITEM, &item);
+    }
+#endif
 }
 
 #ifdef BUGFIX
