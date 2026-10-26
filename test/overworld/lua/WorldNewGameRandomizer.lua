@@ -44,8 +44,11 @@ end
 F.run(function()
     F.idle(330)
     F.check("fresh GBA starts on real title", untilCallback(S.MainCB2_WorldTitleScreen, 6000))
-    tap("Start", 90)
+    -- CB2_MainMenu is an initialization callback, not the resting menu
+    -- callback. Observe the transition before waiting for the fade to end.
+    F.press("Start", 1)
     local mainMenu = untilCallback(S.CB2_MainMenu, 400)
+    F.idle(90)
     F.check("title opens real main menu", mainMenu)
     if not mainMenu then F.finish(); return end
 
@@ -69,9 +72,10 @@ F.run(function()
         "seed=" .. config().seed)
 
     -- B must cancel without starting Oak's introduction.
-    tap("B", 90)
-    F.check("B cancels configuration back to main menu",
-        untilCallback(S.CB2_MainMenu, 400))
+    F.press("B", 2)
+    local returned = untilCallback(S.CB2_MainMenu, 400)
+    F.idle(90)
+    F.check("B cancels configuration back to main menu", returned)
     F.check("cancel restores previous unsaved configuration",
         config().seed ~= 2027 and config().categories ~= 0xF8)
 
