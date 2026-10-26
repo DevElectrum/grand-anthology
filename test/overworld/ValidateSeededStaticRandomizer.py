@@ -158,3 +158,30 @@ for prereq in ("FLAG_CAUGHT_RANDOM_ROUTE117_OGERPON",
                "FLAG_CAUGHT_RANDOM_ROUTE114_MUNKIDORI"):
     need(src("data/maps/Route117/scripts.inc"), "goto_if_unset "+prereq)
 need(src("data/maps/PokemonTower_7F_Frlg/scripts.inc"), "goto_if_unset FLAG_CAUGHT_RANDOM_MTMOON_CRESSELIA")
+
+
+# Capture-source ledger continuity. This single audit closes the gap left by
+# checking individual maps in isolation: all reserved site flags must be
+# unique, stable, save-bank-safe and actually written from a battle script.
+import re
+flag_source = src("include/constants/flags.h")
+source_defs = re.findall(
+    r"^#define (FLAG_CAUGHT_RANDOM_[A-Z0-9_]+) \(FLAG_WORLD_MAP_BANK \+ 0x([0-9A-Fa-f]+)\)$",
+    flag_source, re.M)
+source_slots = {int(value, 16): name for name, value in source_defs}
+assert len(source_defs) == len(source_slots) == 72, (
+    "Seeded location flags must have 72 unique saved offsets", len(source_defs), len(source_slots))
+assert set(source_slots) == set(range(0x12D, 0x175)), "Noncontiguous source flag bank or accidental reuse"
+assert 0xD40 + max(source_slots) < 0x1030, "Source flags exceed saved FLAGS_COUNT"
+all_world_map_flags = re.findall(
+    r"^#define (FLAG_[A-Z0-9_]+) \(FLAG_WORLD_MAP_BANK \+ 0x([0-9A-Fa-f]+)\)$",
+    flag_source, re.M)
+for other, value in all_world_map_flags:
+    offset = int(value, 16)
+    if offset in source_slots:
+        assert other == source_slots[offset], (
+            "Source flag collides with unrelated save flag", other, source_slots[offset], hex(offset))
+map_scripts = "\n".join(path.read_text() for path in (root / "data/maps").glob("*/scripts.inc"))
+for flag in source_slots.values():
+    assert "setflag " + flag in map_scripts, ("Caught-source flag never written in map scripts", flag)
+print("P0 all 72 seeded source-caught flags: contiguous, noncolliding, inside save bank, written from game scripts PASS")
