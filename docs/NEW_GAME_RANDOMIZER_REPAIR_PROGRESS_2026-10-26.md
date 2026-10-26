@@ -40,3 +40,7 @@ Source-only repair for **nine encounter sites** across eight map files: Reshiram
 In seeded mode, Ice Path Kyurem's prerequisite now checks **both source-site capture flags** from Reshiram and Zekrom; the DNA Splicers plinth checks Kyurem's source-site flag rather than original species ownership. The Power Plant's Zeraorite check similarly uses the Zeraora encounter-site flag. Mt. Moon's four previously fixed slots are unchanged.
 
 This batch is **not repository-wide closeout**. Other `getcaughtmon` scripted statics and dependencies remain to be audited and repaired. Source changes require optimized build, mGBA checks, and manual site acceptance; no gameplay PASS is claimed from the edits alone.
+
+## Additional Kanto/Johto/Hoenn location sweep (26 October)
+
+Twelve further seed-randomized caught-site flags were integrated for Yveltal, Necrozma, Manaphy, Tapu Fini, Jirachi, Chien-Pao, Walking Wake, Iron Crown, Landorus, Thundurus, Eternatus and Tornadus. On every affected map, the original species-Dex test is retained when static randomization is Off. Catching a replacement sets only the local completion flag; KO and escape do not. Duplicate native Tornadus sources in other maps are not automatically retired by this Johto site's capture when seeded randomness is on. This is source repair pending game-level acceptance.

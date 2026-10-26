@@ -166,9 +166,16 @@ Route44_Text_Sign2:
 
 // Rare encounter locations near their original home regions.
 Route44_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route44_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_ETERNATUS
 	call_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideEternatus
 	call_if_ne VAR_RESULT, TRUE, Route44_AnthologyShowEternatus
+	return
+
+Route44_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE44_ETERNATUS, Route44_AnthologyHideEternatus
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE44_ETERNATUS, Route44_AnthologyShowEternatus
 	return
 
 Route44_AnthologyHideEternatus::
@@ -190,10 +197,14 @@ Route44_EventScript_Eternatus::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route44_AnthologyEternatusRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route44_AnthologyEternatusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route44_AnthologyEternatusResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route44_AnthologyEternatusResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route44_AnthologyEternatusResolved
 	release
 	end
+
+Route44_AnthologyEternatusResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE44_ETERNATUS
+	goto Route44_AnthologyEternatusResolved
 
 Route44_AnthologyEternatusResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -211,8 +222,15 @@ Route44_AnthologyEternatusRetreated::
 // the first Johto Champion. Hoenn's Shoal Cave source uses the same persistent
 // National Dex caught bit, so capturing either source retires both on revisit.
 Route44_TornadusOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route44_TornadusRandomOnTransition
 	getcaughtmon SPECIES_TORNADUS
 	goto_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideTornadus
+	clearflag FLAG_HIDE_ANTHOLOGY_TORNADUS
+	return
+
+Route44_TornadusRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE44_TORNADUS, Route44_AnthologyHideTornadus
 	clearflag FLAG_HIDE_ANTHOLOGY_TORNADUS
 	return
 
@@ -231,10 +249,14 @@ Route44_EventScript_Tornadus::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route44_AnthologyTornadusRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route44_AnthologyTornadusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route44_AnthologyTornadusResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route44_AnthologyTornadusResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route44_AnthologyTornadusResolved
 	release
 	end
+
+Route44_AnthologyTornadusResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE44_TORNADUS
+	goto Route44_AnthologyTornadusResolved
 
 Route44_AnthologyTornadusResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

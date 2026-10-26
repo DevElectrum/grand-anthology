@@ -145,8 +145,15 @@ Route43_TrainerTips:
 
 
 Route43_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route43_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_LANDORUS
 	goto_if_eq VAR_RESULT, TRUE, Route43_AnthologyHideLandorus
+	clearflag FLAG_HIDE_ANTHOLOGY_LANDORUS
+	return
+
+Route43_AnthologyRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE43_LANDORUS, Route43_AnthologyHideLandorus
 	clearflag FLAG_HIDE_ANTHOLOGY_LANDORUS
 	return
 
@@ -165,10 +172,14 @@ Route43_EventScript_Landorus::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route43_AnthologyLandorusRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route43_AnthologyLandorusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route43_AnthologyLandorusResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route43_AnthologyLandorusResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route43_AnthologyLandorusResolved
 	release
 	end
+
+Route43_AnthologyLandorusResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE43_LANDORUS
+	goto Route43_AnthologyLandorusResolved
 
 Route43_AnthologyLandorusResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

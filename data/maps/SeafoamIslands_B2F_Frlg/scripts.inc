@@ -9,12 +9,21 @@ SeafoamIslands_B2F_OnTransition::
 // The original cave event set was empty. These statics coexist with the native
 // wild habitat and normal stairs, items, Strength puzzles, and Articuno events.
 SeafoamIslands_B2F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, SeafoamIslands_B2F_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_MANAPHY
 	call_if_eq VAR_RESULT, TRUE, SeafoamIslands_B2F_AnthologyHideManaphy
 	call_if_ne VAR_RESULT, TRUE, SeafoamIslands_B2F_AnthologyShowManaphy
 	getcaughtmon SPECIES_TAPU_FINI
 	call_if_eq VAR_RESULT, TRUE, SeafoamIslands_B2F_AnthologyHideTapuFini
 	call_if_ne VAR_RESULT, TRUE, SeafoamIslands_B2F_AnthologyShowTapuFini
+	return
+
+SeafoamIslands_B2F_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_SEAFOAMISLANDS_B2F_MANAPHY, SeafoamIslands_B2F_AnthologyHideManaphy
+	call_if_unset FLAG_CAUGHT_RANDOM_SEAFOAMISLANDS_B2F_MANAPHY, SeafoamIslands_B2F_AnthologyShowManaphy
+	call_if_set FLAG_CAUGHT_RANDOM_SEAFOAMISLANDS_B2F_TAPU_FINI, SeafoamIslands_B2F_AnthologyHideTapuFini
+	call_if_unset FLAG_CAUGHT_RANDOM_SEAFOAMISLANDS_B2F_TAPU_FINI, SeafoamIslands_B2F_AnthologyShowTapuFini
 	return
 
 SeafoamIslands_B2F_AnthologyHideManaphy::
@@ -38,10 +47,14 @@ SeafoamIslands_B2F_EventScript_Manaphy::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, SeafoamIslands_B2F_AnthologyManaphyRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, SeafoamIslands_B2F_AnthologyManaphyRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SeafoamIslands_B2F_AnthologyManaphyResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SeafoamIslands_B2F_AnthologyManaphyResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, SeafoamIslands_B2F_AnthologyManaphyResolved
 	release
 	end
+
+SeafoamIslands_B2F_AnthologyManaphyResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_SEAFOAMISLANDS_B2F_MANAPHY
+	goto SeafoamIslands_B2F_AnthologyManaphyResolved
 
 SeafoamIslands_B2F_AnthologyManaphyResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -76,10 +89,14 @@ SeafoamIslands_B2F_EventScript_TapuFini::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, SeafoamIslands_B2F_AnthologyTapuFiniRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, SeafoamIslands_B2F_AnthologyTapuFiniRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SeafoamIslands_B2F_AnthologyTapuFiniResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SeafoamIslands_B2F_AnthologyTapuFiniResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, SeafoamIslands_B2F_AnthologyTapuFiniResolved
 	release
 	end
+
+SeafoamIslands_B2F_AnthologyTapuFiniResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_SEAFOAMISLANDS_B2F_TAPU_FINI
+	goto SeafoamIslands_B2F_AnthologyTapuFiniResolved
 
 SeafoamIslands_B2F_AnthologyTapuFiniResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

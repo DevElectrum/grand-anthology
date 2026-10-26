@@ -7,12 +7,19 @@ CeruleanCave_2F_OnTransition::
 	end
 
 CeruleanCave_2F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, CeruleanCave_2F_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_NECROZMA
 	call_if_eq VAR_RESULT, TRUE, CeruleanCave_2F_AnthologyHideNecrozma
 	call_if_ne VAR_RESULT, TRUE, CeruleanCave_2F_AnthologyShowNecrozma
 	return
 
 // Post-Kanto-Champion Cerulean Cave 2F legendary encounter.
+
+CeruleanCave_2F_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_CERULEANCAVE_2F_NECROZMA, CeruleanCave_2F_AnthologyHideNecrozma
+	call_if_unset FLAG_CAUGHT_RANDOM_CERULEANCAVE_2F_NECROZMA, CeruleanCave_2F_AnthologyShowNecrozma
+	return
 
 CeruleanCave_2F_AnthologyHideNecrozma::
 	setflag FLAG_HIDE_ANTHOLOGY_NECROZMA
@@ -33,10 +40,14 @@ CeruleanCave_2F_EventScript_Necrozma::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, CeruleanCave_2F_AnthologyNecrozmaRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, CeruleanCave_2F_AnthologyNecrozmaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, CeruleanCave_2F_AnthologyNecrozmaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, CeruleanCave_2F_AnthologyNecrozmaResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, CeruleanCave_2F_AnthologyNecrozmaResolved
 	release
 	end
+
+CeruleanCave_2F_AnthologyNecrozmaResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_CERULEANCAVE_2F_NECROZMA
+	goto CeruleanCave_2F_AnthologyNecrozmaResolved
 
 CeruleanCave_2F_AnthologyNecrozmaResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

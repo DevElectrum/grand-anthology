@@ -85,9 +85,16 @@ Route125_EventScript_Auron::
 // Place this unique legendary-Paradox encounter on a Surf-accessible
 // shoreline instead of gated/legacy-diving cave maps.
 Route125_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route125_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_WALKING_WAKE
 	call_if_eq VAR_RESULT, TRUE, Route125_AnthologyHideWalkingWake
 	call_if_ne VAR_RESULT, TRUE, Route125_AnthologyShowWalkingWake
+	return
+
+Route125_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE125_WALKING_WAKE, Route125_AnthologyHideWalkingWake
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE125_WALKING_WAKE, Route125_AnthologyShowWalkingWake
 	return
 
 Route125_AnthologyHideWalkingWake::
@@ -109,10 +116,14 @@ Route125_EventScript_WalkingWake::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route125_AnthologyWalkingWakeRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route125_AnthologyWalkingWakeRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route125_AnthologyWalkingWakeResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route125_AnthologyWalkingWakeResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route125_AnthologyWalkingWakeResolved
 	release
 	end
+
+Route125_AnthologyWalkingWakeResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE125_WALKING_WAKE
+	goto Route125_AnthologyWalkingWakeResolved
 
 Route125_AnthologyWalkingWakeResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

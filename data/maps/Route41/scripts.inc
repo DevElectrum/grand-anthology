@@ -296,8 +296,15 @@ Route41_Text_TentacruelHeal:
 	.string "It is fully healed!$"
 
 Route41_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route41_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_THUNDURUS
 	goto_if_eq VAR_RESULT, TRUE, Route41_AnthologyHideThundurus
+	clearflag FLAG_HIDE_ANTHOLOGY_THUNDURUS
+	return
+
+Route41_AnthologyRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE41_THUNDURUS, Route41_AnthologyHideThundurus
 	clearflag FLAG_HIDE_ANTHOLOGY_THUNDURUS
 	return
 
@@ -316,10 +323,14 @@ Route41_EventScript_Thundurus::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route41_AnthologyThundurusRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route41_AnthologyThundurusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route41_AnthologyThundurusResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route41_AnthologyThundurusResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route41_AnthologyThundurusResolved
 	release
 	end
+
+Route41_AnthologyThundurusResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE41_THUNDURUS
+	goto Route41_AnthologyThundurusResolved
 
 Route41_AnthologyThundurusResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

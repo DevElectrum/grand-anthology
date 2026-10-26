@@ -29,9 +29,16 @@ MtPyre_Exterior_EventScript_SunTrigger::
 // All four statics are on one stable exterior layout. Fog/sun boundaries and
 // canonical summit script continue to run without changing their logic.
 MtPyre_Exterior_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_YVELTAL
 	call_if_eq VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyHideYveltal
 	call_if_ne VAR_RESULT, TRUE, MtPyre_Exterior_AnthologyShowYveltal
+	return
+
+MtPyre_Exterior_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_MTPYRE_EXTERIOR_YVELTAL, MtPyre_Exterior_AnthologyHideYveltal
+	call_if_unset FLAG_CAUGHT_RANDOM_MTPYRE_EXTERIOR_YVELTAL, MtPyre_Exterior_AnthologyShowYveltal
 	return
 
 MtPyre_Exterior_AnthologyHideYveltal::
@@ -53,10 +60,14 @@ MtPyre_Exterior_EventScript_Yveltal::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtPyre_Exterior_AnthologyYveltalRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtPyre_Exterior_AnthologyYveltalRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtPyre_Exterior_AnthologyYveltalResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtPyre_Exterior_AnthologyYveltalResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtPyre_Exterior_AnthologyYveltalResolved
 	release
 	end
+
+MtPyre_Exterior_AnthologyYveltalResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_MTPYRE_EXTERIOR_YVELTAL
+	goto MtPyre_Exterior_AnthologyYveltalResolved
 
 MtPyre_Exterior_AnthologyYveltalResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

@@ -85,4 +85,26 @@ assert mix(2027,25,0,37,10)!=mix(2026,25,0,37,10)
 assert mix(2026,25,1,37,10)!=mix(2026,25,0,37,10)
 assert len({mix(i,25,0,37,10) for i in range(100)}) >= 75
 assert all(1<=mix(i,25,0,37,10)<1600 for i in range(1000))
+# Encounter location flags must not be inferred from a different species catch.
+for location, original, site_flag in (
+    ("MtPyre_Exterior", "YVELTAL", "FLAG_CAUGHT_RANDOM_MTPYRE_EXTERIOR_YVELTAL"),
+    ("CeruleanCave_2F_Frlg", "NECROZMA", "FLAG_CAUGHT_RANDOM_CERULEANCAVE_2F_NECROZMA"),
+    ("SeafoamIslands_B2F_Frlg", "MANAPHY", "FLAG_CAUGHT_RANDOM_SEAFOAMISLANDS_B2F_MANAPHY"),
+    ("SeafoamIslands_B2F_Frlg", "TAPU_FINI", "FLAG_CAUGHT_RANDOM_SEAFOAMISLANDS_B2F_TAPU_FINI"),
+    ("Route102", "JIRACHI", "FLAG_CAUGHT_RANDOM_ROUTE102_JIRACHI"),
+    ("Route105", "CHIEN_PAO", "FLAG_CAUGHT_RANDOM_ROUTE105_CHIEN_PAO"),
+    ("Route125", "WALKING_WAKE", "FLAG_CAUGHT_RANDOM_ROUTE125_WALKING_WAKE"),
+    ("Route124", "IRON_CROWN", "FLAG_CAUGHT_RANDOM_ROUTE124_IRON_CROWN"),
+    ("Route43", "LANDORUS", "FLAG_CAUGHT_RANDOM_ROUTE43_LANDORUS"),
+    ("Route41", "THUNDURUS", "FLAG_CAUGHT_RANDOM_ROUTE41_THUNDURUS"),
+    ("Route44", "ETERNATUS", "FLAG_CAUGHT_RANDOM_ROUTE44_ETERNATUS"),
+    ("Route44", "TORNADUS", "FLAG_CAUGHT_RANDOM_ROUTE44_TORNADUS"),
+):
+    map_script = src("data/maps/"+location+"/scripts.inc")
+    need(map_script, "seteventmon SPECIES_"+original)
+    need(map_script, "getcaughtmon SPECIES_"+original)
+    need(map_script, "setflag "+site_flag)
+    need(map_script, "callnative AnthologyStaticRandomizerIsOn")
+    need(src("include/constants/flags.h"), "#define "+site_flag+" ")
+
 print("P0 v13 seeded static singles/doubles, sprite parity, form safety, and relic ownership: PASS")

@@ -106,9 +106,16 @@ Route124_Text_HuntersHouse:
 // Place this unique legendary-Paradox encounter on a Surf-accessible
 // shoreline instead of gated/legacy-diving cave maps.
 Route124_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route124_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_IRON_CROWN
 	call_if_eq VAR_RESULT, TRUE, Route124_AnthologyHideIronCrown
 	call_if_ne VAR_RESULT, TRUE, Route124_AnthologyShowIronCrown
+	return
+
+Route124_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE124_IRON_CROWN, Route124_AnthologyHideIronCrown
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE124_IRON_CROWN, Route124_AnthologyShowIronCrown
 	return
 
 Route124_AnthologyHideIronCrown::
@@ -130,10 +137,14 @@ Route124_EventScript_IronCrown::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route124_AnthologyIronCrownRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route124_AnthologyIronCrownRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route124_AnthologyIronCrownResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route124_AnthologyIronCrownResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route124_AnthologyIronCrownResolved
 	release
 	end
+
+Route124_AnthologyIronCrownResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE124_IRON_CROWN
+	goto Route124_AnthologyIronCrownResolved
 
 Route124_AnthologyIronCrownResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
