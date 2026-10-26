@@ -623,6 +623,13 @@ for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
         assert "FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_NORMAL" in _script
         assert "goto_if_set FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_NORMAL" in _script
         assert "setflag FLAG_CAUGHT_ANTHOLOGY_TERAPAGOS_NORMAL" in _part
+    elif _dir == "PokemonMansion_1F_Frlg" and _n == "Mew":
+        # Randomizing locations must not despawn the Mansion encounter just
+        # because the player caught a Mew somewhere else.
+        assert "getcaughtmon SPECIES_MEW" not in _script
+        assert "special MewGauntletShouldRun" in _part
+        assert "goto_if_eq VAR_RESULT, FALSE, PokemonMansion_1F_RandomizedMewStatic" in _part
+        assert "setflag FLAG_HIDE_ANTHOLOGY_MEW" in _script
     else:
         assert "getcaughtmon SPECIES_"+_species in _script
     _lay=_p0_layouts[_m["layout"]]
