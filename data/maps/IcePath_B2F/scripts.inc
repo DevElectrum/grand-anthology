@@ -20,8 +20,15 @@ IcePath_B2F_EventScript_Item_Carbos::
 	end
 
 IcePath_B2F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IcePath_B2F_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_GLASTRIER
 	goto_if_eq VAR_RESULT, TRUE, IcePath_B2F_HideGlastrierJohto
+	clearflag FLAG_HIDE_ANTHOLOGY_JOHTO_GLASTRIER
+	return
+
+IcePath_B2F_AnthologyRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ICEPATH_GLASTRIER, IcePath_B2F_HideGlastrierJohto
 	clearflag FLAG_HIDE_ANTHOLOGY_JOHTO_GLASTRIER
 	return
 
@@ -40,10 +47,14 @@ IcePath_B2F_EventScript_GlastrierJohto::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, IcePath_B2F_GlastrierJohtoRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, IcePath_B2F_GlastrierJohtoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IcePath_B2F_GlastrierJohtoResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IcePath_B2F_GlastrierJohtoResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, IcePath_B2F_GlastrierJohtoResolved
 	release
 	end
+
+IcePath_B2F_GlastrierJohtoResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_ICEPATH_GLASTRIER
+	goto IcePath_B2F_GlastrierJohtoResolved
 
 IcePath_B2F_GlastrierJohtoResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

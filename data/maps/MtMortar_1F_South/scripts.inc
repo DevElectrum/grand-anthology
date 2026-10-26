@@ -19,9 +19,16 @@ MtMortar_1F_South_EventScript_Item_Elixir::
 
 // Independent early/mid-Johto Sword of Justice static. No sibling capture gate.
 MtMortar_1F_South_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MtMortar_1F_South_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_COBALION
 	call_if_eq VAR_RESULT, TRUE, MtMortar_1F_South_AnthologyHideCobalion
 	call_if_ne VAR_RESULT, TRUE, MtMortar_1F_South_AnthologyShowCobalion
+	return
+
+MtMortar_1F_South_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_MTMORTAR_COBALION, MtMortar_1F_South_AnthologyHideCobalion
+	call_if_unset FLAG_CAUGHT_RANDOM_MTMORTAR_COBALION, MtMortar_1F_South_AnthologyShowCobalion
 	return
 
 MtMortar_1F_South_AnthologyHideCobalion::
@@ -43,10 +50,14 @@ MtMortar_1F_South_EventScript_Cobalion::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMortar_1F_South_AnthologyCobalionRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMortar_1F_South_AnthologyCobalionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMortar_1F_South_AnthologyCobalionResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMortar_1F_South_AnthologyCobalionResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMortar_1F_South_AnthologyCobalionResolved
 	release
 	end
+
+MtMortar_1F_South_AnthologyCobalionResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_MTMORTAR_COBALION
+	goto MtMortar_1F_South_AnthologyCobalionResolved
 
 MtMortar_1F_South_AnthologyCobalionResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

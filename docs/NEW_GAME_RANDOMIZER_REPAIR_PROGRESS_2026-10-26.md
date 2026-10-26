@@ -32,3 +32,11 @@ A successful optimized gameplay build and mGBA release smoke were observed on `d
 ## Testing approach
 
 Prefer automated source/CI checks first; after successful builds, one brief human gameplay acceptance session is enough. Do not ask the maintainer to replay an entire campaign or do repeated full rebuilds just to debug menu automation.
+
+## Additional static persistence batch (26 October)
+
+Source-only repair for **nine encounter sites** across eight map files: Reshiram (Tin Tower 2F), Zekrom (Dark Cave North), Kyurem (Ice Path B1F), Glastrier (Ice Path B2F), Spectrier (Cliff Edge Cave), Cobalion (Mt. Mortar south), Tapu Bulu (Route 5), Tapu Koko and Zeraora (Power Plant). Each site gains an independent saved caught flag in the verified-free world-map bank. Only a **caught** battle sets the site flag; winning without catching retains the existing re-entry retry, and running/teleporting does not consume the site. The original species-Dex branch remains unchanged when Statics randomization is Off.
+
+In seeded mode, Ice Path Kyurem's prerequisite now checks **both source-site capture flags** from Reshiram and Zekrom; the DNA Splicers plinth checks Kyurem's source-site flag rather than original species ownership. The Power Plant's Zeraorite check similarly uses the Zeraora encounter-site flag. Mt. Moon's four previously fixed slots are unchanged.
+
+This batch is **not repository-wide closeout**. Other `getcaughtmon` scripted statics and dependencies remain to be audited and repaired. Source changes require optimized build, mGBA checks, and manual site acceptance; no gameplay PASS is claimed from the edits alone.

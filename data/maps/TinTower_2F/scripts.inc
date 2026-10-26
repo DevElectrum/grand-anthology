@@ -8,8 +8,15 @@ TinTower_2F_OnTransition::
 	end
 
 TinTower_2F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, TinTower_2F_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_RESHIRAM
 	goto_if_eq VAR_RESULT, TRUE, TinTower_2F_AnthologyHideReshiram
+	clearflag FLAG_HIDE_ANTHOLOGY_RESHIRAM
+	return
+
+TinTower_2F_AnthologyRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_TINTOWER_RESHIRAM, TinTower_2F_AnthologyHideReshiram
 	clearflag FLAG_HIDE_ANTHOLOGY_RESHIRAM
 	return
 
@@ -28,10 +35,14 @@ TinTower_2F_EventScript_Reshiram::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, TinTower_2F_AnthologyReshiramRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, TinTower_2F_AnthologyReshiramRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, TinTower_2F_AnthologyReshiramResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, TinTower_2F_AnthologyReshiramResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, TinTower_2F_AnthologyReshiramResolved
 	release
 	end
+
+TinTower_2F_AnthologyReshiramResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_TINTOWER_RESHIRAM
+	goto TinTower_2F_AnthologyReshiramResolved
 
 TinTower_2F_AnthologyReshiramResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

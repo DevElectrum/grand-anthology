@@ -119,12 +119,21 @@ PowerPlant_EventScript_FoughtElectrode2::
 
 // Restore uncaught statics on entry; let the original map scripts run.
 PowerPlant_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, PowerPlant_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_TAPU_KOKO
 	call_if_eq VAR_RESULT, TRUE, PowerPlant_AnthologyHideTapuKoko
 	call_if_ne VAR_RESULT, TRUE, PowerPlant_AnthologyShowTapuKoko
 	getcaughtmon SPECIES_ZERAORA
 	call_if_eq VAR_RESULT, TRUE, PowerPlant_AnthologyHideZeraora
 	call_if_ne VAR_RESULT, TRUE, PowerPlant_AnthologyShowZeraora
+	return
+
+PowerPlant_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_POWERPLANT_TAPU_KOKO, PowerPlant_AnthologyHideTapuKoko
+	call_if_unset FLAG_CAUGHT_RANDOM_POWERPLANT_TAPU_KOKO, PowerPlant_AnthologyShowTapuKoko
+	call_if_set FLAG_CAUGHT_RANDOM_POWERPLANT_ZERAORA, PowerPlant_AnthologyHideZeraora
+	call_if_unset FLAG_CAUGHT_RANDOM_POWERPLANT_ZERAORA, PowerPlant_AnthologyShowZeraora
 	return
 
 PowerPlant_AnthologyHideTapuKoko::
@@ -147,10 +156,14 @@ PowerPlant_EventScript_TapuKoko::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PowerPlant_AnthologyTapuKokoRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PowerPlant_AnthologyTapuKokoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PowerPlant_AnthologyTapuKokoResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PowerPlant_AnthologyTapuKokoResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PowerPlant_AnthologyTapuKokoResolved
 	release
 	end
+
+PowerPlant_AnthologyTapuKokoResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_POWERPLANT_TAPU_KOKO
+	goto PowerPlant_AnthologyTapuKokoResolved
 
 PowerPlant_AnthologyTapuKokoResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -185,10 +198,14 @@ PowerPlant_EventScript_Zeraora::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PowerPlant_AnthologyZeraoraRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PowerPlant_AnthologyZeraoraRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PowerPlant_AnthologyZeraoraResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PowerPlant_AnthologyZeraoraResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PowerPlant_AnthologyZeraoraResolved
 	release
 	end
+
+PowerPlant_AnthologyZeraoraResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_POWERPLANT_ZERAORA
+	goto PowerPlant_AnthologyZeraoraResolved
 
 PowerPlant_AnthologyZeraoraResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -216,8 +233,14 @@ PowerPlant_NativeZAPDOSUncaught::
 	return
 
 Anthology_MegaStone_ZERAORITE::
+    callnative AnthologyStaticRandomizerIsOn
+    goto_if_eq VAR_RESULT, TRUE, Anthology_MegaStone_ZERAORITE_Randomized
     getcaughtmon SPECIES_ZERAORA
     goto_if_ne VAR_RESULT, TRUE, Anthology_MegaStone_ZERAORITE_Locked
+    goto Anthology_MegaStone_ZERAORITE_Ready
+Anthology_MegaStone_ZERAORITE_Randomized::
+    goto_if_unset FLAG_CAUGHT_RANDOM_POWERPLANT_ZERAORA, Anthology_MegaStone_ZERAORITE_Locked
+Anthology_MegaStone_ZERAORITE_Ready::
     finditem ITEM_ZERAORITE
     end
 Anthology_MegaStone_ZERAORITE_Locked::

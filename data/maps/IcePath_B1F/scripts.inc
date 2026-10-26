@@ -56,12 +56,21 @@ IcePath_B1F_Text_Sign:
 
 
 IcePath_B1F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IcePath_B1F_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_KYUREM
 	goto_if_eq VAR_RESULT, TRUE, IcePath_B1F_AnthologyHideKyurem
 	getcaughtmon SPECIES_RESHIRAM
 	goto_if_ne VAR_RESULT, TRUE, IcePath_B1F_AnthologyHideKyurem
 	getcaughtmon SPECIES_ZEKROM
 	goto_if_ne VAR_RESULT, TRUE, IcePath_B1F_AnthologyHideKyurem
+	clearflag FLAG_HIDE_ANTHOLOGY_KYUREM
+	return
+
+IcePath_B1F_AnthologyRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ICEPATH_KYUREM, IcePath_B1F_AnthologyHideKyurem
+	goto_if_unset FLAG_CAUGHT_RANDOM_TINTOWER_RESHIRAM, IcePath_B1F_AnthologyHideKyurem
+	goto_if_unset FLAG_CAUGHT_RANDOM_DARKCAVE_ZEKROM, IcePath_B1F_AnthologyHideKyurem
 	clearflag FLAG_HIDE_ANTHOLOGY_KYUREM
 	return
 
@@ -94,6 +103,7 @@ IcePath_B1F_AnthologyKyuremResolved::
 	end
 
 IcePath_B1F_AnthologyKyuremCaught::
+	setflag FLAG_CAUGHT_RANDOM_ICEPATH_KYUREM
 	fadescreenswapbuffers FADE_TO_BLACK
 	removeobject LOCALID_ANTHOLOGY_KYUREM
 	setflag FLAG_HIDE_ANTHOLOGY_KYUREM
@@ -114,8 +124,16 @@ IcePath_B1F_AnthologyKyuremRetreated::
 // After a full bag, the adjacent plinth restores uncaptured DNA Splicers.
 IcePath_B1F_EventScript_DNASplicersPlinth::
 	lock
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IcePath_B1F_EventScript_PlinthRandomized
 	getcaughtmon SPECIES_KYUREM
 	goto_if_ne VAR_RESULT, TRUE, IcePath_B1F_EventScript_PlinthSealed
+	goto IcePath_B1F_EventScript_PlinthCheckItem
+
+IcePath_B1F_EventScript_PlinthRandomized::
+	goto_if_unset FLAG_CAUGHT_RANDOM_ICEPATH_KYUREM, IcePath_B1F_EventScript_PlinthSealed
+
+IcePath_B1F_EventScript_PlinthCheckItem::
 	checkitem ITEM_DNA_SPLICERS
 	goto_if_eq VAR_RESULT, TRUE, IcePath_B1F_EventScript_PlinthEmpty
 	giveitem ITEM_DNA_SPLICERS

@@ -22,8 +22,15 @@ CliffEdgeCave_Text_Baldman:
 	.string "but people can't help trying both.$"
 
 CliffEdgeCave_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, CliffEdgeCave_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_SPECTRIER
 	goto_if_eq VAR_RESULT, TRUE, CliffEdgeCave_HideSpectrier
+	clearflag FLAG_HIDE_ANTHOLOGY_SPECTRIER
+	return
+
+CliffEdgeCave_AnthologyRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_CLIFFEDGE_SPECTRIER, CliffEdgeCave_HideSpectrier
 	clearflag FLAG_HIDE_ANTHOLOGY_SPECTRIER
 	return
 
@@ -42,10 +49,14 @@ CliffEdgeCave_EventScript_Spectrier::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, CliffEdgeCave_SpectrierRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, CliffEdgeCave_SpectrierRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, CliffEdgeCave_SpectrierResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, CliffEdgeCave_SpectrierResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, CliffEdgeCave_SpectrierResolved
 	release
 	end
+
+CliffEdgeCave_SpectrierResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_CLIFFEDGE_SPECTRIER
+	goto CliffEdgeCave_SpectrierResolved
 
 CliffEdgeCave_SpectrierResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

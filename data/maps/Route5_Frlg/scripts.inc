@@ -16,9 +16,16 @@ Route5_Text_UndergroundPathSign::
 
 // Multi-location acquisition batch: preserve canonical map scripts.
 Route5_BigBatchOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route5_BigBatchRandomOnTransition
 	getcaughtmon SPECIES_TAPU_BULU
 	call_if_eq VAR_RESULT, TRUE, Route5_BigBatchHideTapuBulu
 	call_if_ne VAR_RESULT, TRUE, Route5_BigBatchShowTapuBulu
+	return
+
+Route5_BigBatchRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE5_TAPU_BULU, Route5_BigBatchHideTapuBulu
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE5_TAPU_BULU, Route5_BigBatchShowTapuBulu
 	return
 
 Route5_BigBatchHideTapuBulu::
@@ -40,10 +47,14 @@ Route5_EventScript_TapuBulu::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route5_BigBatchTapuBuluRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route5_BigBatchTapuBuluRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route5_BigBatchTapuBuluResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route5_BigBatchTapuBuluResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route5_BigBatchTapuBuluResolved
 	release
 	end
+
+Route5_BigBatchTapuBuluResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE5_TAPU_BULU
+	goto Route5_BigBatchTapuBuluResolved
 
 Route5_BigBatchTapuBuluResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

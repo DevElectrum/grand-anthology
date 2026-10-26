@@ -48,8 +48,15 @@ DarkCave2_Text_Nerd2:
     .string "DARK-type moves.$"
 
 DarkCave_NorthSide_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, DarkCave_NorthSide_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_ZEKROM
 	goto_if_eq VAR_RESULT, TRUE, DarkCave_NorthSide_AnthologyHideZekrom
+	clearflag FLAG_HIDE_ANTHOLOGY_ZEKROM
+	return
+
+DarkCave_NorthSide_AnthologyRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_DARKCAVE_ZEKROM, DarkCave_NorthSide_AnthologyHideZekrom
 	clearflag FLAG_HIDE_ANTHOLOGY_ZEKROM
 	return
 
@@ -68,10 +75,14 @@ DarkCave_NorthSide_EventScript_Zekrom::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, DarkCave_NorthSide_AnthologyZekromRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, DarkCave_NorthSide_AnthologyZekromRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, DarkCave_NorthSide_AnthologyZekromResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, DarkCave_NorthSide_AnthologyZekromResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, DarkCave_NorthSide_AnthologyZekromResolved
 	release
 	end
+
+DarkCave_NorthSide_AnthologyZekromResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_DARKCAVE_ZEKROM
+	goto DarkCave_NorthSide_AnthologyZekromResolved
 
 DarkCave_NorthSide_AnthologyZekromResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
