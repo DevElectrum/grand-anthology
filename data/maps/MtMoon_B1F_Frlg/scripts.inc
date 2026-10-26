@@ -9,6 +9,8 @@ MtMoon_B1F_OnTransition::
 // The original cave event set was empty. These statics coexist with the native
 // wild habitat and normal stairs, items, Strength puzzles, and Articuno events.
 MtMoon_B1F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MtMoon_B1F_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_CRESSELIA
 	call_if_eq VAR_RESULT, TRUE, MtMoon_B1F_AnthologyHideCresselia
 	call_if_ne VAR_RESULT, TRUE, MtMoon_B1F_AnthologyShowCresselia
@@ -18,6 +20,17 @@ MtMoon_B1F_AnthologyOnTransition::
 	getcaughtmon SPECIES_PALKIA
 	call_if_eq VAR_RESULT, TRUE, MtMoon_B1F_AnthologyHidePalkia
 	call_if_ne VAR_RESULT, TRUE, MtMoon_B1F_AnthologyShowPalkia
+	return
+
+// In randomized games each encounter's own completion bit, not the species
+// caught anywhere else, controls visibility and Giratina's prerequisites.
+MtMoon_B1F_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_MTMOON_CRESSELIA, MtMoon_B1F_AnthologyHideCresselia
+	call_if_unset FLAG_CAUGHT_RANDOM_MTMOON_CRESSELIA, MtMoon_B1F_AnthologyShowCresselia
+	call_if_set FLAG_CAUGHT_RANDOM_MTMOON_DIALGA, MtMoon_B1F_AnthologyHideDialga
+	call_if_unset FLAG_CAUGHT_RANDOM_MTMOON_DIALGA, MtMoon_B1F_AnthologyShowDialga
+	call_if_set FLAG_CAUGHT_RANDOM_MTMOON_PALKIA, MtMoon_B1F_AnthologyHidePalkia
+	call_if_unset FLAG_CAUGHT_RANDOM_MTMOON_PALKIA, MtMoon_B1F_AnthologyShowPalkia
 	return
 
 MtMoon_B1F_AnthologyHideCresselia::
@@ -41,10 +54,14 @@ MtMoon_B1F_EventScript_Cresselia::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMoon_B1F_AnthologyCresseliaRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMoon_B1F_AnthologyCresseliaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B1F_AnthologyCresseliaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B1F_AnthologyCresseliaCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMoon_B1F_AnthologyCresseliaResolved
 	release
 	end
+
+MtMoon_B1F_AnthologyCresseliaCaught::
+	setflag FLAG_CAUGHT_RANDOM_MTMOON_CRESSELIA
+	goto MtMoon_B1F_AnthologyCresseliaResolved
 
 MtMoon_B1F_AnthologyCresseliaResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -79,10 +96,14 @@ MtMoon_B1F_EventScript_Dialga::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMoon_B1F_AnthologyDialgaRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMoon_B1F_AnthologyDialgaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B1F_AnthologyDialgaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B1F_AnthologyDialgaCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMoon_B1F_AnthologyDialgaResolved
 	release
 	end
+
+MtMoon_B1F_AnthologyDialgaCaught::
+	setflag FLAG_CAUGHT_RANDOM_MTMOON_DIALGA
+	goto MtMoon_B1F_AnthologyDialgaResolved
 
 MtMoon_B1F_AnthologyDialgaResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -117,10 +138,14 @@ MtMoon_B1F_EventScript_Palkia::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMoon_B1F_AnthologyPalkiaRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMoon_B1F_AnthologyPalkiaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B1F_AnthologyPalkiaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B1F_AnthologyPalkiaCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMoon_B1F_AnthologyPalkiaResolved
 	release
 	end
+
+MtMoon_B1F_AnthologyPalkiaCaught::
+	setflag FLAG_CAUGHT_RANDOM_MTMOON_PALKIA
+	goto MtMoon_B1F_AnthologyPalkiaResolved
 
 MtMoon_B1F_AnthologyPalkiaResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

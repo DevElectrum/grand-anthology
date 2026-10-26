@@ -1040,3 +1040,14 @@ void Script_GiveRandomBerry(struct ScriptContext *ctx)
 
     gSpecialVar_Result = BerryTypeToItemId(RandomUniform(RNG_RANDOM_BERRY, loBerry, hiBerry));
 }
+
+// Map scripts use this to select source-location completion flags under
+// the optional randomizer while retaining classic caught-Dex gates otherwise.
+void AnthologyStaticRandomizerIsOn(void)
+{
+#if ALL_REGIONS
+    gSpecialVar_Result = (gSaveBlock2Ptr != NULL && gSaveBlock2Ptr->randomizerStatics);
+#else
+    gSpecialVar_Result = FALSE;
+#endif
+}

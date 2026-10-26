@@ -243,6 +243,8 @@ MtMoon_B2F_Text_JessieJamesBlastOff:
 
 // Giratina waits in Mt. Moon's remote cave after both creation siblings are caught.
 MtMoon_B2F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MtMoon_B2F_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_DIALGA
 	goto_if_ne VAR_RESULT, TRUE, MtMoon_B2F_AnthologyHideGiratina
 	getcaughtmon SPECIES_PALKIA
@@ -250,6 +252,13 @@ MtMoon_B2F_AnthologyOnTransition::
 	getcaughtmon SPECIES_GIRATINA
 	call_if_eq VAR_RESULT, TRUE, MtMoon_B2F_AnthologyHideGiratina
 	call_if_ne VAR_RESULT, TRUE, MtMoon_B2F_AnthologyShowGiratina
+	return
+
+MtMoon_B2F_AnthologyRandomOnTransition::
+	goto_if_unset FLAG_CAUGHT_RANDOM_MTMOON_DIALGA, MtMoon_B2F_AnthologyHideGiratina
+	goto_if_unset FLAG_CAUGHT_RANDOM_MTMOON_PALKIA, MtMoon_B2F_AnthologyHideGiratina
+	call_if_set FLAG_CAUGHT_RANDOM_MTMOON_GIRATINA, MtMoon_B2F_AnthologyHideGiratina
+	call_if_unset FLAG_CAUGHT_RANDOM_MTMOON_GIRATINA, MtMoon_B2F_AnthologyShowGiratina
 	return
 
 MtMoon_B2F_AnthologyHideGiratina::
@@ -271,10 +280,14 @@ MtMoon_B2F_EventScript_Giratina::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtMoon_B2F_AnthologyGiratinaRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtMoon_B2F_AnthologyGiratinaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B2F_AnthologyGiratinaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtMoon_B2F_AnthologyGiratinaCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtMoon_B2F_AnthologyGiratinaResolved
 	release
 	end
+
+MtMoon_B2F_AnthologyGiratinaCaught::
+	setflag FLAG_CAUGHT_RANDOM_MTMOON_GIRATINA
+	goto MtMoon_B2F_AnthologyGiratinaResolved
 
 MtMoon_B2F_AnthologyGiratinaResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
