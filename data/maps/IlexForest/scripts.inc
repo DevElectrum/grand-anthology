@@ -54,6 +54,7 @@ IlexForest_EventScript_SyncSecondCelebi::
 
 IlexForest_EventScript_SeededSecondCelebi::
 	goto_if_set FLAG_CAUGHT_RANDOM_ILEX_SECOND_CELEBI, IlexForest_EventScript_HideSecondCelebi
+	goto IlexForest_EventScript_SecondCelebiGate
 
 IlexForest_EventScript_SecondCelebiGate::
 	goto_if_unset FLAG_JOHTO_CHAMPION, IlexForest_EventScript_HideSecondCelebi
