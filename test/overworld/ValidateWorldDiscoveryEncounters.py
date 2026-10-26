@@ -41,7 +41,7 @@ need(wild, "attempts < NUM_SPECIES - 1")
 need(wild, "GetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET)")
 need(wild, "WorldIsPostLeagueResearchSpecies(result)")
 # Wild randomization deliberately keeps the broader field-stable pool.
-randomizer = wild.split("static enum Species WorldRandomizeWildSpecies")[1].split("enum Species AnthologyGetRareHabitatSpecies")[0]
+randomizer = wild.split("enum Species WorldRandomizeWildSpeciesAtMap(", 1)[1].split("// The original API remains", 1)[0]
 need(randomizer, "WorldIsFieldStableDiscoverySpecies(result)")
 # Excluded Legendaries cannot be introduced by post-League Research/rotation.
 natural = wild.split("bool8 WorldIsNaturalDiscoverySpecies")[1].split("// Supplemental ordinary species")[0]
