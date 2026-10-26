@@ -65,7 +65,9 @@ def run(labels, entry, save, outcome=None, yes=True):
         elif op == "clearflag":
             save.flags.discard(args[0])
         elif op == "setvar":
-            save.variables[args[0]] = int(args[1])
+            # Native story scripts also assign symbolic species/local object ids.
+            # Only numeric values participate in the supported variable gates.
+            save.variables[args[0]] = int(args[1]) if args[1].isdecimal() else args[1]
         elif op in ("goto", "call"):
             if op == "call":
                 stack.append((label, pc))
