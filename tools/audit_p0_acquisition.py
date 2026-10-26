@@ -163,7 +163,9 @@ if (all(term in royal_route for term in (
         "special RoyalDuoAwardVictory",
         "goto_if_unset FLAG_JOHTO_BADGE_8, Route27_RoyalDuoHide"))
     and "SPECIES_ZACIAN_HERO, SPECIES_ZAMAZENTA_HERO" in royal_reward
-    and "ITEM_RUSTED_SWORD, ITEM_RUSTED_SHIELD" in royal_reward
+    and "WorldRandomizeStaticSpecies(original[i], i)" in royal_reward
+    and "ITEM_RUSTED_SWORD" in royal_reward
+    and "ITEM_RUSTED_SHIELD" in royal_reward
     and "GiveScriptedMonToPlayer(&mon, PARTY_SIZE)" in royal_reward
     and "freeSlots >= 2" in royal_reward):
     add("MAP_ROUTE27", "ZACIAN_HERO", "royal_duo_defeat_reward")
