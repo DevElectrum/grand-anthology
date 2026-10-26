@@ -68,6 +68,7 @@
 #include "tv.h"
 #include "util.h"
 #include "wild_encounter.h"
+#include "world_starter_randomizer.h"
 #include "window.h"
 #include "bw_battle_ui.h"
 #include "constants/abilities.h"
@@ -2152,6 +2153,78 @@ static bool32 IsEarlyBlueCharmanderTrainer(u16 trainerNum)
     }
 }
 
+// Blue's starter is always the seed-resolved species occupying his
+// original counterpart ball. The rest of his team follows the Trainers toggle.
+// Matching source slots (rather than the already-randomized party) also works
+// for the special Oak-lab first battle, which deliberately bypasses generic
+// trainer randomization.
+static enum Species GetKantoBlueOriginalStarter(u16 trainerNum)
+{
+    switch (trainerNum)
+    {
+    case TRAINER_RIVAL_OAKS_LAB_CHARMANDER:
+    case TRAINER_RIVAL_ROUTE22_EARLY_CHARMANDER:
+    case TRAINER_RIVAL_CERULEAN_CHARMANDER:
+    case TRAINER_RIVAL_SS_ANNE_CHARMANDER:
+    case TRAINER_RIVAL_POKEMON_TOWER_CHARMANDER:
+    case TRAINER_RIVAL_SILPH_CHARMANDER:
+    case TRAINER_RIVAL_ROUTE22_LATE_CHARMANDER:
+        return SPECIES_CHARMANDER;
+    case TRAINER_RIVAL_OAKS_LAB_SQUIRTLE:
+    case TRAINER_RIVAL_ROUTE22_EARLY_SQUIRTLE:
+    case TRAINER_RIVAL_CERULEAN_SQUIRTLE:
+    case TRAINER_RIVAL_SS_ANNE_SQUIRTLE:
+    case TRAINER_RIVAL_POKEMON_TOWER_SQUIRTLE:
+    case TRAINER_RIVAL_SILPH_SQUIRTLE:
+    case TRAINER_RIVAL_ROUTE22_LATE_SQUIRTLE:
+        return SPECIES_SQUIRTLE;
+    case TRAINER_RIVAL_OAKS_LAB_BULBASAUR:
+    case TRAINER_RIVAL_ROUTE22_EARLY_BULBASAUR:
+    case TRAINER_RIVAL_CERULEAN_BULBASAUR:
+    case TRAINER_RIVAL_SS_ANNE_BULBASAUR:
+    case TRAINER_RIVAL_POKEMON_TOWER_BULBASAUR:
+    case TRAINER_RIVAL_SILPH_BULBASAUR:
+    case TRAINER_RIVAL_ROUTE22_LATE_BULBASAUR:
+        return SPECIES_BULBASAUR;
+    default:
+        return SPECIES_NONE;
+    }
+}
+
+static void ApplyKantoBlueRandomizedStarter(struct Pokemon *party, u8 count, u16 trainerNum)
+{
+    const struct Trainer *trainer;
+    enum Species original;
+    enum Species replacement;
+    u32 i;
+
+    if (party != gParties[B_TRAINER_OPPONENT_A] || GetCurrentRegion() != REGION_KANTO
+     || gSaveBlock2Ptr == NULL || !gSaveBlock2Ptr->randomizerStarters)
+        return;
+
+    original = GetKantoBlueOriginalStarter(trainerNum);
+    if (original == SPECIES_NONE)
+        return;
+
+    replacement = WorldRandomizeKantoStarterSpecies(original);
+    trainer = GetTrainerStructFromId(trainerNum);
+    for (i = 0; i < count; i++)
+    {
+        enum Species authored = trainer->party[i].species;
+        if ((original == SPECIES_CHARMANDER && authored != SPECIES_CHARMANDER
+             && authored != SPECIES_CHARMELEON && authored != SPECIES_CHARIZARD)
+         || (original == SPECIES_SQUIRTLE && authored != SPECIES_SQUIRTLE
+             && authored != SPECIES_WARTORTLE && authored != SPECIES_BLASTOISE)
+         || (original == SPECIES_BULBASAUR && authored != SPECIES_BULBASAUR
+             && authored != SPECIES_IVYSAUR && authored != SPECIES_VENUSAUR))
+            continue;
+        SetMonData(&party[i], MON_DATA_SPECIES, &replacement);
+        GiveMonInitialMoveset(&party[i]);
+        CalculateMonStats(&party[i]);
+        break;
+    }
+}
+
 static void ApplyPoipoleBlueRhyhorn(struct Pokemon *party, u8 count, u16 trainerNum)
 {
     u8 i;
@@ -2212,6 +2285,7 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum)
     }
 #if ALL_REGIONS
     ApplyPoipoleBlueRhyhorn(party, retVal, trainerNum);
+    ApplyKantoBlueRandomizedStarter(party, retVal, trainerNum);
 #endif
     return retVal;
 }

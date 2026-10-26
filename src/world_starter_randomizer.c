@@ -9,20 +9,16 @@
 //
 // Safety: do not change any other scripted Pokémon, such as optional gift
 // starters, scripted legendaries, trainer Pokémon, eggs or sidequest rewards.
-enum Species WorldRandomizeStarterSpecies(enum Species original)
+static enum Species WorldRandomizeStarterSpeciesAtMap(enum Species original, u16 map)
 {
 #if ALL_REGIONS
     u32 hash;
     u32 attempts;
     enum Species result;
-    u16 map;
 
-    if (gSaveBlock1Ptr == NULL || gSaveBlock2Ptr == NULL
-     || !gSaveBlock2Ptr->randomizerStarters)
+    if (gSaveBlock2Ptr == NULL || !gSaveBlock2Ptr->randomizerStarters)
         return original;
 
-    map = ((u16)(u8)gSaveBlock1Ptr->location.mapGroup << 8)
-        | (u8)gSaveBlock1Ptr->location.mapNum;
     switch (map)
     {
     case MAP_PALLET_TOWN_PROFESSOR_OAKS_LAB:
@@ -81,4 +77,21 @@ enum Species WorldRandomizeStarterSpecies(enum Species original)
     }
 #endif
     return original;
+}
+
+// Rival teams are generated outside Oak's lab. Use the exact same Kanto
+// starter slot mapping without reading the player's current map.
+enum Species WorldRandomizeKantoStarterSpecies(enum Species original)
+{
+    return WorldRandomizeStarterSpeciesAtMap(original, MAP_PALLET_TOWN_PROFESSOR_OAKS_LAB);
+}
+
+enum Species WorldRandomizeStarterSpecies(enum Species original)
+{
+    u16 map;
+    if (gSaveBlock1Ptr == NULL)
+        return original;
+    map = ((u16)(u8)gSaveBlock1Ptr->location.mapGroup << 8)
+        | (u8)gSaveBlock1Ptr->location.mapNum;
+    return WorldRandomizeStarterSpeciesAtMap(original, map);
 }
