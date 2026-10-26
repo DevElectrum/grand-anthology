@@ -28,6 +28,8 @@ Route25_SeededSuicuneTransition::
 
 Route25_EventScript_HideCaughtSuicune::
 	setflag FLAG_FOUGHT_SUICUNE
+	goto Route25_EventScript_HideSuicune
+
 Route25_EventScript_HideSuicune::
 	setflag FLAG_HIDE_ROUTE25_SUICUNE
 	end
