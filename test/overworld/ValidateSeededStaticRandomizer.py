@@ -32,7 +32,7 @@ for name in ("randomizerWild", "randomizerTrainers", "randomizerStatics"):
 need(migration, "gSaveBlock2Ptr->randomizerSeed = 2026;")
 need(offline, "sv.sb2[bits_off] &= 0x07")
 need(offline, "struct.pack_into('<H', sv.sb2, seed_off, 2026)")
-need(battle, "static enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot)")
+need(battle, "enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot)")
 need(battle, "!gSaveBlock2Ptr->randomizerStatics")
 need(battle, "gSaveBlock2Ptr->randomizerSeed")
 for special in ("SPECIES_SNORLAX", "SPECIES_SUDOWOODO", "SPECIES_KECLEON",
@@ -48,7 +48,7 @@ single=battle.split("void CreateScriptedWildMon(",1)[1].split("void CreateScript
 double=battle.split("void CreateScriptedDoubleWildMon(",1)[1].split("void ScriptSetMonMoveSlot(",1)[0]
 need(single, "species = WorldRandomizeStaticSpecies(species, 0);")
 need(double, "species1 = WorldRandomizeStaticSpecies(species1, 0);")
-need(double, "species2 = WorldRandomizeStaticSpecies(species2, 1);")
+need(double, "species2 = WorldRandomizeStaticSpecies(species2, 0);")
 assert single.index("WorldRandomizeStaticSpecies") < single.index("GetMonPersonality")
 assert double.index("WorldRandomizeStaticSpecies") < double.index("GetMonPersonality")
 for action in ("Enable Statics", "Disable Statics",

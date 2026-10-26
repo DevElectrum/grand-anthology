@@ -41,7 +41,8 @@ need(award,"starterMon = GetStarterPokemon(gSpecialVar_Result);")
 need(award,"ScriptGiveMon(WorldRandomizeStarterSpecies(starterMon), 5, ITEM_NONE);")
 assert award.index("VAR_STARTER_MON") < award.index("WorldRandomizeStarterSpecies")
 need(choose,"return sStarterMon[region][chosenStarterId];")
-assert "WorldRandomizeStarterSpecies" not in choose
+assert "WorldRandomizeStarterSpecies(GetStarterPokemon(chosenStarterId))" in choose
+assert "GetDisplayedStarterPokemon(starterId)" in choose
 # Kanto/Johto use givemon at labs, so player-side, first-free-slot and
 # item-free script constraints must remain. Rival picks are source-scripted.
 gift=script.split("void ScrCmd_createmon(",1)[1].split("#undef PARSE_FLAG",1)[0]
