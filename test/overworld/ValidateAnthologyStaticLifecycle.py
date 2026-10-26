@@ -543,7 +543,10 @@ for directory, transition, battle, original, hidden, bit, gates, variables in SE
         run(script, battle, state, outcome)
         assert (bit in state.flags) == (outcome == "B_OUTCOME_CAUGHT"), (
             directory, original, outcome, "incorrect source completion")
-        assert (hidden in state.flags) == (outcome in ("B_OUTCOME_WON", "B_OUTCOME_CAUGHT")), (
+        # Mansion Mew's noncapture result retreats without consuming or hiding.
+        expected_hidden = (outcome == "B_OUTCOME_CAUGHT"
+                           if original == "MEW" else outcome in ("B_OUTCOME_WON", "B_OUTCOME_CAUGHT"))
+        assert (hidden in state.flags) == expected_hidden, (
             directory, original, outcome, "wrong same-visit hide")
         saved = Save(flags=set(state.flags), caught=set(state.caught),
                      variables=dict(state.variables), seeded=True)
