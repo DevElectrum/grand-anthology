@@ -719,6 +719,8 @@ Route111_Text_TrainerHillSign:
 // Independent rare statics: caught status persists in the National Dex.
 // Fainting permits a rematch after map re-entry. Preserve original route story.
 Route111_TingLuTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route111_SeededTINGLUVisibility
 	getcaughtmon SPECIES_TING_LU
 	goto_if_eq VAR_RESULT, TRUE, Route111_HideTingLu
 	clearflag FLAG_HIDE_ANTHOLOGY_TING_LU
@@ -739,7 +741,7 @@ Route111_EventScript_TingLu::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route111_TingLuRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route111_TingLuRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route111_TingLuResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route111_SeededTINGLUCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route111_TingLuResolved
 	release
 	end
@@ -784,3 +786,17 @@ Route111_Text_RingEntrance:
 Route111_Text_RingNotReady:
 	.string "The ring is dormant. It seems to\n"
 	.string "await a seasoned desert explorer.$"
+
+Route111_SeededTINGLUVisibility::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE111_TING_LU, Route111_HideTingLu
+	clearflag FLAG_HIDE_ANTHOLOGY_TING_LU
+	return
+
+Route111_SeededTINGLUCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route111_SeededTINGLUMark
+	goto Route111_TingLuResolved
+
+Route111_SeededTINGLUMark::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE111_TING_LU
+	return

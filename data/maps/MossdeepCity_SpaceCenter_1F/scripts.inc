@@ -427,10 +427,18 @@ MossdeepCity_SpaceCenter_1F_Text_MagmaIntentToStealNotice:
 // Special species sources added without replacing any canonical event or
 // scene. They respawn after a non-capture victory when the map is re-entered.
 MossdeepCity_SpaceCenter_1F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_SeededLatiosVisibility
 	getcaughtmon SPECIES_LATIOS
 	call_if_eq VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys
 	goto_if_unset FLAG_DEFEATED_MAGMA_SPACE_CENTER, MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys
 	call_if_ne VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_AnthologyShowDeoxys
+	return
+
+MossdeepCity_SpaceCenter_1F_SeededLatiosVisibility::
+	goto_if_unset FLAG_DEFEATED_MAGMA_SPACE_CENTER, MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys
+	call_if_set FLAG_CAUGHT_RANDOM_MOSSDEEP_LATIOS, MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys
+	call_if_unset FLAG_CAUGHT_RANDOM_MOSSDEEP_LATIOS, MossdeepCity_SpaceCenter_1F_AnthologyShowDeoxys
 	return
 
 MossdeepCity_SpaceCenter_1F_AnthologyHideDeoxys::
@@ -452,10 +460,19 @@ MossdeepCity_SpaceCenter_1F_EventScript_Latios::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MossdeepCity_SpaceCenter_1F_AnthologyLatiosRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MossdeepCity_SpaceCenter_1F_AnthologyLatiosRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MossdeepCity_SpaceCenter_1F_AnthologyLatiosResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MossdeepCity_SpaceCenter_1F_SeededLatiosCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MossdeepCity_SpaceCenter_1F_AnthologyLatiosResolved
 	release
 	end
+
+MossdeepCity_SpaceCenter_1F_SeededLatiosCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, MossdeepCity_SpaceCenter_1F_MarkSeededLatios
+	goto MossdeepCity_SpaceCenter_1F_AnthologyLatiosResolved
+
+MossdeepCity_SpaceCenter_1F_MarkSeededLatios::
+	setflag FLAG_CAUGHT_RANDOM_MOSSDEEP_LATIOS
+	return
 
 MossdeepCity_SpaceCenter_1F_AnthologyLatiosResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

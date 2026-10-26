@@ -100,3 +100,8 @@ Seven seeded capture-source sites added with separate flags: Goldenrod Genesect,
 ## Source sweep: story-dependent statics, part 2 (26 October)
 
 Seven captured-site flags isolate Arceus, Dojo Marshadow, Granite Cave Diancie, native Moltres/Articuno/Zapdos, and Birth Island Deoxys. Seeded Arceus requires Mt. Moon Dialga/Palkia/Giratina source completion, not an arbitrary original-species catch. Marshadow still requires the Koichi win and uses its immediate reveal path. Diancie preserves letter, first two badge gates and the in-room reveal. Native birds preserve puzzle/electrode side effects; Deoxys keeps the rock puzzle. These are source edits only with no requested testing.
+
+
+## Source sweep: remaining field statics, part 3 (26 October)
+
+Six source flags cover Route 32 Keldeo, Vermilion Meltan, Mt Chimney Volcanion, Route 111 Ting-Lu, Ecruteak Theater Meloetta and Mossdeep Space Center Latios. Lilycove ferry recognizes captured randomized Sky Pillar or Embedded Tower Rayquaza rather than the original Dex species, with existing Champion fallback intact. Corrected Seafoam B4F's randomized Articuno transition so current/boulder setup always executes. No testing performed by request.

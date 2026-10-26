@@ -471,8 +471,17 @@ LilycoveCity_Harbor_Movement_UnusedBoardFerry:
 LilycoveCity_Harbor_EventScript_Sailor::
 	lock
 	faceplayer
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, LilycoveCity_Harbor_SeededRayquazaFerry
 	getcaughtmon SPECIES_RAYQUAZA
 	goto_if_eq VAR_RESULT, TRUE, LilycoveCity_Harbor_EventScript_SailorBirthIsland
+	goto LilycoveCity_Harbor_CheckChampionFerry
+
+LilycoveCity_Harbor_SeededRayquazaFerry::
+	goto_if_set FLAG_CAUGHT_RANDOM_SKYPILLAR_RAYQUAZA, LilycoveCity_Harbor_EventScript_SailorBirthIsland
+	goto_if_set FLAG_CAUGHT_RANDOM_EMBEDDED_RAYQUAZA, LilycoveCity_Harbor_EventScript_SailorBirthIsland
+
+LilycoveCity_Harbor_CheckChampionFerry::
 	goto_if_set FLAG_HOENN_CHAMPION, LilycoveCity_Harbor_EventScript_SailorFerryAvailable
 	msgbox LilycoveCity_Harbor_Text_SailorFerryUnavailable, MSGBOX_DEFAULT
 	release

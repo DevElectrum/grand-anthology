@@ -854,6 +854,8 @@ MtChimney_Text_SawyerPostRematch:
 	.string "I'm overdressed for these parts.$"
 
 MtChimney_VolcanionTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MtChimney_SeededVOLCANIONVisibility
 	getcaughtmon SPECIES_VOLCANION
 	goto_if_eq VAR_RESULT, TRUE, MtChimney_HideVolcanion
 	clearflag FLAG_HIDE_ANTHOLOGY_VOLCANION
@@ -874,7 +876,7 @@ MtChimney_EventScript_Volcanion::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtChimney_VolcanionRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtChimney_VolcanionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtChimney_VolcanionResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtChimney_SeededVOLCANIONCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtChimney_VolcanionResolved
 	release
 	end
@@ -890,3 +892,17 @@ MtChimney_VolcanionResolved::
 MtChimney_VolcanionRetreated::
 	release
 	end
+
+MtChimney_SeededVOLCANIONVisibility::
+	goto_if_set FLAG_CAUGHT_RANDOM_MTCHIMNEY_VOLCANION, MtChimney_HideVolcanion
+	clearflag FLAG_HIDE_ANTHOLOGY_VOLCANION
+	return
+
+MtChimney_SeededVOLCANIONCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, MtChimney_SeededVOLCANIONMark
+	goto MtChimney_VolcanionResolved
+
+MtChimney_SeededVOLCANIONMark::
+	setflag FLAG_CAUGHT_RANDOM_MTCHIMNEY_VOLCANION
+	return

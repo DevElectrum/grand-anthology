@@ -468,6 +468,8 @@ VermilionCity_Text_Route2AideHasPackageForYou::
 // A small metal Pokémon among the construction works near Machop.
 // Multi-location acquisition batch: preserve canonical map scripts.
 VermilionCity_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, VermilionCity_Frlg_SeededMELTANVisibility
 	getcaughtmon SPECIES_MELTAN
 	call_if_eq VAR_RESULT, TRUE, VermilionCity_AnthologyHideMeltan
 	call_if_ne VAR_RESULT, TRUE, VermilionCity_AnthologyShowMeltan
@@ -492,7 +494,7 @@ VermilionCity_EventScript_Meltan::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, VermilionCity_AnthologyMeltanRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, VermilionCity_AnthologyMeltanRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, VermilionCity_AnthologyMeltanResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, VermilionCity_Frlg_SeededMELTANCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, VermilionCity_AnthologyMeltanResolved
 	release
 	end
@@ -509,3 +511,17 @@ VermilionCity_AnthologyMeltanRetreated::
 	release
 	end
 
+
+VermilionCity_Frlg_SeededMELTANVisibility::
+	call_if_set FLAG_CAUGHT_RANDOM_VERMILIONCITY_FRLG_MELTAN, VermilionCity_AnthologyHideMeltan
+	call_if_unset FLAG_CAUGHT_RANDOM_VERMILIONCITY_FRLG_MELTAN, VermilionCity_AnthologyShowMeltan
+	return
+
+VermilionCity_Frlg_SeededMELTANCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, VermilionCity_Frlg_SeededMELTANMark
+	goto VermilionCity_AnthologyMeltanResolved
+
+VermilionCity_Frlg_SeededMELTANMark::
+	setflag FLAG_CAUGHT_RANDOM_VERMILIONCITY_FRLG_MELTAN
+	return

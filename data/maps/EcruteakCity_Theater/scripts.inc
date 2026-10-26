@@ -1103,6 +1103,8 @@ EcruteakCity_Theater_Text_KimonoGirlsBeforeBattle:
 
 // Independent special encounter flags; keep native events authoritative.
 EcruteakCity_Theater_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, EcruteakCity_Theater_SeededMELOETTAVisibility
 	getcaughtmon SPECIES_MELOETTA
 	call_if_eq VAR_RESULT, TRUE, EcruteakCity_Theater_AnthologyHideMeloetta
 	call_if_ne VAR_RESULT, TRUE, EcruteakCity_Theater_AnthologyShowMeloetta
@@ -1127,7 +1129,7 @@ EcruteakCity_Theater_EventScript_Meloetta::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, EcruteakCity_Theater_AnthologyMeloettaRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, EcruteakCity_Theater_AnthologyMeloettaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, EcruteakCity_Theater_AnthologyMeloettaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, EcruteakCity_Theater_SeededMELOETTACaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, EcruteakCity_Theater_AnthologyMeloettaResolved
 	release
 	end
@@ -1143,3 +1145,17 @@ EcruteakCity_Theater_AnthologyMeloettaResolved::
 EcruteakCity_Theater_AnthologyMeloettaRetreated::
 	release
 	end
+
+EcruteakCity_Theater_SeededMELOETTAVisibility::
+	call_if_set FLAG_CAUGHT_RANDOM_ECRUTEAKCITY_THEATER_MELOETTA, EcruteakCity_Theater_AnthologyHideMeloetta
+	call_if_unset FLAG_CAUGHT_RANDOM_ECRUTEAKCITY_THEATER_MELOETTA, EcruteakCity_Theater_AnthologyShowMeloetta
+	return
+
+EcruteakCity_Theater_SeededMELOETTACaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, EcruteakCity_Theater_SeededMELOETTAMark
+	goto EcruteakCity_Theater_AnthologyMeloettaResolved
+
+EcruteakCity_Theater_SeededMELOETTAMark::
+	setflag FLAG_CAUGHT_RANDOM_ECRUTEAKCITY_THEATER_MELOETTA
+	return

@@ -24,6 +24,8 @@ SeafoamIslands_B4F_OnTransition::
 	getcaughtmon SPECIES_ARTICUNO
 	call_if_eq VAR_RESULT, TRUE, SeafoamIslands_B4F_NativeARTICUNOCaught
 	call_if_ne VAR_RESULT, TRUE, SeafoamIslands_B4F_NativeARTICUNOUncaught
+
+SeafoamIslands_B4F_AfterSeededArticunoVisibility::
 	call_if_unset FLAG_STOPPED_SEAFOAM_B4F_CURRENT, SeafoamIslands_B4F_EventScript_CheckStoppedCurrent
 	call_if_set FLAG_STOPPED_SEAFOAM_B4F_CURRENT, SeafoamIslands_B4F_EventScript_SetNoCurrentLayout
 	end
@@ -31,7 +33,7 @@ SeafoamIslands_B4F_OnTransition::
 SeafoamIslands_B4F_SeededArticunoVisibility::
 	call_if_set FLAG_CAUGHT_RANDOM_SEAFOAM_ARTICUNO, SeafoamIslands_B4F_NativeARTICUNOCaught
 	call_if_unset FLAG_CAUGHT_RANDOM_SEAFOAM_ARTICUNO, SeafoamIslands_B4F_NativeARTICUNOUncaught
-	end
+	goto SeafoamIslands_B4F_AfterSeededArticunoVisibility
 
 SeafoamIslands_B4F_EventScript_CheckStoppedCurrent::
 	setvar NUM_BOULDERS_PRESENT, 0

@@ -522,6 +522,8 @@ Route32_Text_Sign3:
 
 // Independent early/mid-Johto Sword of Justice static. No sibling capture gate.
 Route32_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route32_SeededKELDEOVisibility
 	getcaughtmon SPECIES_KELDEO
 	call_if_eq VAR_RESULT, TRUE, Route32_AnthologyHideKeldeo
 	call_if_ne VAR_RESULT, TRUE, Route32_AnthologyShowKeldeo
@@ -548,7 +550,7 @@ Route32_EventScript_Keldeo::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route32_AnthologyKeldeoRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route32_AnthologyKeldeoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route32_AnthologyKeldeoResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route32_SeededKELDEOCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route32_AnthologyKeldeoResolved
 	release
 	end
@@ -565,3 +567,17 @@ Route32_AnthologyKeldeoRetreated::
 	release
 	end
 
+
+Route32_SeededKELDEOVisibility::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE32_KELDEO, Route32_AnthologyHideKeldeo
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE32_KELDEO, Route32_AnthologyShowKeldeo
+	return
+
+Route32_SeededKELDEOCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route32_SeededKELDEOMark
+	goto Route32_AnthologyKeldeoResolved
+
+Route32_SeededKELDEOMark::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE32_KELDEO
+	return
