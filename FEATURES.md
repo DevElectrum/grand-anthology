@@ -22,6 +22,10 @@ the modified all-generation game has passed a complete three-region playthrough.
 | **Offline convenience, options and collection** | Evolution changes, shiny odds, seeded randomizers, edits, regional Dex and rewards in varying states of implementation and validation |
 | **Original continuous campaigns** | Pokémon World's Kanto, Johto, Hoenn and World Transit source retained; one persistent party/save is intended, with representative travel/save acceptance already recorded |
 
+### Seeded starter choices without duplicates
+
+When **Starter Randomization** is enabled, Oak offers **10 distinct randomized choices** in Kanto, while Elm and Birch each offer **9 distinct choices**. Choices are determined by the saved seed and regional starter slot, not the frame or number of menu openings. If two slots would produce the same species, the later slot advances deterministically to another valid species. Each option keeps its original story slot; this change does **not** redesign rival behavior. This is a source-implemented feature pending gameplay acceptance on the updated ROM.
+
 ### Repeatable static encounters and shiny hunting
 
 **Design contract for supported repeatable statics (including ordinary, non-randomized saves):** Catching the Pokémon completes that encounter location; defeating it without catching, or successfully fleeing, should leave the location available for another attempt. Some encounters reappear after leaving and re-entering the map rather than immediately. When battled again, the authored species stays the same (or the **seeded replacement species** stays the same if static randomization is enabled), but a **new individual** is generated: shininess, personality/nature and IVs may change. This intentionally permits repeated shiny-hunting attempts without resetting a save or defeating the Pokémon on every try.

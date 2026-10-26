@@ -31,7 +31,7 @@ for q in ("MAP_PALLET_TOWN_PROFESSOR_OAKS_LAB", "MAP_NEW_BARK_TOWN_LAB", "MAP_RO
           "SPECIES_CHIKORITA","SPECIES_CYNDAQUIL","SPECIES_TOTODILE",
           "SPECIES_TREECKO","SPECIES_TORCHIC","SPECIES_MUDKIP",
           "isMegaEvolution","isPrimalReversion","isUltraBurst","isGigantamax",
-          "isTeraForm","isTotem","IsSpeciesEnabled(result)","attempts < NUM_SPECIES - 1"):
+          "isTeraForm","isTotem","IsSpeciesEnabled(species)","attempts < NUM_SPECIES - 1"):
     need(rng,q)
 # Native Hoenn bag callback randomizes ONLY the actual award. Do not alter
 # the selection UI's starters or original VAR_STARTER_MON.
@@ -73,4 +73,65 @@ def mix(seed,original,map_id,count=1800):
 assert mix(2026,1,0x6478)==mix(2026,1,0x6478)
 assert mix(2027,1,0x6478)!=mix(2026,1,0x6478)
 assert len({mix(i,1,0x6478) for i in range(100)})>=75
-print("P0 seeded original Oak/Elm/Birch starter awards, saved toggle, quest/rival protection: PASS")
+# The canonical menu order must match the collision-resistant resolver in
+# every region, or a displayed choice and its awarded/Blue lookup can diverge.
+import re
+def species_list(blob, pattern):
+    match=re.search(pattern, blob, re.S)
+    assert match, pattern
+    return re.findall(r"SPECIES_([A-Z0-9_]+)", match.group(1))
+
+for region, slots_name, expected_count in (
+    ("KANTO", "sKantoStarterSlots", 10),
+    ("JOHTO", "sJohtoStarterSlots", 9),
+    ("HOENN", "sHoennStarterSlots", 9),
+):
+    authored=species_list(choose, r"\\[REGION_"+region+r"\\]\\s*=\\s*\\{([^}]+)\\}")
+    resolved=species_list(rng, r"\\b"+slots_name+r"\\[\\]\\s*=\\s*\\{([^}]+)\\}")
+    assert len(authored)==expected_count
+    assert resolved==authored, (region, resolved, authored)
+for x in ("selected[i] = WorldPickUniqueStarter(slots[i], map, selected, i);",
+          "if (previous[i] == result)", "if (i == previousCount)", 
+          "return WorldRandomizeStarterSpeciesAtMap(original, MAP_PALLET_TOWN_PROFESSOR_OAKS_LAB);"):
+    need(rng, x)
+
+# A portable mirror exercises duplicates, stable seeds and unchanged
+# non-collision candidates over many seeds. The optimized build executes C.
+def pick_roster(seed, originals, map_id, count=121):
+    picked=[]
+    initial=[]
+    for original in originals:
+        h=(0x9E3779B9 ^ seed) & mask
+        h^=(original * 0x85EBCA6B) & mask
+        h^=((map_id << 8) | 0x5300) & mask
+        h^=h>>16
+        h=(h*0x7FEB352D)&mask
+        h^=h>>15
+        h=(h*0x846CA68B)&mask
+        h^=h>>16
+        candidate=1+h%(count-1)
+        initial.append(candidate)
+        for _ in range(count-1):
+            if candidate % 13 != 0 and candidate not in picked:
+                picked.append(candidate)
+                break
+            candidate+=1
+            if candidate>=count:
+                candidate=1
+        else:
+            raise AssertionError("No valid candidate")
+    return picked, initial
+
+collisions=0
+for region_id, n in ((0x120,10),(0x140,9),(0x160,9)):
+    for seed in range(512):
+        original=list(range(1,n+1))
+        picked, candidates=pick_roster(seed, original, region_id)
+        assert len(picked)==len(set(picked))==n
+        assert pick_roster(seed, original, region_id)[0]==picked
+        if len(set(candidates)) != n:
+            collisions+=1
+    assert pick_roster(2026, list(range(1,n+1)), region_id)[0] != pick_roster(2027, list(range(1,n+1)), region_id)[0]
+assert collisions>0
+
+print("P0 seeded unique starter menus across Oak/Elm/Birch, saved toggle and story/rival contract: PASS")
