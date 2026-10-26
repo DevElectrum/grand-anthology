@@ -107,4 +107,21 @@ for location, original, site_flag in (
     need(map_script, "callnative AnthologyStaticRandomizerIsOn")
     need(src("include/constants/flags.h"), "#define "+site_flag+" ")
 
+for location, species, captured in (
+    ("UnionCave_1F", "TERRAKION", "FLAG_CAUGHT_RANDOM_UNIONCAVE_1F_TERRAKION"),
+    ("NationalPark_Normal", "VIRIZION", "FLAG_CAUGHT_RANDOM_NATIONALPARK_NORMAL_VIRIZION"),
+    ("NationalPark_Normal", "VICTINI", "FLAG_CAUGHT_RANDOM_NATIONALPARK_NORMAL_VICTINI"),
+    ("ViridianForest_Frlg", "SHAYMIN", "FLAG_CAUGHT_RANDOM_VIRIDIANFOREST_SHAYMIN"),
+    ("Route39", "ENAMORUS", "FLAG_CAUGHT_RANDOM_ROUTE39_ENAMORUS"),
+):
+    site = src("data/maps/"+location+"/scripts.inc")
+    need(site, "getcaughtmon SPECIES_"+species)
+    need(site, "seteventmon SPECIES_"+species)
+    need(site, "setflag "+captured)
+    need(site, "callnative AnthologyStaticRandomizerIsOn")
+    need(src("include/constants/flags.h"), "#define "+captured+" ")
+for prerequisite in ("FLAG_CAUGHT_RANDOM_ROUTE44_TORNADUS", "FLAG_CAUGHT_RANDOM_ROUTE41_THUNDURUS", "FLAG_CAUGHT_RANDOM_ROUTE43_LANDORUS"):
+    need(src("data/maps/Route39/scripts.inc"), "goto_if_unset "+prerequisite)
+need(src("data/maps/NationalPark_Normal/scripts.inc"), "goto_if_unset FLAG_SYS_GAME_CLEAR, NationalPark_Normal_HideVictini")
+
 print("P0 v13 seeded static singles/doubles, sprite parity, form safety, and relic ownership: PASS")

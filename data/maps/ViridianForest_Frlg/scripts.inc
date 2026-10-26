@@ -172,9 +172,16 @@ ViridianForest_Text_LeavingViridianForest::
 
 // Before Brock: a one-time static encounter in the forest, not Route 5.
 ViridianForest_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, ViridianForest_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_SHAYMIN
 	call_if_eq VAR_RESULT, TRUE, ViridianForest_AnthologyHideShaymin
 	call_if_ne VAR_RESULT, TRUE, ViridianForest_AnthologyShowShaymin
+	return
+
+ViridianForest_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_VIRIDIANFOREST_SHAYMIN, ViridianForest_AnthologyHideShaymin
+	call_if_unset FLAG_CAUGHT_RANDOM_VIRIDIANFOREST_SHAYMIN, ViridianForest_AnthologyShowShaymin
 	return
 
 ViridianForest_AnthologyHideShaymin::
@@ -196,10 +203,14 @@ ViridianForest_EventScript_Shaymin::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, ViridianForest_AnthologyShayminRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, ViridianForest_AnthologyShayminRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, ViridianForest_AnthologyShayminResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, ViridianForest_AnthologyShayminResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, ViridianForest_AnthologyShayminResolved
 	release
 	end
+
+ViridianForest_AnthologyShayminResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_VIRIDIANFOREST_SHAYMIN
+	goto ViridianForest_AnthologyShayminResolved
 
 ViridianForest_AnthologyShayminResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

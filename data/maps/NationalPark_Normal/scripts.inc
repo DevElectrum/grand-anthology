@@ -201,9 +201,16 @@ NationalPark_Normal_Text_TrainerTips:
 
 // Independent early/mid-Johto Sword of Justice static. No sibling capture gate.
 NationalPark_Normal_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, NationalPark_Normal_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_VIRIZION
 	call_if_eq VAR_RESULT, TRUE, NationalPark_Normal_AnthologyHideVirizion
 	call_if_ne VAR_RESULT, TRUE, NationalPark_Normal_AnthologyShowVirizion
+	return
+
+NationalPark_Normal_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_NATIONALPARK_NORMAL_VIRIZION, NationalPark_Normal_AnthologyHideVirizion
+	call_if_unset FLAG_CAUGHT_RANDOM_NATIONALPARK_NORMAL_VIRIZION, NationalPark_Normal_AnthologyShowVirizion
 	return
 
 NationalPark_Normal_AnthologyHideVirizion::
@@ -225,10 +232,14 @@ NationalPark_Normal_EventScript_Virizion::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, NationalPark_Normal_AnthologyVirizionRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, NationalPark_Normal_AnthologyVirizionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NationalPark_Normal_AnthologyVirizionResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NationalPark_Normal_AnthologyVirizionResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NationalPark_Normal_AnthologyVirizionResolved
 	release
 	end
+
+NationalPark_Normal_AnthologyVirizionResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_NATIONALPARK_NORMAL_VIRIZION
+	goto NationalPark_Normal_AnthologyVirizionResolved
 
 NationalPark_Normal_AnthologyVirizionResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -245,8 +256,15 @@ NationalPark_Normal_AnthologyVirizionRetreated::
 
 NationalPark_Normal_VictiniOnTransition::
 	goto_if_unset FLAG_SYS_GAME_CLEAR, NationalPark_Normal_HideVictini
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, NationalPark_Normal_VictiniRandomOnTransition
 	getcaughtmon SPECIES_VICTINI
 	goto_if_eq VAR_RESULT, TRUE, NationalPark_Normal_HideVictini
+	clearflag FLAG_HIDE_ANTHOLOGY_VICTINI
+	return
+
+NationalPark_Normal_VictiniRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_NATIONALPARK_NORMAL_VICTINI, NationalPark_Normal_HideVictini
 	clearflag FLAG_HIDE_ANTHOLOGY_VICTINI
 	return
 
@@ -265,10 +283,14 @@ NationalPark_Normal_EventScript_Victini::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, NationalPark_Normal_VictiniRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, NationalPark_Normal_VictiniRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NationalPark_Normal_VictiniResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NationalPark_Normal_VictiniResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NationalPark_Normal_VictiniResolved
 	release
 	end
+
+NationalPark_Normal_VictiniResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_NATIONALPARK_NORMAL_VICTINI
+	goto NationalPark_Normal_VictiniResolved
 
 NationalPark_Normal_VictiniResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

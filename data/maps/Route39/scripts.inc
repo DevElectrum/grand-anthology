@@ -375,6 +375,8 @@ Route39_Text_TrainerTips:
 
 // New static acquisition flags are independent of original Johto plot events.
 Route39_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route39_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_ENAMORUS
 	goto_if_eq VAR_RESULT, TRUE, Route39_AnthologyHideEnamorus
 	getcaughtmon SPECIES_TORNADUS
@@ -383,6 +385,14 @@ Route39_AnthologyOnTransition::
 	goto_if_ne VAR_RESULT, TRUE, Route39_AnthologyHideEnamorus
 	getcaughtmon SPECIES_LANDORUS
 	goto_if_ne VAR_RESULT, TRUE, Route39_AnthologyHideEnamorus
+	clearflag FLAG_HIDE_ANTHOLOGY_ENAMORUS
+	return
+
+Route39_AnthologyRandomOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE39_ENAMORUS, Route39_AnthologyHideEnamorus
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE44_TORNADUS, Route39_AnthologyHideEnamorus
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE41_THUNDURUS, Route39_AnthologyHideEnamorus
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE43_LANDORUS, Route39_AnthologyHideEnamorus
 	clearflag FLAG_HIDE_ANTHOLOGY_ENAMORUS
 	return
 
@@ -403,10 +413,14 @@ Route39_EventScript_Enamorus::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route39_AnthologyEnamorusRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route39_AnthologyEnamorusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route39_AnthologyEnamorusResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route39_AnthologyEnamorusResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route39_AnthologyEnamorusResolved
 	release
 	end
+
+Route39_AnthologyEnamorusResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE39_ENAMORUS
+	goto Route39_AnthologyEnamorusResolved
 
 Route39_AnthologyEnamorusResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

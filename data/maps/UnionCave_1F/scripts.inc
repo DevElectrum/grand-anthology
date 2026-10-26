@@ -139,9 +139,16 @@ UnionCave_1F_Text_FirebreatherRayAfter:
 
 // Independent early/mid-Johto Sword of Justice static. No sibling capture gate.
 UnionCave_1F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, UnionCave_1F_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_TERRAKION
 	call_if_eq VAR_RESULT, TRUE, UnionCave_1F_AnthologyHideTerrakion
 	call_if_ne VAR_RESULT, TRUE, UnionCave_1F_AnthologyShowTerrakion
+	return
+
+UnionCave_1F_AnthologyRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_UNIONCAVE_1F_TERRAKION, UnionCave_1F_AnthologyHideTerrakion
+	call_if_unset FLAG_CAUGHT_RANDOM_UNIONCAVE_1F_TERRAKION, UnionCave_1F_AnthologyShowTerrakion
 	return
 
 UnionCave_1F_AnthologyHideTerrakion::
@@ -165,10 +172,14 @@ UnionCave_1F_EventScript_Terrakion::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, UnionCave_1F_AnthologyTerrakionRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, UnionCave_1F_AnthologyTerrakionRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, UnionCave_1F_AnthologyTerrakionResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, UnionCave_1F_AnthologyTerrakionResolvedRandomCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, UnionCave_1F_AnthologyTerrakionResolved
 	release
 	end
+
+UnionCave_1F_AnthologyTerrakionResolvedRandomCaught::
+	setflag FLAG_CAUGHT_RANDOM_UNIONCAVE_1F_TERRAKION
+	goto UnionCave_1F_AnthologyTerrakionResolved
 
 UnionCave_1F_AnthologyTerrakionResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

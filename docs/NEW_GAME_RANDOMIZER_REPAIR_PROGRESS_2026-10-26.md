@@ -44,3 +44,9 @@ This batch is **not repository-wide closeout**. Other `getcaughtmon` scripted st
 ## Additional Kanto/Johto/Hoenn location sweep (26 October)
 
 Twelve further seed-randomized caught-site flags were integrated for Yveltal, Necrozma, Manaphy, Tapu Fini, Jirachi, Chien-Pao, Walking Wake, Iron Crown, Landorus, Thundurus, Eternatus and Tornadus. On every affected map, the original species-Dex test is retained when static randomization is Off. Catching a replacement sets only the local completion flag; KO and escape do not. Duplicate native Tornadus sources in other maps are not automatically retired by this Johto site's capture when seeded randomness is on. This is source repair pending game-level acceptance.
+
+## Johto Sword/Forces dependencies and Viridian Forest (26 October)
+
+Five more independent seed-mode completion flags cover Union Cave Terrakion, National Park Virizion and Victini, Viridian Forest Shaymin, and Route 39 Enamorus. The original source checks remain when randomization is Off. In seed mode, Enamorus requires the **Route 44 Tornadus, Route 41 Thundurus, and Route 43 Landorus source sites** to be caught, not just the Pokédex registration of their original species. Victini still requires FLAG_SYS_GAME_CLEAR first. No site marks complete on win/run.
+
+Cumulative newly repaired source-level sites in these grouped passes: **26** (Mt. Moon 4 + batch 1 9 + batch 2 12 + batch 3 5 = 30, including Mt. Moon; grouped changes alone 26). Remaining special and native encounters still require a location-ledger audit and physical verification.
