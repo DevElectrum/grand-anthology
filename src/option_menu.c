@@ -14,6 +14,7 @@
 #include "main.h"
 #include "menu.h"
 #include "palette.h"
+#include "random.h"
 #include "scanline_effect.h"
 #include "sprite.h"
 #include "strings.h"
@@ -116,8 +117,12 @@ EWRAM_DATA static bool8 sArrowPressed = FALSE;
 #if ALL_REGIONS
 static bool8 sNewGameOptionConfirmed = FALSE;
 static u8 sRandomizerPreset = 0;
+static bool8 sSeedEditing = FALSE;
+static u8 sSeedDigit = 0;
+static u16 sSeedBeforeEditing = 2026;
 static void Randomizer_DrawChoices(s16 scrollOffset);
 static void Randomizer_ProcessInput(u8 item);
+static void Randomizer_ProcessSeedInput(u8 taskId);
 #endif
 
 
@@ -322,6 +327,8 @@ void CB2_InitOptionMenu(void)
         gTasks[taskId].tScrollOffset = 0;
 #if ALL_REGIONS
         sNewGameOptionConfirmed = FALSE;
+        sSeedEditing = FALSE;
+        sSeedDigit = 0;
         sRandomizerPreset = 2;
         if (!gSaveBlock2Ptr->randomizerWild && !gSaveBlock2Ptr->randomizerTrainers
          && !gSaveBlock2Ptr->randomizerStarters && !gSaveBlock2Ptr->randomizerGifts
@@ -356,6 +363,15 @@ static void Task_OptionMenuFadeIn(u8 taskId)
 static void Task_OptionMenuProcessInput(u8 taskId)
 {
 #if ALL_REGIONS
+    if (IsNewGameSetupActive() && gTasks[taskId].tMenuSelection == MENUITEM_RAND_SEED)
+    {
+        if (sSeedEditing || JOY_NEW(A_BUTTON | SELECT_BUTTON))
+        {
+            Randomizer_ProcessSeedInput(taskId);
+            return;
+        }
+    }
+
     // START is the explicit pre-adventure Confirm & Lock shortcut. It is
     // deliberately unavailable after the save has been initialized.
     if (IsNewGameSetupActive() && JOY_NEW(START_BUTTON))
@@ -1222,12 +1238,72 @@ static void Randomizer_DrawChoices(s16 scrollOffset)
         gSaveBlock2Ptr->randomizerStaticMode == 2 ? COMPOUND_STRING("Chaos") : COMPOUND_STRING("Ordinary"));
     ConvertIntToDecimalStringN(seedText, gSaveBlock2Ptr->randomizerSeed, STR_CONV_MODE_LEADING_ZEROS, 5);
     Randomizer_PrintValue(MENUITEM_RAND_SEED, scrollOffset, seedText);
+    if (sSeedEditing)
+    {
+        u8 y;
+        if (GetOptionMenuItemY(MENUITEM_RAND_SEED, scrollOffset, &y))
+        {
+            u8 prefix[6];
+            u8 currentDigit[2] = {seedText[sSeedDigit], EOS};
+            u32 x;
+            memcpy(prefix, seedText, sSeedDigit);
+            prefix[sSeedDigit] = EOS;
+            x = 132 + GetStringWidth(FONT_SMALL, prefix, 0);
+            FillWindowPixelRect(WIN_OPTIONS, PIXEL_FILL(4), x, y, 7, 14);
+            AddTextPrinterParameterized(WIN_OPTIONS, FONT_SMALL, currentDigit, x, y + 1, TEXT_SKIP_DRAW, NULL);
+        }
+    }
+}
+
+static void Randomizer_ProcessSeedInput(u8 taskId)
+{
+    static const u16 powers[5] = {10000, 1000, 100, 10, 1};
+    u32 seed;
+    u32 digit;
+
+    if (!IsNewGameSetupActive())
+        return;
+    if (!sSeedEditing)
+    {
+        if (JOY_NEW(SELECT_BUTTON))
+            gSaveBlock2Ptr->randomizerSeed = Random32() & 0xFFFF;
+        else if (JOY_NEW(A_BUTTON))
+        {
+            sSeedBeforeEditing = gSaveBlock2Ptr->randomizerSeed;
+            sSeedEditing = TRUE;
+            sSeedDigit = 0;
+        }
+        RedrawVisibleOptionsPage(taskId);
+        return;
+    }
+
+    if (JOY_NEW(A_BUTTON))
+        sSeedEditing = FALSE;
+    else if (JOY_NEW(B_BUTTON))
+    {
+        gSaveBlock2Ptr->randomizerSeed = sSeedBeforeEditing;
+        sSeedEditing = FALSE;
+    }
+    else if (JOY_NEW(DPAD_LEFT))
+        sSeedDigit = (sSeedDigit + 4) % 5;
+    else if (JOY_NEW(DPAD_RIGHT))
+        sSeedDigit = (sSeedDigit + 1) % 5;
+    else if (JOY_NEW(DPAD_UP | DPAD_DOWN))
+    {
+        seed = gSaveBlock2Ptr->randomizerSeed;
+        digit = (seed / powers[sSeedDigit]) % 10;
+        if (JOY_NEW(DPAD_UP))
+            seed = seed + ((digit == 9 ? 0 : digit + 1) - digit) * powers[sSeedDigit];
+        else
+            seed -= (digit == 0 ? 0 : 1) * powers[sSeedDigit];
+        if (seed <= 65535)
+            gSaveBlock2Ptr->randomizerSeed = seed;
+    }
+    RedrawVisibleOptionsPage(taskId);
 }
 
 static void Randomizer_ProcessInput(u8 item)
 {
-    u32 seed;
-    u32 delta;
     // All ordinary gameplay options remain editable. Only the randomizer
     // categories, static mode and seed become read-only after confirmation.
     if (item != MENUITEM_HARDMODE && !IsNewGameSetupActive())
@@ -1279,13 +1355,6 @@ static void Randomizer_ProcessInput(u8 item)
         sRandomizerPreset = 2;
         break;
     case MENUITEM_RAND_SEED:
-        seed = gSaveBlock2Ptr->randomizerSeed;
-        delta = JOY_NEW(L_BUTTON | R_BUTTON) ? 1000 : 1;
-        if (JOY_NEW(DPAD_RIGHT | R_BUTTON))
-            seed = seed + delta > 65535 ? 65535 : seed + delta;
-        else
-            seed = seed < delta ? 0 : seed - delta;
-        gSaveBlock2Ptr->randomizerSeed = seed;
         break;
     }
 }
@@ -1297,7 +1366,7 @@ static void DrawHeaderText(void)
     FillWindowPixelBuffer(WIN_FOOTER, PIXEL_FILL(1));
     AddTextPrinterParameterized(WIN_FOOTER, FONT_SMALL,
 #if ALL_REGIONS
-        IsNewGameSetupActive() ? COMPOUND_STRING("START Lock  B Back  L/R Seed") :
+        IsNewGameSetupActive() ? COMPOUND_STRING("Seed: A Edit  SEL Random  START Lock") :
 #endif
         COMPOUND_STRING("Left/Right Change    B Done"), 4, 2, TEXT_SKIP_DRAW, NULL);
     WorldMenu_RoundWindowTopCorners(WIN_FOOTER);
