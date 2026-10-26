@@ -243,6 +243,8 @@ Route117_Text_DayCareSign:
 	.string "“Let us raise your POKéMON.”$"
 
 Route117_AnthologyHuntTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route117_RandomHuntTransition
 	getcaughtmon SPECIES_OGERPON_TEAL
 	goto_if_eq VAR_RESULT, TRUE, Route117_HideOgerpon
 	clearflag FLAG_HIDE_ANTHOLOGY_OGERPON
@@ -266,6 +268,21 @@ Route117_CheckPecharunt::
 	clearflag FLAG_HIDE_ANTHOLOGY_PECHARUNT
 	return
 
+Route117_RandomHuntTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE117_OGERPON, Route117_RandomHideOgerpon
+	clearflag FLAG_HIDE_ANTHOLOGY_OGERPON
+	goto Route117_RandomCheckPecharunt
+Route117_RandomHideOgerpon::
+	setflag FLAG_HIDE_ANTHOLOGY_OGERPON
+Route117_RandomCheckPecharunt::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE117_PECHARUNT, Route117_HidePecharunt
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE117_OGERPON, Route117_HidePecharunt
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE112_OKIDOGI, Route117_HidePecharunt
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE113_FEZANDIPITI, Route117_HidePecharunt
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE114_MUNKIDORI, Route117_HidePecharunt
+	clearflag FLAG_HIDE_ANTHOLOGY_PECHARUNT
+	return
+
 Route117_HidePecharunt::
 	setflag FLAG_HIDE_ANTHOLOGY_PECHARUNT
 	return
@@ -281,10 +298,14 @@ Route117_EventScript_Ogerpon::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route117_AnthologyOgerponRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route117_AnthologyOgerponRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route117_AnthologyOgerponResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route117_AnthologyOgerponCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route117_AnthologyOgerponResolved
 	release
 	end
+
+Route117_AnthologyOgerponCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE117_OGERPON
+	goto Route117_AnthologyOgerponResolved
 
 Route117_AnthologyOgerponResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -309,10 +330,14 @@ Route117_EventScript_Pecharunt::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route117_AnthologyPecharuntRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route117_AnthologyPecharuntRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route117_AnthologyPecharuntResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route117_AnthologyPecharuntCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route117_AnthologyPecharuntResolved
 	release
 	end
+
+Route117_AnthologyPecharuntCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE117_PECHARUNT
+	goto Route117_AnthologyPecharuntResolved
 
 Route117_AnthologyPecharuntResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

@@ -30,10 +30,16 @@ IslandCave_EventScript_HideRegiEntrance::
 IslandCave_OnTransition:
 	setflag FLAG_LANDMARK_ISLAND_CAVE
 	call IslandCave_EventScript_ClearSteps
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IslandCave_RandomStaticOnTransition
 	getcaughtmon SPECIES_REGICE
 	call_if_eq VAR_RESULT, TRUE, IslandCave_NativeREGICECaught
 	call_if_ne VAR_RESULT, TRUE, IslandCave_NativeREGICEUncaught
 	end
+
+IslandCave_RandomStaticOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ISLANDCAVE_REGICE, IslandCave_NativeREGICECaught
+	goto IslandCave_NativeREGICEUncaught
 
 IslandCave_EventScript_ShowRegice::
 	clearflag FLAG_HIDE_REGICE
@@ -101,9 +107,16 @@ IslandCave_EventScript_Regice::
 	special StartRegiBattle
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
 	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IslandCave_EventScript_CaughtRegice
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, IslandCave_EventScript_DefeatedRegice
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, IslandCave_EventScript_RanFromRegice
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, IslandCave_EventScript_RanFromRegice
+	setflag FLAG_DEFEATED_REGICE
+	release
+	end
+
+IslandCave_EventScript_CaughtRegice::
+	setflag FLAG_CAUGHT_RANDOM_ISLANDCAVE_REGICE
 	setflag FLAG_DEFEATED_REGICE
 	release
 	end

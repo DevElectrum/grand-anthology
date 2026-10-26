@@ -167,10 +167,18 @@ Route113_Text_GlassWorkshopSign:
 
 
 Route113_AnthologyHuntTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route113_RandomHuntTransition
 	getcaughtmon SPECIES_FEZANDIPITI
 	goto_if_eq VAR_RESULT, TRUE, Route113_HideFezandipiti
 	getcaughtmon SPECIES_OGERPON_TEAL
 	goto_if_ne VAR_RESULT, TRUE, Route113_HideFezandipiti
+	clearflag FLAG_HIDE_ANTHOLOGY_FEZANDIPITI
+	return
+
+Route113_RandomHuntTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE113_FEZANDIPITI, Route113_HideFezandipiti
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE117_OGERPON, Route113_HideFezandipiti
 	clearflag FLAG_HIDE_ANTHOLOGY_FEZANDIPITI
 	return
 
@@ -189,10 +197,14 @@ Route113_EventScript_Fezandipiti::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route113_FezandipitiRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route113_FezandipitiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route113_FezandipitiResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route113_FezandipitiCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route113_FezandipitiResolved
 	release
 	end
+
+Route113_FezandipitiCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE113_FEZANDIPITI
+	goto Route113_FezandipitiResolved
 
 Route113_FezandipitiResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

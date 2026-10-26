@@ -144,6 +144,8 @@ RockTunnel_B1F_Text_WinstonPostBattle::
 
 // Regigigas requires all three Hoenn Regis registered caught, not in party.
 RockTunnel_B1F_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyRandomOnTransition
 	getcaughtmon SPECIES_REGIROCK
 	goto_if_ne VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyRegigigasLocked
 	getcaughtmon SPECIES_REGICE
@@ -169,6 +171,25 @@ RockTunnel_B1F_AnthologyOtherStatics::
 	call_if_ne VAR_RESULT, TRUE, RockTunnel_B1F_AnthologyShowAzelf
 	return
 
+RockTunnel_B1F_AnthologyRandomOnTransition::
+	goto_if_unset FLAG_CAUGHT_RANDOM_DESERTRUINS_REGIROCK, RockTunnel_B1F_AnthologyRegigigasRandomLocked
+	goto_if_unset FLAG_CAUGHT_RANDOM_ISLANDCAVE_REGICE, RockTunnel_B1F_AnthologyRegigigasRandomLocked
+	goto_if_unset FLAG_CAUGHT_RANDOM_ANCIENTTOMB_REGISTEEL, RockTunnel_B1F_AnthologyRegigigasRandomLocked
+	call_if_set FLAG_CAUGHT_RANDOM_ROCKTUNNEL_REGIGIGAS, RockTunnel_B1F_AnthologyHideRegigigas
+	call_if_unset FLAG_CAUGHT_RANDOM_ROCKTUNNEL_REGIGIGAS, RockTunnel_B1F_AnthologyShowRegigigas
+	goto RockTunnel_B1F_AnthologyOtherRandomStatics
+
+RockTunnel_B1F_AnthologyRegigigasRandomLocked::
+	setflag FLAG_HIDE_ANTHOLOGY_REGIGIGAS
+RockTunnel_B1F_AnthologyOtherRandomStatics::
+	call_if_set FLAG_CAUGHT_RANDOM_ROCKTUNNEL_UXIE, RockTunnel_B1F_AnthologyHideUxie
+	call_if_unset FLAG_CAUGHT_RANDOM_ROCKTUNNEL_UXIE, RockTunnel_B1F_AnthologyShowUxie
+	call_if_set FLAG_CAUGHT_RANDOM_ROCKTUNNEL_MESPRIT, RockTunnel_B1F_AnthologyHideMesprit
+	call_if_unset FLAG_CAUGHT_RANDOM_ROCKTUNNEL_MESPRIT, RockTunnel_B1F_AnthologyShowMesprit
+	call_if_set FLAG_CAUGHT_RANDOM_ROCKTUNNEL_AZELF, RockTunnel_B1F_AnthologyHideAzelf
+	call_if_unset FLAG_CAUGHT_RANDOM_ROCKTUNNEL_AZELF, RockTunnel_B1F_AnthologyShowAzelf
+	return
+
 RockTunnel_B1F_AnthologyHideRegigigas::
 	setflag FLAG_HIDE_ANTHOLOGY_REGIGIGAS
 	return
@@ -188,10 +209,14 @@ RockTunnel_B1F_EventScript_Regigigas::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, RockTunnel_B1F_AnthologyRegigigasRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, RockTunnel_B1F_AnthologyRegigigasRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_AnthologyRegigigasResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_AnthologyRegigigasCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, RockTunnel_B1F_AnthologyRegigigasResolved
 	release
 	end
+
+RockTunnel_B1F_AnthologyRegigigasCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROCKTUNNEL_REGIGIGAS
+	goto RockTunnel_B1F_AnthologyRegigigasResolved
 
 RockTunnel_B1F_AnthologyRegigigasResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -224,10 +249,14 @@ RockTunnel_B1F_EventScript_Uxie::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, RockTunnel_B1F_AnthologyUxieRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, RockTunnel_B1F_AnthologyUxieRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_AnthologyUxieResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_AnthologyUxieCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, RockTunnel_B1F_AnthologyUxieResolved
 	release
 	end
+
+RockTunnel_B1F_AnthologyUxieCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROCKTUNNEL_UXIE
+	goto RockTunnel_B1F_AnthologyUxieResolved
 
 RockTunnel_B1F_AnthologyUxieResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -260,10 +289,14 @@ RockTunnel_B1F_EventScript_Mesprit::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, RockTunnel_B1F_AnthologyMespritRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, RockTunnel_B1F_AnthologyMespritRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_AnthologyMespritResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_AnthologyMespritCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, RockTunnel_B1F_AnthologyMespritResolved
 	release
 	end
+
+RockTunnel_B1F_AnthologyMespritCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROCKTUNNEL_MESPRIT
+	goto RockTunnel_B1F_AnthologyMespritResolved
 
 RockTunnel_B1F_AnthologyMespritResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -296,10 +329,14 @@ RockTunnel_B1F_EventScript_Azelf::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, RockTunnel_B1F_AnthologyAzelfRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, RockTunnel_B1F_AnthologyAzelfRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_AnthologyAzelfResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_AnthologyAzelfCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, RockTunnel_B1F_AnthologyAzelfResolved
 	release
 	end
+
+RockTunnel_B1F_AnthologyAzelfCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROCKTUNNEL_AZELF
+	goto RockTunnel_B1F_AnthologyAzelfResolved
 
 RockTunnel_B1F_AnthologyAzelfResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -315,9 +352,16 @@ RockTunnel_B1F_AnthologyAzelfRetreated::
 
 // Multi-location acquisition batch: preserve canonical map scripts.
 RockTunnel_B1F_BigBatchOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, RockTunnel_B1F_BigBatchRandomOnTransition
 	getcaughtmon SPECIES_HEATRAN
 	call_if_eq VAR_RESULT, TRUE, RockTunnel_B1F_BigBatchHideHeatran
 	call_if_ne VAR_RESULT, TRUE, RockTunnel_B1F_BigBatchShowHeatran
+	return
+
+RockTunnel_B1F_BigBatchRandomOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_ROCKTUNNEL_HEATRAN, RockTunnel_B1F_BigBatchHideHeatran
+	call_if_unset FLAG_CAUGHT_RANDOM_ROCKTUNNEL_HEATRAN, RockTunnel_B1F_BigBatchShowHeatran
 	return
 
 RockTunnel_B1F_BigBatchHideHeatran::
@@ -339,10 +383,14 @@ RockTunnel_B1F_EventScript_Heatran::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, RockTunnel_B1F_BigBatchHeatranRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, RockTunnel_B1F_BigBatchHeatranRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_BigBatchHeatranResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, RockTunnel_B1F_BigBatchHeatranCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, RockTunnel_B1F_BigBatchHeatranResolved
 	release
 	end
+
+RockTunnel_B1F_BigBatchHeatranCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROCKTUNNEL_HEATRAN
+	goto RockTunnel_B1F_BigBatchHeatranResolved
 
 RockTunnel_B1F_BigBatchHeatranResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -357,8 +405,14 @@ RockTunnel_B1F_BigBatchHeatranRetreated::
 	end
 
 Anthology_MegaStone_HEATRANITE::
+    callnative AnthologyStaticRandomizerIsOn
+    goto_if_eq VAR_RESULT, TRUE, RockTunnel_B1F_MegaStoneHeatranRandom
     getcaughtmon SPECIES_HEATRAN
     goto_if_ne VAR_RESULT, TRUE, Anthology_MegaStone_HEATRANITE_Locked
+    finditem ITEM_HEATRANITE
+    end
+RockTunnel_B1F_MegaStoneHeatranRandom::
+    goto_if_unset FLAG_CAUGHT_RANDOM_ROCKTUNNEL_HEATRAN, Anthology_MegaStone_HEATRANITE_Locked
     finditem ITEM_HEATRANITE
     end
 Anthology_MegaStone_HEATRANITE_Locked::

@@ -143,10 +143,18 @@ Route112_Text_RouteSignLavaridge:
 
 
 Route112_AnthologyHuntTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route112_RandomHuntTransition
 	getcaughtmon SPECIES_OKIDOGI
 	goto_if_eq VAR_RESULT, TRUE, Route112_HideOkidogi
 	getcaughtmon SPECIES_OGERPON_TEAL
 	goto_if_ne VAR_RESULT, TRUE, Route112_HideOkidogi
+	clearflag FLAG_HIDE_ANTHOLOGY_OKIDOGI
+	return
+
+Route112_RandomHuntTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE112_OKIDOGI, Route112_HideOkidogi
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE117_OGERPON, Route112_HideOkidogi
 	clearflag FLAG_HIDE_ANTHOLOGY_OKIDOGI
 	return
 
@@ -165,10 +173,14 @@ Route112_EventScript_Okidogi::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route112_OkidogiRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route112_OkidogiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route112_OkidogiResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route112_OkidogiCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route112_OkidogiResolved
 	release
 	end
+
+Route112_OkidogiCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE112_OKIDOGI
+	goto Route112_OkidogiResolved
 
 Route112_OkidogiResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

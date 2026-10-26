@@ -201,10 +201,18 @@ Route114_Text_LanettesHouse:
 
 
 Route114_AnthologyHuntTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route114_RandomHuntTransition
 	getcaughtmon SPECIES_MUNKIDORI
 	goto_if_eq VAR_RESULT, TRUE, Route114_HideMunkidori
 	getcaughtmon SPECIES_OGERPON_TEAL
 	goto_if_ne VAR_RESULT, TRUE, Route114_HideMunkidori
+	clearflag FLAG_HIDE_ANTHOLOGY_MUNKIDORI
+	return
+
+Route114_RandomHuntTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_ROUTE114_MUNKIDORI, Route114_HideMunkidori
+	goto_if_unset FLAG_CAUGHT_RANDOM_ROUTE117_OGERPON, Route114_HideMunkidori
 	clearflag FLAG_HIDE_ANTHOLOGY_MUNKIDORI
 	return
 
@@ -223,10 +231,14 @@ Route114_EventScript_Munkidori::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route114_MunkidoriRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route114_MunkidoriRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route114_MunkidoriResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route114_MunkidoriCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route114_MunkidoriResolved
 	release
 	end
+
+Route114_MunkidoriCaught::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE114_MUNKIDORI
+	goto Route114_MunkidoriResolved
 
 Route114_MunkidoriResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

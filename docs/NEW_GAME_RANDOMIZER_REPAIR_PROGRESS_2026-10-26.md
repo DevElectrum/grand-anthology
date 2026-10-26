@@ -50,3 +50,8 @@ Twelve further seed-randomized caught-site flags were integrated for Yveltal, Ne
 Five more independent seed-mode completion flags cover Union Cave Terrakion, National Park Virizion and Victini, Viridian Forest Shaymin, and Route 39 Enamorus. The original source checks remain when randomization is Off. In seed mode, Enamorus requires the **Route 44 Tornadus, Route 41 Thundurus, and Route 43 Landorus source sites** to be caught, not just the Pokédex registration of their original species. Victini still requires FLAG_SYS_GAME_CLEAR first. No site marks complete on win/run.
 
 Cumulative newly repaired source-level sites in these grouped passes: **26** (Mt. Moon 4 + batch 1 9 + batch 2 12 + batch 3 5 = 30, including Mt. Moon; grouped changes alone 26). Remaining special and native encounters still require a location-ledger audit and physical verification.
+
+
+## 26 October static source-site persistence closeout batch (14 more sites)
+
+In randomized games, Hoenn's native Regirock/Regice/Registeel rooms, Rock Tunnel B1F's Regigigas/Uxie/Mesprit/Azelf/Heatran, the Route 117→112/113/114 Ogerpon/Loyal Three/Pecharunt sequence, and Lavender Pokémon Tower 7F Darkrai now track independent source-site catches (14 new flags, indices 0x14B–0x158). Source rewards for Heatranite and Darkranite use the matching site flags in randomized mode. Original species-based checks remain active with randomization Off. Knockouts and escapes must not set caught flags. Source checks/CI and emulator gameplay are separate evidence; validate against the exact commit.
