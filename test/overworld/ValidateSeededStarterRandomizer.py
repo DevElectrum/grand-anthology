@@ -86,8 +86,8 @@ for region, slots_name, expected_count in (
     ("JOHTO", "sJohtoStarterSlots", 9),
     ("HOENN", "sHoennStarterSlots", 9),
 ):
-    authored=species_list(choose, r"\\[REGION_"+region+r"\\]\\s*=\\s*\\{([^}]+)\\}")
-    resolved=species_list(rng, r"\\b"+slots_name+r"\\[\\]\\s*=\\s*\\{([^}]+)\\}")
+    authored=species_list(choose, r"\[REGION_"+region+r"\]\s*=\s*\{([^}]+)\}")
+    resolved=species_list(rng, r"\b"+slots_name+r"\[\]\s*=\s*\{([^}]+)\}")
     assert len(authored)==expected_count
     assert resolved==authored, (region, resolved, authored)
 for x in ("selected[i] = WorldPickUniqueStarter(slots[i], map, selected, i);",
