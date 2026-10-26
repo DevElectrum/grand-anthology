@@ -95,8 +95,9 @@ assert "tStarterPage * STARTER_MON_COUNT" in starter
 assert "JOY_NEW(L_BUTTON)" in starter and "JOY_NEW(R_BUTTON)" in starter
 assert "gSpecialVar_Result = gTasks[taskId].tStarterPage * STARTER_MON_COUNT" in starter
 random = read("src/world_starter_randomizer.c")
+hoenn_slots = random.split("static const enum Species sHoennStarterSlots[] =", 1)[1].split("};", 1)[0]
 for pokemon in ("CHESPIN","FENNEKIN","FROAKIE","SPRIGATITO","FUECOCO","QUAXLY"):
-    assert "original != SPECIES_" + pokemon in random
+    assert "SPECIES_" + pokemon in hoenn_slots
 
 # Elm reuses the selector without triggering Birch's Zigzagoon battle.
 elm = read("data/maps/NewBarkTown_Lab/scripts.inc")
