@@ -125,3 +125,36 @@ for prerequisite in ("FLAG_CAUGHT_RANDOM_ROUTE44_TORNADUS", "FLAG_CAUGHT_RANDOM_
 need(src("data/maps/NationalPark_Normal/scripts.inc"), "goto_if_unset FLAG_SYS_GAME_CLEAR, NationalPark_Normal_HideVictini")
 
 print("P0 v13 seeded static singles/doubles, sprite parity, form safety, and relic ownership: PASS")
+
+# Per-source capture guards for late October repair batch.
+for location, original, site_flag in (
+    ("DesertRuins", "REGIROCK", "FLAG_CAUGHT_RANDOM_DESERTRUINS_REGIROCK"),
+    ("IslandCave", "REGICE", "FLAG_CAUGHT_RANDOM_ISLANDCAVE_REGICE"),
+    ("AncientTomb", "REGISTEEL", "FLAG_CAUGHT_RANDOM_ANCIENTTOMB_REGISTEEL"),
+    ("RockTunnel_B1F_Frlg", "REGIGIGAS", "FLAG_CAUGHT_RANDOM_ROCKTUNNEL_REGIGIGAS"),
+    ("RockTunnel_B1F_Frlg", "UXIE", "FLAG_CAUGHT_RANDOM_ROCKTUNNEL_UXIE"),
+    ("RockTunnel_B1F_Frlg", "MESPRIT", "FLAG_CAUGHT_RANDOM_ROCKTUNNEL_MESPRIT"),
+    ("RockTunnel_B1F_Frlg", "AZELF", "FLAG_CAUGHT_RANDOM_ROCKTUNNEL_AZELF"),
+    ("RockTunnel_B1F_Frlg", "HEATRAN", "FLAG_CAUGHT_RANDOM_ROCKTUNNEL_HEATRAN"),
+    ("Route117", "OGERPON_TEAL", "FLAG_CAUGHT_RANDOM_ROUTE117_OGERPON"),
+    ("Route112", "OKIDOGI", "FLAG_CAUGHT_RANDOM_ROUTE112_OKIDOGI"),
+    ("Route113", "FEZANDIPITI", "FLAG_CAUGHT_RANDOM_ROUTE113_FEZANDIPITI"),
+    ("Route114", "MUNKIDORI", "FLAG_CAUGHT_RANDOM_ROUTE114_MUNKIDORI"),
+    ("Route117", "PECHARUNT", "FLAG_CAUGHT_RANDOM_ROUTE117_PECHARUNT"),
+    ("PokemonTower_7F_Frlg", "DARKRAI", "FLAG_CAUGHT_RANDOM_POKEMONTOWER_DARKRAI"),
+):
+    script = src("data/maps/"+location+"/scripts.inc")
+    need(script, "getcaughtmon SPECIES_"+original)
+    need(script, "setflag "+site_flag)
+    need(script, "callnative AnthologyStaticRandomizerIsOn")
+    need(src("include/constants/flags.h"), "#define "+site_flag+" ")
+for prereq in ("FLAG_CAUGHT_RANDOM_DESERTRUINS_REGIROCK",
+               "FLAG_CAUGHT_RANDOM_ISLANDCAVE_REGICE",
+               "FLAG_CAUGHT_RANDOM_ANCIENTTOMB_REGISTEEL"):
+    need(src("data/maps/RockTunnel_B1F_Frlg/scripts.inc"), "goto_if_unset "+prereq)
+for prereq in ("FLAG_CAUGHT_RANDOM_ROUTE117_OGERPON",
+               "FLAG_CAUGHT_RANDOM_ROUTE112_OKIDOGI",
+               "FLAG_CAUGHT_RANDOM_ROUTE113_FEZANDIPITI",
+               "FLAG_CAUGHT_RANDOM_ROUTE114_MUNKIDORI"):
+    need(src("data/maps/Route117/scripts.inc"), "goto_if_unset "+prereq)
+need(src("data/maps/PokemonTower_7F_Frlg/scripts.inc"), "goto_if_unset FLAG_CAUGHT_RANDOM_MTMOON_CRESSELIA")

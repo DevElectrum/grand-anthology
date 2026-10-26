@@ -564,6 +564,14 @@ endif
 	rm -rf $(OBJ_DIR_NAME_RELEASE)
 
 # Other rules
+# Grand Anthology 240x160 title art: compile source PNG before C object dependency scans.
+ANTHOLOGY_TITLE_STAMP := $(BUILD_DIR)/.anthology-title.stamp
+$(ANTHOLOGY_TITLE_STAMP): graphics/title_screen/world/grand_anthology_title.png tools/build_anthology_title.py
+	@mkdir -p $(BUILD_DIR)
+	python3 tools/build_anthology_title.py
+	@touch $@
+$(C_BUILDDIR)/title_screen_world.d $(C_BUILDDIR)/title_screen_world.o: $(ANTHOLOGY_TITLE_STAMP)
+
 include graphics_file_rules.mk
 include map_data_rules.mk
 include spritesheet_rules.mk

@@ -106,3 +106,7 @@ fixes.md
 
 # Codex plugin scratch (hook leases, local hook config); never tracked
 .codex/
+
+/graphics/title_screen/world/anthology_title_map.bin
+
+/graphics/title_screen/world/anthology_title_palette.bin

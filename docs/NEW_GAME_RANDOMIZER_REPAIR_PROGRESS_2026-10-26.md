@@ -55,3 +55,8 @@ Cumulative newly repaired source-level sites in these grouped passes: **26** (Mt
 ## 26 October static source-site persistence closeout batch (14 more sites)
 
 In randomized games, Hoenn's native Regirock/Regice/Registeel rooms, Rock Tunnel B1F's Regigigas/Uxie/Mesprit/Azelf/Heatran, the Route 117→112/113/114 Ogerpon/Loyal Three/Pecharunt sequence, and Lavender Pokémon Tower 7F Darkrai now track independent source-site catches (14 new flags, indices 0x14B–0x158). Source rewards for Heatranite and Darkranite use the matching site flags in randomized mode. Original species-based checks remain active with randomization Off. Knockouts and escapes must not set caught flags. Source checks/CI and emulator gameplay are separate evidence; validate against the exact commit.
+
+
+## Grand Anthology title-screen artwork integration (26 October 2026)
+
+Integrated the **approved** 240 × 160, 239-color indexed title image with Oak, Elm, Birch, seated trainer, Arcanine, Eevee, Pikachu, Mudkip and Rowlet. Its precise PNG Git blob is `fa073c5748d3602411fa2e8c16aa97eaa9439727` (SHA-256 `b23ffce8b56cda032dc88e46e8d7fabec5207b6021fea00a077af7a01f9a9967`). `tools/build_anthology_title.py` converts it into native BG0 tiles, palette and map before `src/title_screen_world.c` is compiled, using a Makefile stamp. Original World scenery/fog render paths and duplicate prompt sprites are no longer loaded; credits remain in their existing flow. A, Start, save clear, RTC, SELECT quickstart and title music paths remain in source. The image's PRESS START is static. **Build and actual mGBA screen acceptance must be verified from the exact integration commit; source review is not runtime proof.**

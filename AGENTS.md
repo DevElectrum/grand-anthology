@@ -1,5 +1,5 @@
 
-> **Randomizer repair checkpoint (26 Oct 2026):** Read [current repair progress and unresolved title/static-persistence work](docs/NEW_GAME_RANDOMIZER_REPAIR_PROGRESS_2026-10-26.md) before further New Game/randomizer changes. Public main has bug-fix commits, but full static persistence and the approved title artwork are **not yet complete**.
+> **Randomizer repair checkpoint (26 Oct 2026):** Read [current repair progress and unresolved static-persistence work](docs/NEW_GAME_RANDOMIZER_REPAIR_PROGRESS_2026-10-26.md) before further New Game/randomizer changes. Approved title artwork and converter are integrated in source; verify the precise CI build and title display in mGBA before declaring visual acceptance. Static persistence remains incomplete.
 # Active Astra catalog entrypoint (25 October 2026)
 
 **Future Astras: search the current source-indexed acquisition atlas before editing Pokémon, item, shop, or reward placement.**
