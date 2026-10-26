@@ -105,3 +105,8 @@ Seven captured-site flags isolate Arceus, Dojo Marshadow, Granite Cave Diancie, 
 ## Source sweep: remaining field statics, part 3 (26 October)
 
 Six source flags cover Route 32 Keldeo, Vermilion Meltan, Mt Chimney Volcanion, Route 111 Ting-Lu, Ecruteak Theater Meloetta and Mossdeep Space Center Latios. Lilycove ferry recognizes captured randomized Sky Pillar or Embedded Tower Rayquaza rather than the original Dex species, with existing Champion fallback intact. Corrected Seafoam B4F's randomized Articuno transition so current/boulder setup always executes. No testing performed by request.
+
+
+## Source sweep: duplicate legendary islands (26 October)
+
+Eight additional source-specific seeded flags cover two Navel Rock Ho-Oh sites, two Navel Rock Lugia sites, Southern Island's story-selected Latios/Latias, Mt Silver's native Moltres, Whirl Islands Lugia, and the alternate FRLG Birth Island Deoxys. Their randomized captures no longer consume their sibling locations merely by original-species ownership. Story gates, native cutscenes, puzzle interactions and original-mode flags remain; seeded noncapture paths leave local caught flags unset. No tests requested or performed.

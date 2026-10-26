@@ -4,6 +4,8 @@ NavelRock_Bottom_MapScripts::
 	.byte 0
 
 NavelRock_Bottom_OnTransition:
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, NavelRock_Bottom_SeededOnTransition
 	call_if_set FLAG_CAUGHT_LUGIA, NavelRock_Bottom_EventScript_HideLugia
 	call_if_unset FLAG_CAUGHT_LUGIA, NavelRock_Bottom_EventScript_TryShowLugia
 	end
@@ -59,8 +61,18 @@ NavelRock_Bottom_EventScript_Lugia::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NavelRock_Bottom_EventScript_DefeatedLugia
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, NavelRock_Bottom_EventScript_RanFromLugia
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, NavelRock_Bottom_EventScript_RanFromLugia
+	goto NavelRock_Bottom_SeededCaught
+
+NavelRock_Bottom_SeededCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, NavelRock_Bottom_SeededMark
 	setflag FLAG_CAUGHT_LUGIA
 	release
+	end
+
+NavelRock_Bottom_SeededMark::
+	setflag FLAG_CAUGHT_RANDOM_NAVELROCK_BOTTOM_LUGIA
+	return
 	end
 
 NavelRock_Bottom_EventScript_DefeatedLugia::
@@ -72,4 +84,11 @@ NavelRock_Bottom_EventScript_DefeatedLugia::
 NavelRock_Bottom_EventScript_RanFromLugia::
 	setvar VAR_0x8004, SPECIES_LUGIA
 	goto Common_EventScript_LegendaryFlewAway
+	end
+
+NavelRock_Bottom_SeededOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_NAVELROCK_BOTTOM_LUGIA, NavelRock_Bottom_EventScript_HideLugia
+	goto_if_set FLAG_CAUGHT_RANDOM_NAVELROCK_BOTTOM_LUGIA, NavelRock_Bottom_SeededDone
+	clearflag FLAG_HIDE_LUGIA
+NavelRock_Bottom_SeededDone::
 	end

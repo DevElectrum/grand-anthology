@@ -13,9 +13,22 @@ BirthIsland_Exterior_Frlg_OnTransition::
 	setvar VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_DEOXYS_N
 	setvar VAR_DEOXYS_INTERACTION_STEP_COUNTER, 0
 	setvar VAR_DEOXYS_INTERACTION_NUM, 0
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, BirthIsland_Exterior_Frlg_SeededTransition
 	call_if_set FLAG_FOUGHT_DEOXYS, BirthIsland_Exterior_Frlg_EventScript_HideDeoxysAndPuzzle
 	call_if_unset FLAG_FOUGHT_DEOXYS, BirthIsland_Exterior_Frlg_EventScript_TryShowDeoxysPuzzle
 	end
+
+BirthIsland_Exterior_Frlg_SeededTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_BIRTHISLAND_EXTERIOR_FRLG_DEOXYS, BirthIsland_Exterior_Frlg_EventScript_HideDeoxysAndPuzzle
+	call_if_unset FLAG_CAUGHT_RANDOM_BIRTHISLAND_EXTERIOR_FRLG_DEOXYS, BirthIsland_Exterior_Frlg_SeededShowPuzzle
+	end
+
+BirthIsland_Exterior_Frlg_SeededShowPuzzle::
+	clearflag FLAG_DEOXYS_FLEW_AWAY
+	clearflag FLAG_HIDE_BIRTH_ISLAND_METEORITE
+	clearflag FLAG_DEOXYS_ROCK_COMPLETE
+	return
 
 BirthIsland_Exterior_Frlg_EventScript_HideDeoxysAndPuzzle::
 	setflag FLAG_HIDE_DEOXYS
@@ -85,9 +98,21 @@ BirthIsland_Exterior_Frlg_EventScript_Deoxys::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, BirthIsland_Exterior_Frlg_EventScript_DefeatedDeoxys
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, BirthIsland_Exterior_Frlg_EventScript_RanFromDeoxys
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, BirthIsland_Exterior_Frlg_EventScript_RanFromDeoxys
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, BirthIsland_Exterior_Frlg_SeededCaught
 	setflag FLAG_FOUGHT_DEOXYS
 	release
 	end
+
+BirthIsland_Exterior_Frlg_SeededCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, BirthIsland_Exterior_Frlg_MarkSeededDeoxys
+	setflag FLAG_FOUGHT_DEOXYS
+	release
+	end
+
+BirthIsland_Exterior_Frlg_MarkSeededDeoxys::
+	setflag FLAG_CAUGHT_RANDOM_BIRTHISLAND_EXTERIOR_FRLG_DEOXYS
+	return
 
 BirthIsland_Exterior_Frlg_EventScript_DefeatedDeoxys::
 	setflag FLAG_DEOXYS_FLEW_AWAY

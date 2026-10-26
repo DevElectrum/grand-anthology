@@ -10,9 +10,23 @@ WhirlIslands_LugiaChamber_MapScripts::
 	.byte 0
 
 WhirlIslands_LugiaChamber_OnTransition:
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, WhirlIslands_LugiaChamber_SeededTransition
 	goto_if_eq VAR_COMPLETED_LUGIA, 2, WhirlIslands_LugiaChamber_MapScript_LugiaStory
 	goto_if_eq VAR_COMPLETED_LUGIA, 3, WhirlIslands_LugiaChamber_MapScript_LugiaPostStoryGone
 	goto_if_eq VAR_COMPLETED_LUGIA, 4, WhirlIslands_LugiaChamber_MapScript_LugiaPostStoryEncounter
+	end
+
+WhirlIslands_LugiaChamber_SeededTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_WHIRLISLANDS_LUGIACHAMBER_LUGIA, WhirlIslands_LugiaChamber_SeededCaptured
+	goto_if_eq VAR_COMPLETED_LUGIA, 2, WhirlIslands_LugiaChamber_MapScript_LugiaStory
+	goto_if_eq VAR_COMPLETED_LUGIA, 3, WhirlIslands_LugiaChamber_MapScript_LugiaPostStoryEncounter
+	goto_if_eq VAR_COMPLETED_LUGIA, 4, WhirlIslands_LugiaChamber_MapScript_LugiaPostStoryEncounter
+	end
+
+WhirlIslands_LugiaChamber_SeededCaptured::
+	setflag FLAG_HIDE_LUGIA
+	setflag FLAG_HIDE_WHIRL_ISLANDS_KIMONO_GIRLS
 	end
 
 WhirlIslands_LugiaChamber_MapScript_LugiaStory::
@@ -238,6 +252,8 @@ WhirlIslands_LugiaChamber_EventScript_LugiaFlewAway::
 	return
 
 WhirlIslands_LugiaChamber_EventScript_CaughtLugia::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, WhirlIslands_LugiaChamber_MarkSeededLugia
 	setflag FLAG_CAUGHT_LUGIA
 	fadescreenswapbuffers FADE_TO_BLACK
 	removeobject LOCALID_LUGIA
@@ -245,6 +261,10 @@ WhirlIslands_LugiaChamber_EventScript_CaughtLugia::
 	doweather
 	setflag FLAG_HIDE_LUGIA
 	fadescreenswapbuffers FADE_FROM_BLACK
+	return
+
+WhirlIslands_LugiaChamber_MarkSeededLugia::
+	setflag FLAG_CAUGHT_RANDOM_WHIRLISLANDS_LUGIACHAMBER_LUGIA
 	return
 
 WhirlIslands_LugiaChamber_EventScript_RanFromLugia::

@@ -4,6 +4,8 @@ NavelRock_Summit_Frlg_MapScripts::
 	.byte 0
 
 NavelRock_Summit_OnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, NavelRock_Summit_SeededOnTransition
 	call_if_set FLAG_FOUGHT_HO_OH, NavelRock_Summit_EventScript_HideHoOh
 	call_if_unset FLAG_FOUGHT_HO_OH, NavelRock_Summit_EventScript_TryShowHoOh
 	end
@@ -65,8 +67,18 @@ NavelRock_Summit_EventScript_HoOh::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NavelRock_Summit_EventScript_DefeatedHoOh
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, NavelRock_Summit_EventScript_RanFromHoOh
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, NavelRock_Summit_EventScript_RanFromHoOh
+	goto NavelRock_Summit_SeededCaught
+
+NavelRock_Summit_SeededCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, NavelRock_Summit_SeededMark
 	setflag FLAG_FOUGHT_HO_OH
 	releaseall
+	end
+
+NavelRock_Summit_SeededMark::
+	setflag FLAG_CAUGHT_RANDOM_NAVELROCK_SUMMIT_FRLG_HO_OH
+	return
 	end
 
 NavelRock_Summit_EventScript_DefeatedHoOh::
@@ -113,3 +125,11 @@ Movement_HoOhAppear:
 	walk_in_place_down
 	walk_in_place_down
 	step_end
+
+NavelRock_Summit_SeededOnTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_NAVELROCK_SUMMIT_FRLG_HO_OH, NavelRock_Summit_EventScript_HideHoOh
+	goto_if_set FLAG_CAUGHT_RANDOM_NAVELROCK_SUMMIT_FRLG_HO_OH, NavelRock_Summit_SeededDone
+	setvar VAR_TEMP_1, 0
+	clearflag FLAG_HIDE_HO_OH
+NavelRock_Summit_SeededDone::
+	end

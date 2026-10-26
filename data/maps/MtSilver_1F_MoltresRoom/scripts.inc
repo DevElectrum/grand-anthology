@@ -5,7 +5,18 @@ MtSilver_1F_MoltresRoom_MapScripts::
 	map_script MAP_SCRIPT_ON_RESUME, SetTimeEncounters
 	.byte 0
 
-MtSilver_1F_MoltresRoom_OnTransition: 
+MtSilver_1F_MoltresRoom_OnTransition:
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MtSilver_1F_MoltresRoom_SeededTransition
+	end
+
+MtSilver_1F_MoltresRoom_SeededTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_MTSILVER_1F_MOLTRESROOM_MOLTRES, MtSilver_1F_MoltresRoom_SeededHide
+	clearflag FLAG_HIDE_MOLTRES
+	end
+
+MtSilver_1F_MoltresRoom_SeededHide::
+	setflag FLAG_HIDE_MOLTRES
 	end
 
 
@@ -21,6 +32,8 @@ MtSilver_1F_MoltresRoom_EventScript_Moltres::
 	waitstate
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtSilver_1F_MoltresRoom_EventScript_MoltresRan
+	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtSilver_1F_MoltresRoom_EventScript_MoltresRan
+	call_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtSilver_1F_MoltresRoom_SeededMoltresMark
 	fadescreenswapbuffers FADE_TO_BLACK
 	removeobject LOCALID_MTSILVER_MOLTRES
 	setflag FLAG_HIDE_MOLTRES
@@ -28,6 +41,13 @@ MtSilver_1F_MoltresRoom_EventScript_Moltres::
 	fadescreenswapbuffers FADE_FROM_BLACK
 	release
 	end
+
+MtSilver_1F_MoltresRoom_SeededMoltresMark::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_ne VAR_RESULT, TRUE, MtSilver_1F_MoltresRoom_SeededMoltresMarkDone
+	setflag FLAG_CAUGHT_RANDOM_MTSILVER_1F_MOLTRESROOM_MOLTRES
+MtSilver_1F_MoltresRoom_SeededMoltresMarkDone::
+	return
 
 MtSilver_1F_MoltresRoom_EventScript_MoltresRan::
 	release
