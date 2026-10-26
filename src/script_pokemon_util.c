@@ -331,6 +331,10 @@ void CreateScriptedDoubleWildMon(enum Species species1, u8 level1, enum Item ite
         RANDOM_UNOWN_LETTER);
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][1], species2, level2, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][1]);
+    if (species2 == SPECIES_ZACIAN_HERO)
+        item2 = ITEM_RUSTED_SWORD;
+    else if (species2 == SPECIES_ZAMAZENTA_HERO)
+        item2 = ITEM_RUSTED_SHIELD;
     if (item2)
     {
         heldItem2[0] = item2;
@@ -656,6 +660,15 @@ u32 ScriptGiveMon(enum Species species, u8 level, enum Item item)
     u8 heldItem[2];
 
     CreateRandomMon(&mon, species, level);
+#if ALL_REGIONS
+    if (gSaveBlock2Ptr != NULL && (gSaveBlock2Ptr->randomizerStarters || gSaveBlock2Ptr->randomizerGifts))
+    {
+        if (species == SPECIES_ZACIAN_HERO)
+            item = ITEM_RUSTED_SWORD;
+        else if (species == SPECIES_ZAMAZENTA_HERO)
+            item = ITEM_RUSTED_SHIELD;
+    }
+#endif
     if (item)
     {
         heldItem[0] = item;
@@ -787,6 +800,12 @@ void ScrCmd_createmon(struct ScriptContext *ctx)
             species = WorldRandomizeOptionalGiftSpecies(species);
     }
     bool32 randomizedGift = species != giftOriginal;
+#if ALL_REGIONS
+    if (randomizedGift && species == SPECIES_ZACIAN_HERO)
+        item = ITEM_RUSTED_SWORD;
+    else if (randomizedGift && species == SPECIES_ZAMAZENTA_HERO)
+        item = ITEM_RUSTED_SHIELD;
+#endif
 
     // Perfect IV calculation
     if (gSpeciesInfo[species].perfectIVCount != 0)
@@ -847,8 +866,8 @@ void ScrCmd_createmon(struct ScriptContext *ctx)
 #undef PARSE_FLAG
 
 
-// Route 27's paired guardians are always Zacian and Zamazenta, including when
-// seeded encounter randomization is on. The awarded Pokémon are those fought,
+// Route 27's guardians become seeded replacements in randomized saves.
+// The awarded Pokémon are those fought,
 // not a second random roll after victory.
 EWRAM_DATA static struct Pokemon sRoyalDuoRewards[2] = {0};
 

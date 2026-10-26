@@ -51,6 +51,7 @@
 #include "constants/event_objects.h"
 #include "constants/field_effects.h"
 #include "constants/items.h"
+#include "constants/maps.h"
 #include "constants/mauville_old_man.h"
 #include "constants/metatile_behaviors.h"
 #include "constants/rgb.h"
@@ -2067,7 +2068,12 @@ u8 TrySpawnObjectEventTemplate(const struct ObjectEventTemplate *objectEventTemp
         }
         if (original != SPECIES_NONE)
         {
-            replacement = WorldRandomizeStaticSpecies(original, 0);
+            // Route 27 has two independent fixed slots. The right-hand
+            // guardian uses the same slot index as RoyalDuoPrepareBattle.
+            u32 slot = (mapGroup == MAP_GROUP(MAP_ROUTE27)
+                     && mapNum == MAP_NUM(MAP_ROUTE27)
+                     && original == SPECIES_ZAMAZENTA_HERO) ? 1 : 0;
+            replacement = WorldRandomizeStaticSpecies(original, slot);
             if (replacement != original && SpeciesToGraphicsInfo(replacement, FALSE, FALSE) != NULL)
             {
                 graphicsId = GetGraphicsIdForMon(replacement, FALSE, FALSE);
