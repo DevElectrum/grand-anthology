@@ -90,3 +90,8 @@ Six independent randomizer-on source-caught bits now cover Sky Pillar Rayquaza, 
 ## 26 October 2026 cumulative repair checkpoint
 
 The cumulative 28 source-site fixes after the original 44 cover two Mew sources, Mansion Type: Null, Mewtwo's source-gated unlock, both Ilex Celebi instances, Zarude, the three fixed Johto beasts and Ho-Oh source gate, Route 40 Lugia, Shoal Cave Glastrier, nine Hoenn/Kanto side encounters and Route 25 Suicune, plus Sky Pillar/Terra Cave/Marine Cave and three independent Embedded Tower weather trio encounters. **72 site flags in total**, allocated contiguously at world-map-bank offsets `0x12D..0x174`, still inside the original saved flags bank. The seeded-source simulator covers 17 representative sites across four battle outcomes and additional special gates, and the new registry audit checks all 72 offsets and script writes. This is not 72 out of 72 statics; further original scripts and physical catch/KO/save verification remain.
+
+
+## Source sweep: independent encounter sites, part 1 (26 October)
+
+Seven seeded capture-source sites added with separate flags: Goldenrod Genesect, Jagged Pass Gouging Fire, Olivine Lighthouse Regieleki, Sealed Chamber Chi-Yu, Dragon's Den Regidrago, Hoopa's Route 111 chamber, and New Mauville Miraidon. The New Mauville secondary transition now delegates to the badge/Space Center/generator-gated primary transition so it cannot bypass its original quest. Original species-Dex checks remain for statics Off. Catch marks source completion; KO/escape do not. No gameplay testing claimed or requested.

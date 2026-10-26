@@ -401,6 +401,8 @@ OlivineLighthouse_Text_AmphyPaluPalulu:
 
 OlivineCity_Lighthouse_AnthologyOnTransition::
 	goto_if_unset FLAG_AMPHAROS_HEALED, OlivineCity_Lighthouse_HideRegieleki
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, OlivineCity_Lighthouse_SeededREGIELEKIVisible
 	getcaughtmon SPECIES_REGIELEKI
 	goto_if_eq VAR_RESULT, TRUE, OlivineCity_Lighthouse_HideRegieleki
 	clearflag FLAG_HIDE_ANTHOLOGY_REGIELEKI
@@ -421,7 +423,7 @@ OlivineCity_Lighthouse_EventScript_Regieleki::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, OlivineCity_Lighthouse_RegielekiRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, OlivineCity_Lighthouse_RegielekiRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, OlivineCity_Lighthouse_RegielekiResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, OlivineCity_Lighthouse_SeededREGIELEKICatch
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, OlivineCity_Lighthouse_RegielekiResolved
 	release
 	end
@@ -437,3 +439,18 @@ OlivineCity_Lighthouse_RegielekiResolved::
 OlivineCity_Lighthouse_RegielekiRetreated::
 	release
 	end
+
+// Seeded location ownership is separate from the original species Pokédex.
+OlivineCity_Lighthouse_SeededREGIELEKIVisible::
+	goto_if_set FLAG_CAUGHT_RANDOM_OLIVINECITY_LIGHTHOUSE_REGIELEKI, OlivineCity_Lighthouse_HideRegieleki
+	clearflag FLAG_HIDE_ANTHOLOGY_REGIELEKI
+	return
+
+OlivineCity_Lighthouse_SeededREGIELEKICatch::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, OlivineCity_Lighthouse_SeededREGIELEKICatchMark
+	goto OlivineCity_Lighthouse_RegielekiResolved
+
+OlivineCity_Lighthouse_SeededREGIELEKICatchMark::
+	setflag FLAG_CAUGHT_RANDOM_OLIVINECITY_LIGHTHOUSE_REGIELEKI
+	return

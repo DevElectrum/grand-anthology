@@ -268,6 +268,8 @@ JaggedPass_Text_AutumnPostBattle:
 // Cluster-first optional statics. The original cave boulders, passage,
 // weather, and Team Magma stories remain controlled by their native scripts.
 JaggedPass_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, JaggedPass_SeededGOUGINGFIREVisible
 	getcaughtmon SPECIES_GOUGING_FIRE
 	call_if_eq VAR_RESULT, TRUE, JaggedPass_AnthologyHideGougingFire
 	call_if_ne VAR_RESULT, TRUE, JaggedPass_AnthologyShowGougingFire
@@ -292,7 +294,7 @@ JaggedPass_EventScript_GougingFire::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, JaggedPass_AnthologyGougingFireRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, JaggedPass_AnthologyGougingFireRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, JaggedPass_AnthologyGougingFireResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, JaggedPass_SeededGOUGINGFIRECatch
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, JaggedPass_AnthologyGougingFireResolved
 	release
 	end
@@ -308,3 +310,18 @@ JaggedPass_AnthologyGougingFireResolved::
 JaggedPass_AnthologyGougingFireRetreated::
 	release
 	end
+
+// Seeded location ownership is separate from the original species Pokédex.
+JaggedPass_SeededGOUGINGFIREVisible::
+	call_if_set FLAG_CAUGHT_RANDOM_JAGGEDPASS_GOUGING_FIRE, JaggedPass_AnthologyHideGougingFire
+	call_if_unset FLAG_CAUGHT_RANDOM_JAGGEDPASS_GOUGING_FIRE, JaggedPass_AnthologyShowGougingFire
+	return
+
+JaggedPass_SeededGOUGINGFIRECatch::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, JaggedPass_SeededGOUGINGFIRECatchMark
+	goto JaggedPass_AnthologyGougingFireResolved
+
+JaggedPass_SeededGOUGINGFIRECatchMark::
+	setflag FLAG_CAUGHT_RANDOM_JAGGEDPASS_GOUGING_FIRE
+	return

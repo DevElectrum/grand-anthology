@@ -6,16 +6,15 @@ NewMauville_GeneratorAnnex_AnthologyOnTransition::
 	goto_if_unset FLAG_BADGE07_GET, NewMauville_GeneratorAnnex_SecondBatchHideMiraidon
 	goto_if_unset FLAG_DEFEATED_MAGMA_SPACE_CENTER, NewMauville_GeneratorAnnex_SecondBatchHideMiraidon
 	goto_if_ne VAR_NEW_MAUVILLE_STATE, 2, NewMauville_GeneratorAnnex_SecondBatchHideMiraidon
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, NewMauville_GeneratorAnnex_SeededMIRAIDONVisible
 	getcaughtmon SPECIES_MIRAIDON
 	call_if_eq VAR_RESULT, TRUE, NewMauville_GeneratorAnnex_SecondBatchHideMiraidon
 	call_if_ne VAR_RESULT, TRUE, NewMauville_GeneratorAnnex_SecondBatchShowMiraidon
 	return
 
 NewMauville_GeneratorAnnex_SecondBatchOnTransition::
-	getcaughtmon SPECIES_MIRAIDON
-	call_if_eq VAR_RESULT, TRUE, NewMauville_GeneratorAnnex_SecondBatchHideMiraidon
-	call_if_ne VAR_RESULT, TRUE, NewMauville_GeneratorAnnex_SecondBatchShowMiraidon
-	return
+	goto NewMauville_GeneratorAnnex_AnthologyOnTransition
 
 NewMauville_GeneratorAnnex_SecondBatchHideMiraidon::
 	setflag FLAG_HIDE_ANTHOLOGY_MIRAIDON
@@ -36,7 +35,7 @@ NewMauville_GeneratorAnnex_EventScript_Miraidon::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, NewMauville_GeneratorAnnex_SecondBatchMiraidonRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, NewMauville_GeneratorAnnex_SecondBatchMiraidonRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NewMauville_GeneratorAnnex_SecondBatchMiraidonResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NewMauville_GeneratorAnnex_SeededMIRAIDONCatch
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NewMauville_GeneratorAnnex_SecondBatchMiraidonResolved
 	release
 	end
@@ -52,3 +51,18 @@ NewMauville_GeneratorAnnex_SecondBatchMiraidonResolved::
 NewMauville_GeneratorAnnex_SecondBatchMiraidonRetreated::
 	release
 	end
+
+// Seeded location ownership is separate from the original species Pokédex.
+NewMauville_GeneratorAnnex_SeededMIRAIDONVisible::
+	call_if_set FLAG_CAUGHT_RANDOM_NEWMAUVILLE_GENERATORANNEX_MIRAIDON, NewMauville_GeneratorAnnex_SecondBatchHideMiraidon
+	call_if_unset FLAG_CAUGHT_RANDOM_NEWMAUVILLE_GENERATORANNEX_MIRAIDON, NewMauville_GeneratorAnnex_SecondBatchShowMiraidon
+	return
+
+NewMauville_GeneratorAnnex_SeededMIRAIDONCatch::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, NewMauville_GeneratorAnnex_SeededMIRAIDONCatchMark
+	goto NewMauville_GeneratorAnnex_SecondBatchMiraidonResolved
+
+NewMauville_GeneratorAnnex_SeededMIRAIDONCatchMark::
+	setflag FLAG_CAUGHT_RANDOM_NEWMAUVILLE_GENERATORANNEX_MIRAIDON
+	return

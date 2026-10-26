@@ -107,6 +107,8 @@ SealedChamber_OuterRoom_EventScript_BrailleDigHere::
 
 
 SealedChamber_OuterRoom_ChiYuTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, SealedChamber_OuterRoom_SeededCHIYUVisible
 	getcaughtmon SPECIES_CHI_YU
 	goto_if_eq VAR_RESULT, TRUE, SealedChamber_OuterRoom_HideChiYu
 	clearflag FLAG_HIDE_ANTHOLOGY_CHI_YU
@@ -127,7 +129,7 @@ SealedChamber_OuterRoom_EventScript_ChiYu::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, SealedChamber_OuterRoom_ChiYuRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, SealedChamber_OuterRoom_ChiYuRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SealedChamber_OuterRoom_ChiYuResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SealedChamber_OuterRoom_SeededCHIYUCatch
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, SealedChamber_OuterRoom_ChiYuResolved
 	release
 	end
@@ -143,3 +145,18 @@ SealedChamber_OuterRoom_ChiYuResolved::
 SealedChamber_OuterRoom_ChiYuRetreated::
 	release
 	end
+
+// Seeded location ownership is separate from the original species Pokédex.
+SealedChamber_OuterRoom_SeededCHIYUVisible::
+	goto_if_set FLAG_CAUGHT_RANDOM_SEALEDCHAMBER_OUTERROOM_CHI_YU, SealedChamber_OuterRoom_HideChiYu
+	clearflag FLAG_HIDE_ANTHOLOGY_CHI_YU
+	return
+
+SealedChamber_OuterRoom_SeededCHIYUCatch::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, SealedChamber_OuterRoom_SeededCHIYUCatchMark
+	goto SealedChamber_OuterRoom_ChiYuResolved
+
+SealedChamber_OuterRoom_SeededCHIYUCatchMark::
+	setflag FLAG_CAUGHT_RANDOM_SEALEDCHAMBER_OUTERROOM_CHI_YU
+	return

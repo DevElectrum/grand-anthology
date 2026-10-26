@@ -3,6 +3,8 @@ Route111_HoopaRingChamber_MapScripts::
 	.byte 0
 
 Route111_HoopaRingChamber_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, Route111_HoopaRingChamber_SeededHOOPAVisible
 	getcaughtmon SPECIES_HOOPA_CONFINED
 	call_if_eq VAR_RESULT, TRUE, Route111_HoopaRingChamber_AnthologyHideHoopa
 	call_if_ne VAR_RESULT, TRUE, Route111_HoopaRingChamber_AnthologyShowHoopa
@@ -27,7 +29,7 @@ Route111_HoopaRingChamber_EventScript_Hoopa::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route111_HoopaRingChamber_AnthologyHoopaRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route111_HoopaRingChamber_AnthologyHoopaRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route111_HoopaRingChamber_AnthologyHoopaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route111_HoopaRingChamber_SeededHOOPACatch
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route111_HoopaRingChamber_AnthologyHoopaResolved
 	release
 	end
@@ -44,3 +46,18 @@ Route111_HoopaRingChamber_AnthologyHoopaRetreated::
 	release
 	end
 
+
+// Seeded location ownership is separate from the original species Pokédex.
+Route111_HoopaRingChamber_SeededHOOPAVisible::
+	call_if_set FLAG_CAUGHT_RANDOM_ROUTE111_HOOPARINGCHAMBER_HOOPA, Route111_HoopaRingChamber_AnthologyHideHoopa
+	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE111_HOOPARINGCHAMBER_HOOPA, Route111_HoopaRingChamber_AnthologyShowHoopa
+	return
+
+Route111_HoopaRingChamber_SeededHOOPACatch::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, Route111_HoopaRingChamber_SeededHOOPACatchMark
+	goto Route111_HoopaRingChamber_AnthologyHoopaResolved
+
+Route111_HoopaRingChamber_SeededHOOPACatchMark::
+	setflag FLAG_CAUGHT_RANDOM_ROUTE111_HOOPARINGCHAMBER_HOOPA
+	return

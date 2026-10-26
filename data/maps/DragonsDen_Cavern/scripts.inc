@@ -282,6 +282,8 @@ DragonsDen_Cavern_Text_TwinsLeaandPia2After:
     .string "MASTER will be angry with you.$"
 
 DragonsDen_Cavern_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, DragonsDen_Cavern_SeededREGIDRAGOVisible
 	getcaughtmon SPECIES_REGIDRAGO
 	goto_if_eq VAR_RESULT, TRUE, DragonsDen_Cavern_HideRegidrago
 	clearflag FLAG_HIDE_ANTHOLOGY_REGIDRAGO
@@ -302,7 +304,7 @@ DragonsDen_Cavern_EventScript_Regidrago::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, DragonsDen_Cavern_RegidragoRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, DragonsDen_Cavern_RegidragoRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, DragonsDen_Cavern_RegidragoResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, DragonsDen_Cavern_SeededREGIDRAGOCatch
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, DragonsDen_Cavern_RegidragoResolved
 	release
 	end
@@ -318,3 +320,18 @@ DragonsDen_Cavern_RegidragoResolved::
 DragonsDen_Cavern_RegidragoRetreated::
 	release
 	end
+
+// Seeded location ownership is separate from the original species Pokédex.
+DragonsDen_Cavern_SeededREGIDRAGOVisible::
+	goto_if_set FLAG_CAUGHT_RANDOM_DRAGONSDEN_CAVERN_REGIDRAGO, DragonsDen_Cavern_HideRegidrago
+	clearflag FLAG_HIDE_ANTHOLOGY_REGIDRAGO
+	return
+
+DragonsDen_Cavern_SeededREGIDRAGOCatch::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, DragonsDen_Cavern_SeededREGIDRAGOCatchMark
+	goto DragonsDen_Cavern_RegidragoResolved
+
+DragonsDen_Cavern_SeededREGIDRAGOCatchMark::
+	setflag FLAG_CAUGHT_RANDOM_DRAGONSDEN_CAVERN_REGIDRAGO
+	return

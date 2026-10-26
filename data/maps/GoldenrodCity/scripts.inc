@@ -461,6 +461,8 @@ GoldenrodCity_Text_MoveTutorNotEnoughCoins:
 
 // Rare encounter locations near their original home regions.
 GoldenrodCity_AnthologyOnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, GoldenrodCity_SeededGENESECTVisible
 	getcaughtmon SPECIES_GENESECT
 	call_if_eq VAR_RESULT, TRUE, GoldenrodCity_AnthologyHideGenesect
 	call_if_ne VAR_RESULT, TRUE, GoldenrodCity_AnthologyShowGenesect
@@ -485,7 +487,7 @@ GoldenrodCity_EventScript_Genesect::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, GoldenrodCity_AnthologyGenesectRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, GoldenrodCity_AnthologyGenesectRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, GoldenrodCity_AnthologyGenesectResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, GoldenrodCity_SeededGENESECTCatch
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, GoldenrodCity_AnthologyGenesectResolved
 	release
 	end
@@ -501,3 +503,18 @@ GoldenrodCity_AnthologyGenesectResolved::
 GoldenrodCity_AnthologyGenesectRetreated::
 	release
 	end
+
+// Seeded location ownership is separate from the original species Pokédex.
+GoldenrodCity_SeededGENESECTVisible::
+	call_if_set FLAG_CAUGHT_RANDOM_GOLDENRODCITY_GENESECT, GoldenrodCity_AnthologyHideGenesect
+	call_if_unset FLAG_CAUGHT_RANDOM_GOLDENRODCITY_GENESECT, GoldenrodCity_AnthologyShowGenesect
+	return
+
+GoldenrodCity_SeededGENESECTCatch::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, GoldenrodCity_SeededGENESECTCatchMark
+	goto GoldenrodCity_AnthologyGenesectResolved
+
+GoldenrodCity_SeededGENESECTCatchMark::
+	setflag FLAG_CAUGHT_RANDOM_GOLDENRODCITY_GENESECT
+	return
