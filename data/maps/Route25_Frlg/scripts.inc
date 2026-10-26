@@ -51,6 +51,7 @@ Route25_EventScript_Suicune::
 Route25_EventScript_SuicuneCaught::
 	callnative AnthologyStaticRandomizerIsOn
 	call_if_eq VAR_RESULT, TRUE, Route25_MarkSeededSuicune
+	goto Route25_EventScript_SuicuneDefeated
 
 Route25_EventScript_SuicuneDefeated::
 	setflag FLAG_FOUGHT_SUICUNE
