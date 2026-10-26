@@ -134,6 +134,7 @@ def main():
     for index, (red, green, blue) in enumerate(palette):
         value = (red >> 3) | (green >> 3) << 5 | (blue >> 3) << 10
         struct.pack_into("<H", gba_palette, index * 2, value)
+    (DIRECTORY / "anthology_title_tiles.bin").write_bytes(raw_tiles)
     (DIRECTORY / "anthology_title_tiles.bin.lz").write_bytes(compress_lz10(raw_tiles))
     (DIRECTORY / "anthology_title_map.bin").write_bytes(tilemap)
     (DIRECTORY / "anthology_title_palette.bin").write_bytes(gba_palette)

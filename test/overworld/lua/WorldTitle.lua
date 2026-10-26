@@ -47,45 +47,8 @@ local function checkResource(name, address, filename)
   F.check(name, good, details)
 end
 
-local function decodeTitleTiles()
-  local data = readResource("anthology_title_tiles.bin.lz")
-  assert(data:byte(1) == 0x10, "expected GBA LZ10 tile graphics")
-  local expected = data:byte(2) + (data:byte(3) << 8) + (data:byte(4) << 16)
-  assert(expected == 601 * 64, "unexpected approved artwork tile count")
-  local out, position = {}, 5
-  while #out < expected do
-    local flags = assert(data:byte(position)); position = position + 1
-    for bit = 7, 0, -1 do
-      if #out >= expected then break end
-      if (flags & (1 << bit)) ~= 0 then
-        local a, b = data:byte(position, position + 1)
-        assert(b, "truncated compressed tile pair")
-        position = position + 2
-        local length = (a >> 4) + 3
-        local distance = (((a & 15) << 8) | b) + 1
-        assert(distance <= #out, "invalid tile backreference")
-        for _ = 1, length do
-          out[#out+1] = out[#out-distance+1]
-        end
-      else
-        out[#out+1] = assert(data:byte(position))
-        position = position + 1
-      end
-    end
-  end
-  return out
-end
-
 local function checkNativeArt()
-  local tiles = decodeTitleTiles()
-  local ok, detail = true, "601 native tiles exactly match VRAM"
-  for i = 1, #tiles do
-    if F.r8(0x06000000 + i-1) ~= tiles[i] then
-      ok, detail = false, string.format("tile pixel byte %d differs", i-1)
-      break
-    end
-  end
-  F.check("approved title's 601 decompressed tiles are in VRAM", ok, detail)
+  checkResource("approved title's 601 raw tiles are in VRAM", 0x06000000, "anthology_title_tiles.bin")
   checkResource("approved tilemap loaded on BG0", 0x0600F000, "anthology_title_map.bin")
   checkResource("approved 256-color title palette loaded", 0x05000000, "anthology_title_palette.bin")
 end

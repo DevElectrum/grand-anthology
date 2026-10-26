@@ -27,11 +27,12 @@
 #define CLEAR_SAVE_COMBO (B_BUTTON | SELECT_BUTTON | DPAD_UP)
 #define RESET_RTC_COMBO (B_BUTTON | SELECT_BUTTON | DPAD_LEFT)
 
-static const u32 sAnthologyTiles[] = INCBIN_U32("graphics/title_screen/world/anthology_title_tiles.bin.lz");
+static const u32 sAnthologyTiles[] = INCBIN_U32("graphics/title_screen/world/anthology_title_tiles.bin");
 static const u16 sAnthologyPalette[] = INCBIN_U16("graphics/title_screen/world/anthology_title_palette.bin");
 static const u16 sAnthologyMap[] = INCBIN_U16("graphics/title_screen/world/anthology_title_map.bin");
 
 STATIC_ASSERT(ANTHOLOGY_TITLE_TILES_RAW_BYTES <= ANTHOLOGY_SCREEN_BLOCK * 0x800, AnthologyTitleTilesFit);
+STATIC_ASSERT(sizeof(sAnthologyTiles) == ANTHOLOGY_TITLE_TILES_RAW_BYTES, AnthologyTitleTilesLength);
 STATIC_ASSERT(sizeof(sAnthologyPalette) == BG_PLTT_SIZE, AnthologyTitlePaletteSize);
 STATIC_ASSERT(sizeof(sAnthologyMap) == 0x800, AnthologyTitleMapSize);
 
@@ -84,7 +85,9 @@ void CB2_InitWorldTitleScreen(void)
         gMain.state++;
         break;
     case 1:
-        LZ77UnCompVram(sAnthologyTiles, (void *)VRAM);
+        // A direct aligned DMA copy avoids VRAM LZ10 halfword decoding differences.
+        // The art is only 38 KiB raw, so ROM overhead is small.
+        DmaCopy32(3, sAnthologyTiles, (void *)VRAM, sizeof(sAnthologyTiles));
         DmaCopy16(3, sAnthologyMap, (void *)BG_SCREEN_ADDR(ANTHOLOGY_SCREEN_BLOCK), sizeof(sAnthologyMap));
         LoadPalette(sAnthologyPalette, 0, sizeof(sAnthologyPalette));
         if (QUICKSTART && QUICKSTART_HUD)
