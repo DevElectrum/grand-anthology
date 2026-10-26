@@ -43,13 +43,25 @@ end
 
 F.run(function()
     F.idle(330)
-    F.check("fresh GBA starts on real title", untilCallback(S.MainCB2_WorldTitleScreen, 6000))
-    -- CB2_MainMenu is an initialization callback, not the resting menu
-    -- callback. Observe the transition before waiting for the fade to end.
-    F.press("Start", 1)
-    local mainMenu = untilCallback(S.CB2_MainMenu, 400)
+    local titleReady = untilCallback(S.MainCB2_WorldTitleScreen, 6000)
+    F.check("fresh GBA starts on real title", titleReady)
+    if not titleReady then F.finish(); return end
+    -- Like WorldTitle, wait for the title's entrance/fog animation to settle.
+    -- It can ignore START while the initial animation still owns input.
+    F.idle(1150)
+    local mainMenu = false
+    for attempt = 1, 4 do
+        F.press("Start", 1)
+        if untilCallback(S.CB2_MainMenu, 400) then
+            mainMenu = true
+            break
+        end
+        F.idle(220)
+    end
     F.idle(90)
-    F.check("title opens real main menu", mainMenu)
+    F.check("title opens real main menu", mainMenu,
+        string.format("cb2=%08X", F.cb2()))
+    if not mainMenu then F.shot("main_menu_transition_failed") end
     if not mainMenu then F.finish(); return end
 
     F.check("New Game enters unlocked Adventure Settings", openNewGame())
