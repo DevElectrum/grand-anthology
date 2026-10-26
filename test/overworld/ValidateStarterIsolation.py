@@ -14,7 +14,7 @@ kanto=(root/"include/constants/vars_frlg.h").read_text()
 event=(root/"src/event_data.c").read_text()
 migration=(root/"src/load_save.c").read_text()
 region=(root/"src/region_switch.c").read_text()
-assert "#define SAVE_FORMAT_VERSION 12" in global_h  # v11 starter isolation remains; v12 adds independent randomizer options
+assert "#define SAVE_FORMAT_VERSION 13" in global_h  # v11 starter isolation remains; v12 adds independent randomizer options
 assert "#define VAR_JOHTO_STARTER_MON           VAR_JOHTO_SLICE(0x3c)" in johto
 assert "#define VAR_STARTER_MON_FRLG               VAR_KANTO_SLICE(0x0C)" in kanto
 part=event.split("u16 *GetVarPointer(u16 id)",1)[1].split("else if (id < SPECIAL_VARS_START)",1)[0]

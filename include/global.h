@@ -618,7 +618,10 @@ struct SaveBlock2
              u16 optionsHardMode:1; // QoL #16: forced SET style + no bag in trainer battles + badge level caps
              u16 optionsNicknames:1; // QoL #8: catch/hatch nickname prompt, OPTIONS_NICKNAMES_[ON/OFF] (0 = ON for old saves)
              u16 optionsShinyOdds:4; // 11 options (0..10): same offset, one former padding bit; legacy indices 0..7 unchanged
-             //u16 padding2:7;
+             u16 randomizerStaticMode:2; // 0 = ordinary, 1 = legendary shuffle, 2 = full chaos
+             u16 randomizerLocked:1; // immutable once New Game configuration is confirmed
+             u16 randomizerVersion:3; // deterministic mapping algorithm version
+             //u16 padding2:0;
     /*0x18*/ struct Pokedex pokedex; // Region merge: ONE global National Dex shared across all regions (not per-region); area screen is region-aware for display only.
 #if ALL_REGIONS
     /*0x90*/ u8 currentRegion;      // enum Region; PERSISTED active-campaign region (0 = REGION_NONE

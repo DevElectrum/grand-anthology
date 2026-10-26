@@ -12,5 +12,12 @@ void CopyTrainerId(u8 *dst, u8 *src);
 void NewGameInitData(void);
 void ResetMenuAndMonGlobals(void);
 void Sav2_ClearSetDefault(void);
+#if ALL_REGIONS
+void BeginNewGameSetup(void);
+void ConfirmNewGameSetup(void);
+void CancelNewGameSetup(void);
+bool8 IsNewGameSetupActive(void);
+#endif
+
 
 #endif // GUARD_NEW_GAME_H

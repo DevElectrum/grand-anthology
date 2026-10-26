@@ -1850,7 +1850,8 @@ static void Task_OakSpeech_HandleOutfitInput(u8 taskId)
     tMenuWindowId = WIN_INTRO_TEXTBOX;
     ClearDialogWindowAndFrame(tPromptWindowId, TRUE);
     RemoveWindow(tPromptWindowId);
-    gTasks[taskId].func = Task_OakSpeech_AskHardMode;
+    // Hard Mode is already chosen on the pre-intro Adventure Settings screen.
+    gTasks[taskId].func = Task_OakSpeech_LetsGo;
 }
 
 // QoL #2: Hard Mode is picked once here, at new-game setup, and then locked for the save (the

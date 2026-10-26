@@ -745,7 +745,6 @@ static const struct DebugMenuOption sPlayerCheatMenu_Main[] =
     { COMPOUND_STRING("Infinite BP ON/OFF"), DebugAction_ToggleInfiniteBattlePoints },
     { COMPOUND_STRING("Heal Party"),      DebugAction_Party_HealParty },
     { COMPOUND_STRING("Pokémon Tools…"),  DebugAction_OpenSubMenu, sPlayerCheatMenu_Pokemon },
-    { COMPOUND_STRING("Randomizer…"),     DebugAction_OpenSubMenu, sPlayerCheatMenu_Randomizer },
     { COMPOUND_STRING("Find in PC"),       DebugAction_PcSearch_Open },
     { COMPOUND_STRING("Cancel"),          DebugAction_Cancel },
     { NULL }

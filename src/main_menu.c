@@ -43,6 +43,7 @@
 #include "window.h"
 #include "mystery_gift_menu.h"
 #include "regions.h"
+#include "new_game.h"
 
 /*
  * Main menu state machine
@@ -1254,7 +1255,9 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
             DestroyTask(taskId);
             FreeAllWindowBuffers();
             sCurrItemAndOptionMenuCheck = 0;
-            StartNewGameSceneFrlg();
+            BeginNewGameSetup();
+            gMain.savedCallback = CB2_ReinitMainMenu;
+            SetMainCallback2(CB2_InitOptionMenu);
             return;
 #else
             if (IS_FRLG)

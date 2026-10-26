@@ -421,6 +421,15 @@ void MigrateSaveFormatIfNeeded(void)
         gSaveBlock2Ptr->randomizerSeed = 2026;
     }
 
+    // v13: initialize the former 0x16 padding before reading the new mode/lock bits.
+    // Existing v12 saves keep their original species mappings, not a fresh shuffle.
+    if (savedVersion < 13)
+    {
+        gSaveBlock2Ptr->randomizerStaticMode = 0;
+        gSaveBlock2Ptr->randomizerLocked = TRUE;
+        gSaveBlock2Ptr->randomizerVersion = 0;
+    }
+
     gSaveBlock2Ptr->saveVersion = SAVE_FORMAT_VERSION;
 }
 

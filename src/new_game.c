@@ -63,9 +63,60 @@ static void WarpToTruck(void);
 static void ResetMiniGamesRecords(void);
 static void ResetItemFlags(void);
 static void ResetDexNav(void);
+static void SetDefaultOptions(void);
 
 EWRAM_DATA bool8 gDifferentSaveFile = FALSE;
 EWRAM_DATA bool8 gEnableContestDebugging = FALSE;
+#if ALL_REGIONS
+// The pre-intro settings editor must never damage a previous save when B cancels.
+// Keep the whole original SaveBlock2 in RAM; no flash write takes place here.
+EWRAM_DATA static struct SaveBlock2 sPreviousNewGameSaveBlock2;
+EWRAM_DATA static bool8 sNewGameSetupActive = FALSE;
+EWRAM_DATA static bool8 sPreviousSharedExp = FALSE;
+EWRAM_DATA static bool8 sNewGameSharedExp = FALSE;
+
+bool8 IsNewGameSetupActive(void)
+{
+    return sNewGameSetupActive;
+}
+
+void BeginNewGameSetup(void)
+{
+    CpuCopy16(gSaveBlock2Ptr, &sPreviousNewGameSaveBlock2, sizeof(sPreviousNewGameSaveBlock2));
+    sPreviousSharedExp = FlagGet(FLAG_QOL_SHARED_EXP);
+    sNewGameSetupActive = TRUE;
+    SetDefaultOptions();
+    gSaveBlock2Ptr->optionsAutoRun = FALSE;
+    gSaveBlock2Ptr->randomizerWild = FALSE;
+    gSaveBlock2Ptr->randomizerTrainers = FALSE;
+    gSaveBlock2Ptr->randomizerStatics = FALSE;
+    gSaveBlock2Ptr->randomizerGifts = FALSE;
+    gSaveBlock2Ptr->randomizerStarters = FALSE;
+    gSaveBlock2Ptr->randomizerSeed = 2026;
+    gSaveBlock2Ptr->randomizerStaticMode = 0;
+    gSaveBlock2Ptr->randomizerVersion = 1;
+    gSaveBlock2Ptr->randomizerLocked = FALSE;
+    FlagClear(FLAG_QOL_SHARED_EXP);
+}
+
+void ConfirmNewGameSetup(void)
+{
+    sNewGameSharedExp = FlagGet(FLAG_QOL_SHARED_EXP);
+    gSaveBlock2Ptr->randomizerLocked = TRUE;
+    sNewGameSetupActive = FALSE;
+}
+
+void CancelNewGameSetup(void)
+{
+    CpuCopy16(&sPreviousNewGameSaveBlock2, gSaveBlock2Ptr, sizeof(sPreviousNewGameSaveBlock2));
+    if (sPreviousSharedExp)
+        FlagSet(FLAG_QOL_SHARED_EXP);
+    else
+        FlagClear(FLAG_QOL_SHARED_EXP);
+    sNewGameSetupActive = FALSE;
+}
+#endif
+
 
 static const struct ContestWinner sContestWinnerPicDummy =
 {
@@ -216,12 +267,20 @@ void NewGameInitData(void)
     // hoennIntroDone stays FALSE: ALL_REGIONS WarpToTruck() lands in the hub, not the
     // truck, so the Hoenn first-visit bedroom path must still run (issue #174). Truck-era
     // saves are migrated true in load_save.c v0->v1.
-    gSaveBlock2Ptr->randomizerWild = FALSE;
-    gSaveBlock2Ptr->randomizerTrainers = FALSE;
-    gSaveBlock2Ptr->randomizerStatics = FALSE;
-    gSaveBlock2Ptr->randomizerGifts = FALSE;
-    gSaveBlock2Ptr->randomizerStarters = FALSE;
-    gSaveBlock2Ptr->randomizerSeed = 2026;
+    // Randomizer configuration was confirmed before the intro. Do not erase it
+    // when the new save is initialized, even if all five categories are OFF.
+    if (!gSaveBlock2Ptr->randomizerLocked)
+    {
+        gSaveBlock2Ptr->randomizerWild = FALSE;
+        gSaveBlock2Ptr->randomizerTrainers = FALSE;
+        gSaveBlock2Ptr->randomizerStatics = FALSE;
+        gSaveBlock2Ptr->randomizerGifts = FALSE;
+        gSaveBlock2Ptr->randomizerStarters = FALSE;
+        gSaveBlock2Ptr->randomizerSeed = 2026;
+        gSaveBlock2Ptr->randomizerStaticMode = 0;
+        gSaveBlock2Ptr->randomizerVersion = 0;
+        gSaveBlock2Ptr->randomizerLocked = TRUE;
+    }
     gSaveBlock2Ptr->saveVersion = SAVE_FORMAT_VERSION;
     // Stamp the obstacle table hash NOW, not on the first load. ClearSav3() just zeroed it, and
     // the hash check only runs on load — so without this, every tree cut and rock smashed during
@@ -319,6 +378,13 @@ void NewGameInitData(void)
     ResetItemFlags();
     ResetDexNav();
     ClearFollowerNPCData();
+#if ALL_REGIONS
+    // ClearSav1/InitEventData discarded the pre-intro Shared EXP flag.
+    if (sNewGameSharedExp)
+        FlagSet(FLAG_QOL_SHARED_EXP);
+    else
+        FlagClear(FLAG_QOL_SHARED_EXP);
+#endif
 }
 
 static void ResetMiniGamesRecords(void)

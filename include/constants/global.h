@@ -39,7 +39,7 @@
 // v11: three independent region starter choices without changing any save-block
 // sizes. Migrate the legacy shared choice into the *currently active* campaign;
 // pre-v11 saves cannot recover already overwritten choices in older regions.
-#define SAVE_FORMAT_VERSION 12
+#define SAVE_FORMAT_VERSION 13
 
 // v12: reuse previously unused SaveBlock2 bits 3..7 of byte 0x92 for the
 //       wild randomizer enable flag and bytes 0x96..0x97 for its 16-bit seed.

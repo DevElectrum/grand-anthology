@@ -1,6 +1,10 @@
 #include "global.h"
 #include "world_menu_theme.h"
 #include "option_menu.h"
+#include "new_game.h"
+#include "oak_speech.h"
+#include "main_menu.h"
+
 #include "bg.h"
 #include "event_data.h"
 #include "gpu_regs.h"
@@ -50,6 +54,15 @@ enum
     MENUITEM_CATCHMULT,
     MENUITEM_SHAREDEXP,
     MENUITEM_SHINYODDS,
+    MENUITEM_HARDMODE,
+    MENUITEM_RAND_PRESET,
+    MENUITEM_RAND_WILD,
+    MENUITEM_RAND_TRAINERS,
+    MENUITEM_RAND_STARTERS,
+    MENUITEM_RAND_GIFTS,
+    MENUITEM_RAND_STATICS,
+    MENUITEM_RAND_STATICMODE,
+    MENUITEM_RAND_SEED,
     MENUITEM_CANCEL,
     MENUITEM_COUNT,
 };
@@ -99,6 +112,13 @@ static void DrawOptionMenuTexts(s16 scrollOffset);
 static void DrawBgWindowFrames(void);
 
 EWRAM_DATA static bool8 sArrowPressed = FALSE;
+#if ALL_REGIONS
+static bool8 sNewGameOptionConfirmed = FALSE;
+static u8 sRandomizerPreset = 0;
+static void Randomizer_DrawChoices(s16 scrollOffset);
+static void Randomizer_ProcessInput(u8 item);
+#endif
+
 
 static const u8 gText_Option[]             = _("Options");
 static const u8 gText_TextSpeedSlow[]      = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}Slow");
@@ -148,6 +168,15 @@ static const u8 *const sOptionMenuItemsNames[MENUITEM_COUNT] =
     [MENUITEM_CATCHMULT]   = COMPOUND_STRING("Catch Rate"),
     [MENUITEM_SHAREDEXP]   = COMPOUND_STRING("Shared Exp"),
     [MENUITEM_SHINYODDS]   = COMPOUND_STRING("Shiny Odds"),
+    [MENUITEM_HARDMODE]    = COMPOUND_STRING("Hard Mode"),
+    [MENUITEM_RAND_PRESET] = COMPOUND_STRING("Randomizer"),
+    [MENUITEM_RAND_WILD]   = COMPOUND_STRING("  Wild"),
+    [MENUITEM_RAND_TRAINERS] = COMPOUND_STRING("  Trainers"),
+    [MENUITEM_RAND_STARTERS] = COMPOUND_STRING("  Starters"),
+    [MENUITEM_RAND_GIFTS] = COMPOUND_STRING("  Gifts"),
+    [MENUITEM_RAND_STATICS] = COMPOUND_STRING("  Statics"),
+    [MENUITEM_RAND_STATICMODE] = COMPOUND_STRING("  Static Mode"),
+    [MENUITEM_RAND_SEED] = COMPOUND_STRING("  Seed"),
     [MENUITEM_CANCEL]      = COMPOUND_STRING("Cancel"),
 };
 
@@ -290,6 +319,18 @@ void CB2_InitOptionMenu(void)
         gTasks[taskId].tShinyOdds = gSaveBlock2Ptr->optionsShinyOdds;
         gTasks[taskId].tNicknames = gSaveBlock2Ptr->optionsNicknames;
         gTasks[taskId].tScrollOffset = 0;
+#if ALL_REGIONS
+        sNewGameOptionConfirmed = FALSE;
+        sRandomizerPreset = 2;
+        if (!gSaveBlock2Ptr->randomizerWild && !gSaveBlock2Ptr->randomizerTrainers
+         && !gSaveBlock2Ptr->randomizerStarters && !gSaveBlock2Ptr->randomizerGifts
+         && !gSaveBlock2Ptr->randomizerStatics)
+            sRandomizerPreset = 0;
+        else if (gSaveBlock2Ptr->randomizerWild && gSaveBlock2Ptr->randomizerTrainers
+              && gSaveBlock2Ptr->randomizerStarters && gSaveBlock2Ptr->randomizerGifts
+              && gSaveBlock2Ptr->randomizerStatics && gSaveBlock2Ptr->randomizerStaticMode == 2)
+            sRandomizerPreset = 1;
+#endif
 
         RedrawVisibleOptionsPage(taskId);
         CreateOptionMenuScrollArrows(taskId);
@@ -316,7 +357,13 @@ static void Task_OptionMenuProcessInput(u8 taskId)
     if (JOY_NEW(A_BUTTON))
     {
         if (gTasks[taskId].tMenuSelection == MENUITEM_CANCEL)
+        {
+#if ALL_REGIONS
+            if (IsNewGameSetupActive())
+                sNewGameOptionConfirmed = TRUE;
+#endif
             gTasks[taskId].func = Task_OptionMenuSave;
+        }
     }
     else if (JOY_NEW(B_BUTTON))
     {
@@ -352,6 +399,21 @@ static void Task_OptionMenuProcessInput(u8 taskId)
 
         switch (gTasks[taskId].tMenuSelection)
         {
+#if ALL_REGIONS
+        case MENUITEM_HARDMODE:
+        case MENUITEM_RAND_PRESET:
+        case MENUITEM_RAND_WILD:
+        case MENUITEM_RAND_TRAINERS:
+        case MENUITEM_RAND_STARTERS:
+        case MENUITEM_RAND_GIFTS:
+        case MENUITEM_RAND_STATICS:
+        case MENUITEM_RAND_STATICMODE:
+        case MENUITEM_RAND_SEED:
+            Randomizer_ProcessInput(gTasks[taskId].tMenuSelection);
+            if (sArrowPressed)
+                Randomizer_DrawChoices(gTasks[taskId].tScrollOffset);
+            break;
+#endif
         case MENUITEM_TEXTSPEED:
             previousOption = gTasks[taskId].tTextSpeed;
             gTasks[taskId].tTextSpeed = TextSpeed_ProcessInput(gTasks[taskId].tTextSpeed);
@@ -490,6 +552,22 @@ static void Task_OptionMenuFadeOut(u8 taskId)
     {
         DestroyTask(taskId);
         FreeAllWindowBuffers();
+#if ALL_REGIONS
+        if (IsNewGameSetupActive())
+        {
+            if (sNewGameOptionConfirmed)
+            {
+                ConfirmNewGameSetup();
+                StartNewGameSceneFrlg();
+            }
+            else
+            {
+                CancelNewGameSetup();
+                SetMainCallback2(CB2_ReinitMainMenu);
+            }
+            return;
+        }
+#endif
         SetMainCallback2(gMain.savedCallback);
     }
 }
@@ -579,6 +657,9 @@ static void RedrawVisibleOptionsPage(u8 taskId)
     ShinyOdds_DrawChoices(gTasks[taskId].tShinyOdds, scrollOffset);
     Nicknames_DrawChoices(gTasks[taskId].tNicknames, scrollOffset);
     SharedExp_DrawChoices(FlagGet(FLAG_QOL_SHARED_EXP) ? 1 : 0, scrollOffset);
+#if ALL_REGIONS
+    Randomizer_DrawChoices(scrollOffset);
+#endif
     HighlightOptionMenuItem(gTasks[taskId].tMenuSelection - scrollOffset);
 
     // Scroll repaint is a full window copy, unlike the single-row COPYWIN_GFX
@@ -1098,11 +1179,116 @@ static void SharedExp_DrawChoices(u8 selection, s16 scrollOffset)
     DrawOptionMenuChoice(gText_BattleSceneOn, GetStringRightAlignXOffset(FONT_SMALL, gText_BattleSceneOn, 198), y, styles[1]);
 }
 
+
+#if ALL_REGIONS
+static void Randomizer_PrintValue(u8 item, s16 scrollOffset, const u8 *value)
+{
+    u8 y;
+    if (!GetOptionMenuItemY(item, scrollOffset, &y))
+        return;
+    FillWindowPixelRect(WIN_OPTIONS, PIXEL_FILL(1), 132, y, 76, 16);
+    AddTextPrinterParameterized(WIN_OPTIONS, FONT_SMALL, value, 132, y + 1, TEXT_SKIP_DRAW, NULL);
+}
+
+static void Randomizer_DrawChoices(s16 scrollOffset)
+{
+    u8 seedText[8];
+    Randomizer_PrintValue(MENUITEM_HARDMODE, scrollOffset,
+        gSaveBlock2Ptr->optionsHardMode ? COMPOUND_STRING("On") : COMPOUND_STRING("Off"));
+    Randomizer_PrintValue(MENUITEM_RAND_PRESET, scrollOffset,
+        sRandomizerPreset == 0 ? COMPOUND_STRING("Off") :
+        sRandomizerPreset == 1 ? COMPOUND_STRING("Full") : COMPOUND_STRING("Custom"));
+    Randomizer_PrintValue(MENUITEM_RAND_WILD, scrollOffset,
+        gSaveBlock2Ptr->randomizerWild ? COMPOUND_STRING("On") : COMPOUND_STRING("Off"));
+    Randomizer_PrintValue(MENUITEM_RAND_TRAINERS, scrollOffset,
+        gSaveBlock2Ptr->randomizerTrainers ? COMPOUND_STRING("On") : COMPOUND_STRING("Off"));
+    Randomizer_PrintValue(MENUITEM_RAND_STARTERS, scrollOffset,
+        gSaveBlock2Ptr->randomizerStarters ? COMPOUND_STRING("On") : COMPOUND_STRING("Off"));
+    Randomizer_PrintValue(MENUITEM_RAND_GIFTS, scrollOffset,
+        gSaveBlock2Ptr->randomizerGifts ? COMPOUND_STRING("On") : COMPOUND_STRING("Off"));
+    Randomizer_PrintValue(MENUITEM_RAND_STATICS, scrollOffset,
+        gSaveBlock2Ptr->randomizerStatics ? COMPOUND_STRING("On") : COMPOUND_STRING("Off"));
+    Randomizer_PrintValue(MENUITEM_RAND_STATICMODE, scrollOffset,
+        gSaveBlock2Ptr->randomizerStaticMode == 1 ? COMPOUND_STRING("Shuffle") :
+        gSaveBlock2Ptr->randomizerStaticMode == 2 ? COMPOUND_STRING("Chaos") : COMPOUND_STRING("Ordinary"));
+    ConvertIntToDecimalStringN(seedText, gSaveBlock2Ptr->randomizerSeed, STR_CONV_MODE_LEADING_ZEROS, 5);
+    Randomizer_PrintValue(MENUITEM_RAND_SEED, scrollOffset, seedText);
+}
+
+static void Randomizer_ProcessInput(u8 item)
+{
+    u32 seed;
+    u32 delta;
+    if (!IsNewGameSetupActive())
+        return;
+    if (!(JOY_NEW(DPAD_LEFT | DPAD_RIGHT | L_BUTTON | R_BUTTON)))
+        return;
+    sArrowPressed = TRUE;
+    switch (item)
+    {
+    case MENUITEM_HARDMODE:
+        gSaveBlock2Ptr->optionsHardMode ^= 1;
+        break;
+    case MENUITEM_RAND_PRESET:
+        sRandomizerPreset = (sRandomizerPreset + (JOY_NEW(DPAD_LEFT) ? 2 : 1)) % 3;
+        if (sRandomizerPreset != 2)
+        {
+            bool8 enable = sRandomizerPreset == 1;
+            gSaveBlock2Ptr->randomizerWild = enable;
+            gSaveBlock2Ptr->randomizerTrainers = enable;
+            gSaveBlock2Ptr->randomizerStarters = enable;
+            gSaveBlock2Ptr->randomizerGifts = enable;
+            gSaveBlock2Ptr->randomizerStatics = enable;
+            gSaveBlock2Ptr->randomizerStaticMode = enable ? 2 : 0;
+        }
+        break;
+    case MENUITEM_RAND_WILD:
+        gSaveBlock2Ptr->randomizerWild ^= 1;
+        sRandomizerPreset = 2;
+        break;
+    case MENUITEM_RAND_TRAINERS:
+        gSaveBlock2Ptr->randomizerTrainers ^= 1;
+        sRandomizerPreset = 2;
+        break;
+    case MENUITEM_RAND_STARTERS:
+        gSaveBlock2Ptr->randomizerStarters ^= 1;
+        sRandomizerPreset = 2;
+        break;
+    case MENUITEM_RAND_GIFTS:
+        gSaveBlock2Ptr->randomizerGifts ^= 1;
+        sRandomizerPreset = 2;
+        break;
+    case MENUITEM_RAND_STATICS:
+        gSaveBlock2Ptr->randomizerStatics ^= 1;
+        sRandomizerPreset = 2;
+        break;
+    case MENUITEM_RAND_STATICMODE:
+        gSaveBlock2Ptr->randomizerStaticMode =
+            (gSaveBlock2Ptr->randomizerStaticMode + (JOY_NEW(DPAD_LEFT) ? 2 : 1)) % 3;
+        sRandomizerPreset = 2;
+        break;
+    case MENUITEM_RAND_SEED:
+        seed = gSaveBlock2Ptr->randomizerSeed;
+        delta = JOY_NEW(L_BUTTON | R_BUTTON) ? 1000 : 1;
+        if (JOY_NEW(DPAD_RIGHT | R_BUTTON))
+            seed = seed + delta > 65535 ? 65535 : seed + delta;
+        else
+            seed = seed < delta ? 0 : seed - delta;
+        gSaveBlock2Ptr->randomizerSeed = seed;
+        break;
+    }
+}
+#endif
+
 static void DrawHeaderText(void)
 {
     WorldMenu_DrawHeader(WIN_HEADER, gText_Option);
     FillWindowPixelBuffer(WIN_FOOTER, PIXEL_FILL(1));
-    AddTextPrinterParameterized(WIN_FOOTER, FONT_SMALL, COMPOUND_STRING("Left/Right Change    B Done"), 4, 2, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(WIN_FOOTER, FONT_SMALL,
+#if ALL_REGIONS
+        IsNewGameSetupActive() ? COMPOUND_STRING("L/R Seed 1000   A Lock  B Back") :
+#endif
+        COMPOUND_STRING("Left/Right Change    B Done"), 4, 2, TEXT_SKIP_DRAW, NULL);
     WorldMenu_RoundWindowTopCorners(WIN_FOOTER);
     PutWindowTilemap(WIN_FOOTER);
     CopyWindowToVram(WIN_FOOTER, COPYWIN_FULL);
@@ -1114,7 +1300,16 @@ static void DrawOptionMenuTexts(s16 scrollOffset)
 
     FillWindowPixelBuffer(WIN_OPTIONS, PIXEL_FILL(1));
     for (i = 0; i < NUM_VISIBLE_OPTIONS && scrollOffset + i < MENUITEM_COUNT; i++)
-        AddTextPrinterParameterized(WIN_OPTIONS, FONT_SMALL, sOptionMenuItemsNames[scrollOffset + i], 8, (i * 16) + 1, TEXT_SKIP_DRAW, NULL);
+    {
+        u8 item = scrollOffset + i;
+#if ALL_REGIONS
+        const u8 *text = item == MENUITEM_CANCEL && IsNewGameSetupActive()
+            ? COMPOUND_STRING("Confirm & Lock") : sOptionMenuItemsNames[item];
+#else
+        const u8 *text = sOptionMenuItemsNames[item];
+#endif
+        AddTextPrinterParameterized(WIN_OPTIONS, FONT_SMALL, text, 8, (i * 16) + 1, TEXT_SKIP_DRAW, NULL);
+    }
     // No CopyWindowToVram here: the sole caller (RedrawVisibleOptionsPage) draws the choice
     // values on top and does the full window copy, so a copy here would just be a wasted DMA.
 }
