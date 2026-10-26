@@ -2070,6 +2070,12 @@ u8 TrySpawnObjectEventTemplate(const struct ObjectEventTemplate *objectEventTemp
             default: break;
             }
         }
+        // Ilex's Farfetch'd are moving puzzle actors, not wild encounter
+        // sources. Their species drives field logic and must never be shuffled.
+        if (mapGroup == MAP_GROUP(MAP_ILEX_FOREST)
+         && mapNum == MAP_NUM(MAP_ILEX_FOREST)
+         && original == SPECIES_FARFETCHD)
+            original = SPECIES_NONE;
         if (original != SPECIES_NONE)
         {
             // Route 27 has two independent fixed slots. The right-hand
