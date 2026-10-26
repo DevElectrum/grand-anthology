@@ -2033,15 +2033,46 @@ u8 TrySpawnObjectEventTemplate(const struct ObjectEventTemplate *objectEventTemp
      && objectEventTemplateLocal.kind == OBJ_KIND_NORMAL
      && objectEventTemplateLocal.trainerType == TRAINER_TYPE_NONE
      && objectEventTemplateLocal.script != NULL
-     && objectEventTemplateLocal.flagId != 0
-     && (graphicsId & OBJ_EVENT_MON))
+     && objectEventTemplateLocal.flagId != 0)
     {
-        enum Species original = graphicsId & OBJ_EVENT_MON_SPECIES_MASK;
-        enum Species replacement = WorldRandomizeStaticSpecies(original, 0);
-        if (replacement != original && SpeciesToGraphicsInfo(replacement, FALSE, FALSE) != NULL)
+        enum Species original = SPECIES_NONE;
+        enum Species replacement;
+        // Recent scripted encounters use OBJ_EVENT_GFX_SPECIES, while inherited
+        // FRLG/Emerald legendaries retain one-off legacy graphics IDs.
+        if (graphicsId & OBJ_EVENT_MON)
+            original = graphicsId & OBJ_EVENT_MON_SPECIES_MASK;
+        else
         {
-            graphicsId = GetGraphicsIdForMon(replacement, FALSE, FALSE);
-            objectEventTemplateLocal.graphicsId = graphicsId;
+            switch (graphicsId)
+            {
+            case OBJ_EVENT_GFX_MEWTWO: original = SPECIES_MEWTWO; break;
+            case OBJ_EVENT_GFX_ARTICUNO: original = SPECIES_ARTICUNO; break;
+            case OBJ_EVENT_GFX_ZAPDOS: original = SPECIES_ZAPDOS; break;
+            case OBJ_EVENT_GFX_MOLTRES: original = SPECIES_MOLTRES; break;
+            case OBJ_EVENT_GFX_LUGIA: original = SPECIES_LUGIA; break;
+            case OBJ_EVENT_GFX_ENTEI: original = SPECIES_ENTEI; break;
+            case OBJ_EVENT_GFX_SUICUNE: original = SPECIES_SUICUNE; break;
+            case OBJ_EVENT_GFX_RAIKOU: original = SPECIES_RAIKOU; break;
+            case OBJ_EVENT_GFX_RAYQUAZA:
+            case OBJ_EVENT_GFX_RAYQUAZA_STILL: original = SPECIES_RAYQUAZA; break;
+            case OBJ_EVENT_GFX_REGIROCK: original = SPECIES_REGIROCK; break;
+            case OBJ_EVENT_GFX_REGICE: original = SPECIES_REGICE; break;
+            case OBJ_EVENT_GFX_REGISTEEL: original = SPECIES_REGISTEEL; break;
+            case OBJ_EVENT_GFX_LATIAS: original = SPECIES_LATIAS; break;
+            case OBJ_EVENT_GFX_LATIOS: original = SPECIES_LATIOS; break;
+            case OBJ_EVENT_GFX_MEW: original = SPECIES_MEW; break;
+            case OBJ_EVENT_GFX_DEOXYS: original = SPECIES_DEOXYS; break;
+            default: break;
+            }
+        }
+        if (original != SPECIES_NONE)
+        {
+            replacement = WorldRandomizeStaticSpecies(original, 0);
+            if (replacement != original && SpeciesToGraphicsInfo(replacement, FALSE, FALSE) != NULL)
+            {
+                graphicsId = GetGraphicsIdForMon(replacement, FALSE, FALSE);
+                objectEventTemplateLocal.graphicsId = graphicsId;
+            }
         }
     }
 #endif
