@@ -355,6 +355,16 @@ static void Task_OptionMenuFadeIn(u8 taskId)
 
 static void Task_OptionMenuProcessInput(u8 taskId)
 {
+#if ALL_REGIONS
+    // START is the explicit pre-adventure Confirm & Lock shortcut. It is
+    // deliberately unavailable after the save has been initialized.
+    if (IsNewGameSetupActive() && JOY_NEW(START_BUTTON))
+    {
+        sNewGameOptionConfirmed = TRUE;
+        gTasks[taskId].func = Task_OptionMenuSave;
+        return;
+    }
+#endif
     if (JOY_NEW(A_BUTTON))
     {
         if (gTasks[taskId].tMenuSelection == MENUITEM_CANCEL)
@@ -1287,7 +1297,7 @@ static void DrawHeaderText(void)
     FillWindowPixelBuffer(WIN_FOOTER, PIXEL_FILL(1));
     AddTextPrinterParameterized(WIN_FOOTER, FONT_SMALL,
 #if ALL_REGIONS
-        IsNewGameSetupActive() ? COMPOUND_STRING("L/R Seed 1000   A Lock  B Back") :
+        IsNewGameSetupActive() ? COMPOUND_STRING("START Lock  B Back  L/R Seed") :
 #endif
         COMPOUND_STRING("Left/Right Change    B Done"), 4, 2, TEXT_SKIP_DRAW, NULL);
     WorldMenu_RoundWindowTopCorners(WIN_FOOTER);
