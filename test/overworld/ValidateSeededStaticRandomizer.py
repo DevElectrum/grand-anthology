@@ -43,14 +43,24 @@ for excluded in ("isMegaEvolution", "isPrimalReversion", "isUltraBurst",
                  "isGigantamax", "isTeraForm", "isTotem"):
     need(battle,excluded)
 need(battle, "attempts < NUM_SPECIES - 1")
+need(battle, "WorldIsFieldStableDiscoverySpecies(result)")
+need(battle, "randomizerVersion == 0")
+need(battle, "ResolveRandomizedStaticRelic(enum Species species, enum Item scriptedItem)")
 need(battle, "IsSpeciesEnabled(result)")
 single=battle.split("void CreateScriptedWildMon(",1)[1].split("void CreateScriptedDoubleWildMon(",1)[0]
 double=battle.split("void CreateScriptedDoubleWildMon(",1)[1].split("void ScriptSetMonMoveSlot(",1)[0]
 need(single, "species = WorldRandomizeStaticSpecies(species, 0);")
 need(double, "species1 = WorldRandomizeStaticSpecies(species1, 0);")
 need(double, "species2 = WorldRandomizeStaticSpecies(species2, 0);")
+need(single, "item = ResolveRandomizedStaticRelic(species, item);")
+need(double, "item1 = ResolveRandomizedStaticRelic(species1, item1);")
+need(double, "item2 = ResolveRandomizedStaticRelic(species2, item2);")
 assert single.index("WorldRandomizeStaticSpecies") < single.index("GetMonPersonality")
 assert double.index("WorldRandomizeStaticSpecies") < double.index("GetMonPersonality")
+visible=src("src/event_object_movement.c")
+need(visible, "WorldRandomizeStaticSpecies(original, slot)")
+for gfx in ("SNORLAX", "SUDOWOODO", "KECLEON", "CELEBI"):
+    need(visible, "case OBJ_EVENT_GFX_"+gfx+":")
 for action in ("Enable Statics", "Disable Statics",
                "DebugAction_Randomizer_EnableStatics", "DebugAction_Randomizer_DisableStatics",
                "gSaveBlock2Ptr->randomizerStatics = TRUE",
@@ -75,4 +85,4 @@ assert mix(2027,25,0,37,10)!=mix(2026,25,0,37,10)
 assert mix(2026,25,1,37,10)!=mix(2026,25,0,37,10)
 assert len({mix(i,25,0,37,10) for i in range(100)}) >= 75
 assert all(1<=mix(i,25,0,37,10)<1600 for i in range(1000))
-print("P0 seeded static singles/doubles, v12 save, player menu, quest guards: PASS")
+print("P0 v13 seeded static singles/doubles, sprite parity, form safety, and relic ownership: PASS")
