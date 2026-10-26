@@ -68,6 +68,8 @@ bool8 TryDoDoubleWildBattle(void);
 bool8 StandardWildEncounter_Debug(void);
 u32 CalculateChainFishingShinyRolls(void);
 void CreateWildMon(enum Species species, u8 level);
+enum Species WorldRandomizeWildSpeciesAtMap(enum Species original, u32 slot, enum WildPokemonArea area,
+                                            u8 mapGroup, u8 mapNum);
 bool8 WorldIsFieldStableDiscoverySpecies(enum Species species);
 bool8 WorldIsNaturalDiscoverySpecies(enum Species species);
 bool8 WorldIsPostLeagueResearchSpecies(enum Species species);

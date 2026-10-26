@@ -577,7 +577,8 @@ static u8 PickWildMonNature(enum Species species)
 // Preserve special Battle Frontier rules even when wild battles call the same
 // encounter-table generator as routes.
 // The seed and toggle are checksum-protected SaveBlock2 data (v12).
-static enum Species WorldRandomizeWildSpecies(enum Species original, u32 slot, enum WildPokemonArea area)
+enum Species WorldRandomizeWildSpeciesAtMap(enum Species original, u32 slot, enum WildPokemonArea area,
+                                            u8 mapGroup, u8 mapNum)
 {
 #if ALL_REGIONS
     u32 hash;
@@ -585,7 +586,9 @@ static enum Species WorldRandomizeWildSpecies(enum Species original, u32 slot, e
     u32 attempts;
 
     if (gSaveBlock2Ptr == NULL || !gSaveBlock2Ptr->randomizerWild
-     || gMapHeader.battleType == MAP_BATTLE_SCENE_FRONTIER
+     || (gMapHeader.battleType == MAP_BATTLE_SCENE_FRONTIER
+      && gSaveBlock1Ptr->location.mapGroup == mapGroup
+      && gSaveBlock1Ptr->location.mapNum == mapNum)
      || original == SPECIES_NONE || original == SPECIES_EGG)
         return original;
 
@@ -594,8 +597,8 @@ static enum Species WorldRandomizeWildSpecies(enum Species original, u32 slot, e
     hash = 0x9E3779B9u ^ (u32)gSaveBlock2Ptr->randomizerSeed;
     hash ^= (u32)original * 0x85EBCA6Bu;
     hash ^= (slot + 1) * 0xC2B2AE35u;
-    hash ^= ((u32)(u8)gSaveBlock1Ptr->location.mapGroup << 24)
-          | ((u32)(u8)gSaveBlock1Ptr->location.mapNum << 16)
+    hash ^= ((u32)mapGroup << 24)
+          | ((u32)mapNum << 16)
           | ((u32)area << 8);
     hash ^= hash >> 16;
     hash *= 0x7FEB352Du;
@@ -616,6 +619,13 @@ static enum Species WorldRandomizeWildSpecies(enum Species original, u32 slot, e
     }
 #endif
     return original;
+}
+
+// The original API remains the encounter-table entrypoint.
+static enum Species WorldRandomizeWildSpecies(enum Species original, u32 slot, enum WildPokemonArea area)
+{
+    return WorldRandomizeWildSpeciesAtMap(original, slot, area,
+        gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum);
 }
 
 // Natural, pre-Champion rare habitat encounters. No original wild table is

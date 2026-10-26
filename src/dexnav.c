@@ -960,7 +960,7 @@ static bool32 DexNavSpeciesInCurrentMapEncounters(enum Species species, u32 head
     if (info != NULL && info->encounterRate != 0)
     {
         for (i = 0; i < NUM_LAND_MONS_ENCOUNTER_SLOTS; i++)
-            if (info->wildPokemon[i].species == species)
+            if (WorldRandomizeWildSpeciesAtMap(info->wildPokemon[i].species, i, WILD_AREA_LAND, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum) == species)
                 return TRUE;
         if (AnthologyGetRareHabitatSpecies(WILD_AREA_LAND, info) == species)
             return TRUE;
@@ -974,7 +974,7 @@ static bool32 DexNavSpeciesInCurrentMapEncounters(enum Species species, u32 head
     if (info != NULL && info->encounterRate != 0)
     {
         for (i = 0; i < NUM_WATER_MONS_ENCOUNTER_SLOTS; i++)
-            if (info->wildPokemon[i].species == species)
+            if (WorldRandomizeWildSpeciesAtMap(info->wildPokemon[i].species, i, WILD_AREA_WATER, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum) == species)
                 return TRUE;
         if (AnthologyGetAquaticHabitatSpecies(WILD_AREA_WATER, info) == species)
             return TRUE;
@@ -984,7 +984,7 @@ static bool32 DexNavSpeciesInCurrentMapEncounters(enum Species species, u32 head
     info = gWildMonHeaders[headerId].encounterTypes[timeOfDay].hiddenMonsInfo;
     if (info != NULL) // no rate guard: hidden encounterRate is 0=land/1=water, not a rate
         for (i = 0; i < NUM_HIDDEN_MONS_ENCOUNTER_SLOTS; i++)
-            if (info->wildPokemon[i].species == species)
+            if (WorldRandomizeWildSpeciesAtMap(info->wildPokemon[i].species, i, WILD_AREA_HIDDEN, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum) == species)
                 return TRUE;
 
     return FALSE;
@@ -1541,7 +1541,7 @@ static u8 GetEncounterLevelFromMapData(enum Species species, enum EncounterType 
 
         for (i = 0; i < NUM_LAND_MONS_ENCOUNTER_SLOTS; i++)
         {
-            if (landMonsInfo->wildPokemon[i].species == species)
+            if (WorldRandomizeWildSpeciesAtMap(landMonsInfo->wildPokemon[i].species, i, WILD_AREA_LAND, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum) == species)
             {
                 min = (min < landMonsInfo->wildPokemon[i].minLevel) ? min : landMonsInfo->wildPokemon[i].minLevel;
                 max = (max > landMonsInfo->wildPokemon[i].maxLevel) ? max : landMonsInfo->wildPokemon[i].maxLevel;
@@ -1569,7 +1569,7 @@ static u8 GetEncounterLevelFromMapData(enum Species species, enum EncounterType 
 
         for (i = 0; i < NUM_WATER_MONS_ENCOUNTER_SLOTS; i++)
         {
-            if (waterMonsInfo->wildPokemon[i].species == species)
+            if (WorldRandomizeWildSpeciesAtMap(waterMonsInfo->wildPokemon[i].species, i, WILD_AREA_WATER, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum) == species)
             {
                 min = (min < waterMonsInfo->wildPokemon[i].minLevel) ? min : waterMonsInfo->wildPokemon[i].minLevel;
                 max = (max > waterMonsInfo->wildPokemon[i].maxLevel) ? max : waterMonsInfo->wildPokemon[i].maxLevel;
@@ -1590,7 +1590,7 @@ static u8 GetEncounterLevelFromMapData(enum Species species, enum EncounterType 
 
         for (i = 0; i < NUM_HIDDEN_MONS_ENCOUNTER_SLOTS; i++)
         {
-            if (hiddenMonsInfo->wildPokemon[i].species == species)
+            if (WorldRandomizeWildSpeciesAtMap(hiddenMonsInfo->wildPokemon[i].species, i, WILD_AREA_HIDDEN, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum) == species)
             {
                 min = (min < hiddenMonsInfo->wildPokemon[i].minLevel) ? min : hiddenMonsInfo->wildPokemon[i].minLevel;
                 max = (max > hiddenMonsInfo->wildPokemon[i].maxLevel) ? max : hiddenMonsInfo->wildPokemon[i].maxLevel;
@@ -1769,7 +1769,7 @@ static bool8 CapturedAllLandMons(u32 headerId)
     {
         for (i = 0; i < NUM_LAND_MONS_ENCOUNTER_SLOTS; ++i)
         {
-            species = landMonsInfo->wildPokemon[i].species;
+            species = WorldRandomizeWildSpeciesAtMap(landMonsInfo->wildPokemon[i].species, i, WILD_AREA_LAND, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum);
             if (species != SPECIES_NONE)
             {
                 if (!GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_GET_CAUGHT))
@@ -1818,7 +1818,7 @@ static bool8 CapturedAllWaterMons(u32 headerId)
     {
         for (i = 0; i < NUM_WATER_MONS_ENCOUNTER_SLOTS; ++i)
         {
-            species = waterMonsInfo->wildPokemon[i].species;
+            species = WorldRandomizeWildSpeciesAtMap(waterMonsInfo->wildPokemon[i].species, i, WILD_AREA_WATER, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum);
             if (species != SPECIES_NONE)
             {
                 count++;
@@ -1855,7 +1855,7 @@ static bool8 CapturedAllHiddenMons(u32 headerId)
     {
         for (i = 0; i < NUM_HIDDEN_MONS_ENCOUNTER_SLOTS; ++i)
         {
-            species = hiddenMonsInfo->wildPokemon[i].species;
+            species = WorldRandomizeWildSpeciesAtMap(hiddenMonsInfo->wildPokemon[i].species, i, WILD_AREA_HIDDEN, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum);
             if (species != SPECIES_NONE)
             {
                 count++;
@@ -2017,7 +2017,7 @@ static void DexNavLoadEncounterData(void)
         {
             species = landMonsInfo->wildPokemon[i].species;
             if (species != SPECIES_NONE && !SpeciesInArray(species, 0))
-                sDexNavUiDataPtr->landSpecies[grassIndex++] = landMonsInfo->wildPokemon[i].species;
+                sDexNavUiDataPtr->landSpecies[grassIndex++] = species;
         }
         // Extra icon without removing any of the original species.
         species = AnthologyGetRareHabitatSpecies(WILD_AREA_LAND, landMonsInfo);
@@ -2040,7 +2040,7 @@ static void DexNavLoadEncounterData(void)
         {
             species = waterMonsInfo->wildPokemon[i].species;
             if (species != SPECIES_NONE && !SpeciesInArray(species, 1))
-                sDexNavUiDataPtr->waterSpecies[waterIndex++] = waterMonsInfo->wildPokemon[i].species;
+                sDexNavUiDataPtr->waterSpecies[waterIndex++] = species;
         }
     }
 
@@ -2060,7 +2060,7 @@ static void DexNavLoadEncounterData(void)
         {
             species = hiddenMonsInfo->wildPokemon[i].species;
             if (species != SPECIES_NONE && !SpeciesInArray(species, 2))
-                sDexNavUiDataPtr->hiddenSpecies[hiddenIndex++] = hiddenMonsInfo->wildPokemon[i].species;
+                sDexNavUiDataPtr->hiddenSpecies[hiddenIndex++] = species;
         }
     }
 }
