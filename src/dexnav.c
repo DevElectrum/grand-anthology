@@ -2015,7 +2015,8 @@ static void DexNavLoadEncounterData(void)
     {
         for (i = 0; i < NUM_LAND_MONS_ENCOUNTER_SLOTS; i++)
         {
-            species = landMonsInfo->wildPokemon[i].species;
+            species = WorldRandomizeWildSpeciesAtMap(landMonsInfo->wildPokemon[i].species, i, WILD_AREA_LAND,
+                gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum);
             if (species != SPECIES_NONE && !SpeciesInArray(species, 0))
                 sDexNavUiDataPtr->landSpecies[grassIndex++] = species;
         }
@@ -2038,7 +2039,8 @@ static void DexNavLoadEncounterData(void)
     {
         for (i = 0; i < NUM_WATER_MONS_ENCOUNTER_SLOTS; i++)
         {
-            species = waterMonsInfo->wildPokemon[i].species;
+            species = WorldRandomizeWildSpeciesAtMap(waterMonsInfo->wildPokemon[i].species, i, WILD_AREA_WATER,
+                gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum);
             if (species != SPECIES_NONE && !SpeciesInArray(species, 1))
                 sDexNavUiDataPtr->waterSpecies[waterIndex++] = species;
         }
@@ -2058,7 +2060,8 @@ static void DexNavLoadEncounterData(void)
     {
         for (i = 0; i < NUM_HIDDEN_MONS_ENCOUNTER_SLOTS; i++)
         {
-            species = hiddenMonsInfo->wildPokemon[i].species;
+            species = WorldRandomizeWildSpeciesAtMap(hiddenMonsInfo->wildPokemon[i].species, i, WILD_AREA_HIDDEN,
+                gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum);
             if (species != SPECIES_NONE && !SpeciesInArray(species, 2))
                 sDexNavUiDataPtr->hiddenSpecies[hiddenIndex++] = species;
         }

@@ -297,7 +297,7 @@ void MewGauntletPrepareBattle(void)
 
 // Zacian and Zamazenta bring their relics wherever their encounter moves.
 // Never leave a sword/shield on an unrelated randomized replacement.
-static enum Item ResolveRandomizedStaticRelic(enum Species species, enum Item scriptedItem)
+enum Item WorldResolveStaticRelic(enum Species species, enum Item scriptedItem)
 {
     if (species == SPECIES_ZACIAN_HERO)
         return ITEM_RUSTED_SWORD;
@@ -320,7 +320,7 @@ void CreateScriptedWildMon(enum Species species, u8 level, enum Item item)
         RANDOM_UNOWN_LETTER);
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], species, level, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
-    item = ResolveRandomizedStaticRelic(species, item);
+    item = WorldResolveStaticRelic(species, item);
     if (item)
     {
         heldItem[0] = item;
@@ -342,7 +342,7 @@ void CreateScriptedDoubleWildMon(enum Species species1, u8 level1, enum Item ite
         RANDOM_UNOWN_LETTER);
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], species1, level1, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
-    item1 = ResolveRandomizedStaticRelic(species1, item1);
+    item1 = WorldResolveStaticRelic(species1, item1);
     if (item1)
     {
         heldItem1[0] = item1;
@@ -356,7 +356,7 @@ void CreateScriptedDoubleWildMon(enum Species species1, u8 level1, enum Item ite
         RANDOM_UNOWN_LETTER);
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][1], species2, level2, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][1]);
-    item2 = ResolveRandomizedStaticRelic(species2, item2);
+    item2 = WorldResolveStaticRelic(species2, item2);
     if (item2)
     {
         heldItem2[0] = item2;

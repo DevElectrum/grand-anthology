@@ -8,6 +8,7 @@ void RoyalDuoAwardVictory(void);
 u8 ScriptGiveEgg(enum Species species);
 void CreateScriptedWildMon(enum Species species, u8 level, enum Item item);
 enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot);
+enum Item WorldResolveStaticRelic(enum Species species, enum Item scriptedItem);
 void MewGauntletShouldRun(void);
 void MewGauntletRollDisguises(void);
 void MewGauntletPrepareBattle(void);

@@ -40,6 +40,7 @@
 #include "pokemon_icon.h"
 #include "pokemon_summary_screen.h"
 #include "pokemon_storage_system.h"
+#include "script_pokemon_util.h"
 #include "pokerus.h"
 #include "random.h"
 #include "recorded_battle.h"
@@ -1342,6 +1343,11 @@ void CreateEnemyEventMon(void)
     s32 species = gSpecialVar_0x8004;
     s32 level = gSpecialVar_0x8005;
     s32 itemId = gSpecialVar_0x8006;
+
+    // seteventmon uses a different constructor than setwildbattle. Resolve
+    // the same seeded static as its overworld object before creating the foe.
+    species = WorldRandomizeStaticSpecies(species, 0);
+    itemId = WorldResolveStaticRelic(species, itemId);
 
     ZeroEnemyPartyMons();
 

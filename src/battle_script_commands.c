@@ -9730,6 +9730,14 @@ static void ComputeBallData(u32 wildMonBattler, u32 playerBattler, struct BallDa
     ball->flatBonus = 0;
     ball->guaranteedCapture = FALSE;
 
+    // The Master Ball guarantees capture even for Ultra Beasts. Their
+    // Beast Ball restriction only applies to non-Master Balls.
+    if (ballId == BALL_MASTER)
+    {
+        ball->guaranteedCapture = TRUE;
+        return;
+    }
+
     if (gSpeciesInfo[battleMon->species].isUltraBeast)
     {
         if (ballId == BALL_BEAST)
