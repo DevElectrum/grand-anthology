@@ -75,6 +75,27 @@ assert "SPECIES_RHYHORN" in blue and "SPECIES_RHYDON" in blue
 assert "VarGet(VAR_STARTER_MON) != 9" in blue
 assert "TRAINER_CHAMPION_FIRST_CHARMANDER" not in blue.split("static bool32 IsEarlyBlueCharmanderTrainer")[1].split("static void ApplyPoipoleBlueRhyhorn")[0]
 
+# Blue's scripted original starter slot must be overwritten with the same
+# seeded option Oak previewed, and its nickname must match the new species.
+# This also fixes the Poipole special case where Rhydon/Rhyhorn retained
+# the old Charmander nickname and was then overwritten by starter randomization.
+blue_rename = blue.split("static void SetKantoBlueStarterSpecies(", 1)[1].split("static void ApplyKantoBlueRandomizedStarter(", 1)[0]
+for statement in (
+    "SetMonData(mon, MON_DATA_SPECIES, &replacement);",
+    "SetMonData(mon, MON_DATA_NICKNAME, GetSpeciesName(replacement));",
+    "SetMonData(mon, MON_DATA_ABILITY_NUM, &abilityNum);",
+    "GiveMonInitialMoveset(mon);",
+    "CalculateMonStats(mon);",
+):
+    assert statement in blue_rename, statement
+blue_swap = blue.split("static void ApplyKantoBlueRandomizedStarter(", 1)[1].split("static void ApplyPoipoleBlueRhyhorn(", 1)[0]
+assert "WorldRandomizeKantoStarterSpecies(original)" in blue_swap
+assert "GetKantoBlueOriginalStarter(trainerNum)" in blue_swap
+assert "SetKantoBlueStarterSpecies(&party[i], replacement);" in blue_swap
+assert "VarGet(VAR_STARTER_MON) == 9 && IsEarlyBlueCharmanderTrainer(trainerNum)" in blue_swap
+blue_poipole = blue.split("static void ApplyPoipoleBlueRhyhorn(", 1)[1].split("#endif", 1)[0]
+assert "SetKantoBlueStarterSpecies(&party[i], replacement);" in blue_poipole
+
 # Hoenn story branches must normalize the full 0..8 starter index to the
 # original 0..2 elemental story branches; do not force nine new rivals.
 for path in (

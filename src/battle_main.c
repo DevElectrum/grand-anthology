@@ -2191,6 +2191,19 @@ static enum Species GetKantoBlueOriginalStarter(u16 trainerNum)
     }
 }
 
+// Species swaps after CreateMon must refresh the stored nickname too:
+// otherwise a randomized Unown/Moltres still displays "Charmander".
+static void SetKantoBlueStarterSpecies(struct Pokemon *mon, enum Species replacement)
+{
+    u32 abilityNum = 0;
+
+    SetMonData(mon, MON_DATA_SPECIES, &replacement);
+    SetMonData(mon, MON_DATA_NICKNAME, GetSpeciesName(replacement));
+    SetMonData(mon, MON_DATA_ABILITY_NUM, &abilityNum);
+    GiveMonInitialMoveset(mon);
+    CalculateMonStats(mon);
+}
+
 static void ApplyKantoBlueRandomizedStarter(struct Pokemon *party, u8 count, u16 trainerNum)
 {
     const struct Trainer *trainer;
@@ -2200,6 +2213,12 @@ static void ApplyKantoBlueRandomizedStarter(struct Pokemon *party, u8 count, u16
 
     if (party != gParties[B_TRAINER_OPPONENT_A] || GetCurrentRegion() != REGION_KANTO
      || gSaveBlock2Ptr == NULL || !gSaveBlock2Ptr->randomizerStarters)
+        return;
+
+    // Poipole's authored Blue/Rhyhorn path is a deliberate exception as long
+    // as the generic Trainers randomizer is Off. Don't overwrite it here.
+    if (!gSaveBlock2Ptr->randomizerTrainers
+     && VarGet(VAR_STARTER_MON) == 9 && IsEarlyBlueCharmanderTrainer(trainerNum))
         return;
 
     original = GetKantoBlueOriginalStarter(trainerNum);
@@ -2218,9 +2237,7 @@ static void ApplyKantoBlueRandomizedStarter(struct Pokemon *party, u8 count, u16
          || (original == SPECIES_BULBASAUR && authored != SPECIES_BULBASAUR
              && authored != SPECIES_IVYSAUR && authored != SPECIES_VENUSAUR))
             continue;
-        SetMonData(&party[i], MON_DATA_SPECIES, &replacement);
-        GiveMonInitialMoveset(&party[i]);
-        CalculateMonStats(&party[i]);
+        SetKantoBlueStarterSpecies(&party[i], replacement);
         break;
     }
 }
@@ -2250,9 +2267,7 @@ static void ApplyPoipoleBlueRhyhorn(struct Pokemon *party, u8 count, u16 trainer
         if (species != SPECIES_CHARMANDER && species != SPECIES_CHARMELEON && species != SPECIES_CHARIZARD)
             continue;
         replacement = GetMonData(&party[i], MON_DATA_LEVEL) >= 42 ? SPECIES_RHYDON : SPECIES_RHYHORN;
-        SetMonData(&party[i], MON_DATA_SPECIES, &replacement);
-        GiveMonInitialMoveset(&party[i]);
-        CalculateMonStats(&party[i]);
+        SetKantoBlueStarterSpecies(&party[i], replacement);
         break;
     }
 }
