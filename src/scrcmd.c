@@ -67,6 +67,7 @@
 #include "constants/comparison_operators.h"
 #include "constants/event_objects.h"
 #include "constants/map_types.h"
+#include "constants/maps.h"
 #include "constants/party_menu.h"
 // Recovered after the #120 merge: resolving the POKEVIAL conflict as "ours" dropped these two
 // upstream additions, which data/script_cmd_table.inc still references -- it failed at LINK,
@@ -2837,6 +2838,23 @@ bool8 ScrCmd_playmoncry(struct ScriptContext *ctx)
     u16 mode = VarGet(ScriptReadHalfword(ctx));
 
     Script_RequestEffects(SCREFF_V1 | SCREFF_HARDWARE);
+
+#if ALL_REGIONS
+    // A static's field cry must belong to the same seeded species shown by
+    // its overworld object and created by seteventmon / setwildbattle.
+    // Non-encounter cries (puzzles, followers, cutscenes) stay untouched.
+    if (mode == CRY_MODE_ENCOUNTER && gSaveBlock2Ptr != NULL
+     && gSaveBlock2Ptr->randomizerStatics)
+    {
+        u32 slot = 0;
+        if (gSaveBlock1Ptr != NULL
+         && gSaveBlock1Ptr->location.mapGroup == MAP_GROUP(MAP_ROUTE27)
+         && gSaveBlock1Ptr->location.mapNum == MAP_NUM(MAP_ROUTE27)
+         && species == SPECIES_ZAMAZENTA_HERO)
+            slot = 1;
+        species = WorldRandomizeStaticSpecies(species, slot);
+    }
+#endif
 
     PlayCry_Script(species, mode);
     return FALSE;
