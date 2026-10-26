@@ -189,6 +189,8 @@ IndigoPlateau_Exterior_Movement_OakExitBuilding::
 // The post-Champion creation-trio hunt must be completed before Arceus.
 IndigoPlateau_Exterior_AnthologyOnTransition::
 	goto_if_unset FLAG_KANTO_CHAMPION, IndigoPlateau_Exterior_AnthologyHideArceus
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, IndigoPlateau_Exterior_SeededArceusGate
 	getcaughtmon SPECIES_DIALGA
 	goto_if_ne VAR_RESULT, TRUE, IndigoPlateau_Exterior_AnthologyHideArceus
 	getcaughtmon SPECIES_PALKIA
@@ -198,6 +200,14 @@ IndigoPlateau_Exterior_AnthologyOnTransition::
 	getcaughtmon SPECIES_ARCEUS
 	call_if_eq VAR_RESULT, TRUE, IndigoPlateau_Exterior_AnthologyHideArceus
 	call_if_ne VAR_RESULT, TRUE, IndigoPlateau_Exterior_AnthologyShowArceus
+	return
+
+IndigoPlateau_Exterior_SeededArceusGate::
+	goto_if_unset FLAG_CAUGHT_RANDOM_MTMOON_DIALGA, IndigoPlateau_Exterior_AnthologyHideArceus
+	goto_if_unset FLAG_CAUGHT_RANDOM_MTMOON_PALKIA, IndigoPlateau_Exterior_AnthologyHideArceus
+	goto_if_unset FLAG_CAUGHT_RANDOM_MTMOON_GIRATINA, IndigoPlateau_Exterior_AnthologyHideArceus
+	call_if_set FLAG_CAUGHT_RANDOM_INDIGO_ARCEUS, IndigoPlateau_Exterior_AnthologyHideArceus
+	call_if_unset FLAG_CAUGHT_RANDOM_INDIGO_ARCEUS, IndigoPlateau_Exterior_AnthologyShowArceus
 	return
 
 IndigoPlateau_Exterior_AnthologyHideArceus::
@@ -219,10 +229,19 @@ IndigoPlateau_Exterior_EventScript_Arceus::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, IndigoPlateau_Exterior_AnthologyArceusRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, IndigoPlateau_Exterior_AnthologyArceusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IndigoPlateau_Exterior_AnthologyArceusResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, IndigoPlateau_Exterior_SeededArceusCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, IndigoPlateau_Exterior_AnthologyArceusResolved
 	release
 	end
+
+IndigoPlateau_Exterior_SeededArceusCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, IndigoPlateau_Exterior_MarkSeededArceus
+	goto IndigoPlateau_Exterior_AnthologyArceusResolved
+
+IndigoPlateau_Exterior_MarkSeededArceus::
+	setflag FLAG_CAUGHT_RANDOM_INDIGO_ARCEUS
+	return
 
 IndigoPlateau_Exterior_AnthologyArceusResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

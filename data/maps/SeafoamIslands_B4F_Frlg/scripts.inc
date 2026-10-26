@@ -19,11 +19,18 @@ SeafoamIslands_B4F_EventScript_TryRemoveArticuno::
 	return
 
 SeafoamIslands_B4F_OnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, SeafoamIslands_B4F_SeededArticunoVisibility
 	getcaughtmon SPECIES_ARTICUNO
 	call_if_eq VAR_RESULT, TRUE, SeafoamIslands_B4F_NativeARTICUNOCaught
 	call_if_ne VAR_RESULT, TRUE, SeafoamIslands_B4F_NativeARTICUNOUncaught
 	call_if_unset FLAG_STOPPED_SEAFOAM_B4F_CURRENT, SeafoamIslands_B4F_EventScript_CheckStoppedCurrent
 	call_if_set FLAG_STOPPED_SEAFOAM_B4F_CURRENT, SeafoamIslands_B4F_EventScript_SetNoCurrentLayout
+	end
+
+SeafoamIslands_B4F_SeededArticunoVisibility::
+	call_if_set FLAG_CAUGHT_RANDOM_SEAFOAM_ARTICUNO, SeafoamIslands_B4F_NativeARTICUNOCaught
+	call_if_unset FLAG_CAUGHT_RANDOM_SEAFOAM_ARTICUNO, SeafoamIslands_B4F_NativeARTICUNOUncaught
 	end
 
 SeafoamIslands_B4F_EventScript_CheckStoppedCurrent::
@@ -172,9 +179,21 @@ SeafoamIslands_B4F_EventScript_Articuno::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, SeafoamIslands_B4F_EventScript_DefeatedArticuno
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, SeafoamIslands_B4F_EventScript_RanFromArticuno
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, SeafoamIslands_B4F_EventScript_RanFromArticuno
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SeafoamIslands_B4F_SeededArticunoCaught
 	setflag FLAG_FOUGHT_ARTICUNO
 	release
 	end
+
+SeafoamIslands_B4F_SeededArticunoCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, SeafoamIslands_B4F_SeededArticunoMark
+	setflag FLAG_FOUGHT_ARTICUNO
+	release
+	end
+
+SeafoamIslands_B4F_SeededArticunoMark::
+	setflag FLAG_CAUGHT_RANDOM_SEAFOAM_ARTICUNO
+	return
 
 SeafoamIslands_B4F_EventScript_DefeatedArticuno::
 	setflag FLAG_FOUGHT_ARTICUNO

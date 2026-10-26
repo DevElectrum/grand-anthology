@@ -6,8 +6,18 @@ GraniteCave_StevensRoom_MapScripts::
 @ Steven's original letter/TM story takes priority; Diancie appears after
 @ the letter and both Roxanne's and Brawly's badges, until caught.
 GraniteCave_StevensRoom_OnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, GraniteCave_StevensRoom_SeededDiancieTransition
 	getcaughtmon SPECIES_DIANCIE
 	goto_if_eq VAR_RESULT, TRUE, GraniteCave_StevensRoom_HideDiancie
+	goto_if_unset FLAG_DELIVERED_STEVEN_LETTER, GraniteCave_StevensRoom_HideDiancie
+	goto_if_unset FLAG_BADGE01_GET, GraniteCave_StevensRoom_HideDiancie
+	goto_if_unset FLAG_BADGE02_GET, GraniteCave_StevensRoom_HideDiancie
+	clearflag FLAG_HIDE_ANTHOLOGY_DIANCIE
+	end
+
+GraniteCave_StevensRoom_SeededDiancieTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_GRANITE_DIANCIE, GraniteCave_StevensRoom_HideDiancie
 	goto_if_unset FLAG_DELIVERED_STEVEN_LETTER, GraniteCave_StevensRoom_HideDiancie
 	goto_if_unset FLAG_BADGE01_GET, GraniteCave_StevensRoom_HideDiancie
 	goto_if_unset FLAG_BADGE02_GET, GraniteCave_StevensRoom_HideDiancie
@@ -28,8 +38,16 @@ GraniteCave_StevensRoom_EventScript_Steven::
 	@ The letter is delivered *inside* this room. A transition-only guard
 	@ cannot reveal Diancie until the player leaves and returns.
 	@ Show it now if the Pokédex has not registered its capture.
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, GraniteCave_StevensRoom_SeededAfterLetter
 	getcaughtmon SPECIES_DIANCIE
 	call_if_eq VAR_RESULT, FALSE, GraniteCave_StevensRoom_RevealDiancieAfterLetter
+	goto GraniteCave_StevensRoom_ContinueLetterStory
+
+GraniteCave_StevensRoom_SeededAfterLetter::
+	call_if_unset FLAG_CAUGHT_RANDOM_GRANITE_DIANCIE, GraniteCave_StevensRoom_RevealDiancieAfterLetter
+
+GraniteCave_StevensRoom_ContinueLetterStory::
 	msgbox GraniteCave_StevensRoom_Text_ThankYouTakeThis, MSGBOX_DEFAULT
 	giveitem ITEM_TM_STEEL_WING
 	call_if_eq VAR_RESULT, FALSE, GraniteCave_StevensRoom_EventScript_BagFull
@@ -161,10 +179,19 @@ GraniteCave_StevensRoom_EventScript_Diancie::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, GraniteCave_StevensRoom_LegendaryRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, GraniteCave_StevensRoom_LegendaryRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, GraniteCave_StevensRoom_LegendaryResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, GraniteCave_StevensRoom_SeededDiancieCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, GraniteCave_StevensRoom_LegendaryResolved
 	release
 	end
+
+GraniteCave_StevensRoom_SeededDiancieCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, GraniteCave_StevensRoom_MarkSeededDiancie
+	goto GraniteCave_StevensRoom_LegendaryResolved
+
+GraniteCave_StevensRoom_MarkSeededDiancie::
+	setflag FLAG_CAUGHT_RANDOM_GRANITE_DIANCIE
+	return
 
 GraniteCave_StevensRoom_LegendaryResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

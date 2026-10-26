@@ -15,13 +15,23 @@ PowerPlant_EventScript_TryRemoveStaticMon::
 
 PowerPlant_OnTransition::
 	setworldmapflag FLAG_WORLD_MAP_POWER_PLANT
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, PowerPlant_SeededZapdosVisibility
 	getcaughtmon SPECIES_ZAPDOS
 	call_if_eq VAR_RESULT, TRUE, PowerPlant_NativeZAPDOSCaught
 	call_if_ne VAR_RESULT, TRUE, PowerPlant_NativeZAPDOSUncaught
+	goto PowerPlant_AfterSeededZapdosVisibility
+
+PowerPlant_AfterSeededZapdosVisibility::
 	call_if_unset FLAG_FOUGHT_POWER_PLANT_ELECTRODE_1, PowerPlant_EventScript_ShowElectrode1
 	call_if_unset FLAG_FOUGHT_POWER_PLANT_ELECTRODE_2, PowerPlant_EventScript_ShowElectrode2
 	call PowerPlant_AnthologyOnTransition
 	end
+
+PowerPlant_SeededZapdosVisibility::
+	call_if_set FLAG_CAUGHT_RANDOM_POWERPLANT_ZAPDOS, PowerPlant_NativeZAPDOSCaught
+	call_if_unset FLAG_CAUGHT_RANDOM_POWERPLANT_ZAPDOS, PowerPlant_NativeZAPDOSUncaught
+	goto PowerPlant_AfterSeededZapdosVisibility
 
 PowerPlant_EventScript_ShowZapdos::
 	clearflag FLAG_HIDE_ZAPDOS
@@ -54,9 +64,21 @@ PowerPlant_EventScript_Zapdos::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, PowerPlant_EventScript_DefeatedZapdos
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, PowerPlant_EventScript_RanFromZapdos
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, PowerPlant_EventScript_RanFromZapdos
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, PowerPlant_SeededZapdosCaught
 	setflag FLAG_FOUGHT_ZAPDOS
 	release
 	end
+
+PowerPlant_SeededZapdosCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, PowerPlant_SeededZapdosMark
+	setflag FLAG_FOUGHT_ZAPDOS
+	release
+	end
+
+PowerPlant_SeededZapdosMark::
+	setflag FLAG_CAUGHT_RANDOM_POWERPLANT_ZAPDOS
+	return
 
 PowerPlant_EventScript_DefeatedZapdos::
 	setflag FLAG_FOUGHT_ZAPDOS

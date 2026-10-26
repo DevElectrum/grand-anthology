@@ -11,14 +11,29 @@ SaffronCity_Dojo_AnthologyOnTransition::
 	end
 
 SaffronCity_Dojo_AnthologyMarshadowAfterMaster::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, SaffronCity_Dojo_SeededMarshadowAfterMaster
 	getcaughtmon SPECIES_MARSHADOW
 	call_if_eq VAR_RESULT, TRUE, SaffronCity_Dojo_AnthologyHideMarshadow
 	call_if_ne VAR_RESULT, TRUE, SaffronCity_Dojo_AnthologyShowMarshadow
 	end
 
+SaffronCity_Dojo_SeededMarshadowAfterMaster::
+	call_if_set FLAG_CAUGHT_RANDOM_DOJO_MARSHADOW, SaffronCity_Dojo_AnthologyHideMarshadow
+	call_if_unset FLAG_CAUGHT_RANDOM_DOJO_MARSHADOW, SaffronCity_Dojo_AnthologyShowMarshadow
+	end
+
 SaffronCity_Dojo_AnthologyRevealMarshadowNow::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, SaffronCity_Dojo_SeededMarshadowRevealNow
 	getcaughtmon SPECIES_MARSHADOW
 	goto_if_eq VAR_RESULT, TRUE, SaffronCity_Dojo_AnthologyHideMarshadow
+	clearflag FLAG_HIDE_ANTHOLOGY_MARSHADOW
+	addobject LOCALID_ANTHOLOGY_MARSHADOW
+	return
+
+SaffronCity_Dojo_SeededMarshadowRevealNow::
+	goto_if_set FLAG_CAUGHT_RANDOM_DOJO_MARSHADOW, SaffronCity_Dojo_AnthologyHideMarshadow
 	clearflag FLAG_HIDE_ANTHOLOGY_MARSHADOW
 	addobject LOCALID_ANTHOLOGY_MARSHADOW
 	return
@@ -293,10 +308,19 @@ SaffronCity_Dojo_EventScript_Marshadow::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, SaffronCity_Dojo_AnthologyMarshadowRetreated
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, SaffronCity_Dojo_AnthologyMarshadowRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SaffronCity_Dojo_AnthologyMarshadowResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SaffronCity_Dojo_SeededMarshadowCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, SaffronCity_Dojo_AnthologyMarshadowResolved
 	release
 	end
+
+SaffronCity_Dojo_SeededMarshadowCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, SaffronCity_Dojo_MarkSeededMarshadow
+	goto SaffronCity_Dojo_AnthologyMarshadowResolved
+
+SaffronCity_Dojo_MarkSeededMarshadow::
+	setflag FLAG_CAUGHT_RANDOM_DOJO_MARSHADOW
+	return
 
 SaffronCity_Dojo_AnthologyMarshadowResolved::
 	fadescreenswapbuffers FADE_TO_BLACK

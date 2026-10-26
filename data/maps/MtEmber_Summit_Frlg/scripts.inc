@@ -14,9 +14,16 @@ MtEmber_Summit_EventScript_TryRemoveMoltres::
 	return
 
 MtEmber_Summit_OnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MtEmber_Summit_SeededMoltresVisibility
 	getcaughtmon SPECIES_MOLTRES
 	call_if_eq VAR_RESULT, TRUE, MtEmber_Summit_NativeMOLTRESCaught
 	call_if_ne VAR_RESULT, TRUE, MtEmber_Summit_NativeMOLTRESUncaught
+	end
+
+MtEmber_Summit_SeededMoltresVisibility::
+	call_if_set FLAG_CAUGHT_RANDOM_MTEMBER_MOLTRES, MtEmber_Summit_NativeMOLTRESCaught
+	call_if_unset FLAG_CAUGHT_RANDOM_MTEMBER_MOLTRES, MtEmber_Summit_NativeMOLTRESUncaught
 	end
 
 MtEmber_Summit_EventScript_ShowMoltres::
@@ -42,9 +49,21 @@ MtEmber_Summit_EventScript_Moltres::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MtEmber_Summit_EventScript_DefeatedMoltres
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MtEmber_Summit_EventScript_RanFromMoltres
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MtEmber_Summit_EventScript_RanFromMoltres
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MtEmber_Summit_SeededMoltresCaught
 	setflag FLAG_FOUGHT_MOLTRES
 	release
 	end
+
+MtEmber_Summit_SeededMoltresCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, MtEmber_Summit_SeededMoltresMark
+	setflag FLAG_FOUGHT_MOLTRES
+	release
+	end
+
+MtEmber_Summit_SeededMoltresMark::
+	setflag FLAG_CAUGHT_RANDOM_MTEMBER_MOLTRES
+	return
 
 MtEmber_Summit_EventScript_DefeatedMoltres::
 	setflag FLAG_FOUGHT_MOLTRES

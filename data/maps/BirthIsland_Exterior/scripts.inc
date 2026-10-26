@@ -13,9 +13,16 @@ BirthIsland_Exterior_OnTransition:
 	setvar VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_RIVAL_BRENDAN_NORMAL
 	setvar VAR_DEOXYS_ROCK_STEP_COUNT, 0
 	setvar VAR_DEOXYS_ROCK_LEVEL, 0
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, BirthIsland_Exterior_SeededDeoxysVisibility
 	getcaughtmon SPECIES_DEOXYS_NORMAL
 	call_if_eq VAR_RESULT, TRUE, BirthIsland_Exterior_EventScript_HideDeoxysAndPuzzle
 	call_if_ne VAR_RESULT, TRUE, BirthIsland_Exterior_EventScript_TryShowDeoxysPuzzle
+	end
+
+BirthIsland_Exterior_SeededDeoxysVisibility::
+	call_if_set FLAG_CAUGHT_RANDOM_BIRTHISLAND_DEOXYS, BirthIsland_Exterior_EventScript_HideDeoxysAndPuzzle
+	call_if_unset FLAG_CAUGHT_RANDOM_BIRTHISLAND_DEOXYS, BirthIsland_Exterior_EventScript_TryShowDeoxysPuzzle
 	end
 
 BirthIsland_Exterior_EventScript_HideDeoxysAndPuzzle::
@@ -90,9 +97,21 @@ BirthIsland_Exterior_EventScript_Deoxys::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, BirthIsland_Exterior_EventScript_DefeatedDeoxys
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, BirthIsland_Exterior_EventScript_RanFromDeoxys
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, BirthIsland_Exterior_EventScript_RanFromDeoxys
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, BirthIsland_Exterior_SeededDeoxysCaught
 	setflag FLAG_BATTLED_DEOXYS
 	release
 	end
+
+BirthIsland_Exterior_SeededDeoxysCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, BirthIsland_Exterior_MarkSeededDeoxys
+	setflag FLAG_BATTLED_DEOXYS
+	release
+	end
+
+BirthIsland_Exterior_MarkSeededDeoxys::
+	setflag FLAG_CAUGHT_RANDOM_BIRTHISLAND_DEOXYS
+	return
 
 BirthIsland_Exterior_EventScript_DefeatedDeoxys::
 	setflag FLAG_DEFEATED_DEOXYS
