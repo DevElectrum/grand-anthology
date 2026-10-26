@@ -38,8 +38,10 @@ static bool32 WorldIsValidRandomizedStarter(enum Species species)
         && !gSpeciesInfo[species].isTotem;
 }
 
-// Preserve the original seeded hash and candidate scan. Reject species
-// already used by earlier starter slots, keeping regional choices unique.
+// Preserve the original seeded hash and candidate scan. Reject Pokémon
+// already used by earlier slots by National Pokédex number, not just species
+// enum ID. Unown letters and other forms have different IDs but represent
+// the same species in the menu.
 static enum Species WorldPickUniqueStarter(enum Species original, u16 map,
                                            const enum Species *previous, u32 previousCount)
 {
@@ -61,7 +63,7 @@ static enum Species WorldPickUniqueStarter(enum Species original, u16 map,
         {
             u32 i;
             for (i = 0; i < previousCount; i++)
-                if (previous[i] == result)
+                if (gSpeciesInfo[previous[i]].natDexNum == gSpeciesInfo[result].natDexNum)
                     break;
             if (i == previousCount)
                 return result;

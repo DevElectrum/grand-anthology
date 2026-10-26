@@ -24,7 +24,7 @@ the modified all-generation game has passed a complete three-region playthrough.
 
 ### Seeded starter choices without duplicates
 
-When **Starter Randomization** is enabled, Oak offers **10 distinct randomized choices** in Kanto, while Elm and Birch each offer **9 distinct choices**. Choices are determined by the saved seed and regional starter slot, not the frame or number of menu openings. If two slots would produce the same species, the later slot advances deterministically to another valid species. Each option keeps its original story slot; this change does **not** redesign rival behavior. This is a source-implemented feature pending gameplay acceptance on the updated ROM.
+When **Starter Randomization** is enabled, Oak offers **10 distinct randomized choices** in Kanto, while Elm and Birch each offer **9 distinct choices**. Choices are determined by the saved seed and regional starter slot, not the frame or number of menu openings. If two slots would produce the same National Pokédex species, including different forms such as Unown letters, the later slot advances deterministically to another valid species. Each option keeps its original story slot; this change does **not** redesign rival behavior. This is a source-implemented feature pending gameplay acceptance on the updated ROM.
 
 ### Repeatable static encounters and shiny hunting
 

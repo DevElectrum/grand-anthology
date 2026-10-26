@@ -91,12 +91,24 @@ for region, slots_name, expected_count in (
     assert len(authored)==expected_count
     assert resolved==authored, (region, resolved, authored)
 for x in ("selected[i] = WorldPickUniqueStarter(slots[i], map, selected, i);",
-          "if (previous[i] == result)", "if (i == previousCount)", 
+          "gSpeciesInfo[previous[i]].natDexNum == gSpeciesInfo[result].natDexNum", "if (i == previousCount)", 
           "return WorldRandomizeStarterSpeciesAtMap(original, MAP_PALLET_TOWN_PROFESSOR_OAKS_LAB);"):
     need(rng, x)
 
-# A portable mirror exercises duplicates, stable seeds and unchanged
-# non-collision candidates over many seeds. The optimized build executes C.
+# Regression: Unown A/B/C/... use different internal species IDs but
+# share one National Dex number and all display "Unown". Do not allow
+# another letter to consume a menu slot.
+unown_info=src("src/data/pokemon/species_info/gen_2_families.h")
+unown_macro=unown_info.split("#define UNOWN_MISC_INFO(",1)[1].split("[SPECIES_UNOWN]",1)[0]
+need(unown_macro, '.natDexNum = NATIONAL_DEX_UNOWN')
+assert "[SPECIES_UNOWN_B]" in unown_info
+
+# A portable mirror exercises duplicates, shared-Dex forms, stable seeds
+# and unchanged non-collision candidates. The optimized build executes C.
+def dex_number(species):
+    # Synthetic alternate-form cluster, standing in for Unown A, B, C...
+    return 45 if 45 <= species <= 53 else species
+
 def pick_roster(seed, originals, map_id, count=121):
     picked=[]
     initial=[]
@@ -112,7 +124,7 @@ def pick_roster(seed, originals, map_id, count=121):
         candidate=1+h%(count-1)
         initial.append(candidate)
         for _ in range(count-1):
-            if candidate % 13 != 0 and candidate not in picked:
+            if candidate % 13 != 0 and dex_number(candidate) not in [dex_number(p) for p in picked]:
                 picked.append(candidate)
                 break
             candidate+=1
@@ -123,15 +135,19 @@ def pick_roster(seed, originals, map_id, count=121):
     return picked, initial
 
 collisions=0
+form_collisions=0
 for region_id, n in ((0x120,10),(0x140,9),(0x160,9)):
     for seed in range(512):
         original=list(range(1,n+1))
         picked, candidates=pick_roster(seed, original, region_id)
-        assert len(picked)==len(set(picked))==n
+        assert len(picked)==len(set(dex_number(p) for p in picked))==n
         assert pick_roster(seed, original, region_id)[0]==picked
         if len(set(candidates)) != n:
             collisions+=1
+        if len(set(dex_number(c) for c in candidates)) < len(set(candidates)):
+            form_collisions+=1
     assert pick_roster(2026, list(range(1,n+1)), region_id)[0] != pick_roster(2027, list(range(1,n+1)), region_id)[0]
 assert collisions>0
+assert form_collisions>0
 
-print("P0 seeded unique starter menus across Oak/Elm/Birch, saved toggle and story/rival contract: PASS")
+print("P0 seeded National-Dex-unique starter menus across Oak/Elm/Birch, including Unown forms: PASS")
