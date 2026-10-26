@@ -83,7 +83,15 @@ assert "HealPokemon(&mon);" in rewards
 assert "GiveScriptedMonToPlayer(&mon, PARTY_SIZE)" in rewards
 assert "freeSlots >= 2" in rewards
 assert "SPECIES_ZACIAN_HERO, SPECIES_ZAMAZENTA_HERO" in rewards
-assert "ITEM_RUSTED_SWORD, ITEM_RUSTED_SHIELD" in rewards
+# In randomized games the two combatants can be anything. Their items
+# must follow actual species, rather than the original Route 27 slots.
+assert "WorldRandomizeStaticSpecies(original[i], i)" in rewards
+assert "if (species == SPECIES_ZACIAN_HERO)" in rewards
+assert "item = ITEM_RUSTED_SWORD" in rewards
+assert "else if (species == SPECIES_ZAMAZENTA_HERO)" in rewards
+assert "item = ITEM_RUSTED_SHIELD" in rewards
+assert "if (item != ITEM_NONE)" in rewards
+assert "SetMonData(mon, MON_DATA_HELD_ITEM, &item)" in rewards
 assert "SetMonMoveSlot(mon, MOVE_IRON_HEAD, 0)" in rewards
 assert "FLAG_ANTHOLOGY_ROYAL_DUO_CLAIMED" in flags
 assert "FLAG_ANTHOLOGY_ROYAL_DUO_NO_CATCH" in flags
