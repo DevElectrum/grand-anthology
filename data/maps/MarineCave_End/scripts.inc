@@ -14,11 +14,24 @@ MarineCave_End_EventScript_TryRemoveKyogre::
 	return
 
 MarineCave_End_OnTransition:
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, MarineCave_End_SeededOnTransition
 	getcaughtmon SPECIES_KYOGRE
 	goto_if_eq VAR_RESULT, TRUE, MarineCave_End_NativeKYOGRECaught
 	getcaughtmon SPECIES_RAYQUAZA
 	call_if_eq VAR_RESULT, TRUE, MarineCave_End_NativeKYOGREUncaught
 	call_if_ne VAR_RESULT, TRUE, MarineCave_End_NativeKYOGRELocked
+	end
+
+MarineCave_End_SeededOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_MARINECAVE_KYOGRE, MarineCave_End_NativeKYOGRECaught
+	goto_if_set FLAG_CAUGHT_RANDOM_SKYPILLAR_RAYQUAZA, MarineCave_End_SeededRayquazaPrerequisiteMet
+	goto_if_set FLAG_CAUGHT_RANDOM_EMBEDDED_RAYQUAZA, MarineCave_End_SeededRayquazaPrerequisiteMet
+	call MarineCave_End_NativeKYOGRELocked
+	end
+
+MarineCave_End_SeededRayquazaPrerequisiteMet::
+	call MarineCave_End_NativeKYOGREUncaught
 	end
 
 MarineCave_End_EventScript_ShowKyogre::
@@ -46,10 +59,23 @@ MarineCave_End_EventScript_Kyogre::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MarineCave_End_EventScript_DefeatedKyogre
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MarineCave_End_EventScript_RanFromKyogre
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, MarineCave_End_EventScript_RanFromKyogre
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MarineCave_End_SeededCaught
 	setvar VAR_SHOULD_END_ABNORMAL_WEATHER, 1
 	setflag FLAG_DEFEATED_KYOGRE
 	releaseall
 	end
+
+MarineCave_End_SeededCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, MarineCave_End_MarkSeededCaught
+	setvar VAR_SHOULD_END_ABNORMAL_WEATHER, 1
+	setflag FLAG_DEFEATED_KYOGRE
+	releaseall
+	end
+
+MarineCave_End_MarkSeededCaught::
+	setflag FLAG_CAUGHT_RANDOM_MARINECAVE_KYOGRE
+	return
 
 MarineCave_End_EventScript_DefeatedKyogre::
 	setvar VAR_SHOULD_END_ABNORMAL_WEATHER, 1

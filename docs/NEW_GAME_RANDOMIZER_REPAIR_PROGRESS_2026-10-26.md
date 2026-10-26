@@ -74,6 +74,10 @@ Six more source-caught flags isolate Raikou (Route 38), Entei (Mt. Mortar 2F), S
 
 Nine more source-specific capture sites patched: Iron Boulder (Route 118), Raging Bolt/Xerneas (Route 119), Iron Leaves/Latias/Wo-Chien (Route 120), Koraidon (Route 128 Ancient Grotto, preserving badges/Space Center flags), Tapu Lele (Celadon flowers), and Route 25 second-chance Suicune independent from the Lake of Rage encounter. Statics Off retains the original species-Dex behavior and native story gates. This is source integration pending exact-commit CI and gameplay acceptance.
 
+## 26 October 2026 native weather trio and Embedded Tower
+
+Six independent randomizer-on source-caught bits now cover Sky Pillar Rayquaza, native Terra Cave Groudon, Marine Cave Kyogre, and the three separate Embedded Tower Rayquaza/Groudon/Kyogre encounters. Seeded Terra/Marine unlock after **either Rayquaza source location capture**, rather than accidentally by owning an original Rayquaza caught elsewhere. Original native story/abnormal-weather outcomes stay intact; randomizer Off continues original Dex gates. Embedded Tower retains its inherited Hall-of-Fame visibility policy and does **not** unconditionally reveal encounters before that story allows it. No physical capture/revisit acceptance claimed yet.
+
 ## Final title-screen and CI verification (26 October 2026)
 
 - Approved PNG SHA-256: `b23ffce8b56cda032dc88e46e8d7fabec5207b6021fea00a077af7a01f9a9967`.

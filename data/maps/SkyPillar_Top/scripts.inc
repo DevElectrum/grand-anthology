@@ -25,9 +25,16 @@ SkyPillar_Top_EventScript_SetCleanLayout::
 	return
 
 SkyPillar_Top_EventScript_TryShowRayquaza::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, SkyPillar_Top_SeededRayquazaTransition
 	getcaughtmon SPECIES_RAYQUAZA
 	call_if_eq VAR_RESULT, TRUE, SkyPillar_Top_NativeRAYQUAZACaught
 	call_if_ne VAR_RESULT, TRUE, SkyPillar_Top_NativeRAYQUAZAUncaught
+	return
+
+SkyPillar_Top_SeededRayquazaTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_SKYPILLAR_RAYQUAZA, SkyPillar_Top_NativeRAYQUAZACaught
+	call_if_unset FLAG_CAUGHT_RANDOM_SKYPILLAR_RAYQUAZA, SkyPillar_Top_NativeRAYQUAZAUncaught
 	return
 
 SkyPillar_Top_EventScript_ShowRayquaza::
@@ -56,9 +63,21 @@ SkyPillar_Top_EventScript_Rayquaza::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, SkyPillar_Top_EventScript_DefeatedRayquaza
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, SkyPillar_Top_EventScript_RanFromRayquaza
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, SkyPillar_Top_EventScript_RanFromRayquaza
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, SkyPillar_Top_SeededRayquazaCaught
 	setflag FLAG_DEFEATED_RAYQUAZA
 	releaseall
 	end
+
+SkyPillar_Top_SeededRayquazaCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, SkyPillar_Top_MarkSeededRayquaza
+	setflag FLAG_DEFEATED_RAYQUAZA
+	releaseall
+	end
+
+SkyPillar_Top_MarkSeededRayquaza::
+	setflag FLAG_CAUGHT_RANDOM_SKYPILLAR_RAYQUAZA
+	return
 
 SkyPillar_Top_EventScript_DefeatedRayquaza::
 	setflag FLAG_DEFEATED_RAYQUAZA

@@ -14,11 +14,24 @@ TerraCave_End_EventScript_TryRemoveGroudon::
 	return
 
 TerraCave_End_OnTransition:
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, TerraCave_End_SeededOnTransition
 	getcaughtmon SPECIES_GROUDON
 	goto_if_eq VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONCaught
 	getcaughtmon SPECIES_RAYQUAZA
 	call_if_eq VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONUncaught
 	call_if_ne VAR_RESULT, TRUE, TerraCave_End_NativeGROUDONLocked
+	end
+
+TerraCave_End_SeededOnTransition::
+	goto_if_set FLAG_CAUGHT_RANDOM_TERRACAVE_GROUDON, TerraCave_End_NativeGROUDONCaught
+	goto_if_set FLAG_CAUGHT_RANDOM_SKYPILLAR_RAYQUAZA, TerraCave_End_SeededRayquazaPrerequisiteMet
+	goto_if_set FLAG_CAUGHT_RANDOM_EMBEDDED_RAYQUAZA, TerraCave_End_SeededRayquazaPrerequisiteMet
+	call TerraCave_End_NativeGROUDONLocked
+	end
+
+TerraCave_End_SeededRayquazaPrerequisiteMet::
+	call TerraCave_End_NativeGROUDONUncaught
 	end
 
 TerraCave_End_EventScript_ShowGroudon::
@@ -46,10 +59,23 @@ TerraCave_End_EventScript_Groudon::
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, TerraCave_End_EventScript_DefeatedGroudon
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, TerraCave_End_EventScript_RanFromGroudon
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, TerraCave_End_EventScript_RanFromGroudon
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, TerraCave_End_SeededCaught
 	setvar VAR_SHOULD_END_ABNORMAL_WEATHER, 1
 	setflag FLAG_DEFEATED_GROUDON
 	releaseall
 	end
+
+TerraCave_End_SeededCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, TerraCave_End_MarkSeededCaught
+	setvar VAR_SHOULD_END_ABNORMAL_WEATHER, 1
+	setflag FLAG_DEFEATED_GROUDON
+	releaseall
+	end
+
+TerraCave_End_MarkSeededCaught::
+	setflag FLAG_CAUGHT_RANDOM_TERRACAVE_GROUDON
+	return
 
 TerraCave_End_EventScript_DefeatedGroudon::
 	setvar VAR_SHOULD_END_ABNORMAL_WEATHER, 1

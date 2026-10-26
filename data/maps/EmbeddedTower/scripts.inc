@@ -14,12 +14,20 @@ EmbeddedTower_MapScripts::
 @ made elsewhere) whenever the map loads. Hall of Fame only clears a tower flag
 @ when that species is still uncaught.
 EmbeddedTower_OnTransition::
+	callnative AnthologyStaticRandomizerIsOn
+	goto_if_eq VAR_RESULT, TRUE, EmbeddedTower_SeededTransition
 	getcaughtmon SPECIES_RAYQUAZA
 	call_if_eq VAR_RESULT, TRUE, EmbeddedTower_HideRayquaza
 	getcaughtmon SPECIES_GROUDON
 	call_if_eq VAR_RESULT, TRUE, EmbeddedTower_HideGroudon
 	getcaughtmon SPECIES_KYOGRE
 	call_if_eq VAR_RESULT, TRUE, EmbeddedTower_HideKyogre
+	end
+
+EmbeddedTower_SeededTransition::
+	call_if_set FLAG_CAUGHT_RANDOM_EMBEDDED_RAYQUAZA, EmbeddedTower_HideRayquaza
+	call_if_set FLAG_CAUGHT_RANDOM_EMBEDDED_GROUDON, EmbeddedTower_HideGroudon
+	call_if_set FLAG_CAUGHT_RANDOM_EMBEDDED_KYOGRE, EmbeddedTower_HideKyogre
 	end
 
 EmbeddedTower_HideRayquaza::
@@ -48,10 +56,19 @@ waitstate
 	@ guard the fall-through removes the object and sets the hide flag, deleting the encounter
 	@ for good. Matches SkyPillar_Top / TerraCave_End / MarineCave_End.
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, EmbeddedTower_EventScript_GroudonRan
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, EmbeddedTower_EventScript_GroudonResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, EmbeddedTower_GroudonSeededCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, EmbeddedTower_EventScript_GroudonResolved
 	release
 	end
+
+EmbeddedTower_GroudonSeededCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, EmbeddedTower_MarkGroudonSeededCaught
+	goto EmbeddedTower_EventScript_GroudonResolved
+
+EmbeddedTower_MarkGroudonSeededCaught::
+	setflag FLAG_CAUGHT_RANDOM_EMBEDDED_GROUDON
+	return
 
 EmbeddedTower_EventScript_GroudonResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -76,10 +93,19 @@ waitstate
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, EmbeddedTower_EventScript_KyogreRan
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, EmbeddedTower_EventScript_KyogreRan
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, EmbeddedTower_EventScript_KyogreResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, EmbeddedTower_KyogreSeededCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, EmbeddedTower_EventScript_KyogreResolved
 	release
 	end
+
+EmbeddedTower_KyogreSeededCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, EmbeddedTower_MarkKyogreSeededCaught
+	goto EmbeddedTower_EventScript_KyogreResolved
+
+EmbeddedTower_MarkKyogreSeededCaught::
+	setflag FLAG_CAUGHT_RANDOM_EMBEDDED_KYOGRE
+	return
 
 EmbeddedTower_EventScript_KyogreResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
@@ -105,10 +131,19 @@ waitstate
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, EmbeddedTower_EventScript_RayquazaRan
 	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, EmbeddedTower_EventScript_RayquazaRan
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, EmbeddedTower_EventScript_RayquazaResolved
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, EmbeddedTower_RayquazaSeededCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, EmbeddedTower_EventScript_RayquazaResolved
 	release
 	end
+
+EmbeddedTower_RayquazaSeededCaught::
+	callnative AnthologyStaticRandomizerIsOn
+	call_if_eq VAR_RESULT, TRUE, EmbeddedTower_MarkRayquazaSeededCaught
+	goto EmbeddedTower_EventScript_RayquazaResolved
+
+EmbeddedTower_MarkRayquazaSeededCaught::
+	setflag FLAG_CAUGHT_RANDOM_EMBEDDED_RAYQUAZA
+	return
 
 EmbeddedTower_EventScript_RayquazaResolved::
 	fadescreenswapbuffers FADE_TO_BLACK
