@@ -26,15 +26,19 @@ enum Species WorldRandomizeStarterSpecies(enum Species original)
     switch (map)
     {
     case MAP_PALLET_TOWN_PROFESSOR_OAKS_LAB:
-        if (original != SPECIES_BULBASAUR
-         && original != SPECIES_SQUIRTLE
-         && original != SPECIES_CHARMANDER)
+        if (original != SPECIES_BULBASAUR && original != SPECIES_SQUIRTLE
+         && original != SPECIES_CHARMANDER && original != SPECIES_TURTWIG
+         && original != SPECIES_PIPLUP && original != SPECIES_CHIMCHAR
+         && original != SPECIES_ROWLET && original != SPECIES_POPPLIO
+         && original != SPECIES_LITTEN && original != SPECIES_POIPOLE)
             return original;
         break;
     case MAP_NEW_BARK_TOWN_LAB:
-        if (original != SPECIES_CHIKORITA
-         && original != SPECIES_CYNDAQUIL
-         && original != SPECIES_TOTODILE)
+        if (original != SPECIES_CHIKORITA && original != SPECIES_CYNDAQUIL
+         && original != SPECIES_TOTODILE && original != SPECIES_SNIVY
+         && original != SPECIES_TEPIG && original != SPECIES_OSHAWOTT
+         && original != SPECIES_GROOKEY && original != SPECIES_SCORBUNNY
+         && original != SPECIES_SOBBLE)
             return original;
         break;
     case MAP_ROUTE101:

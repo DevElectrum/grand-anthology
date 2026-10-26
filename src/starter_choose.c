@@ -1,4 +1,5 @@
 #include "global.h"
+#include "world_starter_randomizer.h"
 #include "bg.h"
 #include "data.h"
 #include "decompress.h"
@@ -372,6 +373,13 @@ u16 GetStarterPokemon(u16 chosenStarterId)
 }
 
 
+// The choice index drives rivals and story; only the preview and awarded
+// Pokémon are randomized. Preserve the original GetStarterPokemon API.
+static enum Species GetDisplayedStarterPokemon(u16 chosenStarterId)
+{
+    return WorldRandomizeStarterSpecies(GetStarterPokemon(chosenStarterId));
+}
+
 // Full selection is saved for Dex/credits; original Kanto scripts still have
 // three rival battle branches. Poipole uses the Charmander branch's story
 // staging, but Blue actually begins with Rhyhorn in battle (battle_main.c).
@@ -571,7 +579,7 @@ static void Task_HandleStarterChooseInput(u8 taskId)
         gTasks[taskId].tCircleSpriteId = spriteId;
 
         // Create Pokémon sprite
-        spriteId = CreatePokemonFrontSprite(GetStarterPokemon(gTasks[taskId].tStarterPage * STARTER_MON_COUNT
+        spriteId = CreatePokemonFrontSprite(GetDisplayedStarterPokemon(gTasks[taskId].tStarterPage * STARTER_MON_COUNT
                                                         + gTasks[taskId].tStarterSelection), sPokeballCoords[selection][0], sPokeballCoords[selection][1]);
         gSprites[spriteId].affineAnims = &sAffineAnims_StarterPokemon;
         gSprites[spriteId].callback = SpriteCB_StarterPokemon;
@@ -618,7 +626,7 @@ static void Task_WaitForStarterSprite(u8 taskId)
 
 static void Task_AskConfirmStarter(u8 taskId)
 {
-    PlayCry_Normal(GetStarterPokemon(gTasks[taskId].tStarterPage * STARTER_MON_COUNT
+    PlayCry_Normal(GetDisplayedStarterPokemon(gTasks[taskId].tStarterPage * STARTER_MON_COUNT
                                                         + gTasks[taskId].tStarterSelection), 0);
     FillWindowPixelBuffer(0, PIXEL_FILL(1));
     AddTextPrinterParameterized(0, FONT_NORMAL, gText_ConfirmStarterChoice, 0, 1, 0, NULL);
@@ -668,7 +676,7 @@ static void CreateStarterPokemonLabel(u8 starterId)
     s32 width;
     u8 labelLeft, labelRight, labelTop, labelBottom;
 
-    enum Species species = GetStarterPokemon(starterId);
+    enum Species species = GetDisplayedStarterPokemon(starterId);
     u8 selection = starterId % STARTER_MON_COUNT;
     CopyMonCategoryText(species, categoryText);
     speciesName = GetSpeciesName(species);
