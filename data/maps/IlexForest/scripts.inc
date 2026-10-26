@@ -380,6 +380,7 @@ IlexForest_EventScript_CelebiRematch::
 
 IlexForest_EventScript_SeededShrineRematch::
 	goto_if_set FLAG_CAUGHT_RANDOM_ILEX_SHRINE_CELEBI, IlexForest_EventScript_ShrineRegularText
+	goto IlexForest_EventScript_BeginShrineRematch
 
 IlexForest_EventScript_BeginShrineRematch::
 	msgbox IlexForest_Text_ShrineCelebiEvent, MSGBOX_YESNO
