@@ -119,7 +119,7 @@ static bool8 sNewGameOptionConfirmed = FALSE;
 static u8 sRandomizerPreset = 0;
 static bool8 sSeedEditing = FALSE;
 static u8 sSeedDigit = 0;
-static u16 sSeedBeforeEditing = 2026;
+static u16 sSeedBeforeEditing = 0;
 static void Randomizer_DrawChoices(s16 scrollOffset);
 static void Randomizer_ProcessInput(u8 item);
 static void Randomizer_ProcessSeedInput(u8 taskId);
