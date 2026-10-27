@@ -297,9 +297,20 @@ def main():
             "primal": f.get("isPrimalReversion") in ("TRUE", "1"),
             "source": "src/data/pokemon/species_info/",
         }
+    # National species constants often alias a concrete base form, e.g.
+    # SPECIES_ZYGARDE = SPECIES_ZYGARDE_50. Resolve those explicitly.
+    aliases = {}
+    enum_text = (ROOT / "include/constants/species.h").read_text()
+    for alias, target in re.findall(r"^\s*(SPECIES_[A-Z0-9_]+)\s*=\s*(SPECIES_[A-Z0-9_]+)\s*,", enum_text, re.M):
+        aliases[alias] = target
+    for alias, target in aliases.items():
+        if target in details:
+            details[alias] = {**details[target], "symbol": alias, "dex": dex_by_symbol.get(alias, details[target]["dex"])}
     groups = find_form_members()
     by_dex = {str(item["dex"]): [] for item in catalog}
     for symbol, info in details.items():
+        if symbol in aliases and aliases[symbol] in details:
+            continue
         if info["dex"] is None:
             for sibling in groups.get(symbol, set()):
                 if sibling in details and details[sibling]["dex"] is not None:
