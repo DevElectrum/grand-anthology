@@ -62,6 +62,7 @@ jobs:
           python3 test/overworld/ValidateAnthologyDexAndRewards.py
           python3 tools/audit_p0_acquisition.py
           python3 test/overworld/ValidateAnthologyRoyalDuo.py
+          python3 test/overworld/ValidateJohtoEternatusChamber.py
           python3 test/overworld/ValidateAnthologyHabitatRare.py
           python3 test/overworld/ValidatePermanentStellarTerapagos.py
           python3 test/overworld/ValidateAnthologyStaticLifecycle.py
