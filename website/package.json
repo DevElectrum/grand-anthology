@@ -10,7 +10,7 @@
     "prebuild": "npm run generate",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "node --test scripts/*.test.mjs && python3 -m unittest discover -s scripts -p 'test_export_species.py'"
+    "test": "npm run generate && node --test scripts/*.test.mjs && python3 -m unittest discover -s scripts -p 'test_export_species.py'"
   },
   "dependencies": {
     "astro": "^6.4.6"
