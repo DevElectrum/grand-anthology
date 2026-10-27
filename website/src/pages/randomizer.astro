@@ -50,7 +50,7 @@ import Base from '../layouts/Base.astro';
     <section class="panel">
       <h2>What these results cover</h2>
       <p>Wild results represent the game's <strong>native encounter-table slots</strong>, including each slot's original species, level bracket, method and replacement species. The same species may occupy multiple slots; that's intentional. Ordinary supplemental grass, Surfing and fishing spawns are disabled while Wild Randomization is on and are not artificially added to these results.</p>
-      <p>The site currently excludes special Feebas/outbreak/roamer pathways, post-League research rotations, quest gates, and scripted static events. Some indexed maps are inaccessible until story progression or use encounter restrictions. Static encounter settings will be supported after the individual scripted sites have been audited for seed parity.</p>
+      <p>Some areas, including Altering Cave, have multiple authored wild tables. Those rows are explicitly marked <strong>Alternative table</strong>; they are not simultaneously active and the active variant may depend on game state. The site currently excludes special Feebas/outbreak/roamer pathways, post-League research rotations, quest gates, and scripted static events. Some indexed maps are inaccessible until story progression or use encounter restrictions. Static encounter settings will be supported after the individual scripted sites have been audited for seed parity.</p>
       <p class="fine-print">Source snapshot: <code id="atlas-fingerprint">Loading…</code>. Calculations run locally in your browser; no seed data is uploaded. Results are a source-level mirror awaiting representative in-emulator validation.</p>
     </section>
   </div>
@@ -123,7 +123,14 @@ import Base from '../layouts/Base.astro';
       wrapper.className = 'atlas-mon';
       wrapper.append(image(id));
       const label = document.createElement('span');
-      label.textContent = nameFor(id);
+      const entry = species[id];
+      if (entry?.dex >= 1 && entry.dex <= 1025) {
+        const anchor = document.createElement('a');
+        anchor.href = '/pokedex/' + entry.dex + '/';
+        anchor.textContent = nameFor(id);
+        anchor.title = 'Open species Pokédex profile';
+        label.append(anchor);
+      } else label.textContent = nameFor(id);
       wrapper.append(label);
       td.append(wrapper);
       row.append(td);
@@ -216,7 +223,8 @@ import Base from '../layouts/Base.astro';
         const tr = document.createElement('tr');
         pokemonCell(tr, record.speciesId);
         textCell(tr, locationFor(record.map) + (maps[record.map]?.region ? ' · ' + maps[record.map].region : ''));
-        textCell(tr, record.method + (record.rod ? ' (' + record.rod + ')' : '') + ', slot ' + (record.slot + 1));
+        textCell(tr, record.method + (record.rod ? ' (' + record.rod + ')' : '') + ', slot ' + (record.slot + 1)
+          + (record.variant ? ' · Alternative table: ' + record.variant : ''));
         textCell(tr, record.min === record.max ? 'Lv. ' + record.min : 'Lv. ' + record.min + '–' + record.max);
         textCell(tr, nameFor(record.original));
         body.append(tr);
