@@ -23,6 +23,8 @@ Both dev and build automatically invoke `scripts/generate.mjs`, which:
 
 Generated files and copied visuals are ignored by Git. Keep the authoritative catalog in the game repository; do not edit the generated JSON.
 
+The presentation importer conservatively merges **source aliases for the same physical event**: a special permanent Zygarde/Terapagos static plus its general scripted-battle index, or a named Mega Stone item-ball event plus its generic script reference. It retains genuinely different methods, such as Fishing versus Surfing and Battle Net free starter selection versus purchase. The raw catalog is untouched. Run `npm test` to check the normalization behavior against the current game data.
+
 ## Editorial and source accuracy
 
 The catalog is a source-indexed **candidate acquisition inventory**, not a playable-world guarantee. In particular, `scripted_battle_candidate` does not prove a catchable reward. Some recorded maps lack region assignments; the site must not silently infer a region from the audit-region column. A missing item source is not evidence that an item is unobtainable.

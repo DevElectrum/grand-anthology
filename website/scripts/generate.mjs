@@ -1,6 +1,7 @@
 import { readFile, mkdir, writeFile, copyFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalizeSourceEntries } from './normalize-sources.mjs';
 
 const website = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repository = resolve(website, '..');
@@ -8,10 +9,11 @@ const catalogPath = resolve(repository, 'data/catalog/world_acquisition.jsonl');
 const output = resolve(website, 'src/generated/catalog.json');
 
 const raw = await readFile(catalogPath, 'utf8');
-const records = raw.split(/\r?\n/).filter(Boolean).map((line, index) => {
+const rawRecords = raw.split(/\r?\n/).filter(Boolean).map((line, index) => {
   try { return JSON.parse(line); }
   catch (error) { throw new Error(`Invalid catalog JSON at line ${index + 1}: ${error.message}`); }
 });
+const records = normalizeSourceEntries(rawRecords);
 
 const meta = records.find(record => record.kind === 'meta');
 const pokemon = records.filter(record => record.kind === 'pokemon');
@@ -70,4 +72,5 @@ const images = [
 ];
 for (const [from, to] of images) await copyFile(resolve(repository, from), resolve(visuals, to));
 console.log(`Generated site data: ${pokemon.length} Pokémon, ${items.length} items, ${megaStones.length} Mega Stones, ${locations.length} indexed map identifiers.`);
+console.log(`Website presentation merged ${rawRecords.reduce((count, entry) => count + (entry.sources?.length ?? 0), 0) - records.reduce((count, entry) => count + (entry.sources?.length ?? 0), 0)} redundant script-source references; distinct acquisition methods remain separate.`);
 console.log('Acquisition entries are source-level candidates, NOT proof of obtainable or tested encounters.');

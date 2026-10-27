@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "prebuild": "npm run generate",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test": "node --test scripts/normalize-sources.test.mjs"
   },
   "dependencies": {
     "astro": "^6.4.6"
