@@ -281,6 +281,7 @@ def main():
             "name": literal_strings(f.get("speciesName", "")),
             "category": literal_strings(f.get("categoryName", "")),
             "description": description,
+            "statInputs": {key: f.get(key, "") for key in STATS},
             "stats": base if all(isinstance(x, int) and x > 0 for x in base.values()) else None,
             "bst": sum(base.values()) if all(isinstance(x, int) and x > 0 for x in base.values()) else None,
             "types": types[:2],
@@ -306,7 +307,7 @@ def main():
                     break
         if info["dex"] in range(1, 1026):
             by_dex[str(info["dex"])].append(symbol)
-    missing_stats = [(item["dex"], item["symbol"], details.get(item["symbol"], {}).get("stats")) for item in catalog if not details.get(item["symbol"], {}).get("stats")]
+    missing_stats = [(item["dex"], item["symbol"], details.get(item["symbol"], {}).get("statInputs")) for item in catalog if not details.get(item["symbol"], {}).get("stats")]
     if missing_stats:
         raise ValueError("Unresolved National species base stats (" + str(len(missing_stats)) + "): " + str(missing_stats[:60]))
     for item in catalog:
