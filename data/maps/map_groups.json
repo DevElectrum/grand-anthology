@@ -1491,7 +1491,8 @@
     "JohtoPokemonLeague_BrunosRoom",
     "JohtoPokemonLeague_KarensRoom",
     "JohtoPokemonLeague_ChampionsRoom",
-    "JohtoPokemonLeague_HallOfFame"
+    "JohtoPokemonLeague_HallOfFame",
+    "JohtoEternatusChamber"
   ],
   "gMapGroup_RegionHub": [
     "RegionHub",
