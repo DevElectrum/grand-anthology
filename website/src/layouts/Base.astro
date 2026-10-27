@@ -18,7 +18,16 @@ const path = Astro.url.pathname;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      (() => {
+        const key = 'grand-anthology-theme';
+        let stored = null;
+        try { stored = localStorage.getItem(key); } catch { /* storage unavailable */ }
+        const automatic = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = stored === 'light' || stored === 'dark' ? stored : automatic;
+      })();
+    </script>
     <title>{title} | Pokémon Grand Anthology</title>
   </head>
   <body>
@@ -34,6 +43,10 @@ const path = Astro.url.pathname;
             <a href={href} aria-current={path === href || (href !== '/' && path.startsWith(href)) ? 'page' : undefined}>{label}</a>
           )}
         </nav>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
+          <span class="theme-symbol" aria-hidden="true">☾</span>
+          <span class="theme-label">Dark</span>
+        </button>
       </div>
     </header>
     <div class="page-shell">
@@ -45,5 +58,39 @@ const path = Astro.url.pathname;
         <p>Built upon <a href="https://github.com/evilchinesefood/PKMN-World">Pokémon World</a> by David A. and contributors. <a href="/about/">Full acknowledgments</a> · <a href="https://github.com/DevElectrum/grand-anthology">Source repository</a></p>
       </div>
     </footer>
+    <script is:inline>
+      (() => {
+        const key = 'grand-anthology-theme';
+        const root = document.documentElement;
+        const button = document.getElementById('theme-toggle');
+        const media = window.matchMedia('(prefers-color-scheme: dark)');
+        const stored = () => {
+          try { return localStorage.getItem(key); } catch { return null; }
+        };
+        const display = () => {
+          if (!button) return;
+          const isDark = root.dataset.theme === 'dark';
+          const action = isDark ? 'light' : 'dark';
+          button.setAttribute('aria-label', 'Switch to ' + action + ' mode');
+          button.setAttribute('title', 'Switch to ' + action + ' mode');
+          button.setAttribute('aria-pressed', String(isDark));
+          button.querySelector('.theme-symbol').textContent = isDark ? '☀' : '☾';
+          button.querySelector('.theme-label').textContent = isDark ? 'Light' : 'Dark';
+        };
+        button?.addEventListener('click', () => {
+          const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+          root.dataset.theme = next;
+          try { localStorage.setItem(key, next); } catch { /* private mode */ }
+          display();
+        });
+        media.addEventListener('change', event => {
+          if (stored() !== 'dark' && stored() !== 'light') {
+            root.dataset.theme = event.matches ? 'dark' : 'light';
+            display();
+          }
+        });
+        display();
+      })();
+    </script>
   </body>
 </html>
