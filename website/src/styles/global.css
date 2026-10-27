@@ -41,7 +41,7 @@ button, input, select { font: inherit; }
   display: flex; align-items: center; overflow: hidden;
 }
 .hero-content { max-width: 1160px; width: 100%; margin: auto; padding: 76px 38px 94px; }
-.hero h1 { font: 700 clamp(2.9rem, 5.4vw, 5.7rem)/1.08 var(--serif); max-width: 740px; letter-spacing: -.028em; margin: 14px 0 20px; text-wrap: balance; }
+.hero h1 { font: 700 clamp(2.9rem, 5.4vw, 5.7rem)/1.08 var(--serif); color: #fff; max-width: 740px; letter-spacing: -.028em; margin: 14px 0 20px; text-wrap: balance; }
 .hero h1 em { font-style: normal; color: #f6d28d; }
 .hero-copy { font-size: 1.08rem; color: #e9eff3; max-width: 560px; line-height: 1.8; margin-bottom: 30px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 13px; }
