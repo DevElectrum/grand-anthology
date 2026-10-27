@@ -150,7 +150,7 @@ def number_expr(expr):
             break
     if re.fullmatch(r"[-+]?\d+[uUlL]*", expr):
         return int(re.sub(r"[uUlL]+$", "", expr))
-    if re.search(r"[A-Za-z_]", re.sub(r"\d+[uUlL]+", "0", expr)):
+    if re.search(r"[A-Za-z_]", re.sub(r"\b(?:or|and|not)\b", "", re.sub(r"\d+[uUlL]+", "0", expr))):
         return None
     expr = re.sub(r"(\d+)[uUlL]+\b", r"\1", expr)
     expr = expr.replace("||", " or ").replace("&&", " and ")
