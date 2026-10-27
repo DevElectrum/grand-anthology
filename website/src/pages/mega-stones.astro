@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import { catalog, displayName, locationHref, locationName, sourceMethod } from '../lib/data';
+const stones = catalog.items.filter(item => item.mega_stone);
+const slugs = new Map(catalog.locations.map(loc => [loc.id, loc.slug]));
+---
+<Base title="Mega Stone Field Guide">
+  <div class="content-wrap wiki-wrap">
+    <div class="page-heading"><p class="eyebrow">Collect the extraordinary</p><h1>All 92 Mega Stones</h1><p>Find source-indexed Mega Stone acquisition candidates from world pickups, Battle Net vendors and hard rematch rewards.</p></div>
+    <div class="notice">The 92-stone coverage is source-level. A recorded pickup or reward does not prove every prerequisite and route has passed emulator acceptance. Some stones have overlapping acquisition methods.</div>
+    <div class="filter-bar"><label class="field">Search stones<input id="stone-search" type="search" placeholder="e.g. Clefablite, Gengarite" /></label><span class="result-counter" id="stone-count">{stones.length} stones</span></div>
+    <section class="panel"><div class="table-scroll"><table class="data-table"><thead><tr><th>Mega Stone</th><th>Acquisition candidate</th></tr></thead><tbody>
+      {stones.map(stone => <tr class="stone-row" data-name={stone.name.toLowerCase()}><td><strong>{displayName(stone.name)}</strong></td><td>{stone.sources.length ? <ul class="source-list">{stone.sources.map(source => <li>{sourceMethod(source.method)}{source.map && slugs.has(source.map) ? <> at <a href={locationHref(slugs.get(source.map)!)}>{locationName(source.map)}</a></> : null}{source.coordinates ? <span class="muted"> · tile ({source.coordinates.join(', ')})</span> : null}</li>)}</ul> : <span class="muted">No explicit catalog source indexed</span>}</td></tr>)}
+    </tbody></table></div></section>
+    <p class="empty-state" id="stone-empty" hidden>No Mega Stones match your search.</p>
+  </div>
+  <script>
+    const input = document.querySelector<HTMLInputElement>('#stone-search');
+    const rows = [...document.querySelectorAll<HTMLElement>('.stone-row')];
+    const count = document.querySelector<HTMLElement>('#stone-count');
+    const empty = document.querySelector<HTMLElement>('#stone-empty');
+    input?.addEventListener('input', () => {
+      const needle = input.value.trim().toLowerCase();
+      let found = 0;
+      for (const row of rows) { row.hidden = !row.dataset.name?.includes(needle); if (!row.hidden) found++; }
+      if (count) count.textContent = `${found} ${found === 1 ? 'stone' : 'stones'}`;
+      if (empty) empty.hidden = found !== 0;
+    });
+  </script>
+</Base>

@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import { catalog, locationHref, locationName } from '../../lib/data';
+---
+<Base title="Location Index">
+  <div class="content-wrap wiki-wrap">
+    <div class="page-heading"><p class="eyebrow">Explore the world</p><h1>Location index</h1><p>Browse {catalog.locations.length} distinct source-map identifiers. Each entry gathers indexed Pokémon and item candidates from the current repository.</p></div>
+    <div class="notice">Some maps have multiple internal identifiers or missing region metadata. This index preserves their original names rather than guessing or merging potentially different locations.</div>
+    <div class="filter-bar"><label class="field">Find a location<input id="location-search" type="search" placeholder="Route 27, Mt Moon, Fortree..." /></label><label class="field">Region<select id="location-region"><option value="all">All regions</option><option>KANTO</option><option>JOHTO</option><option>HOENN</option><option value="unspecified">Not indexed</option></select></label><span class="result-counter" id="location-count">{catalog.locations.length} locations</span></div>
+    <div class="location-grid">
+      {catalog.locations.map(loc => <a href={locationHref(loc.slug)} class="location-card" data-search={`${loc.id} ${locationName(loc.id)}`.toLowerCase()} data-region={loc.regions.join(' ')}>
+        <strong>{locationName(loc.id)}</strong><span>{loc.regions.length ? loc.regions.join(' · ') : 'Region not indexed'}</span><small>{loc.entries.length} source {loc.entries.length === 1 ? 'record' : 'records'}</small>
+      </a>)}
+    </div>
+    <p class="empty-state" id="location-empty" hidden>No locations match your filters.</p>
+  </div>
+  <script>
+    const search = document.querySelector<HTMLInputElement>('#location-search');
+    const region = document.querySelector<HTMLSelectElement>('#location-region');
+    const cards = [...document.querySelectorAll<HTMLElement>('.location-card')];
+    const count = document.querySelector<HTMLElement>('#location-count');
+    const empty = document.querySelector<HTMLElement>('#location-empty');
+    function filter() {
+      const text = (search?.value ?? '').trim().toLowerCase();
+      const selected = region?.value ?? 'all';
+      let found = 0;
+      for (const card of cards) {
+        const matches = (!text || card.dataset.search?.includes(text)) && (selected === 'all'
+          || (selected === 'unspecified' ? !card.dataset.region : card.dataset.region?.includes(selected)));
+        card.hidden = !matches;
+        if (matches) found++;
+      }
+      if (count) count.textContent = `${found} ${found === 1 ? 'location' : 'locations'}`;
+      if (empty) empty.hidden = found !== 0;
+    }
+    search?.addEventListener('input', filter);
+    region?.addEventListener('change', filter);
+  </script>
+</Base>

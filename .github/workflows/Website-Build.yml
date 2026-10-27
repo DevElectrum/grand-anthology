@@ -1,0 +1,35 @@
+name: Website build
+
+on:
+  push:
+    paths:
+      - 'website/**'
+      - 'data/catalog/**'
+      - '.github/workflows/Website-Build.yml'
+  pull_request:
+    paths:
+      - 'website/**'
+      - 'data/catalog/**'
+      - '.github/workflows/Website-Build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install website dependencies
+        working-directory: website
+        run: npm install --no-audit --no-fund
+      - name: Generate website and static pages
+        working-directory: website
+        run: npm run build
+      - name: Check expected output
+        run: |
+          test -f website/dist/index.html
+          test -f website/dist/pokedex/1/index.html
+          test -f website/dist/pokedex/1025/index.html
+          test -f website/dist/randomizer/index.html
+          test -f website/dist/mega-stones/index.html

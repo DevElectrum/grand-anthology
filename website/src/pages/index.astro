@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+import { catalog } from '../lib/data';
+const regions = [
+  { name: 'Kanto', subtitle: 'Where the journey begins', img: '/visuals/kanto.png', description: 'Familiar routes, hidden encounters, and a world much larger than you remember.' },
+  { name: 'Johto', subtitle: 'Legends among the mountains', img: '/visuals/johto.png', description: 'Ancient towers, quiet towns, and legendary trails worth following.' },
+  { name: 'Hoenn', subtitle: 'Explore beyond the horizon', img: '/visuals/hoenn.png', description: 'From coastal waters to volcanic peaks, a region built for discovery.' }
+];
+---
+<Base title="Three regions. Nine generations. One adventure." description="Explore Pokémon Grand Anthology: an experimental, collection-first Pokémon fan adventure built upon Pokémon World.">
+  <section class="hero">
+    <div class="hero-content">
+      <p class="eyebrow light">A world worth exploring</p>
+      <h1>Nine generations.<br />Three regions.<br /><em>One grand adventure.</em></h1>
+      <p class="hero-copy">Discover Pokémon across Kanto, Johto and Hoenn in a collection-first fan adventure built upon Pokémon World.</p>
+      <div class="hero-actions">
+        <a href="/pokedex/" class="button button-gold">Explore the Pokédex <span aria-hidden="true">↗</span></a>
+        <a href="/randomizer/" class="button button-ghost">Randomizer Atlas <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+    <span class="hero-caption">Illustrated concept artwork, not an in-game screenshot</span>
+  </section>
+  <section class="intro-strip" aria-label="Project snapshot">
+    <div><strong>1,025</strong><span>National species indexed</span></div>
+    <div><strong>3</strong><span>Connected regions</span></div>
+    <div><strong>92</strong><span>Mega Stones cataloged</span></div>
+    <div><strong>Experimental</strong><span>Development status</span></div>
+  </section>
+  <div class="content-wrap">
+    <section class="section-block">
+      <div class="section-heading">
+        <div><p class="eyebrow">Pick a destination</p><h2>Three regions. One journey.</h2></div>
+        <a class="text-link" href="/locations/">All indexed locations →</a>
+      </div>
+      <div class="region-grid">
+        {regions.map(region => <a href="/locations/" class="region-card">
+          <div class="region-image"><img src={region.img} alt={`Archived emulator screenshot of ${region.name}`} loading="lazy" width="240" height="160" /></div>
+          <div class="region-content"><p class="region-kicker">{region.subtitle}</p><h3>{region.name}</h3><p>{region.description}</p><span class="text-link">Browse location index →</span></div>
+        </a>)}
+      </div>
+      <p class="fine-print">Regional captures come from an earlier, documented emulator showcase and are not evidence of full current-build gameplay acceptance.</p>
+    </section>
+    <section class="section-block two-columns">
+      <div class="feature-panel">
+        <p class="eyebrow">The companion encyclopedia</p>
+        <h2>Every species has a story.</h2>
+        <p>Search the National Pokédex, browse indexed acquisition paths, inspect route encounter tables, and look up Mega Stone sources without wrestling with a 2,700-line text document.</p>
+        <p>Entries are extracted from the current game repository and labeled as source-level candidates until gameplay evidence exists.</p>
+        <a class="button button-dark" href="/pokedex/">Search 1,025 Pokémon →</a>
+      </div>
+      <div class="feature-panel feature-panel-dark">
+        <p class="eyebrow light">Coming in the next engineering phase</p>
+        <h2>Your seed. Your world.</h2>
+        <p>The Randomizer Atlas is being designed to calculate exact wild, static, and starter placements from the game's own deterministic algorithms.</p>
+        <p>No fake seed results, no guessed species, no claim of accuracy before game comparison.</p>
+        <a class="button button-outline-light" href="/randomizer/">Randomizer Atlas roadmap →</a>
+      </div>
+    </section>
+    <section class="note-banner">
+      <div><p class="eyebrow">Development preview</p><h2>An adventure in the making.</h2><p>Source-level P0 feature engineering has reached its closeout milestone, but full validation, acceptance and a public game release have not. There is no ROM download.</p></div>
+      <a href="/status/" class="button button-dark">Read development status →</a>
+    </section>
+  </div>
+</Base>

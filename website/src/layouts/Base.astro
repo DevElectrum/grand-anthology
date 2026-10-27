@@ -1,0 +1,49 @@
+---
+import '../styles/global.css';
+const { title = 'Pokémon Grand Anthology', description = 'An unofficial, experimental, collection-first Pokémon fan project across Kanto, Johto and Hoenn.' } = Astro.props;
+const navigation = [
+  ['/', 'Home'],
+  ['/pokedex/', 'Pokédex'],
+  ['/locations/', 'Locations'],
+  ['/randomizer/', 'Randomizer Atlas'],
+  ['/mega-stones/', 'Mega Stones'],
+  ['/status/', 'Status'],
+  ['/about/', 'About']
+];
+const path = Astro.url.pathname;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="light" />
+    <title>{title} | Pokémon Grand Anthology</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="Pokémon Grand Anthology homepage">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span>Pokémon <strong>Grand Anthology</strong></span>
+        </a>
+        <nav class="main-nav" aria-label="Primary navigation">
+          {navigation.map(([href, label]) =>
+            <a href={href} aria-current={path === href || (href !== '/' && path.startsWith(href)) ? 'page' : undefined}>{label}</a>
+          )}
+        </nav>
+      </div>
+    </header>
+    <div class="page-shell">
+      <main id="main"><slot /></main>
+    </div>
+    <footer class="footer">
+      <div class="footer-inner">
+        <p><strong>Pokémon Grand Anthology</strong> is an unofficial, free, noncommercial fan project in development. Not affiliated with or endorsed by Nintendo, Game Freak, The Pokémon Company, or the Pokémon World team.</p>
+        <p>Built upon <a href="https://github.com/evilchinesefood/PKMN-World">Pokémon World</a> by David A. and contributors. <a href="/about/">Full acknowledgments</a> · <a href="https://github.com/DevElectrum/grand-anthology">Source repository</a></p>
+      </div>
+    </footer>
+  </body>
+</html>

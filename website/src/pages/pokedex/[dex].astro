@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import { catalog, displayName, generation, locationHref, locationName, pokemonHref, sourceMethod, levelLabel, evidenceLabel } from '../../lib/data';
+export function getStaticPaths() {
+  return catalog.pokemon.map(pokemon => ({ params: { dex: String(pokemon.dex) }, props: { pokemon } }));
+}
+const { pokemon } = Astro.props;
+const locationSlugs = new Map(catalog.locations.map(loc => [loc.id, loc.slug]));
+const sources = pokemon.sources ?? [];
+const relatives = (pokemon.evolves_from ?? []).map(name => catalog.pokemon.find(mon => mon.name === name)).filter(Boolean);
+---
+<Base title={`#${String(pokemon.dex).padStart(4, '0')} ${displayName(pokemon.name)}`} description={`Source-indexed Grand Anthology acquisition information for ${displayName(pokemon.name)}.`}>
+  <div class="content-wrap wiki-wrap">
+    <div class="breadcrumbs"><a href="/pokedex/">National Pokédex</a><span>/</span>#{String(pokemon.dex).padStart(4, '0')}</div>
+    <div class="page-heading compact"><p class="eyebrow">Generation {generation(pokemon.dex)} · National #{String(pokemon.dex).padStart(4, '0')}</p><h1>{displayName(pokemon.name)}</h1><p>Source-indexed encounter and evolution information for the current Grand Anthology catalog.</p></div>
+    <div class="notice"><strong>Evidence:</strong> {evidenceLabel()}. A source candidate may be unreachable, non-catchable or affected by story flags. Consult current scripts for definitive behavior.</div>
+    <div class="detail-layout">
+      <section class="panel"><h2>Acquisition sources <span class="muted">({sources.length})</span></h2>
+        {sources.length ? <div class="table-scroll"><table class="data-table"><thead><tr><th>Method</th><th>Location</th><th>Level</th><th>Evidence</th></tr></thead><tbody>
+          {sources.map(source => <tr><td>{sourceMethod(source.method)}{source.form ? <small>Form: {displayName(source.form)}</small> : null}</td>
+            <td>{source.map && locationSlugs.has(source.map) ? <a href={locationHref(locationSlugs.get(source.map)!)}>{locationName(source.map)}</a> : <span class="muted">Not indexed</span>}</td>
+            <td>{levelLabel({level:source.level,levelMin:source.level_min,levelMax:source.level_max})}</td><td class="small-cell">{evidenceLabel(source.gameplay_verified)}</td></tr>)}
+        </tbody></table></div> : <p>No direct encounter source is indexed for this species. An evolution path may still exist; this does not establish unobtainability.</p>}
+      </section>
+      <aside class="panel side-panel"><h2>Evolution links</h2>
+        {relatives.length ? <ul class="link-list">{relatives.map(relative => <li><a href={pokemonHref(relative.dex)}>{displayName(relative.name)} ↗</a></li>)}</ul> : <p>No pre-evolution relationship recorded.</p>}
+        <h3>Catalog assignment</h3><p>{pokemon.audit_region ? displayName(pokemon.audit_region) : 'Not assigned'} <small class="standalone">This is an audit assignment, not an exclusive encounter region.</small></p>
+        <h3>Index status</h3><p class="muted">{displayName(pokemon.known_path_status ?? 'Unknown')}</p>
+      </aside>
+    </div>
+    {sources.some(source => source.note || source.required || source.requires) && <section class="panel notes-panel"><h2>Encounter notes and prerequisites</h2><ul class="notes-list">{sources.filter(source => source.note || source.required || source.requires).map(source => <li><strong>{source.map ? locationName(source.map) : sourceMethod(source.method)}:</strong> {source.note ?? 'Special prerequisites or script conditions are indexed.'}{(source.required ?? source.requires)?.length ? <small class="standalone">Source requirements: {(source.required ?? source.requires).join(', ')}</small> : null}</li>)}</ul></section>}
+    <div class="page-links"><a href="/pokedex/">← Back to the Pokédex</a><a href="/randomizer/">Seed-specific locations: planned →</a></div>
+  </div>
+</Base>

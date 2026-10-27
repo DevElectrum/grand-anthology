@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Development Status">
+  <div class="content-wrap wiki-wrap">
+    <div class="page-heading"><p class="eyebrow">An honest progress report</p><h1>Development status</h1><p>Pokémon Grand Anthology is publicly developed source, not a completed or supported game release.</p></div>
+    <div class="status-grid">
+      <section class="panel"><h2>Source implementation</h2><p class="status-tag">P0 engineering closeout</p><p>The major planned P0 feature work is in source, including the Johto Victory Road Eternatus chamber. This milestone remains subject to fixes and validation.</p></section>
+      <section class="panel"><h2>Automated validation</h2><p class="status-tag">Partial, commit-specific evidence</p><p>Source validators and optimized build checks have passed on documented earlier commits. A later gameplay edit does not inherit those pass results automatically.</p></section>
+      <section class="panel"><h2>Emulator gameplay</h2><p class="status-tag">Selected flows tested</p><p>Real mGBA checks and manual playtests have exercised selected systems and encounter sites. They do not prove all 1,025 acquisitions, special forms, or three complete campaigns.</p></section>
+      <section class="panel"><h2>Game release</h2><p class="status-tag">Not released</p><p>No official Grand Anthology ROM download is available. Builds are local, experimental, and subject to change.</p></section>
+    </div>
+    <section class="panel"><h2>Authoritative development records</h2><p>For the precise status at a specific source commit, use the maintained <a href="https://github.com/DevElectrum/grand-anthology/blob/main/docs/PUBLIC_STATUS.md">public status log</a>, <a href="https://github.com/DevElectrum/grand-anthology/actions">GitHub Actions</a>, and the <a href="https://github.com/DevElectrum/grand-anthology/blob/main/docs/JOHTO_ETERNATUS_CHAMBER_2026-10-27.md">latest P0 change note</a>. The website is a readable introduction, not a substitute for those records.</p></section>
+  </div>
+</Base>

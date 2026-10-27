@@ -1,0 +1,45 @@
+---
+import Base from '../../layouts/Base.astro';
+import { catalog, displayName, generation, pokemonHref } from '../../lib/data';
+---
+<Base title="National Pokédex">
+  <div class="content-wrap wiki-wrap">
+    <div class="page-heading"><p class="eyebrow">Encyclopedia</p><h1>National Pokédex</h1><p>All 1,025 National species, from Bulbasaur to Pecharunt. Search the source-indexed acquisition records; forms and encounter details appear on individual entries.</p></div>
+    <div class="notice"><strong>Reading the data:</strong> An indexed source or evolution relationship is a candidate path, not proof of normal-game accessibility, capture or emulator verification.</div>
+    <div class="filter-bar">
+      <label class="field">Search Pokémon or National number<input id="dex-search" type="search" placeholder="e.g. Rowlet, 722, Rayquaza" autocomplete="off" /></label>
+      <label class="field">Generation<select id="dex-generation"><option value="all">All generations</option>{Array.from({length: 9},(_,i)=>i+1).map(i=><option value={i}>Generation {i}</option>)}</select></label>
+      <span class="result-counter" id="dex-count">{catalog.pokemon.length} entries</span>
+    </div>
+    <div class="dex-grid" id="dex-list">
+      {catalog.pokemon.map(mon => <a class="dex-card" href={pokemonHref(mon.dex)} data-name={mon.name.toLowerCase()} data-dex={mon.dex} data-generation={generation(mon.dex)}>
+        <span class="dex-number">#{String(mon.dex).padStart(4, '0')}</span>
+        <strong>{displayName(mon.name)}</strong>
+        <span class="dex-meta">Gen {generation(mon.dex)}</span>
+      </a>)}
+    </div>
+    <p class="empty-state" id="dex-empty" hidden>No Pokémon match that search.</p>
+  </div>
+  <script>
+    const search = document.querySelector<HTMLInputElement>('#dex-search');
+    const generation = document.querySelector<HTMLSelectElement>('#dex-generation');
+    const cards = [...document.querySelectorAll<HTMLElement>('.dex-card')];
+    const count = document.querySelector<HTMLElement>('#dex-count');
+    const empty = document.querySelector<HTMLElement>('#dex-empty');
+    function filter() {
+      const needle = (search?.value ?? '').trim().toLowerCase();
+      const gen = generation?.value ?? 'all';
+      let visible = 0;
+      for (const card of cards) {
+        const matches = (!needle || card.dataset.name?.includes(needle) || card.dataset.dex?.includes(needle))
+          && (gen === 'all' || card.dataset.generation === gen);
+        card.hidden = !matches;
+        if (matches) visible++;
+      }
+      if (count) count.textContent = `${visible} ${visible === 1 ? 'entry' : 'entries'}`;
+      if (empty) empty.hidden = visible !== 0;
+    }
+    search?.addEventListener('input', filter);
+    generation?.addEventListener('change', filter);
+  </script>
+</Base>

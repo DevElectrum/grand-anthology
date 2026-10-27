@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Randomizer Atlas" description="Development roadmap for the Grand Anthology seed-specific Randomizer Atlas.">
+  <div class="content-wrap wiki-wrap">
+    <div class="page-heading"><p class="eyebrow">A companion for your particular adventure</p><h1>Randomizer Atlas</h1><p>One seed can transform every route. This upcoming tool will reproduce the game’s deterministic encounter calculations and tell you where Pokémon appear in your chosen world.</p></div>
+    <div class="notice"><strong>Under construction:</strong> The seed-specific calculator is not enabled in this foundation version. No guessed or simulated placements are shown. The normal-game wiki remains usable.</div>
+    <div class="three-up">
+      <div class="panel"><span class="step-number">01</span><h2>Pokémon Finder</h2><p>Search a species across wild encounter slots and seeded static sources with your active settings.</p></div>
+      <div class="panel"><span class="step-number">02</span><h2>Location Explorer</h2><p>Inspect a map’s seeded encounter table, method, level ranges and scripted events.</p></div>
+      <div class="panel"><span class="step-number">03</span><h2>Starter Viewer</h2><p>See the ten Oak choices, nine Elm choices and nine Birch choices for a particular seed.</p></div>
+    </div>
+    <section class="panel"><h2>Accuracy comes before launch</h2><p>The game has separate deterministic rules for Wild encounters, scripted Statics and Starters. Wild placements depend on map group, map number, encounter area and table slot. Static behavior also depends on its selected policy: Ordinary, Legendary Shuffle or Full Chaos. Starters resolve collisions by National Pokédex number in regional slot order.</p><p>The calculator will need an exact snapshot of the game’s internal species ordering, map identifiers, encounter tables and eligibility rules. Results must be checked against the same game version before being labeled accurate.</p><p>Later priorities are Gifts and Trainers. Normal wiki pages will remain independent of the Randomizer Atlas in version one.</p></section>
+    <section class="panel"><h2>While we build it</h2><p>Use the <a href="/pokedex/">National Pokédex</a> and <a href="/locations/">location index</a> for ordinary source-level acquisition references, or follow development progress in the <a href="/status/">status page</a>.</p></section>
+  </div>
+</Base>
