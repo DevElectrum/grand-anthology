@@ -470,6 +470,8 @@ enum
     PIKACHU_INTRO_PAGE_1,
     PIKACHU_INTRO_PAGE_2,
     PIKACHU_INTRO_PAGE_3,
+    PIKACHU_INTRO_PAGE_4,
+    PIKACHU_INTRO_PAGE_5,
     NUM_PIKACHU_INTRO_PAGES,
 };
 
@@ -477,7 +479,9 @@ static const u8 *const sPikachuIntro_Strings[NUM_PIKACHU_INTRO_PAGES] =
 {
     [PIKACHU_INTRO_PAGE_1] = gPikachuIntro_Text_Page1,
     [PIKACHU_INTRO_PAGE_2] = gPikachuIntro_Text_Page2,
-    [PIKACHU_INTRO_PAGE_3] = gPikachuIntro_Text_Page3
+    [PIKACHU_INTRO_PAGE_3] = gPikachuIntro_Text_Page3,
+    [PIKACHU_INTRO_PAGE_4] = gPikachuIntro_Text_Page4,
+    [PIKACHU_INTRO_PAGE_5] = gPikachuIntro_Text_Page5
 };
 
 #define GFX_TAG_PLATFORM     0x1000
