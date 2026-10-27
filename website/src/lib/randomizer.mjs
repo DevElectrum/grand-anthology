@@ -121,3 +121,56 @@ export function pokemonDexHref(id, species) {
   return Number.isInteger(dex) && dex >= 1 && dex <= 1025
     ? '/pokedex/' + dex + '/' : null;
 }
+
+
+export const STATIC_MODES = {
+  ordinary: 0,
+  legendary: 1,
+  chaos: 2
+};
+
+// Matches WorldRandomizeStaticSpecies in script_pokemon_util.c for new-game
+// save version 13. The legendary pool is ordered by INTERNAL Species enum ID.
+export function seededStatic(seed, original, slot, group, num, species, mode = 0, enabled = true) {
+  if (!Number.isInteger(seed) || seed < 0 || seed > 65535)
+    throw new RangeError('Seed must be an integer between 0 and 65535');
+  if (!Number.isInteger(mode) || mode < 0 || mode > 2)
+    throw new RangeError('Unknown modern static encounter policy');
+  if (!enabled || original === 0 || original === species.length) return original;
+  const mon = species[original];
+  if (!mon?.symbol) throw new Error('Unknown original static species ID ' + original);
+  if (mode === STATIC_MODES.ordinary && (mon.legendaryStatic || mon.ultraBeast || mon.paradox))
+    return original;
+  if (mode === STATIC_MODES.legendary) {
+    if (!mon.legendaryStatic || !mon.fieldStable) return original;
+    const pool = [];
+    for (let id = 1; id < species.length; id++) {
+      const current = species[id];
+      if (current?.legendaryStatic && current.fieldStable) pool.push(id);
+    }
+    if (!pool.length) return original;
+    const position = pool.indexOf(original);
+    return pool[(position + seed % pool.length) % pool.length];
+  }
+
+  let hash = (0x9E3779B9 ^ seed) >>> 0;
+  hash ^= Math.imul(original, MUL_ORIGINAL);
+  hash ^= Math.imul(slot + 1, MUL_SLOT);
+  hash ^= ((group << 24) | (num << 16) | 0x5300);
+  hash = mix32(hash);
+  let candidate = 1 + hash % (species.length - 1);
+  for (let attempt = 0; attempt < species.length - 1; attempt++) {
+    if (species[candidate]?.fieldStable) return candidate;
+    candidate++;
+    if (candidate >= species.length) candidate = 1;
+  }
+  return original;
+}
+
+export function buildStaticAtlas(seed, data, mode = 0, enabled = true) {
+  return (data.staticSites ?? []).map(site => {
+    const replacement = seededStatic(seed, site.original, site.slot, site.group,
+      site.num, data.species, mode, enabled);
+    return { ...site, speciesId: replacement };
+  });
+}
