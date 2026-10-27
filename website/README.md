@@ -19,6 +19,7 @@ Both dev and build automatically invoke `scripts/generate.mjs`, which:
 - reads `../data/catalog/world_acquisition.jsonl`;
 - requires exactly 1,025 distinct National Pokédex entries, 874 item constants and 92 Mega Stones;
 - emits `src/generated/catalog.json`, a build-time snapshot of catalog records and source-map groups;
+- enriches source-indexed supplemental grass, Surfing, fishing and rare-grass encounters with their *actual native-table level brackets* without mutating `data/catalog/world_acquisition.jsonl`. Grass/Surf use the first native slot; Fishing uses individual rod slot ranges. These are ordinary encounter levels, not Lure-adjusted or randomizer outcomes;
 - copies a limited set of **existing** branding art and dated mGBA screenshots into `public/visuals/`.
 
 The build also extracts configured Pokémon stats, types, abilities, forms, descriptions and evolution data from the game's Gen 1–9 C species initializers, shared Pokédex text, ability definitions and form tables. GCC resolves compile-time conditionals and a balanced initializer parser imports the relevant fields. The separate result is `src/generated/pokemon-details.json`. Generated files and copied visuals are ignored by Git. Keep the authoritative catalog in the game repository; do not edit the generated JSON.

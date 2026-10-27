@@ -2,6 +2,7 @@ import { readFile, mkdir, writeFile, copyFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizeSourceEntries } from './normalize-sources.mjs';
+import { enrichSupplementalLevels } from './resolve-supplemental-levels.mjs';
 import { execFileSync } from 'node:child_process';
 
 const website = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -14,7 +15,9 @@ const rawRecords = raw.split(/\r?\n/).filter(Boolean).map((line, index) => {
   try { return JSON.parse(line); }
   catch (error) { throw new Error(`Invalid catalog JSON at line ${index + 1}: ${error.message}`); }
 });
-const records = normalizeSourceEntries(rawRecords);
+const normalized = normalizeSourceEntries(rawRecords);
+const wildData = JSON.parse(await readFile(resolve(repository, 'src/data/wild_encounters.json'), 'utf8'));
+const { records, counters: supplementalLevels } = enrichSupplementalLevels(normalized, wildData);
 execFileSync('python3', [resolve(website, 'scripts/export_species.py')], { cwd: repository, stdio: 'inherit' });
 
 const meta = records.find(record => record.kind === 'meta');
@@ -63,7 +66,8 @@ for (const entry of [...pokemon, ...items]) {
       dex: entry.kind === 'pokemon' ? entry.dex : undefined,
       itemId: entry.kind === 'item' ? entry.id : undefined,
       method: source.method, level: source.level, levelMin: source.level_min,
-      levelMax: source.level_max, form: source.form,
+      levelMax: source.level_max, rodLevels: source.rod_levels,
+      levelBasis: source.level_basis, form: source.form,
       note: source.note, detail: source.detail,
       required: source.required ?? source.requires,
       gameplayVerified: source.gameplay_verified,
@@ -89,6 +93,7 @@ const images = [
   ['graphics/branding/screenshots/showcase/02-world-transit.png', 'hub.png']
 ];
 for (const [from, to] of images) await copyFile(resolve(repository, from), resolve(visuals, to));
+console.log(`Supplemental/rare habitat level ranges: ${supplementalLevels.resolved}/${supplementalLevels.candidates} resolved from native encounter slots; ${supplementalLevels.unresolved} without usable level tables.`);
 console.log(`Generated site data: ${pokemon.length} Pokémon, ${items.length} items, ${megaStones.length} Mega Stones, ${locations.length} indexed map identifiers.`);
 console.log(`Website presentation merged ${rawRecords.reduce((count, entry) => count + (entry.sources?.length ?? 0), 0) - records.reduce((count, entry) => count + (entry.sources?.length ?? 0), 0)} redundant script-source references; distinct acquisition methods remain separate.`);
 console.log('Acquisition entries are source-level candidates, NOT proof of obtainable or tested encounters.');

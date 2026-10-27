@@ -31,10 +31,10 @@ export function sourceMethod(method: string): string {
     native_water_mons: 'Surfing',
     native_fishing_mons: 'Fishing',
     native_rock_smash_mons: 'Rock Smash',
-    rare_land: 'Rare wild encounter',
-    supplemental_land: 'Supplemental grass',
-    supplemental_water: 'Supplemental surfing',
-    supplemental_fishing: 'Supplemental fishing',
+    rare_land: 'Rare grass encounter',
+    supplemental_land: 'Grass (rare)',
+    supplemental_water: 'Surfing (rare)',
+    supplemental_fishing: 'Fishing (rare)',
     scripted_battle_candidate: 'Scripted battle candidate',
     scripted_event_candidate: 'Scripted event candidate',
     scripted_gift_candidate: 'Gift candidate',
@@ -52,10 +52,22 @@ export function sourceMethod(method: string): string {
   return names[method] ?? displayName(method);
 }
 
-export function levelLabel(source: { level?: number; levelMin?: number; levelMax?: number }): string {
-  if (source.level !== undefined) return `Lv. ${source.level}`;
-  if (source.levelMin !== undefined && source.levelMax !== undefined)
-    return source.levelMin === source.levelMax ? `Lv. ${source.levelMin}` : `Lv. ${source.levelMin}–${source.levelMax}`;
+export function levelLabel(source: {
+  level?: number;
+  levelMin?: number;
+  levelMax?: number;
+  level_min?: number;
+  level_max?: number;
+  rodLevels?: { rod: string; min: number; max: number }[];
+  rod_levels?: { rod: string; min: number; max: number }[];
+}): string {
+  const range = (min: number, max: number) => min === max ? 'Lv. ' + min : 'Lv. ' + min + '–' + max;
+  const rods = source.rodLevels ?? source.rod_levels;
+  if (rods?.length) return rods.map(row => row.rod + ': ' + range(row.min, row.max)).join(' · ');
+  if (source.level !== undefined) return 'Lv. ' + source.level;
+  const low = source.levelMin ?? source.level_min;
+  const high = source.levelMax ?? source.level_max;
+  if (low !== undefined && high !== undefined) return range(low, high);
   return 'Level not indexed';
 }
 
