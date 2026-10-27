@@ -17,7 +17,7 @@ export function mix32(value) {
 export function seededWild(seed, original, slot, area, group, num, species, frontier = false) {
   if (!Number.isInteger(seed) || seed < 0 || seed > 65535)
     throw new RangeError('Seed must be an integer between 0 and 65535');
-  if (frontier || original === 0 || original === species.length - 1) return original;
+  if (frontier || original === 0 || original === species.length) return original;
   let hash = (0x9E3779B9 ^ seed) >>> 0;
   hash ^= Math.imul(original, MUL_ORIGINAL);
   hash ^= Math.imul(slot + 1, MUL_SLOT);
