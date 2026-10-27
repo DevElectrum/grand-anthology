@@ -4,7 +4,6 @@ Route44_MapScripts::
 	.byte 0
 
 Route44_OnTransition:
-	call Route44_AnthologyOnTransition
 	call Route44_TornadusOnTransition
 	end
 
@@ -163,60 +162,6 @@ Route44_Text_Sign1:
 Route44_Text_Sign2:
     .string "ROUTE 44\p"
     .string "MAHOGANY TOWN - BLACKTHORN CITY$"
-
-// Rare encounter locations near their original home regions.
-Route44_AnthologyOnTransition::
-	callnative AnthologyStaticRandomizerIsOn
-	goto_if_eq VAR_RESULT, TRUE, Route44_AnthologyRandomOnTransition
-	getcaughtmon SPECIES_ETERNATUS
-	call_if_eq VAR_RESULT, TRUE, Route44_AnthologyHideEternatus
-	call_if_ne VAR_RESULT, TRUE, Route44_AnthologyShowEternatus
-	return
-
-Route44_AnthologyRandomOnTransition::
-	call_if_set FLAG_CAUGHT_RANDOM_ROUTE44_ETERNATUS, Route44_AnthologyHideEternatus
-	call_if_unset FLAG_CAUGHT_RANDOM_ROUTE44_ETERNATUS, Route44_AnthologyShowEternatus
-	return
-
-Route44_AnthologyHideEternatus::
-	setflag FLAG_HIDE_ANTHOLOGY_ETERNATUS
-	return
-
-Route44_AnthologyShowEternatus::
-	clearflag FLAG_HIDE_ANTHOLOGY_ETERNATUS
-	return
-
-Route44_EventScript_Eternatus::
-	lock
-	faceplayer
-	playmoncry SPECIES_ETERNATUS, CRY_MODE_ENCOUNTER
-	waitmoncry
-	seteventmon SPECIES_ETERNATUS, 50
-	special BattleSetup_StartLegendaryBattle
-	waitstate
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, Route44_AnthologyEternatusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_PLAYER_TELEPORTED, Route44_AnthologyEternatusRetreated
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Route44_AnthologyEternatusResolvedRandomCaught
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Route44_AnthologyEternatusResolved
-	release
-	end
-
-Route44_AnthologyEternatusResolvedRandomCaught::
-	setflag FLAG_CAUGHT_RANDOM_ROUTE44_ETERNATUS
-	goto Route44_AnthologyEternatusResolved
-
-Route44_AnthologyEternatusResolved::
-	fadescreenswapbuffers FADE_TO_BLACK
-	removeobject LOCALID_ANTHOLOGY_ETERNATUS
-	setflag FLAG_HIDE_ANTHOLOGY_ETERNATUS
-	fadescreenswapbuffers FADE_FROM_BLACK
-	release
-	end
-
-Route44_AnthologyEternatusRetreated::
-	release
-	end
 
 // A Johto-side source on the Ice Path approach guarantees availability before
 // the first Johto Champion. Hoenn's Shoal Cave source uses the same persistent
