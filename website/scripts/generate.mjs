@@ -25,6 +25,7 @@ const meta = records.find(record => record.kind === 'meta');
 const pokemon = records.filter(record => record.kind === 'pokemon');
 const items = records.filter(record => record.kind === 'item');
 const megaStones = items.filter(item => item.mega_stone);
+execFileSync('node', [resolve(website, 'scripts/export-randomizer.mjs')], { cwd: repository, stdio: 'inherit' });
 const details = JSON.parse(await readFile(resolve(website, 'src/generated/pokemon-details.json'), 'utf8'));
 await buildSpriteManifest({ repository, website, pokemon, details });
 if (!meta || pokemon.length !== 1025 || new Set(pokemon.map(mon => mon.dex)).size !== 1025)
