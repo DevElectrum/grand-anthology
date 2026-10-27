@@ -412,3 +412,40 @@ html[data-theme='dark'] .sprite-unavailable, html[data-theme='dark'] .sprite-fal
   .pokemon-portrait-form { width: 125px; }
   .pokemon-portrait-image, .portrait-placeholder { width: 116px; height: 116px; }
 }
+
+
+/* Randomizer Atlas: seed controls, searchable slot tables and starter grids. */
+.atlas-settings { padding: 24px; }
+.atlas-settings-fields { display: flex; flex-wrap: wrap; align-items: end; gap: 14px 22px; }
+.atlas-settings-fields .field { flex: 1 1 195px; max-width: 285px; }
+.atlas-settings-fields .button { border: 0; cursor: pointer; min-height: 44px; }
+.atlas-check { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); font-weight: 700; font-size: .91rem; padding-bottom: 11px; cursor: pointer; }
+.atlas-check input { width: 19px; height: 19px; accent-color: #3c92b6; }
+.atlas-status { margin: 14px 0 0; color: var(--ink); font-weight: 700; font-size: .88rem; }
+.atlas-filters { display: flex; flex-wrap: wrap; gap: 13px; align-items: end; margin-bottom: 19px; }
+.atlas-filters .field { flex: 1 1 180px; }
+.atlas-summary { color: var(--muted) !important; font-size: .88rem; margin: 4px 0 18px; }
+.atlas-table { min-width: 770px; }
+.atlas-table td { vertical-align: middle; }
+.atlas-mon { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; }
+.atlas-sprite { display: block; width: 38px; height: 38px; flex-shrink: 0; object-fit: cover; object-position: center top; image-rendering: pixelated; }
+.atlas-empty-sprite { display: grid; place-items: center; width: 38px; height: 38px; color: var(--muted); }
+.atlas-starter-region { margin-bottom: 26px; }
+.atlas-starter-region h3 { padding-bottom: 9px; border-bottom: 1px solid var(--line); }
+.atlas-starter-deck { display: grid; gap: 22px; }
+.atlas-starter-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.atlas-starter-card { display: grid; justify-items: center; text-align: center; gap: 6px; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 9px; padding: 17px 9px; min-width: 0; }
+.atlas-starter-card .atlas-sprite { width: 66px; height: 66px; }
+.atlas-starter-card strong { color: var(--ink); font-size: .94rem; overflow-wrap: anywhere; }
+.atlas-starter-card small, .atlas-starter-card span { color: var(--muted); font-size: .75rem; }
+.atlas-starter-card span { line-height: 1.45; }
+@media (max-width: 900px) {
+  .atlas-starter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 650px) {
+  .atlas-settings { padding: 17px; }
+  .atlas-settings-fields .field { max-width: none; }
+  .atlas-filters .field { flex: 1 1 100%; }
+  .atlas-starter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .atlas-starter-card { padding: 13px 8px; }
+}
