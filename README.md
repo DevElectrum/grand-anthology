@@ -72,7 +72,7 @@ The public `main` branch has substantial source-level acquisition and encounter 
 
 **[Open the Grand Anthology Field Guide](docs/GRAND_ANTHOLOGY_FIELD_GUIDE.md)** for searchable National Pokédex entries, all numbered items, all 92 Mega Stone sources, a map-by-map index, major boss encounter requirements and the intended Kanto → Johto → Hoenn journey.
 
-The encounter engineering milestone **does not imply postgame placement**. The Royal Duo is explicitly **pre-Johto-Champion**. In contrast, permanent Complete Zygarde and permanent Stellar Terapagos unlock **after Hoenn Champion**. **Eternatus is still authored on Johto Route 44**; moving it to Victory Road with a Royal Duo requirement is a discussed design proposal, not a source-implemented change.
+The encounter engineering milestone **does not imply postgame placement**. The Royal Duo is explicitly **pre-Johto-Champion**. In contrast, permanent Complete Zygarde and permanent Stellar Terapagos unlock **after Hoenn Champion**. **Eternatus is now authored as a level-55 static** in a chamber off Johto Victory Road 1F; the League-side meteorite only permits entry after the Royal Duo victory. Gameplay acceptance is pending.
 
 For future engineering agents, the [machine-readable acquisition catalog](data/catalog/world_acquisition.jsonl) and [catalog instructions](data/catalog/README.md) are linked directly from [AGENTS.md](AGENTS.md). These source-indexed paths supersede older placement snapshots when those snapshots conflict with current code.
 
