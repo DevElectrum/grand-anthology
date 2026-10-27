@@ -1,16 +1,252 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Randomizer Atlas" description="Development roadmap for the Grand Anthology seed-specific Randomizer Atlas.">
+<Base title="Randomizer Atlas" description="Calculate current Grand Anthology seeded wild slots and unique regional starter choices, directly in your browser.">
   <div class="content-wrap wiki-wrap">
-    <div class="page-heading"><p class="eyebrow">A companion for your particular adventure</p><h1>Randomizer Atlas</h1><p>One seed can transform every route. This upcoming tool will reproduce the game’s deterministic encounter calculations and tell you where Pokémon appear in your chosen world.</p></div>
-    <div class="notice"><strong>Under construction:</strong> The seed-specific calculator is not enabled in this foundation version. No guessed or simulated placements are shown. The normal-game wiki remains usable.</div>
-    <div class="three-up">
-      <div class="panel"><span class="step-number">01</span><h2>Pokémon Finder</h2><p>Search a species across wild encounter slots and seeded static sources with your active settings.</p></div>
-      <div class="panel"><span class="step-number">02</span><h2>Location Explorer</h2><p>Inspect a map’s seeded encounter table, method, level ranges and scripted events.</p></div>
-      <div class="panel"><span class="step-number">03</span><h2>Starter Viewer</h2><p>See the ten Oak choices, nine Elm choices and nine Birch choices for a particular seed.</p></div>
+    <div class="page-heading">
+      <p class="eyebrow">Your seed. Your world.</p>
+      <h1>Randomizer Atlas</h1>
+      <p>Explore wild Pokémon and regional starter choices for any Grand Anthology seed. Results are calculated using the game's current new-game algorithms, not prewritten seed tables.</p>
     </div>
-    <section class="panel"><h2>Accuracy comes before launch</h2><p>The game has separate deterministic rules for Wild encounters, scripted Statics and Starters. Wild placements depend on map group, map number, encounter area and table slot. Static behavior also depends on its selected policy: Ordinary, Legendary Shuffle or Full Chaos. Starters resolve collisions by National Pokédex number in regional slot order.</p><p>The calculator will need an exact snapshot of the game’s internal species ordering, map identifiers, encounter tables and eligibility rules. Results must be checked against the same game version before being labeled accurate.</p><p>Later priorities are Gifts and Trainers. Normal wiki pages will remain independent of the Randomizer Atlas in version one.</p></section>
-    <section class="panel"><h2>While we build it</h2><p>Use the <a href="/pokedex/">National Pokédex</a> and <a href="/locations/">location index</a> for ordinary source-level acquisition references, or follow development progress in the <a href="/status/">status page</a>.</p></section>
+    <div class="notice"><strong>Phase 1 is live:</strong> Native wild encounter slots and Oak, Elm and Birch starter rosters are calculated below. Scripted statics, optional gifts and trainer battles are not yet indexed. This Atlas models current new-game randomizer rules, not legacy save migrations.</div>
+    <form id="atlas-settings" class="panel atlas-settings">
+      <div class="atlas-settings-fields">
+        <label class="field">Seed (00000–65535)
+          <input id="atlas-seed" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{1,5}" value="02026" required aria-describedby="atlas-seed-help"/>
+        </label>
+        <label class="atlas-check"><input id="atlas-wild" type="checkbox" checked/> Randomize Wild</label>
+        <label class="atlas-check"><input id="atlas-starters" type="checkbox" checked/> Randomize Starters</label>
+        <button class="button button-dark" type="submit">Generate my world</button>
+      </div>
+      <p id="atlas-seed-help" class="fine-print">Use the seed and enabled categories from your game's New Game settings. Results do not depend on the time you enter the seed.</p>
+      <p id="atlas-status" role="status" aria-live="polite" class="atlas-status">Loading the source-derived encounter index…</p>
+    </form>
+    <section class="panel">
+      <h2>Explore your seed</h2>
+      <div class="atlas-filters">
+        <label class="field">Explorer
+          <select id="atlas-view">
+            <option value="pokemon">Pokémon Finder</option>
+            <option value="location">Location Explorer</option>
+            <option value="starters">Starter Viewer</option>
+          </select>
+        </label>
+        <label class="field" id="atlas-pokemon-field">Find randomized Pokémon
+          <input type="search" id="atlas-pokemon-search" placeholder="Rayquaza, Ceruledge, Unown…" autocomplete="off"/>
+        </label>
+        <label class="field" id="atlas-location-field" hidden>Search locations
+          <input type="search" id="atlas-location-search" placeholder="Route 1, Mt. Moon…" autocomplete="off"/>
+        </label>
+        <label class="field" id="atlas-region-field">Region
+          <select id="atlas-region"><option value="all">All regions</option><option value="KANTO">Kanto</option><option value="JOHTO">Johto</option><option value="HOENN">Hoenn</option></select>
+        </label>
+        <label class="field" id="atlas-method-field">Encounter method
+          <select id="atlas-method"><option value="all">All wild methods</option><option value="0">Grass / ground</option><option value="1">Surfing</option><option value="2">Rock Smash</option><option value="3">Fishing</option></select>
+        </label>
+      </div>
+      <p id="atlas-summary" class="atlas-summary" aria-live="polite">Preparing results…</p>
+      <div id="atlas-results"></div>
+    </section>
+    <section class="panel">
+      <h2>What these results cover</h2>
+      <p>Wild results represent the game's <strong>native encounter-table slots</strong>, including each slot's original species, level bracket, method and replacement species. The same species may occupy multiple slots; that's intentional. Ordinary supplemental grass, Surfing and fishing spawns are disabled while Wild Randomization is on and are not artificially added to these results.</p>
+      <p>The site currently excludes special Feebas/outbreak/roamer pathways, post-League research rotations, quest gates, and scripted static events. Some indexed maps are inaccessible until story progression or use encounter restrictions. Static encounter settings will be supported after the individual scripted sites have been audited for seed parity.</p>
+      <p class="fine-print">Source snapshot: <code id="atlas-fingerprint">Loading…</code>. Calculations run locally in your browser; no seed data is uploaded. Results are a source-level mirror awaiting representative in-emulator validation.</p>
+    </section>
   </div>
+  <script>
+    import atlasData from '../generated/randomizer-data.json';
+    import spriteData from '../generated/sprites.json';
+    import { buildWildAtlas, buildStarterAtlas } from '../lib/randomizer.mjs';
+
+    const element = (id: string) => document.getElementById(id)!;
+    const form = element('atlas-settings') as HTMLFormElement;
+    const seedInput = element('atlas-seed') as HTMLInputElement;
+    const wildInput = element('atlas-wild') as HTMLInputElement;
+    const starterInput = element('atlas-starters') as HTMLInputElement;
+    const viewInput = element('atlas-view') as HTMLSelectElement;
+    const pokemonQuery = element('atlas-pokemon-search') as HTMLInputElement;
+    const locationQuery = element('atlas-location-search') as HTMLInputElement;
+    const regionInput = element('atlas-region') as HTMLSelectElement;
+    const methodInput = element('atlas-method') as HTMLSelectElement;
+    const status = element('atlas-status');
+    const summary = element('atlas-summary');
+    const results = element('atlas-results');
+    const species = atlasData.species;
+    const maps = atlasData.maps;
+    const spriteManifest = spriteData as { sprites: Record<string, {icon: string | null}>; byDex: Record<string, {icon: string | null}> };
+    let wildRows: any[] = [];
+    let starterRows: Record<string, any[]> = {};
+    element('atlas-fingerprint').textContent = atlasData.fingerprint;
+    const suppliedSeed = new URLSearchParams(window.location.search).get('seed');
+    if (suppliedSeed && /^\d{1,5}$/.test(suppliedSeed) && Number(suppliedSeed) <= 65535)
+      seedInput.value = suppliedSeed.padStart(5, '0');
+
+    function nameFor(id: number): string {
+      const entry = species[id];
+      return entry?.name || entry?.symbol?.replace(/^SPECIES_/, '').replace(/_/g, ' ') || ('Internal #' + id);
+    }
+    function locationFor(map: string): string {
+      return maps[map]?.label?.replace(/_Frlg$/i, '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/(Route)(\d+)/i, '$1 $2').replaceAll('_', ' ') ?? map.replace('MAP_', '');
+    }
+    function artwork(id: number): string | null {
+      const info = species[id];
+      return spriteManifest.sprites[info?.symbol]?.icon
+        ?? spriteManifest.byDex[String(info?.dex)]?.icon ?? null;
+    }
+    function image(id: number): HTMLElement {
+      const url = artwork(id);
+      if (!url) {
+        const blank = document.createElement('span');
+        blank.className = 'atlas-empty-sprite';
+        blank.textContent = '✦';
+        return blank;
+      }
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.width = 38;
+      img.height = 38;
+      img.className = 'atlas-sprite';
+      return img;
+    }
+    function textCell(row: HTMLTableRowElement, value: string): void {
+      const cell = document.createElement('td');
+      cell.textContent = value;
+      row.append(cell);
+    }
+    function pokemonCell(row: HTMLTableRowElement, id: number): void {
+      const td = document.createElement('td');
+      const wrapper = document.createElement('span');
+      wrapper.className = 'atlas-mon';
+      wrapper.append(image(id));
+      const label = document.createElement('span');
+      label.textContent = nameFor(id);
+      wrapper.append(label);
+      td.append(wrapper);
+      row.append(td);
+    }
+    function makeTable(headers: string[]): { wrapper: HTMLDivElement; body: HTMLTableSectionElement } {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-scroll';
+      const table = document.createElement('table');
+      table.className = 'data-table atlas-table';
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      for (const value of headers) {
+        const th = document.createElement('th');
+        th.textContent = value;
+        headRow.append(th);
+      }
+      thead.append(headRow);
+      const body = document.createElement('tbody');
+      table.append(thead, body);
+      wrapper.append(table);
+      return { wrapper, body };
+    }
+    function refreshView(): void {
+      const mode = viewInput.value;
+      element('atlas-pokemon-field').hidden = mode !== 'pokemon';
+      element('atlas-location-field').hidden = mode !== 'location';
+      element('atlas-region-field').hidden = mode === 'starters';
+      element('atlas-method-field').hidden = mode === 'starters';
+      results.replaceChildren();
+      if (mode === 'starters') {
+        if (!Object.keys(starterRows).length) { summary.textContent = 'No starter data available.'; return; }
+        summary.textContent = '28 choices across three professors. Each randomized roster has distinct National Pokédex species.';
+        const deck = document.createElement('div');
+        deck.className = 'atlas-starter-deck';
+        for (const [region, roster] of Object.entries(starterRows)) {
+          const section = document.createElement('section');
+          section.className = 'atlas-starter-region';
+          const heading = document.createElement('h3');
+          heading.textContent = region + ' · ' + (region === 'Kanto' ? 'Professor Oak' : region === 'Johto' ? 'Professor Elm' : 'Professor Birch');
+          section.append(heading);
+          const grid = document.createElement('div');
+          grid.className = 'atlas-starter-grid';
+          for (const choice of roster) {
+            const card = document.createElement('div');
+            card.className = 'atlas-starter-card';
+            card.append(image(choice.id));
+            const index = document.createElement('small');
+            index.textContent = 'Choice ' + (choice.slot + 1);
+            const pokemon = document.createElement('strong');
+            pokemon.textContent = nameFor(choice.id);
+            const prior = document.createElement('span');
+            prior.textContent = 'Replaces ' + nameFor(choice.original);
+            card.append(index, pokemon, prior);
+            grid.append(card);
+          }
+          section.append(grid);
+          deck.append(section);
+        }
+        results.append(deck);
+        return;
+      }
+      const search = (mode === 'pokemon' ? pokemonQuery.value : locationQuery.value).trim().toLowerCase();
+      const region = regionInput.value;
+      const method = methodInput.value;
+      const filtered = wildRows.filter(row => {
+        if (region !== 'all' && maps[row.map]?.region !== region) return false;
+        if (method !== 'all' && row.area !== Number(method)) return false;
+        if (!search) return true;
+        if (mode === 'pokemon') {
+          const mon = species[row.speciesId];
+          return nameFor(row.speciesId).toLowerCase().includes(search)
+            || mon?.symbol?.toLowerCase().replaceAll('_', ' ').includes(search)
+            || String(mon?.dex) === search;
+        }
+        return locationFor(row.map).toLowerCase().includes(search)
+          || row.map.toLowerCase().includes(search);
+      });
+      const limit = 200;
+      summary.textContent = filtered.length.toLocaleString() + ' matching wild encounter slots'
+        + (filtered.length > limit ? ' · Showing first ' + limit.toLocaleString() + '. Narrow your search to see more.' : '.');
+      if (!filtered.length) {
+        const empty = document.createElement('p');
+        empty.className = 'empty-state';
+        empty.textContent = 'No matching native encounter slots for these settings.';
+        results.append(empty);
+        return;
+      }
+      const { wrapper, body } = makeTable(['Randomized Pokémon', 'Location', 'Method / slot', 'Level', 'Original Pokémon']);
+      for (const record of filtered.slice(0, limit)) {
+        const tr = document.createElement('tr');
+        pokemonCell(tr, record.speciesId);
+        textCell(tr, locationFor(record.map) + (maps[record.map]?.region ? ' · ' + maps[record.map].region : ''));
+        textCell(tr, record.method + (record.rod ? ' (' + record.rod + ')' : '') + ', slot ' + (record.slot + 1));
+        textCell(tr, record.min === record.max ? 'Lv. ' + record.min : 'Lv. ' + record.min + '–' + record.max);
+        textCell(tr, nameFor(record.original));
+        body.append(tr);
+      }
+      results.append(wrapper);
+    }
+    function calculate(): void {
+      const value = seedInput.value.trim();
+      if (!/^\d{1,5}$/.test(value) || Number(value) > 65535) {
+        status.textContent = 'Enter a whole-number seed from 00000 to 65535.';
+        return;
+      }
+      const seed = Number(value);
+      wildRows = buildWildAtlas(seed, atlasData, wildInput.checked);
+      starterRows = buildStarterAtlas(seed, atlasData, starterInput.checked);
+      status.textContent = 'Seed ' + String(seed).padStart(5, '0') + ' loaded · ' +
+        wildRows.length.toLocaleString() + ' native wild slots · ' +
+        (wildInput.checked ? 'Wild ON' : 'Wild OFF') + ' · ' +
+        (starterInput.checked ? 'Starters ON' : 'Starters OFF');
+      const url = new URL(window.location.href);
+      url.searchParams.set('seed', String(seed).padStart(5, '0'));
+      window.history.replaceState(null, '', url);
+      refreshView();
+    }
+    form.addEventListener('submit', event => { event.preventDefault(); calculate(); });
+    viewInput.addEventListener('change', refreshView);
+    pokemonQuery.addEventListener('input', refreshView);
+    locationQuery.addEventListener('input', refreshView);
+    regionInput.addEventListener('change', refreshView);
+    methodInput.addEventListener('change', refreshView);
+    calculate();
+  </script>
 </Base>
