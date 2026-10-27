@@ -449,3 +449,17 @@ html[data-theme='dark'] .sprite-unavailable, html[data-theme='dark'] .sprite-fal
   .atlas-starter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .atlas-starter-card { padding: 13px 8px; }
 }
+
+
+/* Starter roster cards are now full-card links, including their sprites. */
+a.atlas-starter-card { color: var(--ink); text-decoration: none; cursor: pointer; }
+a.atlas-starter-card:hover, a.atlas-starter-card:focus-visible {
+  background: var(--surface-hover);
+  border-color: var(--link);
+  box-shadow: 0 4px 15px #0002;
+  outline-offset: 3px;
+}
+a.atlas-starter-card:hover strong, a.atlas-starter-card:focus-visible strong {
+  color: var(--link);
+  text-decoration: underline;
+}
