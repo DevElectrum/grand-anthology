@@ -47,7 +47,7 @@ for n in [3, 5, 10]:
 
 # Compile the actual production header against a minimal save/variable stub.
 # Both old option fields intentionally have only TWO bits.
-defs = "\n".join(re.findall(r"^#define OPTIONS_(?:EXP|CATCH)_MULT_\w+\s+\d+$", ids, re.M))
+defs = "\n".join(re.findall(r"^#define OPTIONS_(?:EXP|CATCH)_MULT_\w+\s+\d+[^\n]*$", ids, re.M))
 assert len(defs.splitlines()) == 17, "Expected 8 EXP, 7 Catch options and 2 count constants"
 mocked = header.replace('#include "global.h"', "").replace('#include "event_data.h"', "").replace('#include "constants/vars.h"', "")
 harness = r"""
