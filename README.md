@@ -9,7 +9,9 @@
 An **unofficial, non-commercial, experimental hobby modification** built upon
 [Pokémon World](https://github.com/evilchinesefood/PKMN-World) by David A. and its contributors.
 
-[**Origins**](#our-origins-built-upon-pokémon-world) · [**Field Guide**](docs/GRAND_ANTHOLOGY_FIELD_GUIDE.md) · [**Features**](#what-grand-anthology-adds) · [**Status**](#development-status-and-verification) · [**Build**](#building-locally) · [**Credits**](#credits-and-acknowledgments) · [**Roadmap**](#development-roadmap)
+[**Live Website**](https://grand-anthology.pages.dev/) · [**Origins**](#our-origins-built-upon-pokémon-world) · [**Field Guide**](docs/GRAND_ANTHOLOGY_FIELD_GUIDE.md) · [**Features**](#what-grand-anthology-adds) · [**Status**](#development-status-and-verification) · [**Build**](#building-locally) · [**Credits**](#credits-and-acknowledgments) · [**Roadmap**](#development-roadmap)
+
+**Companion website:** [grand-anthology.pages.dev](https://grand-anthology.pages.dev/) includes the National Pokédex, indexed locations, Mega Stones and the seeded Randomizer Atlas. Cloudflare Pages' first production deployment succeeded on 27 October 2026. The website is a reference and development preview, **not a playable game or ROM download**.
 
 > **Development preview, not a completed release.** The illustration above is original AI-generated project concept artwork, **not an in-game screenshot**. Grand Anthology is independent of and not endorsed by Pokémon World or the Pokémon rights holders.
 
