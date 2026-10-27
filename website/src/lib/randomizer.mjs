@@ -83,7 +83,7 @@ export function buildStarterAtlas(seed, data, randomized = true) {
 
 // The Finder searches all currently modeled source types. Keep this pure so
 // UI filters and regression tests cannot disagree about the starter roster.
-export function findSeededPokemonSources(wildRows, starterRows, species, options = {}) {
+export function findSeededPokemonSources(wildRows, starterRows, species, options = {}, staticRows = []) {
   const query = String(options.query ?? '').trim().toLowerCase();
   const region = options.region ?? 'all';
   const method = options.method ?? 'all';
@@ -107,14 +107,17 @@ export function findSeededPokemonSources(wildRows, starterRows, species, options
       }
     }
   }
-  const wild = method === 'starters' ? [] : wildRows.filter(row => {
+  const wild = (method === 'starters' || method === 'statics') ? [] : wildRows.filter(row => {
     if (region !== 'all' && row.region !== region) return false;
     if (method !== 'all' && row.area !== Number(method)) return false;
     return matches(row.speciesId);
   });
-  return { starters, wild };
+  const statics = (method === 'all' || method === 'statics') ? staticRows.filter(row => {
+    if (region !== 'all' && row.region !== region) return false;
+    return matches(row.speciesId);
+  }) : [];
+  return { starters, wild, statics };
 }
-
 
 export function pokemonDexHref(id, species) {
   const dex = species[id]?.dex;
