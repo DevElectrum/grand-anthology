@@ -10,6 +10,7 @@ on:
       - 'src/data/anthology_extra_habitats.h'
       - 'src/data/anthology_aquatic_habitats.h'
       - 'src/data/anthology_rare_habitats.h'
+      - 'graphics/pokemon/**'
       - 'src/data/pokemon/species_info/**'
       - 'src/data/pokemon/form_species_tables.h'
       - 'src/data/abilities.h'
@@ -27,6 +28,7 @@ on:
       - 'src/data/anthology_extra_habitats.h'
       - 'src/data/anthology_aquatic_habitats.h'
       - 'src/data/anthology_rare_habitats.h'
+      - 'graphics/pokemon/**'
       - 'src/data/pokemon/species_info/**'
       - 'src/data/pokemon/form_species_tables.h'
       - 'src/data/abilities.h'
@@ -61,6 +63,11 @@ jobs:
         run: |
           test -f website/dist/index.html
           test -f website/dist/pokedex/1/index.html
+          grep -q 'pokemon-sprites/bulbasaur/' website/dist/pokedex/1/index.html
+          grep -q 'pokemon-sprites/charizard/mega_x/' website/dist/pokedex/6/index.html
+          grep -q 'pokemon-sprites/terapagos/stellar/' website/dist/pokedex/1024/index.html
+          grep -q 'data-sprite-form="SPECIES_ZYGARDE_COMPLETE"' website/dist/pokedex/718/index.html
+          test -f website/dist/pokemon-sprites/bulbasaur/icon.png
           test -f website/dist/pokedex/133/index.html
           test -f website/dist/pokedex/349/index.html
           grep -q 'id="theme-toggle"' website/dist/index.html

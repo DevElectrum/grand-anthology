@@ -388,3 +388,27 @@ html[data-theme='dark'] .region-image { background: #273e49; }
 @media (max-width: 650px) {
   .theme-toggle { flex-shrink: 0; margin-left: auto; }
 }
+
+
+/* Pixel-art sprites: front sheets contain vertically stacked animation
+   frames; object-fit:cover + top positioning clips to the first frame. */
+.dex-card { justify-items: center; text-align: center; }
+.dex-sprite-frame { width: 80px; height: 80px; display: grid; place-items: center; margin: 2px auto; overflow: hidden; border-radius: 10px; background: #e9f0ee; }
+.dex-sprite-frame img { width: 72px; height: 72px; object-fit: cover; object-position: center top; image-rendering: pixelated; }
+.sprite-unavailable { color: #8399a5; font-size: 1.9rem; }
+.pokemon-hero { gap: 36px; }
+.pokemon-portrait { flex: 0 0 196px; display: grid; place-items: center; min-width: 0; }
+.pokemon-portrait-form { width: 196px; text-align: center; }
+.pokemon-portrait-image { display: block; margin: 0 auto; width: 176px; height: 176px; object-fit: cover; object-position: center top; image-rendering: pixelated; }
+.portrait-placeholder { display:grid; place-items:center; width:176px; height:176px; margin:auto; border-radius:50%; background:#153851; border:4px solid #ddc790; color:#f9f3df; font:700 1.65rem var(--serif); }
+.sprite-fallback-note { display: block; color: #586879; font-size: .71rem; line-height: 1.4; margin: 6px auto 0; }
+html[data-theme='dark'] .dex-sprite-frame { background: #304151; }
+html[data-theme='dark'] .sprite-unavailable, html[data-theme='dark'] .sprite-fallback-note { color: #c5d6e1; }
+@media(max-width:650px) {
+  .dex-sprite-frame { width: 65px; height: 65px; }
+  .dex-sprite-frame img { width: 60px; height: 60px; }
+  .pokemon-hero { align-items: flex-start; gap: 13px; flex-wrap: wrap; }
+  .pokemon-portrait { flex-basis: 125px; }
+  .pokemon-portrait-form { width: 125px; }
+  .pokemon-portrait-image, .portrait-placeholder { width: 116px; height: 116px; }
+}

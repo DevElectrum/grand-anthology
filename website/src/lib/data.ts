@@ -1,7 +1,14 @@
 import catalog from '../generated/catalog.json';
 import pokemonDetails from '../generated/pokemon-details.json';
+import spriteCatalog from '../generated/sprites.json';
 
-export { catalog, pokemonDetails };
+export { catalog, pokemonDetails, spriteCatalog };
+
+export function pokemonSprite(symbol: string, dex: number) {
+  const data = spriteCatalog as { sprites: Record<string, { front: string | null; icon: string | null; exact: boolean }>; byDex: Record<string, { front: string | null; icon: string | null }> };
+  return data.sprites[symbol] ?? { ...data.byDex[String(dex)], exact: false };
+}
+
 
 export function displayName(name: string): string {
   return String(name).toLowerCase().split(/([ _-]+)/).map(part =>

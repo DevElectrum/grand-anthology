@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { normalizeSourceEntries } from './normalize-sources.mjs';
 import { enrichSupplementalLevels } from './resolve-supplemental-levels.mjs';
 import { execFileSync } from 'node:child_process';
+import { buildSpriteManifest } from './sprite-manifest.mjs';
 
 const website = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repository = resolve(website, '..');
@@ -24,6 +25,8 @@ const meta = records.find(record => record.kind === 'meta');
 const pokemon = records.filter(record => record.kind === 'pokemon');
 const items = records.filter(record => record.kind === 'item');
 const megaStones = items.filter(item => item.mega_stone);
+const details = JSON.parse(await readFile(resolve(website, 'src/generated/pokemon-details.json'), 'utf8'));
+await buildSpriteManifest({ repository, website, pokemon, details });
 if (!meta || pokemon.length !== 1025 || new Set(pokemon.map(mon => mon.dex)).size !== 1025)
   throw new Error('Expected metadata and 1,025 distinct National Pokédex entries');
 if (items.length !== 874 || megaStones.length !== 92)
