@@ -35,6 +35,11 @@ class ExporterTests(unittest.TestCase):
         self.assertEqual(len(generated['formsByDex']), 1025)
         self.assertIn('SPECIES_ZYGARDE_COMPLETE', mons)
         self.assertIn('SPECIES_TERAPAGOS_STELLAR', mons)
+        self.assertIn('SPECIES_ZYGARDE_COMPLETE', generated['formsByDex']['718'])
+        self.assertIn('SPECIES_TERAPAGOS_STELLAR', generated['formsByDex']['1024'])
+        self.assertEqual(mons['SPECIES_ZYGARDE_COMPLETE']['bst'], 708)
+        self.assertEqual(mons['SPECIES_ZYGARDE']['dex'], 718)
+        self.assertEqual(mons['SPECIES_TERAPAGOS']['dex'], 1024)
 
 
 if __name__ == '__main__':
