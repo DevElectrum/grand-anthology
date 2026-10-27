@@ -293,6 +293,9 @@ def main():
             "genderRatio": f.get("genderRatio"),
             "eggGroups": [readable(x[10:]) for x in symbols(f.get("eggGroups", ""), "EGG_GROUP_") if x != "EGG_GROUP_NONE"],
             "evolutions": evolution_list(f.get("evolutions", "")),
+            "randomizerFlags": {name: f.get(name) in ("TRUE", "1") for name in (
+                "isMegaEvolution", "isPrimalReversion", "isUltraBurst",
+                "isGigantamax", "isTeraForm", "isTotem")},
             "mega": f.get("isMegaEvolution") in ("TRUE", "1"),
             "primal": f.get("isPrimalReversion") in ("TRUE", "1"),
             "source": "src/data/pokemon/species_info/",
