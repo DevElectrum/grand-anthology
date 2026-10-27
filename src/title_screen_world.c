@@ -2,6 +2,7 @@
 #include "clear_save_data_menu.h"
 #include "decompress.h"
 #include "event_data.h"
+#include "graphics.h"
 #include "gpu_regs.h"
 #include "intro.h"
 #include "m4a.h"
@@ -20,12 +21,83 @@
 
 #if ALL_REGIONS
 
-// The finished art includes the logo and PRESS START; both must not be overlaid again.
-// Generated from the 240x160 indexed PNG by tools/build_anthology_title.py.
+// The 240x160 title contains no prompt; reuse the original World blinking sprite.
 #define ANTHOLOGY_SCREEN_BLOCK 30
-#define ANTHOLOGY_TITLE_TILES_RAW_BYTES (601 * 64)
+#define ANTHOLOGY_TITLE_TILES_RAW_BYTES (577 * 64)
+#define ANTHOLOGY_PRESS_START_TAG 1001
+#define ANTHOLOGY_PRESS_START_PIECES 5
 #define CLEAR_SAVE_COMBO (B_BUTTON | SELECT_BUTTON | DPAD_UP)
 #define RESET_RTC_COMBO (B_BUTTON | SELECT_BUTTON | DPAD_LEFT)
+
+static const struct OamData sAnthologyPressStartOam =
+{
+    .y = DISPLAY_HEIGHT,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
+    .mosaic = FALSE,
+    .bpp = ST_OAM_4BPP,
+    .shape = SPRITE_SHAPE(32x8),
+    .x = 0,
+    .matrixNum = 0,
+    .size = SPRITE_SIZE(32x8),
+    .tileNum = 0,
+    .priority = 0,
+    .paletteNum = 0,
+    .affineParam = 0,
+};
+
+static const union AnimCmd sAnthologyPromptFrame0[] = { ANIMCMD_FRAME(1, 4), ANIMCMD_END };
+static const union AnimCmd sAnthologyPromptFrame1[] = { ANIMCMD_FRAME(5, 4), ANIMCMD_END };
+static const union AnimCmd sAnthologyPromptFrame2[] = { ANIMCMD_FRAME(9, 4), ANIMCMD_END };
+static const union AnimCmd sAnthologyPromptFrame3[] = { ANIMCMD_FRAME(13, 4), ANIMCMD_END };
+static const union AnimCmd sAnthologyPromptFrame4[] = { ANIMCMD_FRAME(17, 4), ANIMCMD_END };
+
+static const union AnimCmd *const sAnthologyPromptAnims[] =
+{
+    sAnthologyPromptFrame0,
+    sAnthologyPromptFrame1,
+    sAnthologyPromptFrame2,
+    sAnthologyPromptFrame3,
+    sAnthologyPromptFrame4,
+};
+
+static void SpriteCB_AnthologyPressStart(struct Sprite *sprite)
+{
+    sprite->invisible = !(++sprite->data[0] & 16);
+}
+
+static const struct SpriteTemplate sAnthologyPressStartTemplate =
+{
+    .tileTag = ANTHOLOGY_PRESS_START_TAG,
+    .paletteTag = ANTHOLOGY_PRESS_START_TAG,
+    .oam = &sAnthologyPressStartOam,
+    .anims = sAnthologyPromptAnims,
+    .callback = SpriteCB_AnthologyPressStart,
+};
+
+static const struct CompressedSpriteSheet sAnthologyPressStartSheet =
+{
+    .data = gTitleScreenPressStartGfx,
+    .size = 0x520,
+    .tag = ANTHOLOGY_PRESS_START_TAG,
+};
+
+static const struct SpritePalette sAnthologyPressStartPalette =
+{
+    .data = gTitleScreenPressStartPal,
+    .tag = ANTHOLOGY_PRESS_START_TAG,
+};
+
+static void CreateAnthologyPressStart(void)
+{
+    u8 i;
+    for (i = 0; i < ANTHOLOGY_PRESS_START_PIECES; i++)
+    {
+        u8 spriteId = CreateSprite(&sAnthologyPressStartTemplate, 56 + i * 32, 145, 0);
+        if (spriteId != MAX_SPRITES)
+            StartSpriteAnim(&gSprites[spriteId], i);
+    }
+}
 
 static const u32 sAnthologyTiles[] = INCBIN_U32("graphics/title_screen/world/anthology_title_tiles.bin");
 static const u16 sAnthologyPalette[] = INCBIN_U16("graphics/title_screen/world/anthology_title_palette.bin");
@@ -90,6 +162,8 @@ void CB2_InitWorldTitleScreen(void)
         DmaCopy32(3, sAnthologyTiles, (void *)VRAM, sizeof(sAnthologyTiles));
         DmaCopy16(3, sAnthologyMap, (void *)BG_SCREEN_ADDR(ANTHOLOGY_SCREEN_BLOCK), sizeof(sAnthologyMap));
         LoadPalette(sAnthologyPalette, 0, sizeof(sAnthologyPalette));
+        LoadCompressedSpriteSheet(&sAnthologyPressStartSheet);
+        LoadSpritePalette(&sAnthologyPressStartPalette);
         if (QUICKSTART && QUICKSTART_HUD)
             CreateQuickstartHud();
         BuildOamBuffer();
@@ -97,6 +171,7 @@ void CB2_InitWorldTitleScreen(void)
         break;
     default:
         SetGpuReg(REG_OFFSET_BG0CNT, BGCNT_PRIORITY(0) | BGCNT_CHARBASE(0) | BGCNT_SCREENBASE(ANTHOLOGY_SCREEN_BLOCK) | BGCNT_256COLOR | BGCNT_TXT256x256);
+        CreateAnthologyPressStart();
         CreateTask(Task_WorldTitleScreen, 0);
         BeginNormalPaletteFade(PALETTES_ALL, 1, 16, 0, RGB_WHITEALPHA);
         SetVBlankCallback(VBlankCB_WorldTitleScreen);

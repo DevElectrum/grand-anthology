@@ -48,7 +48,7 @@ local function checkResource(name, address, filename)
 end
 
 local function checkNativeArt()
-  checkResource("approved title's 601 raw tiles are in VRAM", 0x06000000, "anthology_title_tiles.bin")
+  checkResource("native 577-tile V3 title is in VRAM", 0x06000000, "anthology_title_tiles.bin")
   checkResource("approved tilemap loaded on BG0", 0x0600F000, "anthology_title_map.bin")
   checkResource("approved 256-color title palette loaded", 0x05000000, "anthology_title_palette.bin")
 end
@@ -57,7 +57,7 @@ local function stoppedWave()
   return F.r8(S.gScanlineEffect + 21) == 0
 end
 
-local function noDuplicatePromptSprites()
+local function promptSpriteCount()
   local pieces = 0
   for i = 0, 127 do
     local a0, a1 = F.r16(0x07000000 + i*8), F.r16(0x07000002 + i*8)
@@ -65,7 +65,20 @@ local function noDuplicatePromptSprites()
       pieces = pieces + 1
     end
   end
-  F.check("no overlaid World PRESS START sprite strip", pieces == 0, "32x8 sprite pieces=" .. pieces)
+  return pieces
+end
+
+local function checkAnimatedPrompt()
+  local sawHidden, sawVisible, sawOther = false, false, false
+  for i = 1, 64 do
+    local n = promptSpriteCount()
+    sawHidden = sawHidden or n == 0
+    sawVisible = sawVisible or n == 5
+    sawOther = sawOther or (n ~= 0 and n ~= 5)
+    emu.frameadvance()
+  end
+  F.check("original five-piece PRESS START blinks off and on", sawHidden and sawVisible)
+  F.check("title has no duplicate prompt sprites", not sawOther)
 end
 
 F.run(function()
@@ -75,7 +88,7 @@ F.run(function()
   F.check("BG1 and BG2 remain disabled", F.r16(0x0400000A) == 0 and F.r16(0x0400000C) == 0)
   F.check("former fog alpha blend is disabled", F.r16(0x04000050) == 0)
   checkNativeArt()
-  noDuplicatePromptSprites()
+  checkAnimatedPrompt()
   F.shot("grand_anthology_title")
 
   F.idle(1024)
