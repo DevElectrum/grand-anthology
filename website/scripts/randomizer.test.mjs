@@ -213,6 +213,13 @@ test('actual scripted static sources and three modes mirror current game source'
   const sites = data.staticSites;
   assert.ok(sites.length >= 70, 'Static sources are suspiciously sparse: ' + sites.length);
   const legendaryCount = data.species.filter(mon => mon.legendaryStatic && mon.fieldStable).length;
+  console.log('Static pool diagnostic', legendaryCount,
+    data.species.filter(mon => mon.legendaryStatic).length,
+    data.species.filter(mon => mon.ultraBeast).length,
+    ['SPECIES_ARTICUNO', 'SPECIES_MEWTWO', 'SPECIES_MEW', 'SPECIES_RAYQUAZA', 'SPECIES_JIRACHI'].map(symbol => {
+      const entry = data.species.find(mon => mon.symbol === symbol);
+      return [symbol, entry?.id, entry?.legendaryStatic, entry?.fieldStable];
+    }));
   assert.ok(legendaryCount >= 50, 'Legendary pool is missing configured C flags: ' + legendaryCount);
   assert.ok(data.species.some(mon => mon.ultraBeast), 'Ultra Beast flags missing');
   assert.ok(data.species.some(mon => mon.paradox), 'Paradox flags missing');
