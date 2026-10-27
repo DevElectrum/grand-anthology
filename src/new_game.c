@@ -18,6 +18,7 @@
 #include "rtc.h"
 #include "easy_chat.h"
 #include "event_data.h"
+#include "qol_multipliers.h"
 #include "money.h"
 #include "trainer_hill.h"
 #include "trainer_tower.h"
@@ -74,6 +75,8 @@ EWRAM_DATA static struct SaveBlock2 sPreviousNewGameSaveBlock2;
 EWRAM_DATA static bool8 sNewGameSetupActive = FALSE;
 EWRAM_DATA static bool8 sPreviousSharedExp = FALSE;
 EWRAM_DATA static bool8 sNewGameSharedExp = FALSE;
+EWRAM_DATA static u16 sPreviousQolMultiplierExtras = 0;
+EWRAM_DATA static u16 sNewGameQolMultiplierExtras = 0;
 
 bool8 IsNewGameSetupActive(void)
 {
@@ -84,6 +87,8 @@ void BeginNewGameSetup(void)
 {
     CpuCopy16(gSaveBlock2Ptr, &sPreviousNewGameSaveBlock2, sizeof(sPreviousNewGameSaveBlock2));
     sPreviousSharedExp = FlagGet(FLAG_QOL_SHARED_EXP);
+    sPreviousQolMultiplierExtras = VarGet(VAR_QOL_MULTIPLIERS);
+    sNewGameQolMultiplierExtras = 0;
     sNewGameSetupActive = TRUE;
     SetDefaultOptions();
     gSaveBlock2Ptr->optionsAutoRun = FALSE;
@@ -97,11 +102,13 @@ void BeginNewGameSetup(void)
     gSaveBlock2Ptr->randomizerVersion = 2; // Fisher-Yates Legendary Shuffle; old v1 saves retain rotation.
     gSaveBlock2Ptr->randomizerLocked = FALSE;
     FlagClear(FLAG_QOL_SHARED_EXP);
+    VarSet(VAR_QOL_MULTIPLIERS, 0);
 }
 
 void ConfirmNewGameSetup(void)
 {
     sNewGameSharedExp = FlagGet(FLAG_QOL_SHARED_EXP);
+    sNewGameQolMultiplierExtras = VarGet(VAR_QOL_MULTIPLIERS);
     gSaveBlock2Ptr->randomizerLocked = TRUE;
     sNewGameSetupActive = FALSE;
 }
@@ -109,6 +116,7 @@ void ConfirmNewGameSetup(void)
 void CancelNewGameSetup(void)
 {
     CpuCopy16(&sPreviousNewGameSaveBlock2, gSaveBlock2Ptr, sizeof(sPreviousNewGameSaveBlock2));
+    VarSet(VAR_QOL_MULTIPLIERS, sPreviousQolMultiplierExtras);
     if (sPreviousSharedExp)
         FlagSet(FLAG_QOL_SHARED_EXP);
     else
@@ -292,6 +300,11 @@ void NewGameInitData(void)
     PlayTimeCounter_Reset();
     ClearPokedexFlags();
     InitEventData();
+#if ALL_REGIONS
+    // ClearSav1 erased the pre-intro editor's extended multiplier var.
+    // Reapply the confirmed settings after event data initialization.
+    VarSet(VAR_QOL_MULTIPLIERS, sNewGameQolMultiplierExtras);
+#endif
 #if IS_FRLG || ALL_REGIONS
     VarSet(VAR_PLAYER_PALETTE, playerOutfit); // restore the intro outfit pick wiped by ClearSav1
 #endif

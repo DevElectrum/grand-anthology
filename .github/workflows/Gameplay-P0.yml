@@ -49,6 +49,7 @@ jobs:
           python3 test/overworld/ValidateStarterIsolation.py
           python3 test/overworld/ValidateRegionalStarterOrder.py
           python3 test/overworld/ValidateShinyOdds.py
+          python3 test/overworld/ValidateQolMultipliers.py
           python3 test/overworld/ValidateSeededWildRandomizer.py
           python3 test/overworld/ValidateSeededTrainerRandomizer.py
           python3 test/overworld/ValidateGlobalPcSearch.py

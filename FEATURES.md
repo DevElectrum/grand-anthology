@@ -481,3 +481,10 @@ The upstream feature list is at
 against the *[What this build turns off](#what-this-build-turns-off)* table above — several
 headline items are compiled out here. The config headers live in this repo under
 `include/config/`; those are the authority for what is actually on.
+
+
+### Expanded EXP and Catch Rate choices
+
+The in-game **Exp Rate** Options menu supports `0.25×, 0.5×, 1×, 1.5×, 2×, 3×, 5×, 10×`. **Catch Rate** supports `0.5×, 1×, 1.5×, 2×, 3×, 5×, 10×`. Both display one value at a time, cycling with left/right; both default to 1×. Existing 0.5×/1×/1.5×/2× settings keep their exact old IDs and calculations. High EXP options use overflow-safe post-scaled multiplication and capped `u32` results; Catch 3×/5×/10× saturate at 255 capture odds, which the existing code already treats as guaranteed. At 10×, a difficult uncaught Pokémon can still fail until its calculated odds reach 255.
+
+The original two-bit option fields in `SaveBlock2` are unchanged. New IDs use a signed/validated extension inside the previously unused global `0x4091` SaveBlock1 variable; unrecognized/old data fall back to the original bits. Pre-intro New Game setup snapshots and restores this variable on Cancel, and transfers selected values after `ClearSav1` on Confirm. No new save format, changed offsets, or modification to the website Randomizer Atlas.

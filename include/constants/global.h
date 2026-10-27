@@ -305,17 +305,28 @@ enum Gender
 #define OPTIONS_RUN_SHORTCUT_INSTANT 2
 
 // QoL #15: battle EXP multiplier. Save-compat: 0 = 1x so pre-option saves
-// (and zeroed battle-test saves) stay vanilla. Menu shows 0.5x/1x/1.5x/2x.
+// (and zeroed battle-test saves) stay vanilla. The 2-bit legacy field is
+// unchanged; choices 4..7 are stored separately in VAR_QOL_MULTIPLIERS.
 #define OPTIONS_EXP_MULT_1X 0
 #define OPTIONS_EXP_MULT_0_5X 1
 #define OPTIONS_EXP_MULT_1_5X 2
 #define OPTIONS_EXP_MULT_2X 3
+#define OPTIONS_EXP_MULT_0_25X 4
+#define OPTIONS_EXP_MULT_3X 5
+#define OPTIONS_EXP_MULT_5X 6
+#define OPTIONS_EXP_MULT_10X 7
+#define OPTIONS_EXP_MULT_COUNT 8
 
-// QoL #15: catch-rate multiplier (0 = 1x, matches menu order 1x/1.5x/2x).
+// QoL #15: catch-rate multiplier (0 = 1x). Choices 4..6 use an
+// extended settings variable; legacy 2-bit values never change meaning.
 #define OPTIONS_CATCH_MULT_1X 0
 #define OPTIONS_CATCH_MULT_1_5X 1
 #define OPTIONS_CATCH_MULT_2X 2
 #define OPTIONS_CATCH_MULT_0_5X 3 // added last to preserve old-save values (0/1/2 unchanged)
+#define OPTIONS_CATCH_MULT_3X 4
+#define OPTIONS_CATCH_MULT_5X 5
+#define OPTIONS_CATCH_MULT_10X 6
+#define OPTIONS_CATCH_MULT_COUNT 7
 
 // QoL #8: nickname prompt on catch / egg hatch. Save-compat: 0 = ON (prompts
 // shown, vanilla) so pre-option/zeroed saves keep asking; 1 = OFF skips the
