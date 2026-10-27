@@ -125,7 +125,16 @@ export async function exportRandomizerData(root = ROOT) {
   const primary = wild.wild_encounter_groups.find(group => group.label === 'gWildMonHeaders')
     ?? wild.wild_encounter_groups.find(group => group.for_maps);
   if (!primary) throw new Error('Missing game wild headers');
-  const collisions = new Map();
+  const variants = new Map();
+  for (const row of primary.encounters) {
+    if (!gameCompiledVariant(row)) continue;
+    for (const [key, area] of methodFields) {
+      if (!row[key]?.encounter_rate) continue;
+      const id = row.map + ':' + area;
+      if (!variants.has(id)) variants.set(id, new Set());
+      variants.get(id).add(row.base_label);
+    }
+  }
   for (const row of primary.encounters) {
     if (!gameCompiledVariant(row)) continue;
     const map = mapIndex[row.map];
@@ -133,18 +142,16 @@ export async function exportRandomizerData(root = ROOT) {
     for (const [key, area, method] of methodFields) {
       const value = row[key];
       if (!value || !value.encounter_rate || !value.mons?.length) continue;
-      const collision = row.map + ':' + area;
-      // With time encounters disabled, there must be only one compiled header
-      // per map + area, otherwise current-time behavior must be reaudited.
-      if (collisions.has(collision)) throw new Error('Ambiguous compiled wild table: ' + collision
-        + ' (' + collisions.get(collision) + ', ' + row.base_label + ')');
-      collisions.set(collision, row.base_label);
+      // Some inherited areas, notably Altering Cave, have multiple authored
+      // runtime encounter tables. Preserve them as explicitly labeled variants
+      // rather than pretending every variant is simultaneously available.
+      const alternate = variants.get(row.map + ':' + area)?.size > 1;
       for (const [slot, mon] of value.mons.entries()) {
         const original = speciesEnum.byName[mon.species];
         if (original == null) throw new Error('Unrecognized encounter species ' + mon.species);
         mapSlots.push({
           map: row.map, group: map.group, num: map.num, region: map.region,
-          area, method, slot, original,
+          area, method, slot, original, variant: alternate ? row.base_label : null,
           min: mon.min_level ?? 2, max: mon.max_level ?? 100,
           rate: value.encounter_rate,
           rod: area !== 3 ? null : slot < 2 ? 'Old Rod' : slot < 5 ? 'Good Rod' : 'Super Rod'
