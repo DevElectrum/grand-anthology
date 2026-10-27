@@ -213,6 +213,15 @@ for directory, prefix, name, species, x, y, suffix, multiple in table:
     for outcome in ("B_OUTCOME_WON", "B_OUTCOME_CAUGHT",
                     "B_OUTCOME_RAN", "B_OUTCOME_PLAYER_TELEPORTED"):
         state = Save()
+        if directory == "JohtoEternatusChamber":
+            # Its encounter is deliberately unavailable until the player
+            # defeats and claims the Royal Duo. The battle-state tests
+            # must start from that legitimate unlocked story state.
+            locked = Save()
+            run(scripts, battle, locked, outcome)
+            assert hide not in locked.flags, ("Eternatus battle bypassed Royal Duo seal")
+            assert "SPECIES_ETERNATUS" not in locked.caught, ("Locked Eternatus was caught")
+            state.flags.add("FLAG_ANTHOLOGY_ROYAL_DUO_CLAIMED")
         run(scripts, battle, state, outcome)
         resolved = outcome in ("B_OUTCOME_WON", "B_OUTCOME_CAUGHT")
         assert (hide in state.flags) == resolved, (
