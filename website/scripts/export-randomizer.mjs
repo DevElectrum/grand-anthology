@@ -185,7 +185,8 @@ export async function exportRandomizerData(root = ROOT) {
     root, catalog, maps: mapIndex, byName: speciesEnum.byName, royalSource
   });
   const output = {
-    schema: 2, gameMode: 'New Game / randomizerVersion 1',
+    schema: 3, gameMode: 'New Game / randomizerVersion 2',
+    staticAlgorithmVersion: 2, legacyStaticVersions: [1],
     fingerprint: createHash('sha256').update(enumText + starterText + wildText + detailsText + royalSource).digest('hex').slice(0, 16),
     species, maps: mapIndex, wildSlots: mapSlots, starters,
     staticSites: staticSources.sites,

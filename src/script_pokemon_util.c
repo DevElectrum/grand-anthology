@@ -127,12 +127,28 @@ static bool32 IsLegendaryStaticSpecies(enum Species species)
         || gSpeciesInfo[species].isMythical;
 }
 
-// One-to-one permutation of the valid legendary/mythical species pool. The
-// mapping is independent of location and interaction order. Do not choose
-// arbitrary species for each Legendary Shuffle slot independently.
+// Reusable EWRAM scratch space avoids allocating a NUM_SPECIES array on the
+// small GBA stack. Rebuilt from the saved seed on every invocation: no global
+// battle RNG calls, cache invalidation, or encounter-order dependence.
+EWRAM_DATA static enum Species sLegendaryShufflePool[NUM_SPECIES];
+
+static u32 NextLegendaryShuffleRandom(u32 *state)
+{
+    u32 value = *state;
+    value ^= value << 13;
+    value ^= value >> 17;
+    value ^= value << 5;
+    *state = value;
+    return value;
+}
+
+// Globally ordered eligible Legendary/Mythical species, across ALL regions.
+// v1 keeps the original cyclic rotation exactly for existing v13 save files.
+// New games use version 2's deterministic Fisher-Yates permutation.
 static enum Species WorldShuffleLegendarySpecies(enum Species original)
 {
-    u32 count = 0, index = 0, i, multiplier, offset;
+    u32 count = 0, index = 0, i, j, state;
+    enum Species swap;
     if (!IsLegendaryStaticSpecies(original))
         return original;
     for (i = 1; i < NUM_SPECIES; i++)
@@ -141,26 +157,33 @@ static enum Species WorldShuffleLegendarySpecies(enum Species original)
         {
             if (i == original)
                 index = count;
-            count++;
+            sLegendaryShufflePool[count++] = i;
         }
     }
     if (!count || !WorldIsFieldStableDiscoverySpecies(original))
         return original;
-    // A cyclic permutation is bijective even if the legendary pool size
-    // changes. It preserves every source species once when sources cover it.
-    multiplier = 1;
-    offset = (gSaveBlock2Ptr->randomizerSeed % count);
-    index = (index * multiplier + offset) % count;
-    for (i = 1; i < NUM_SPECIES; i++)
+
+    if (gSaveBlock2Ptr->randomizerVersion < 2)
+        return sLegendaryShufflePool[(index + gSaveBlock2Ptr->randomizerSeed % count) % count];
+
+    // Seed domain 0..65535. Mixing a fixed nonzero salt initializes the
+    // private xorshift32 stream; its state is never zero for a valid seed.
+    state = 0xA511E9B3u ^ gSaveBlock2Ptr->randomizerSeed;
+    state ^= state >> 16;
+    state *= 0x7FEB352Du;
+    state ^= state >> 15;
+    state *= 0x846CA68Bu;
+    state ^= state >> 16;
+    if (state == 0)
+        state = 0x6D2B79F5u;
+    for (i = count - 1; i > 0; i--)
     {
-        if (IsLegendaryStaticSpecies(i) && WorldIsFieldStableDiscoverySpecies(i))
-        {
-            if (index == 0)
-                return i;
-            index--;
-        }
+        j = NextLegendaryShuffleRandom(&state) % (i + 1);
+        swap = sLegendaryShufflePool[i];
+        sLegendaryShufflePool[i] = sLegendaryShufflePool[j];
+        sLegendaryShufflePool[j] = swap;
     }
-    return original;
+    return sLegendaryShufflePool[index];
 }
 
 enum Species WorldRandomizeStaticSpecies(enum Species original, u32 slot)

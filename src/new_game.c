@@ -94,7 +94,7 @@ void BeginNewGameSetup(void)
     gSaveBlock2Ptr->randomizerStarters = FALSE;
     gSaveBlock2Ptr->randomizerSeed = 2026;
     gSaveBlock2Ptr->randomizerStaticMode = 0;
-    gSaveBlock2Ptr->randomizerVersion = 1;
+    gSaveBlock2Ptr->randomizerVersion = 2; // Fisher-Yates Legendary Shuffle; old v1 saves retain rotation.
     gSaveBlock2Ptr->randomizerLocked = FALSE;
     FlagClear(FLAG_QOL_SHARED_EXP);
 }

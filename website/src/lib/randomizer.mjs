@@ -132,13 +132,15 @@ export const STATIC_MODES = {
   chaos: 2
 };
 
-// Matches WorldRandomizeStaticSpecies in script_pokemon_util.c for new-game
-// save version 13. The legendary pool is ordered by INTERNAL Species enum ID.
-export function seededStatic(seed, original, slot, group, num, species, mode = 0, enabled = true) {
+// Matches WorldRandomizeStaticSpecies for save format 13. The legendary pool
+// is globally ordered by INTERNAL Species enum ID; v1 rotation stays playable.
+export function seededStatic(seed, original, slot, group, num, species, mode = 0, enabled = true, version = 2) {
   if (!Number.isInteger(seed) || seed < 0 || seed > 65535)
     throw new RangeError('Seed must be an integer between 0 and 65535');
   if (!Number.isInteger(mode) || mode < 0 || mode > 2)
     throw new RangeError('Unknown modern static encounter policy');
+  if (!Number.isInteger(version) || (version !== 1 && version !== 2))
+    throw new RangeError('Atlas supports static versions 1 and 2');
   if (!enabled || original === 0 || original === species.length) return original;
   const mon = species[original];
   if (!mon?.symbol) throw new Error('Unknown original static species ID ' + original);
@@ -153,7 +155,20 @@ export function seededStatic(seed, original, slot, group, num, species, mode = 0
     }
     if (!pool.length) return original;
     const position = pool.indexOf(original);
-    return pool[(position + seed % pool.length) % pool.length];
+    if (version < 2) return pool[(position + seed % pool.length) % pool.length];
+    let state = mix32((0xA511E9B3 ^ seed) >>> 0);
+    if (state === 0) state = 0x6D2B79F5;
+    for (let i = pool.length - 1; i > 0; i--) {
+      state ^= state << 13;
+      state ^= state >>> 17;
+      state ^= state << 5;
+      state >>>= 0;
+      const j = state % (i + 1);
+      const old = pool[i];
+      pool[i] = pool[j];
+      pool[j] = old;
+    }
+    return pool[position];
   }
 
   let hash = (0x9E3779B9 ^ seed) >>> 0;
@@ -170,10 +185,10 @@ export function seededStatic(seed, original, slot, group, num, species, mode = 0
   return original;
 }
 
-export function buildStaticAtlas(seed, data, mode = 0, enabled = true) {
+export function buildStaticAtlas(seed, data, mode = 0, enabled = true, version = 2) {
   return (data.staticSites ?? []).map(site => {
     const replacement = seededStatic(seed, site.original, site.slot, site.group,
-      site.num, data.species, mode, enabled);
+      site.num, data.species, mode, enabled, version);
     return { ...site, speciesId: replacement };
   });
 }
