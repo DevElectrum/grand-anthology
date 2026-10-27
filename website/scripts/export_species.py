@@ -153,6 +153,8 @@ def number_expr(expr):
     if re.search(r"[A-Za-z_]", re.sub(r"\d+[uUlL]+", "0", expr)):
         return None
     expr = re.sub(r"(\d+)[uUlL]+\b", r"\1", expr)
+    expr = expr.replace("||", " or ").replace("&&", " and ")
+    expr = re.sub(r"(?<![=!<>])!(?!=)", " not ", expr)
     question = expr.find("?")
     if question != -1:
         depth = 0
@@ -173,6 +175,12 @@ def number_expr(expr):
         def walk(node):
             if isinstance(node, ast.Constant) and type(node.value) in (int, float):
                 return node.value
+            if isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
+                return any(walk(value) for value in node.values)
+            if isinstance(node, ast.BoolOp) and isinstance(node.op, ast.And):
+                return all(walk(value) for value in node.values)
+            if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+                return not walk(node.operand)
             if isinstance(node, ast.UnaryOp) and type(node.op) in OPERATORS:
                 return OPERATORS[type(node.op)](walk(node.operand))
             if isinstance(node, ast.BinOp) and type(node.op) in OPERATORS:
