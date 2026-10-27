@@ -85,7 +85,12 @@ export function formName(symbol: string, gameName?: string | null): string {
     TERAPAGOS_STELLAR: 'Stellar Form',
     TERAPAGOS_TERASTAL: 'Terastal Form'
   };
-  return special[raw] ?? (gameName && !/^[-?]+$/.test(gameName) ? gameName : displayName(raw));
+  if (special[raw]) return special[raw];
+  if (raw.endsWith('_MEGA')) return 'Mega ' + (gameName || displayName(raw.slice(0, -5)));
+  if (raw.endsWith('_MEGA_X')) return 'Mega ' + (gameName || displayName(raw.slice(0, -7))) + ' X';
+  if (raw.endsWith('_MEGA_Y')) return 'Mega ' + (gameName || displayName(raw.slice(0, -7))) + ' Y';
+  if (gameName && raw === gameName.toUpperCase().replace(/[^A-Z0-9]+/g, '_')) return gameName;
+  return displayName(raw);
 }
 
 export function genderLabel(ratio?: string | null): string {
