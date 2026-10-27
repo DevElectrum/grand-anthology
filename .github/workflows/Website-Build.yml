@@ -75,6 +75,9 @@ jobs:
       - name: Generate website and static pages
         working-directory: website
         run: npm run build
+      - name: Verify Cloudflare file limits and published links
+        working-directory: website
+        run: npm run audit:deploy
       - name: Check expected output
         run: |
           test -f website/dist/index.html
