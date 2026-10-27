@@ -176,6 +176,7 @@ test('static C hash matches independent 32-bit mixing and each protection policy
     h ^= h >>> 15;
     h = Math.imul(h, 0x846CA68B) >>> 0;
     h ^= h >>> 16;
+    h >>>= 0;
     let candidate = 1 + h % (species.length - 1);
     while (!species[candidate].fieldStable) {
       candidate++;
@@ -211,8 +212,8 @@ test('actual scripted static sources and three modes mirror current game source'
   const data = await exportRandomizerData();
   const sites = data.staticSites;
   assert.ok(sites.length >= 70, 'Static sources are suspiciously sparse: ' + sites.length);
-  assert.ok(data.species.filter(mon => mon.legendaryStatic && mon.fieldStable).length >= 50,
-    'Legendary pool is missing configured C flags');
+  const legendaryCount = data.species.filter(mon => mon.legendaryStatic && mon.fieldStable).length;
+  assert.ok(legendaryCount >= 50, 'Legendary pool is missing configured C flags: ' + legendaryCount);
   assert.ok(data.species.some(mon => mon.ultraBeast), 'Ultra Beast flags missing');
   assert.ok(data.species.some(mon => mon.paradox), 'Paradox flags missing');
   assert.ok(data.staticAudit.notMatched.length < 25,
