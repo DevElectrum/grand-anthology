@@ -92,9 +92,10 @@ function label(symbol: string) {
       {sources.length ? <div class="table-scroll"><table class="data-table"><thead><tr><th>Method</th><th>Location</th><th>Level</th><th>Evidence</th></tr></thead><tbody>
         {sources.map(source => <tr><td>{sourceMethod(source.method)}{source.form && <small>Form: {formName(source.form)}</small>}</td>
           <td>{source.map && locations.has(source.map) ? <a href={locationHref(locations.get(source.map)!)}>{locationName(source.map)}</a> : <span class="muted">Not indexed</span>}</td>
-          <td>{levelLabel({level:source.level, levelMin:source.level_min, levelMax:source.level_max})}</td>
+          <td>{levelLabel(source)}</td>
           <td class="small-cell">{evidenceLabel(source.gameplay_verified)}</td></tr>)}
       </tbody></table></div> : <p>No direct acquisition source is indexed. Evolution or gifts may still provide a path.</p>}
+      <p class="fine-print">Rare grass and Surfing encounters inherit the first native slot's level range. Supplemental fishing follows each rod's native slots. These ranges exclude Lure effects and randomizer replacements; eligibility restrictions still apply.</p>
     </section>
     {sources.some(source => source.note || source.required || source.requires) && <section class="panel notes-panel">
       <h2>Encounter notes and prerequisites</h2>
