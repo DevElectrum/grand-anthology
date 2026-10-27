@@ -486,7 +486,7 @@ _p0_new_statics = (
 ("DarkCave_NorthSide","DarkCave_NorthSide","Zekrom","ZEKROM",40,13,"ZEKROM",False),
 ("DragonsDen_Cavern","DragonsDen_Cavern","Regidrago","REGIDRAGO",35,43,"REGIDRAGO",False),
 ("IcePath_B1F","IcePath_B1F","Kyurem","KYUREM",8,10,"KYUREM",False),
-("Route44","Route44","Eternatus","ETERNATUS",8,17,"ETERNATUS",False),
+("JohtoEternatusChamber","JohtoEternatusChamber","Eternatus","ETERNATUS",10,9,"ETERNATUS",False),
 ("GoldenrodCity","GoldenrodCity","Genesect","GENESECT",36,25,"GENESECT",False),
 ("Route105","Route105","ChienPao","CHIEN_PAO",10,22,"CHIEN_PAO",False),
 ("PetalburgWoods","PetalburgWoods","Zygarde10","ZYGARDE_10_AURA_BREAK",16,19,"ZYGARDE_10",True),
