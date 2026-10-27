@@ -30,6 +30,7 @@ on:
       - "test/overworld/ValidateSeededGiftRandomizer.py"
       - "test/overworld/ValidateSeededStarterRandomizer.py"
       - "test/overworld/ValidateSeededStaticRandomizer.py"
+      - "test/overworld/ValidateLegendaryShufflePermutation.py"
       - "src/wild_encounter.c"
       # Static Pokémon source, encounter maps and fossil restoration must also
       # get a representative real-ROM/mGBA regression, not only source checks.

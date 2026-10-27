@@ -20,13 +20,19 @@ import Base from '../layouts/Base.astro';
         <label class="field">Static encounter mode
           <select id="atlas-static-mode">
             <option value="0">Ordinary</option>
-            <option value="1">Legendary Shuffle</option>
+            <option value="1">Legendary Shuffle (seeded permutation)</option>
             <option value="2">Full Chaos</option>
+          </select>
+        </label>
+        <label class="field">Static algorithm version
+          <select id="atlas-static-version">
+            <option value="2">v2 · New games (shuffled)</option>
+            <option value="1">v1 · Existing saves (rotation)</option>
           </select>
         </label>
         <button class="button button-dark" type="submit">Generate my world</button>
       </div>
-      <p id="atlas-seed-help" class="fine-print">Use the seed and enabled categories from your game's New Game settings. Results do not depend on the time you enter the seed.</p>
+      <p id="atlas-seed-help" class="fine-print">New games made with this update use v2, a cross-generation seeded Legendary Shuffle. Choose v1 for saves started before this update; their legendary mappings remain unchanged. Full Chaos and Ordinary work the same in both versions.</p>
       <p id="atlas-status" role="status" aria-live="polite" class="atlas-status">Loading the source-derived encounter index…</p>
     </form>
     <section class="panel">
@@ -59,7 +65,7 @@ import Base from '../layouts/Base.astro';
     <section class="panel">
       <h2>What these results cover</h2>
       <p>Pokémon Finder includes the <strong>three currently modeled source types</strong>: native wild slots, regional starter choices and scripted statics. Static Explorer lists script-confirmed encounter instructions, including conditional legendary locations and the Route 27 Royal Duo. They are <strong>source candidates</strong>, not guarantees of accessibility, capture or rewards. Wild results represent the game's <strong>native encounter-table slots</strong>, including each slot's original species, level bracket, method and replacement species. The same species may occupy multiple slots; that's intentional. Ordinary supplemental grass, Surfing and fishing spawns are disabled while Wild Randomization is on and are not artificially added to these results.</p>
-      <p>Some areas, including Altering Cave, have multiple authored wild tables. Those rows are explicitly marked <strong>Alternative table</strong>; they are not simultaneously active and the active variant may depend on game state. The site currently excludes special Feebas/outbreak/roamer pathways, post-League research rotations, quest gates, and scripted static events. Some indexed maps are inaccessible until story progression or use encounter restrictions. Static modes use the current v13 Ordinary, Legendary Shuffle and Full Chaos rules. The source-level static list is not a substitute for auditing story flags, repeated scripts, source-site completion, or mGBA behavior.</p>
+      <p>Some areas, including Altering Cave, have multiple authored wild tables. Those rows are explicitly marked <strong>Alternative table</strong>; they are not simultaneously active and the active variant may depend on game state. The site currently excludes special Feebas/outbreak/roamer pathways, post-League research rotations, quest gates, and scripted static events. Some indexed maps are inaccessible until story progression or use encounter restrictions. Static modes use the v13 Ordinary, Legendary Shuffle and Full Chaos rules. v2 Legendary Shuffle uses a global, seeded Fisher–Yates permutation; v1 preserves the legacy rotation. Both modes retain a one-to-one mapping across eligible Legendary/Mythical species. The source-level static list is not a substitute for auditing story flags, repeated scripts, source-site completion, or mGBA behavior.</p>
       <p class="fine-print">Source snapshot: <code id="atlas-fingerprint">Loading…</code>. Calculations run locally in your browser; no seed data is uploaded. Results are a source-level mirror awaiting representative in-emulator validation.</p>
     </section>
   </div>
@@ -75,6 +81,7 @@ import Base from '../layouts/Base.astro';
     const starterInput = element('atlas-starters') as HTMLInputElement;
     const staticInput = element('atlas-statics') as HTMLInputElement;
     const staticModeInput = element('atlas-static-mode') as HTMLSelectElement;
+    const staticVersionInput = element('atlas-static-version') as HTMLSelectElement;
     const viewInput = element('atlas-view') as HTMLSelectElement;
     const pokemonQuery = element('atlas-pokemon-search') as HTMLInputElement;
     const locationQuery = element('atlas-location-search') as HTMLInputElement;
@@ -90,7 +97,9 @@ import Base from '../layouts/Base.astro';
     let starterRows: Record<string, any[]> = {};
     let staticRows: any[] = [];
     element('atlas-fingerprint').textContent = atlasData.fingerprint;
-    const suppliedSeed = new URLSearchParams(window.location.search).get('seed');
+    const params = new URLSearchParams(window.location.search);
+    const suppliedSeed = params.get('seed');
+    if (params.get('staticVersion') === '1') staticVersionInput.value = '1';
     if (suppliedSeed && /^\d{1,5}$/.test(suppliedSeed) && Number(suppliedSeed) <= 65535)
       seedInput.value = suppliedSeed.padStart(5, '0');
 
@@ -302,15 +311,18 @@ import Base from '../layouts/Base.astro';
       const seed = Number(value);
       wildRows = buildWildAtlas(seed, atlasData, wildInput.checked);
       starterRows = buildStarterAtlas(seed, atlasData, starterInput.checked);
-      staticRows = buildStaticAtlas(seed, atlasData, Number(staticModeInput.value), staticInput.checked);
+      staticRows = buildStaticAtlas(seed, atlasData, Number(staticModeInput.value),
+        staticInput.checked, Number(staticVersionInput.value));
       status.textContent = 'Seed ' + String(seed).padStart(5, '0') + ' loaded · ' +
         wildRows.length.toLocaleString() + ' native wild slots · ' +
         (wildInput.checked ? 'Wild ON' : 'Wild OFF') + ' · ' +
         (starterInput.checked ? 'Starters ON' : 'Starters OFF') + ' · ' +
-        (staticInput.checked ? 'Statics ' + staticModeInput.selectedOptions[0].textContent : 'Statics OFF') +
+        (staticInput.checked ? 'Statics ' + staticModeInput.selectedOptions[0].textContent +
+          ' · mapping v' + staticVersionInput.value : 'Statics OFF') +
         ' · ' + staticRows.length + ' indexed static battle entries';
       const url = new URL(window.location.href);
       url.searchParams.set('seed', String(seed).padStart(5, '0'));
+      url.searchParams.set('staticVersion', staticVersionInput.value);
       window.history.replaceState(null, '', url);
       refreshView();
     }
