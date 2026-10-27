@@ -239,7 +239,7 @@ test('actual scripted static sources and three modes mirror current game source'
     'Ordinary mode preserves Legendary/Mythical statics');
   const legendary = buildStaticAtlas(2026, data, 1);
   assert.notEqual(legendary.find(x => x.id === jirachi.id).speciesId, jirachi.original,
-    'Legendary Shuffle rotates Jirachi in normal non-zero seed');
+    'Legendary Shuffle permutes Jirachi for this seed');
   const pool = data.species.filter(mon => mon?.legendaryStatic && mon.fieldStable).map(x=>x.id);
   const permuted = pool.map(id => seededStatic(2026, id, 0, jirachi.group, jirachi.num, data.species, 1));
   assert.equal(new Set(permuted).size, pool.length, 'Legendary Shuffle must be one-to-one');
@@ -299,5 +299,86 @@ test('all 65536 seeds yield legal current-version Full Chaos and bijective Shuff
     const shuffled = seededStatic(seed, site.original, site.slot,
       site.group, site.num, data.species, 1);
     assert.ok(pool.includes(shuffled), 'Invalid Legendary Shuffle member, seed ' + seed);
+  }
+});
+
+
+test('v2 seeded Fisher-Yates matches independent shuffle and legacy v1 rotation is intact', async () => {
+  const data = await exportRandomizerData();
+  const pool = data.species.filter(mon => mon.legendaryStatic && mon.fieldStable).map(mon => mon.id);
+  assert.ok(pool.length >= 50);
+  const site = data.staticSites.find(row => row.method === 'royal_duo' && row.slot === 0);
+  assert.ok(site);
+
+  // Independent reference mirrors uint32 C promotions at every mixing stage.
+  function permutation(seed) {
+    const output = [...pool];
+    const mask = 0xffffffff;
+    let state = (0xA511E9B3 ^ seed) >>> 0;
+    state = (state ^ (state >>> 16)) >>> 0;
+    state = Math.imul(state, 0x7FEB352D) >>> 0;
+    state = (state ^ (state >>> 15)) >>> 0;
+    state = Math.imul(state, 0x846CA68B) >>> 0;
+    state = (state ^ (state >>> 16)) >>> 0;
+    if (!state) state = 0x6D2B79F5;
+    for (let k = output.length - 1; k > 0; k--) {
+      state = (state ^ (state << 13)) >>> 0;
+      state = (state ^ (state >>> 17)) >>> 0;
+      state = (state ^ (state << 5)) >>> 0;
+      const swapIndex = state % (k + 1);
+      [output[k], output[swapIndex]] = [output[swapIndex], output[k]];
+    }
+    return output;
+  }
+
+  for (const seed of [0, 1, 2, 99, 2026, 2027, 32768, 65535]) {
+    const expected = permutation(seed);
+    const observed = pool.map(id => seededStatic(seed, id, site.slot, site.group,
+      site.num, data.species, 1, true, 2));
+    assert.deepEqual(observed, expected, 'Site-independent Fisher-Yates, seed ' + seed);
+    assert.equal(new Set(observed).size, pool.length, 'Must be bijective, seed ' + seed);
+    assert.deepEqual(pool.map(id => seededStatic(seed, id, 0, 0, 0, data.species, 1, true, 1)),
+      pool.map((_, index) => pool[(index + seed % pool.length) % pool.length]),
+      'Legacy v1 cyclic mapping must stay byte-for-byte identical');
+  }
+  const fresh = pool.map(id => seededStatic(2026, id, 0, 1, 4, data.species, 1, true, 2));
+  const old = pool.map(id => seededStatic(2026, id, 0, 1, 4, data.species, 1, true, 1));
+  const changed = fresh.filter((id, index) => id !== old[index]).length;
+  assert.ok(changed >= pool.length / 2, 'New shuffle should materially differ from old rotation');
+
+  // Global pool must mix generations, not quietly partition by game region.
+  function generation(id) {
+    const dex = data.species[id].dex;
+    if (dex <= 151) return 1;
+    if (dex <= 251) return 2;
+    if (dex <= 386) return 3;
+    if (dex <= 493) return 4;
+    if (dex <= 649) return 5;
+    if (dex <= 721) return 6;
+    if (dex <= 809) return 7;
+    if (dex <= 905) return 8;
+    return 9;
+  }
+  const crossGeneration = pool.filter((id, index) => generation(id) !== generation(fresh[index]));
+  assert.ok(crossGeneration.length >= pool.length / 2, 'Global legendary shuffle must mix generations');
+
+  const fullChaosV1 = buildStaticAtlas(2026, data, 2, true, 1);
+  const fullChaosV2 = buildStaticAtlas(2026, data, 2, true, 2);
+  assert.deepEqual(fullChaosV1, fullChaosV2, 'Full Chaos must stay unchanged for existing seeds');
+  assert.deepEqual(buildStaticAtlas(2026, data, 0, true, 1),
+    buildStaticAtlas(2026, data, 0, true, 2), 'Ordinary remains unchanged');
+  assert.throws(() => seededStatic(2026, pool[0], 0, 0, 0, data.species, 1, true, 3), RangeError);
+});
+
+test('seeded Legendary Shuffle v2 supports all 65536 seeds with valid members', async () => {
+  const data = await exportRandomizerData();
+  const site = data.staticSites.find(row => row.method === 'royal_duo' && row.slot === 0);
+  assert.ok(site);
+  const eligible = new Set(data.species.filter(mon => mon.legendaryStatic && mon.fieldStable)
+    .map(mon => mon.id));
+  for (let seed = 0; seed <= 65535; seed++) {
+    const found = seededStatic(seed, site.original, site.slot, site.group,
+      site.num, data.species, 1, true, 2);
+    assert.ok(eligible.has(found), 'v2 returned nonlegendary member at seed ' + seed);
   }
 });
