@@ -306,12 +306,12 @@ def main():
                     break
         if info["dex"] in range(1, 1026):
             by_dex[str(info["dex"])].append(symbol)
+    missing_stats = [(item["dex"], item["symbol"], details.get(item["symbol"], {}).get("stats")) for item in catalog if not details.get(item["symbol"], {}).get("stats")]
+    if missing_stats:
+        raise ValueError("Unresolved National species base stats (" + str(len(missing_stats)) + "): " + str(missing_stats[:60]))
     for item in catalog:
-        symbol = item["symbol"]
-        if symbol not in details or not details[symbol]["stats"]:
-            raise ValueError("Missing compiled source stats for National #" + str(item["dex"]) + ": " + symbol + " => " + str(details.get(symbol)))
-        if details[symbol]["dex"] != item["dex"]:
-            raise ValueError("National Dex mismatch for " + symbol)
+        if details[item["symbol"]]["dex"] != item["dex"]:
+            raise ValueError("National Dex mismatch for " + item["symbol"])
     missing_descriptions = [item["symbol"] for item in catalog if not details[item["symbol"]]["description"]]
     if missing_descriptions:
         raise ValueError("Missing configured Pokédex descriptions: " + ", ".join(missing_descriptions[:16]))
