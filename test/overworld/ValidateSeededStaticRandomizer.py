@@ -97,7 +97,7 @@ for location, original, site_flag in (
     ("Route124", "IRON_CROWN", "FLAG_CAUGHT_RANDOM_ROUTE124_IRON_CROWN"),
     ("Route43", "LANDORUS", "FLAG_CAUGHT_RANDOM_ROUTE43_LANDORUS"),
     ("Route41", "THUNDURUS", "FLAG_CAUGHT_RANDOM_ROUTE41_THUNDURUS"),
-    ("Route44", "ETERNATUS", "FLAG_CAUGHT_RANDOM_ROUTE44_ETERNATUS"),
+    ("JohtoEternatusChamber", "ETERNATUS", "FLAG_CAUGHT_RANDOM_ROUTE44_ETERNATUS"),
     ("Route44", "TORNADUS", "FLAG_CAUGHT_RANDOM_ROUTE44_TORNADUS"),
 ):
     map_script = src("data/maps/"+location+"/scripts.inc")
