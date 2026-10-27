@@ -267,6 +267,7 @@ p { line-height: 1.7; margin: 0 0 16px; }
 }
 html[data-theme='dark'] {
   color-scheme: dark;
+  background: #101923;
   --page-bg: #101923;
   --ink: #e9f0f5;
   --muted: #b5c5d0;

@@ -61,6 +61,12 @@ jobs:
         run: |
           test -f website/dist/index.html
           test -f website/dist/pokedex/1/index.html
+          test -f website/dist/pokedex/133/index.html
+          test -f website/dist/pokedex/349/index.html
+          grep -q 'id="theme-toggle"' website/dist/index.html
+          grep -q 'id="theme-toggle"' website/dist/pokedex/133/index.html
+          grep -q 'Old Rod:' website/dist/pokedex/349/index.html
+          ! grep -q 'Level not indexed' website/dist/pokedex/133/index.html
           test -f website/dist/pokedex/1025/index.html
           test -f website/dist/randomizer/index.html
           test -f website/dist/mega-stones/index.html

@@ -14,6 +14,8 @@ npm run dev
 
 Astro requires Node.js 22.12 or newer. The Pokémon reference-data extractor also requires Python 3 and GCC's C preprocessor (`gcc`). Visit the URL printed by the development server. For a production build run `npm run build`; output is written to `website/dist/`.
 
+The header has a keyboard-accessible **Light/Dark** toggle on every page. On first visit the site follows the operating system theme; a manual selection is saved to local storage and persists across navigation and reloads. The theme is implemented entirely in website CSS and small inline scripts, without altering any game graphics.
+
 Both dev and build automatically invoke `scripts/generate.mjs`, which:
 
 - reads `../data/catalog/world_acquisition.jsonl`;
