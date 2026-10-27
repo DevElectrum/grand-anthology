@@ -194,6 +194,18 @@ def number_expr(expr):
         return None
 
 
+def species_flag(body, name):
+    # C macro expansions occasionally join later designated fields onto a
+    # macro-owned chunk; split_fields then misses e.g. .isSubLegendary.
+    # These are flat SpeciesInfo flag designators, so inspect the balanced
+    # initializer directly, after C preprocessing resolves conditional code.
+    match = re.search(r"\." + re.escape(name) + r"\s*=\s*([^,\n}]+)", body)
+    if not match:
+        return False
+    expr = match.group(1).strip()
+    return expr == "TRUE" or number_expr(expr) == 1
+
+
 def symbols(expr, prefix):
     return re.findall(r"\b" + prefix + r"[A-Z0-9_]+\b", expr or "")
 
@@ -293,11 +305,13 @@ def main():
             "genderRatio": f.get("genderRatio"),
             "eggGroups": [readable(x[10:]) for x in symbols(f.get("eggGroups", ""), "EGG_GROUP_") if x != "EGG_GROUP_NONE"],
             "evolutions": evolution_list(f.get("evolutions", "")),
-            "randomizerFlags": {name: f.get(name) in ("TRUE", "1") for name in (
+            "randomizerFlags": {name: species_flag(body, name) for name in (
                 "isMegaEvolution", "isPrimalReversion", "isUltraBurst",
-                "isGigantamax", "isTeraForm", "isTotem")},
-            "mega": f.get("isMegaEvolution") in ("TRUE", "1"),
-            "primal": f.get("isPrimalReversion") in ("TRUE", "1"),
+                "isGigantamax", "isTeraForm", "isTotem",
+                "isRestrictedLegendary", "isSubLegendary", "isMythical",
+                "isUltraBeast", "isParadox")},
+            "mega": species_flag(body, "isMegaEvolution"),
+            "primal": species_flag(body, "isPrimalReversion"),
             "source": "src/data/pokemon/species_info/",
         }
     # National species constants often alias a concrete base form, e.g.

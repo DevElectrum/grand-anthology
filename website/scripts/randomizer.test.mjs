@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { mix32, seededWild, seededStarters, buildWildAtlas, buildStarterAtlas, findSeededPokemonSources, pokemonDexHref } from '../src/lib/randomizer.mjs';
+import { mix32, seededWild, seededStarters, buildWildAtlas, buildStarterAtlas, findSeededPokemonSources, pokemonDexHref, seededStatic, buildStaticAtlas } from '../src/lib/randomizer.mjs';
 import { exportRandomizerData, parseSpeciesEnum, parseStarterSlots } from './export-randomizer.mjs';
+import { scriptStaticCommands } from './export-static-sites.mjs';
 
 function eligibleData(n = 170) {
   return Array.from({ length: n }, (_, id) => ({
@@ -151,4 +152,152 @@ test('seed 02026 exposes Oak choice 7 Moltres in the unified Finder and Pokédex
     }
   }
   assert.equal(pokemonDexHref(0, data.species), null);
+});
+
+
+test('static C hash matches independent 32-bit mixing and each protection policy', () => {
+  const species = eligibleData(180).map(x => ({...x, legendaryStatic: x.id % 11 === 0,
+    ultraBeast: x.id === 42, paradox: x.id === 44 }));
+  const original = 22, seed = 2026, slot = 0, group = 38, num = 7;
+  assert.equal(seededStatic(seed, original, slot, group, num, species, 0), original);
+  assert.equal(seededStatic(seed, original, slot, group, num, species, 1),
+    seededStatic(seed, original, slot, group, num, species, 1));
+  assert.equal(seededStatic(seed, 42, 0, group, num, species, 0), 42);
+  assert.equal(seededStatic(seed, 44, 0, group, num, species, 0), 44);
+
+  // Same map/slot hashing as C, but independent from the tested function.
+  function referenceHash(id, index) {
+    let h = (0x9E3779B9 ^ seed) >>> 0;
+    h ^= Math.imul(id, 0x85EBCA6B);
+    h ^= Math.imul(index + 1, 0xC2B2AE35);
+    h ^= (group << 24) | (num << 16) | 0x5300;
+    h ^= h >>> 16;
+    h = Math.imul(h, 0x7FEB352D) >>> 0;
+    h ^= h >>> 15;
+    h = Math.imul(h, 0x846CA68B) >>> 0;
+    h ^= h >>> 16;
+    h >>>= 0;
+    let candidate = 1 + h % (species.length - 1);
+    while (!species[candidate].fieldStable) {
+      candidate++;
+      if (candidate >= species.length) candidate = 1;
+    }
+    return candidate;
+  }
+  assert.equal(seededStatic(seed, 25, slot, group, num, species, 2), referenceHash(25, 0));
+  assert.equal(seededStatic(seed, 25, 1, group, num, species, 2), referenceHash(25, 1));
+  assert.equal(seededStatic(seed, 25, 0, group, num, species, 2, false), 25);
+  assert.throws(() => seededStatic(65536, 25, 0, group, num, species, 2), RangeError);
+});
+
+test('script parser finds concrete static calls and does not infer nested double-battle slot 1', () => {
+  const script = [
+    'Some_EventScript_Double::',
+    '  setwildbattle SPECIES_ZACIAN_HERO, 50, ITEM_NONE, SPECIES_ZAMAZENTA_HERO, 50, ITEM_NONE',
+    '  dowildbattle',
+    'Another_EventScript_Foe::',
+    '  seteventmon SPECIES_MEW, 30',
+    '  special BattleSetup_StartLegendaryBattle',
+    '@ seteventmon SPECIES_DITTO, 42'
+  ].join('\n');
+  const result = scriptStaticCommands(script, 'data/maps/Example/scripts.inc');
+  assert.equal(result.length, 3);
+  assert.deepEqual(result.slice(0,2).map(x=>x.slot), [0,0]);
+  assert.deepEqual(result.slice(0,2).map(x=>x.symbol),
+    ['SPECIES_ZACIAN_HERO','SPECIES_ZAMAZENTA_HERO']);
+  assert.equal(result[2].scriptLabel, 'Another_EventScript_Foe');
+});
+
+test('actual scripted static sources and three modes mirror current game source', async () => {
+  const data = await exportRandomizerData();
+  const sites = data.staticSites;
+  assert.ok(sites.length >= 70, 'Static sources are suspiciously sparse: ' + sites.length);
+  const legendaryCount = data.species.filter(mon => mon.legendaryStatic && mon.fieldStable).length;
+  assert.ok(legendaryCount >= 50, 'Legendary pool is missing configured C flags: ' + legendaryCount);
+  assert.ok(data.species.some(mon => mon.ultraBeast), 'Ultra Beast flags missing');
+  assert.ok(data.species.some(mon => mon.paradox), 'Paradox flags missing');
+  for (const symbol of ['SPECIES_ARTICUNO', 'SPECIES_MEWTWO', 'SPECIES_MEW',
+                        'SPECIES_RAYQUAZA', 'SPECIES_JIRACHI']) {
+    const mon = data.species.find(x => x.symbol === symbol);
+    assert.ok(mon?.legendaryStatic, 'Configured C Legendary/Mythical flag missing: ' + symbol);
+  }
+  const mega = data.species.find(mon => mon.symbol === 'SPECIES_CHARIZARD_MEGA_X');
+  assert.ok(mega?.enabled && !mega?.fieldStable && !mega?.starterEligible,
+    'Mega form must not enter wild/starter/static candidate pool');
+  assert.ok(data.species.some(mon => mon.symbol === 'SPECIES_NIHILEGO' && mon.ultraBeast),
+    'Compiled Ultra Beast flags are not being read');
+  assert.ok(data.species.some(mon => mon.symbol === 'SPECIES_GREAT_TUSK' && mon.paradox),
+    'Compiled Paradox flags are not being read');
+  assert.ok(data.staticAudit.notMatched.length < 25,
+    'Too many catalog source candidates lack matching source script commands');
+  assert.ok(sites.every(site => site.original >= 1 && site.original < data.species.length));
+  const jirachi = sites.find(site => site.map === 'MAP_ROUTE102'
+    && data.species[site.original].symbol === 'SPECIES_JIRACHI');
+  assert.ok(jirachi, 'Early Route 102 Jirachi scripted battle');
+  const ordinary = buildStaticAtlas(2026, data, 0);
+  assert.equal(ordinary.find(x => x.id === jirachi.id).speciesId, jirachi.original,
+    'Ordinary mode preserves Legendary/Mythical statics');
+  const legendary = buildStaticAtlas(2026, data, 1);
+  assert.notEqual(legendary.find(x => x.id === jirachi.id).speciesId, jirachi.original,
+    'Legendary Shuffle rotates Jirachi in normal non-zero seed');
+  const pool = data.species.filter(mon => mon?.legendaryStatic && mon.fieldStable).map(x=>x.id);
+  const permuted = pool.map(id => seededStatic(2026, id, 0, jirachi.group, jirachi.num, data.species, 1));
+  assert.equal(new Set(permuted).size, pool.length, 'Legendary Shuffle must be one-to-one');
+
+  const duo = sites.filter(site => site.method === 'royal_duo');
+  assert.equal(duo.length, 2);
+  assert.deepEqual(duo.map(x=>x.slot), [0, 1]);
+  assert.deepEqual(duo.map(x=>data.species[x.original].symbol),
+    ['SPECIES_ZACIAN_HERO','SPECIES_ZAMAZENTA_HERO']);
+  assert.ok(duo.every(x => x.acquisition === 'defeat_to_receive_both'));
+  const chaos = buildStaticAtlas(2026, data, 2);
+  assert.equal(chaos.length, sites.length);
+  for (const row of chaos)
+    assert.ok(data.species[row.speciesId].fieldStable);
+  const normal = buildStaticAtlas(2026, data, 2, false);
+  assert.ok(normal.every(x => x.original === x.speciesId));
+});
+
+
+test('unified Finder includes mode-specific scripted statics without hiding wild and starters', async () => {
+  const data = await exportRandomizerData();
+  const seed = 2026;
+  const wildRows = buildWildAtlas(seed, data);
+  const starterRows = buildStarterAtlas(seed, data);
+  const staticRows = buildStaticAtlas(seed, data, 2);
+  const all = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { query: '' }, staticRows);
+  assert.equal(all.statics.length, data.staticSites.length);
+  assert.equal(all.wild.length, data.wildSlots.length);
+  assert.equal(all.starters.length, 28);
+  const staticOnly = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { method: 'statics' }, staticRows);
+  assert.equal(staticOnly.statics.length, staticRows.length);
+  assert.equal(staticOnly.wild.length, 0);
+  assert.equal(staticOnly.starters.length, 0);
+  const grassOnly = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { method: '0' }, staticRows);
+  assert.equal(grassOnly.statics.length, 0);
+  assert.equal(grassOnly.starters.length, 0);
+  assert.ok(grassOnly.wild.every(x => x.area === 0));
+  const kanto = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { method: 'statics', region: 'KANTO' }, staticRows);
+  assert.ok(kanto.statics.length > 0);
+  assert.ok(kanto.statics.every(x => x.region === 'KANTO'));
+});
+
+test('all 65536 seeds yield legal current-version Full Chaos and bijective Shuffle results', async () => {
+  const data = await exportRandomizerData();
+  const site = data.staticSites.find(x => x.method === 'royal_duo' && x.slot === 0);
+  assert.ok(site);
+  const pool = data.species.filter(x => x.legendaryStatic && x.fieldStable).map(x => x.id);
+  assert.ok(pool.length >= 50);
+  for (let seed = 0; seed < 65536; seed++) {
+    const chaos = seededStatic(seed, site.original, site.slot,
+      site.group, site.num, data.species, 2);
+    assert.ok(data.species[chaos].fieldStable, 'Invalid Full Chaos candidate, seed ' + seed);
+    const shuffled = seededStatic(seed, site.original, site.slot,
+      site.group, site.num, data.species, 1);
+    assert.ok(pool.includes(shuffled), 'Invalid Legendary Shuffle member, seed ' + seed);
+  }
 });

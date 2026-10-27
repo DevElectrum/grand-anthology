@@ -8,7 +8,7 @@ import Base from '../layouts/Base.astro';
       <h1>Randomizer Atlas</h1>
       <p>Explore wild Pokémon and regional starter choices for any Grand Anthology seed. Results are calculated using the game's current new-game algorithms, not prewritten seed tables.</p>
     </div>
-    <div class="notice"><strong>Phase 1 is live:</strong> Native wild encounter slots and Oak, Elm and Birch starter rosters are calculated below. Scripted statics, optional gifts and trainer battles are not yet indexed. This Atlas models current new-game randomizer rules, not legacy save migrations.</div>
+    <div class="notice"><strong>Phase 2 preview:</strong> Native wild slots, all 28 regional starters, and source-matched scripted static encounters now support current New Game seeds. Ordinary, Legendary Shuffle and Full Chaos are available. Event unlocks, catch eligibility, and special source conditions are not comprehensively validated. Gifts, trainers and legacy saves remain outside this Atlas.</div>
     <form id="atlas-settings" class="panel atlas-settings">
       <div class="atlas-settings-fields">
         <label class="field">Seed (00000–65535)
@@ -16,6 +16,14 @@ import Base from '../layouts/Base.astro';
         </label>
         <label class="atlas-check"><input id="atlas-wild" type="checkbox" checked/> Randomize Wild</label>
         <label class="atlas-check"><input id="atlas-starters" type="checkbox" checked/> Randomize Starters</label>
+        <label class="atlas-check"><input id="atlas-statics" type="checkbox" checked/> Randomize Statics</label>
+        <label class="field">Static encounter mode
+          <select id="atlas-static-mode">
+            <option value="0">Ordinary</option>
+            <option value="1">Legendary Shuffle</option>
+            <option value="2">Full Chaos</option>
+          </select>
+        </label>
         <button class="button button-dark" type="submit">Generate my world</button>
       </div>
       <p id="atlas-seed-help" class="fine-print">Use the seed and enabled categories from your game's New Game settings. Results do not depend on the time you enter the seed.</p>
@@ -29,19 +37,20 @@ import Base from '../layouts/Base.astro';
             <option value="pokemon">Pokémon Finder</option>
             <option value="location">Location Explorer</option>
             <option value="starters">Starter Viewer</option>
+            <option value="statics">Static Explorer</option>
           </select>
         </label>
         <label class="field" id="atlas-pokemon-field">Find Pokémon (wild + starters)
           <input type="search" id="atlas-pokemon-search" placeholder="Rayquaza, Ceruledge, Unown…" autocomplete="off"/>
         </label>
-        <label class="field" id="atlas-location-field" hidden>Search locations
-          <input type="search" id="atlas-location-search" placeholder="Route 1, Mt. Moon…" autocomplete="off"/>
+        <label class="field" id="atlas-location-field" hidden>Search locations or scripted encounters
+          <input type="search" id="atlas-location-search" placeholder="Route 1, Jirachi, Mt. Moon…" autocomplete="off"/>
         </label>
         <label class="field" id="atlas-region-field">Region
           <select id="atlas-region"><option value="all">All regions</option><option value="KANTO">Kanto</option><option value="JOHTO">Johto</option><option value="HOENN">Hoenn</option></select>
         </label>
         <label class="field" id="atlas-method-field">Encounter method
-          <select id="atlas-method"><option value="all">All sources</option><option value="starters">Starter choices</option><option value="0">Grass / ground</option><option value="1">Surfing</option><option value="2">Rock Smash</option><option value="3">Fishing</option></select>
+          <select id="atlas-method"><option value="all">All sources</option><option value="starters">Starter choices</option><option value="statics">Scripted statics</option><option value="0">Grass / ground</option><option value="1">Surfing</option><option value="2">Rock Smash</option><option value="3">Fishing</option></select>
         </label>
       </div>
       <p id="atlas-summary" class="atlas-summary" aria-live="polite">Preparing results…</p>
@@ -49,21 +58,23 @@ import Base from '../layouts/Base.astro';
     </section>
     <section class="panel">
       <h2>What these results cover</h2>
-      <p>Pokémon Finder includes every <strong>currently supported source type</strong>: native wild encounter slots and regional starter choices. Starter results show the professor, the original choice and its slot number. Scripted statics, optional gifts and NPC trainers will join the Finder when their randomizer logic is implemented. Wild results represent the game's <strong>native encounter-table slots</strong>, including each slot's original species, level bracket, method and replacement species. The same species may occupy multiple slots; that's intentional. Ordinary supplemental grass, Surfing and fishing spawns are disabled while Wild Randomization is on and are not artificially added to these results.</p>
-      <p>Some areas, including Altering Cave, have multiple authored wild tables. Those rows are explicitly marked <strong>Alternative table</strong>; they are not simultaneously active and the active variant may depend on game state. The site currently excludes special Feebas/outbreak/roamer pathways, post-League research rotations, quest gates, and scripted static events. Some indexed maps are inaccessible until story progression or use encounter restrictions. Static encounter settings will be supported after the individual scripted sites have been audited for seed parity.</p>
+      <p>Pokémon Finder includes the <strong>three currently modeled source types</strong>: native wild slots, regional starter choices and scripted statics. Static Explorer lists script-confirmed encounter instructions, including conditional legendary locations and the Route 27 Royal Duo. They are <strong>source candidates</strong>, not guarantees of accessibility, capture or rewards. Wild results represent the game's <strong>native encounter-table slots</strong>, including each slot's original species, level bracket, method and replacement species. The same species may occupy multiple slots; that's intentional. Ordinary supplemental grass, Surfing and fishing spawns are disabled while Wild Randomization is on and are not artificially added to these results.</p>
+      <p>Some areas, including Altering Cave, have multiple authored wild tables. Those rows are explicitly marked <strong>Alternative table</strong>; they are not simultaneously active and the active variant may depend on game state. The site currently excludes special Feebas/outbreak/roamer pathways, post-League research rotations, quest gates, and scripted static events. Some indexed maps are inaccessible until story progression or use encounter restrictions. Static modes use the current v13 Ordinary, Legendary Shuffle and Full Chaos rules. The source-level static list is not a substitute for auditing story flags, repeated scripts, source-site completion, or mGBA behavior.</p>
       <p class="fine-print">Source snapshot: <code id="atlas-fingerprint">Loading…</code>. Calculations run locally in your browser; no seed data is uploaded. Results are a source-level mirror awaiting representative in-emulator validation.</p>
     </section>
   </div>
   <script>
     import atlasData from '../generated/randomizer-data.json';
     import spriteData from '../generated/sprites.json';
-    import { buildWildAtlas, buildStarterAtlas, findSeededPokemonSources, pokemonDexHref } from '../lib/randomizer.mjs';
+    import { buildWildAtlas, buildStarterAtlas, buildStaticAtlas, findSeededPokemonSources, pokemonDexHref } from '../lib/randomizer.mjs';
 
     const element = (id: string) => document.getElementById(id)!;
     const form = element('atlas-settings') as HTMLFormElement;
     const seedInput = element('atlas-seed') as HTMLInputElement;
     const wildInput = element('atlas-wild') as HTMLInputElement;
     const starterInput = element('atlas-starters') as HTMLInputElement;
+    const staticInput = element('atlas-statics') as HTMLInputElement;
+    const staticModeInput = element('atlas-static-mode') as HTMLSelectElement;
     const viewInput = element('atlas-view') as HTMLSelectElement;
     const pokemonQuery = element('atlas-pokemon-search') as HTMLInputElement;
     const locationQuery = element('atlas-location-search') as HTMLInputElement;
@@ -77,6 +88,7 @@ import Base from '../layouts/Base.astro';
     const spriteManifest = spriteData as { sprites: Record<string, {icon: string | null}>; byDex: Record<string, {icon: string | null}> };
     let wildRows: any[] = [];
     let starterRows: Record<string, any[]> = {};
+    let staticRows: any[] = [];
     element('atlas-fingerprint').textContent = atlasData.fingerprint;
     const suppliedSeed = new URLSearchParams(window.location.search).get('seed');
     if (suppliedSeed && /^\d{1,5}$/.test(suppliedSeed) && Number(suppliedSeed) <= 65535)
@@ -159,14 +171,16 @@ import Base from '../layouts/Base.astro';
     function refreshView(): void {
       const mode = viewInput.value;
       element('atlas-pokemon-field').hidden = mode !== 'pokemon';
-      element('atlas-location-field').hidden = mode !== 'location';
+      element('atlas-location-field').hidden = mode !== 'location' && mode !== 'statics';
       element('atlas-region-field').hidden = mode === 'starters';
-      element('atlas-method-field').hidden = mode === 'starters';
+      element('atlas-method-field').hidden = mode === 'starters' || mode === 'statics';
       const starterMethodOption = methodInput.querySelector<HTMLOptionElement>('option[value="starters"]')!;
-      starterMethodOption.hidden = mode === 'location';
-      if (mode === 'location' && methodInput.value === 'starters') methodInput.value = 'all';
+      starterMethodOption.hidden = mode === 'location' || mode === 'statics';
+      if (mode !== 'pokemon' && (methodInput.value === 'starters' || methodInput.value === 'statics'))
+        methodInput.value = 'all';
+      methodInput.querySelector<HTMLOptionElement>('option[value="statics"]')!.hidden = mode === 'statics';
       methodInput.querySelector<HTMLOptionElement>('option[value="all"]')!.textContent =
-        mode === 'pokemon' ? 'All supported sources' : 'All wild methods';
+        mode === 'pokemon' || mode === 'location' ? 'All supported sources' : 'All wild methods';
       results.replaceChildren();
       if (mode === 'starters') {
         if (!Object.keys(starterRows).length) { summary.textContent = 'No starter data available.'; return; }
@@ -208,19 +222,30 @@ import Base from '../layouts/Base.astro';
       }
       const region = regionInput.value;
       const method = methodInput.value;
+      const search = locationQuery.value.trim().toLowerCase();
       const matches = mode === 'pokemon'
-        ? findSeededPokemonSources(wildRows, starterRows, species, {
-            query: pokemonQuery.value, region, method
-          })
-        : { starters: [], wild: wildRows.filter(row => {
+        ? findSeededPokemonSources(wildRows, starterRows, species,
+            { query: pokemonQuery.value, region, method }, staticRows)
+        : {
+          starters: [],
+          wild: mode === 'statics' || method === 'statics' ? [] : wildRows.filter(row => {
             if (region !== 'all' && maps[row.map]?.region !== region) return false;
             if (method !== 'all' && row.area !== Number(method)) return false;
-            const query = locationQuery.value.trim().toLowerCase();
-            return !query || locationFor(row.map).toLowerCase().includes(query)
-              || row.map.toLowerCase().includes(query);
-          }) };
+            return !search || locationFor(row.map).toLowerCase().includes(search)
+              || row.map.toLowerCase().includes(search);
+          }),
+          statics: mode === 'location' && method !== 'all' && method !== 'statics' ? []
+            : staticRows.filter(row => {
+              if (region !== 'all' && row.region !== region) return false;
+              return !search || locationFor(row.map).toLowerCase().includes(search)
+                || nameFor(row.speciesId).toLowerCase().includes(search)
+                || nameFor(row.original).toLowerCase().includes(search)
+                || String(row.scriptLabel ?? '').toLowerCase().includes(search);
+            })
+        };
       const rows: any[] = [
         ...matches.starters.map(choice => ({ ...choice, sourceKind: 'starter' })),
+        ...matches.statics.map(row => ({ ...row, sourceKind: 'static' })),
         ...matches.wild.map(row => ({ ...row, sourceKind: 'wild' }))
       ];
       const limit = 200;
@@ -228,14 +253,14 @@ import Base from '../layouts/Base.astro';
         ? ' · Showing first ' + limit.toLocaleString() + '. Narrow your search to see more.' : '.';
       summary.textContent = mode === 'pokemon'
         ? matches.starters.length.toLocaleString() + ' starter choices · ' +
-          matches.wild.length.toLocaleString() + ' wild encounter slots' + remaining
-        : matches.wild.length.toLocaleString() + ' matching wild encounter slots' + remaining;
+          matches.statics.length.toLocaleString() + ' script-matched statics · ' +
+          matches.wild.length.toLocaleString() + ' wild slots' + remaining
+        : matches.statics.length.toLocaleString() + ' scripted statics · ' +
+          matches.wild.length.toLocaleString() + ' wild slots' + remaining;
       if (!rows.length) {
         const empty = document.createElement('p');
         empty.className = 'empty-state';
-        empty.textContent = mode === 'pokemon'
-          ? 'No matching wild slots or regional starter choices for these settings.'
-          : 'No matching native encounter slots for these settings.';
+        empty.textContent = 'No matching indexed sources for these settings.';
         results.append(empty);
         return;
       }
@@ -249,6 +274,14 @@ import Base from '../layouts/Base.astro';
           textCell(tr, professor + ' · ' + record.region.toUpperCase());
           textCell(tr, 'Starter · choice ' + (record.slot + 1));
           textCell(tr, 'Gift');
+        } else if (record.sourceKind === 'static') {
+          textCell(tr, locationFor(record.map) + (record.region ? ' · ' + record.region : ''));
+          const special = record.acquisition === 'defeat_to_receive_both'
+            ? 'Royal Duo · defeat both to receive'
+            : record.noCatch ? 'Scripted battle · no catching'
+            : 'Scripted static · conditional';
+          textCell(tr, special + (record.method === 'royal_duo' ? ' · slot ' + (record.slot + 1) : ''));
+          textCell(tr, 'Lv. ' + record.level);
         } else {
           textCell(tr, locationFor(record.map) + (maps[record.map]?.region ? ' · ' + maps[record.map].region : ''));
           textCell(tr, record.method + (record.rod ? ' (' + record.rod + ')' : '') + ', slot ' + (record.slot + 1)
@@ -269,10 +302,13 @@ import Base from '../layouts/Base.astro';
       const seed = Number(value);
       wildRows = buildWildAtlas(seed, atlasData, wildInput.checked);
       starterRows = buildStarterAtlas(seed, atlasData, starterInput.checked);
+      staticRows = buildStaticAtlas(seed, atlasData, Number(staticModeInput.value), staticInput.checked);
       status.textContent = 'Seed ' + String(seed).padStart(5, '0') + ' loaded · ' +
         wildRows.length.toLocaleString() + ' native wild slots · ' +
         (wildInput.checked ? 'Wild ON' : 'Wild OFF') + ' · ' +
-        (starterInput.checked ? 'Starters ON' : 'Starters OFF');
+        (starterInput.checked ? 'Starters ON' : 'Starters OFF') + ' · ' +
+        (staticInput.checked ? 'Statics ' + staticModeInput.selectedOptions[0].textContent : 'Statics OFF') +
+        ' · ' + staticRows.length + ' indexed static battle entries';
       const url = new URL(window.location.href);
       url.searchParams.set('seed', String(seed).padStart(5, '0'));
       window.history.replaceState(null, '', url);

@@ -92,4 +92,7 @@ jobs:
           test -f website/dist/randomizer/index.html
           grep -q 'id="atlas-seed"' website/dist/randomizer/index.html
           grep -q 'id="atlas-view"' website/dist/randomizer/index.html
+          grep -q 'id="atlas-statics"' website/dist/randomizer/index.html
+          grep -q 'id="atlas-static-mode"' website/dist/randomizer/index.html
+          grep -q 'value="statics"' website/dist/randomizer/index.html
           test -f website/dist/mega-stones/index.html
