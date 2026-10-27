@@ -1,14 +1,10 @@
-# Grand Anthology: logo and simple landscape title concepts
+# Pokémon Grand Anthology branding concepts (26 October 2026)
 
-Two **high-resolution design references**, generated and selected for retention on 26 October 2026.
+Design references only. These are NOT native GBA-ready assets and must not replace the current playable title screen until approved and converted.
 
-| Proposed asset | Dimensions | Role |
-| --- | --- | --- |
-| `grand-anthology-logo-master.png` | 2172 x 724, transparent PNG | Standalone shared project logo candidate for title, README and banners |
-| `grand-anthology-title-landscape-concept.png` | 1536 x 1024, RGB PNG | Uncluttered twilight panorama concept with the project logo and PRESS START |
+- `grand-anthology-logo-master.png`: isolated Pokémon GRAND ANTHOLOGY logo master (2172x724 with transparency). Candidate for project-wide branding after approval.
+- `grand-anthology-title-landscape-concept.png`: proposed simple night/sunset panorama title screen (1536x1024). This is a composition study; do not treat as the native 240x160 sprite/tileset source.
 
-**Important:** These are source references, *not* approved 240 x 160 GBA-native art. Do not overwrite `graphics/title_screen/world/grand_anthology_title.png`, the tile-generation pipeline, or the currently working title screen just because these references exist.
+Intended repo folder: `graphics/branding/concepts/2026-10-26/`
 
-**Import status:** The high-resolution PNGs were packaged as `grand_anthology_branding_concepts_2026-10-26.zip` in the originating ChatGPT conversation for transfer into this folder. This README is checked in separately; the two binary source files are pending import and must not be treated as if they are present in the repository.
-
-After importing the PNGs, keep the standalone logo as the preferred reusable master, and derive a simplified GBA-readable version for any playable title-screen update. The README banner decision remains open.
+No change to runtime assets `graphics/title_screen/world/grand_anthology_title.png`.
