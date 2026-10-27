@@ -67,6 +67,8 @@ jobs:
       - name: Install website dependencies
         working-directory: website
         run: npm install --no-audit --no-fund
+      - name: Check compiled game C legendary permutations against independent v1/v2 reference
+        run: python3 test/overworld/ValidateLegendaryShufflePermutation.py
       - name: Check catalog presentation and distinct encounter methods
         working-directory: website
         run: npm test
