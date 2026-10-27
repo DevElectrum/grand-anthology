@@ -10,6 +10,13 @@ on:
       - 'src/data/anthology_extra_habitats.h'
       - 'src/data/anthology_aquatic_habitats.h'
       - 'src/data/anthology_rare_habitats.h'
+      - 'src/world_starter_randomizer.c'
+      - 'src/wild_encounter.c'
+      - 'src/script_pokemon_util.c'
+      - 'src/starter_choose.c'
+      - 'include/wild_encounter.h'
+      - 'include/constants/maps.h'
+      - 'include/constants/species.h'
       - 'graphics/pokemon/**'
       - 'src/data/pokemon/species_info/**'
       - 'src/data/pokemon/form_species_tables.h'
@@ -28,6 +35,13 @@ on:
       - 'src/data/anthology_extra_habitats.h'
       - 'src/data/anthology_aquatic_habitats.h'
       - 'src/data/anthology_rare_habitats.h'
+      - 'src/world_starter_randomizer.c'
+      - 'src/wild_encounter.c'
+      - 'src/script_pokemon_util.c'
+      - 'src/starter_choose.c'
+      - 'include/wild_encounter.h'
+      - 'include/constants/maps.h'
+      - 'include/constants/species.h'
       - 'graphics/pokemon/**'
       - 'src/data/pokemon/species_info/**'
       - 'src/data/pokemon/form_species_tables.h'
@@ -76,4 +90,6 @@ jobs:
           ! grep -q 'Level not indexed' website/dist/pokedex/133/index.html
           test -f website/dist/pokedex/1025/index.html
           test -f website/dist/randomizer/index.html
+          grep -q 'id="atlas-seed"' website/dist/randomizer/index.html
+          grep -q 'id="atlas-view"' website/dist/randomizer/index.html
           test -f website/dist/mega-stones/index.html
