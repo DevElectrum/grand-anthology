@@ -249,3 +249,141 @@ p { line-height: 1.7; margin: 0 0 16px; }
  .evolution-edge {grid-template-columns:1fr; gap:5px}
  .evolution-edge>span {text-align:left}
 }
+
+
+/* Light/dark appearance: shared tokens for current and future pages. */
+:root {
+  --page-bg: #f8f8f4;
+  --surface-soft: #f4f7f8;
+  --surface-hover: #f4fafc;
+  --link: #18638e;
+  --link-hover: #114866;
+  --table-head: #f0f4f6;
+  --table-stripe: #fbfcfc;
+  --form-bg: #ffffff;
+  --form-border: #bfcbd4;
+  --note-bg: #fff7e8;
+  --note-ink: #69563c;
+}
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --page-bg: #101923;
+  --ink: #e9f0f5;
+  --muted: #b5c5d0;
+  --line: #354657;
+  --blue: #2c5d78;
+  --gold: #dfb976;
+  --paper: #1b2936;
+  --surface-soft: #223241;
+  --surface-hover: #263b4b;
+  --link: #91d1f6;
+  --link-hover: #c6eafa;
+  --table-head: #293b49;
+  --table-stripe: #202f3c;
+  --form-bg: #1c2b38;
+  --form-border: #607287;
+  --note-bg: #393022;
+  --note-ink: #f4d8a7;
+}
+body { background: var(--page-bg); color: var(--ink); }
+a { color: var(--link); }
+a:hover { color: var(--link-hover); }
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-width: 78px; padding: 8px 11px; border-radius: 100px;
+  border: 1px solid #849ba9; background: #ffffff12; color: #f6f2e7;
+  font-size: .82rem; font-weight: 700; line-height: 1.2; cursor: pointer;
+}
+.theme-toggle:hover { background: #ffffff26; border-color: #efd09a; }
+.theme-symbol { font-size: 1.1rem; line-height: 1; }
+html[data-theme='dark'] .site-header { background: #0c1a29; }
+html[data-theme='dark'] .skip-link { background: var(--paper); color: var(--ink); }
+html[data-theme='dark'] .eyebrow,
+html[data-theme='dark'] .region-content .region-kicker,
+html[data-theme='dark'] .location-card span,
+html[data-theme='dark'] .step-number,
+html[data-theme='dark'] .dex-number,
+html[data-theme='dark'] .stat-total { color: #ecc688; }
+html[data-theme='dark'] .intro-strip { background: #172633; border-color: var(--line); }
+html[data-theme='dark'] .intro-strip div { border-color: var(--line); }
+html[data-theme='dark'] .intro-strip strong { color: #dcecf3; }
+html[data-theme='dark'] .intro-strip span { color: var(--muted); }
+html[data-theme='dark'] .region-card,
+html[data-theme='dark'] .dex-card,
+html[data-theme='dark'] .location-card,
+html[data-theme='dark'] .panel,
+html[data-theme='dark'] .filter-bar,
+html[data-theme='dark'] .form-choice,
+html[data-theme='dark'] .empty-state {
+  background: var(--paper); border-color: var(--line); color: var(--ink);
+}
+html[data-theme='dark'] .region-card:hover,
+html[data-theme='dark'] .dex-card:hover,
+html[data-theme='dark'] .location-card:hover {
+  background: var(--surface-hover); border-color: #7fa8bf; color: var(--ink);
+}
+html[data-theme='dark'] .region-content p,
+html[data-theme='dark'] .feature-panel p,
+html[data-theme='dark'] .page-heading p:last-child,
+html[data-theme='dark'] .panel p,
+html[data-theme='dark'] .pokemon-hero p,
+html[data-theme='dark'] .fine-print,
+html[data-theme='dark'] .small-cell,
+html[data-theme='dark'] .muted,
+html[data-theme='dark'] .breadcrumbs,
+html[data-theme='dark'] .result-counter,
+html[data-theme='dark'] .dex-meta,
+html[data-theme='dark'] .location-card small,
+html[data-theme='dark'] .data-table small,
+html[data-theme='dark'] .standalone,
+html[data-theme='dark'] .notes-list small {
+  color: var(--muted);
+}
+html[data-theme='dark'] .feature-panel { background: #213240; border-color: var(--line); }
+html[data-theme='dark'] .feature-panel-dark { background: #173f54; border-color: #326780; }
+html[data-theme='dark'] .feature-panel-dark p,
+html[data-theme='dark'] .feature-panel-dark h2 { color: #eef4f7; }
+html[data-theme='dark'] .note-banner { background: #352f28; border-color: #786444; color: #f3e4d0; }
+html[data-theme='dark'] .note-banner h2 { color: #f6e8d5; }
+html[data-theme='dark'] .notice { background: var(--note-bg); color: var(--note-ink); border-left-color: #d2a65f; }
+html[data-theme='dark'] .field { color: #d2e1ec; }
+html[data-theme='dark'] .field input,
+html[data-theme='dark'] .field select,
+html[data-theme='dark'] .form-choice select {
+  background: var(--form-bg); color: var(--ink); border-color: var(--form-border);
+}
+html[data-theme='dark'] .panel h2,
+html[data-theme='dark'] .pokemon-facts div { border-color: var(--line); }
+html[data-theme='dark'] .data-table th { color: #d2e0ea; background: var(--table-head); }
+html[data-theme='dark'] .data-table td,
+html[data-theme='dark'] .data-table th { border-color: var(--line); }
+html[data-theme='dark'] .data-table tbody tr:nth-child(even) { background: var(--table-stripe); }
+html[data-theme='dark'] .data-table tbody tr:hover { background: #293c4b; }
+html[data-theme='dark'] .status-tag { background: #273d49; color: #d3e7f2 !important; }
+html[data-theme='dark'] .button-dark { background: #32739a; color: #fff; }
+html[data-theme='dark'] .button-dark:hover { background: #418bae; }
+html[data-theme='dark'] .button-gold { background: #dcba78; color: #182b39; }
+html[data-theme='dark'] .button-gold:hover { background: #f6d99f; color: #182b39; }
+html[data-theme='dark'] .pokemon-hero {
+  background: linear-gradient(115deg,#233b43,#242e35);
+  border-color: var(--line);
+}
+html[data-theme='dark'] .pokemon-number { box-shadow: 0 9px 18px #0005; }
+html[data-theme='dark'] .form-choice small { color: var(--muted); }
+html[data-theme='dark'] .pokemon-flavor {
+  background: #23383b; color: #e5f4f0 !important; border-left-color: #77b9a8;
+}
+html[data-theme='dark'] .pokemon-facts dt { color: #b1c4d1; }
+html[data-theme='dark'] .pokemon-stat>span,
+html[data-theme='dark'] .evolution-edge>span { color: #bcd0dc; }
+html[data-theme='dark'] .pokemon-stat-track { background: #3b4b59; }
+html[data-theme='dark'] .pokemon-abilities>div,
+html[data-theme='dark'] .evolution-edge { background: var(--surface-soft); border-color: var(--line); }
+html[data-theme='dark'] .pokemon-abilities>div>small { color: #bdcdda; }
+html[data-theme='dark'] .ability-tag { color: #e6bd7c; }
+html[data-theme='dark'] .footer { background: #0c1a29; color: #cbdae4; }
+html[data-theme='dark'] .footer a { color: #f3cf91; }
+html[data-theme='dark'] .region-image { background: #273e49; }
+@media (max-width: 650px) {
+  .theme-toggle { flex-shrink: 0; margin-left: auto; }
+}
