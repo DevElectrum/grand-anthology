@@ -748,6 +748,8 @@ extern const u8 gOakSpeech_Text_AskPlayerGender[];
 extern const u8 gPikachuIntro_Text_Page1[];
 extern const u8 gPikachuIntro_Text_Page2[];
 extern const u8 gPikachuIntro_Text_Page3[];
+extern const u8 gPikachuIntro_Text_Page4[];
+extern const u8 gPikachuIntro_Text_Page5[];
 extern const u8 gOakSpeech_Text_WelcomeToTheWorld[];
 extern const u8 gOakSpeech_Text_ThisWorld[];
 extern const u8 gOakSpeech_Text_IsInhabitedFarAndWide[];
