@@ -213,16 +213,21 @@ test('actual scripted static sources and three modes mirror current game source'
   const sites = data.staticSites;
   assert.ok(sites.length >= 70, 'Static sources are suspiciously sparse: ' + sites.length);
   const legendaryCount = data.species.filter(mon => mon.legendaryStatic && mon.fieldStable).length;
-  console.log('Static pool diagnostic', legendaryCount,
-    data.species.filter(mon => mon.legendaryStatic).length,
-    data.species.filter(mon => mon.ultraBeast).length,
-    ['SPECIES_ARTICUNO', 'SPECIES_MEWTWO', 'SPECIES_MEW', 'SPECIES_RAYQUAZA', 'SPECIES_JIRACHI'].map(symbol => {
-      const entry = data.species.find(mon => mon.symbol === symbol);
-      return [symbol, entry?.id, entry?.legendaryStatic, entry?.fieldStable];
-    }));
   assert.ok(legendaryCount >= 50, 'Legendary pool is missing configured C flags: ' + legendaryCount);
   assert.ok(data.species.some(mon => mon.ultraBeast), 'Ultra Beast flags missing');
   assert.ok(data.species.some(mon => mon.paradox), 'Paradox flags missing');
+  for (const symbol of ['SPECIES_ARTICUNO', 'SPECIES_MEWTWO', 'SPECIES_MEW',
+                        'SPECIES_RAYQUAZA', 'SPECIES_JIRACHI']) {
+    const mon = data.species.find(x => x.symbol === symbol);
+    assert.ok(mon?.legendaryStatic, 'Configured C Legendary/Mythical flag missing: ' + symbol);
+  }
+  const mega = data.species.find(mon => mon.symbol === 'SPECIES_CHARIZARD_MEGA_X');
+  assert.ok(mega?.enabled && !mega?.fieldStable && !mega?.starterEligible,
+    'Mega form must not enter wild/starter/static candidate pool');
+  assert.ok(data.species.some(mon => mon.symbol === 'SPECIES_NIHILEGO' && mon.ultraBeast),
+    'Compiled Ultra Beast flags are not being read');
+  assert.ok(data.species.some(mon => mon.symbol === 'SPECIES_GREAT_TUSK' && mon.paradox),
+    'Compiled Paradox flags are not being read');
   assert.ok(data.staticAudit.notMatched.length < 25,
     'Too many catalog source candidates lack matching source script commands');
   assert.ok(sites.every(site => site.original >= 1 && site.original < data.species.length));
