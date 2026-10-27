@@ -4,7 +4,7 @@ import { readFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { relativeForm, formFolderMatch, buildSpriteManifest } from './sprite-manifest.mjs';
+import { relativeForm, formFolderMatch, buildSpriteManifest, withPaletteTransparency } from './sprite-manifest.mjs';
 
 test('distinguishes default forms, Mega forms and alternate form paths', () => {
   assert.equal(relativeForm('SPECIES_BULBASAUR', 'SPECIES_BULBASAUR'), '');
@@ -42,4 +42,15 @@ test('materialize real game fronts and icons with form-specific fallbacks', asyn
   } finally {
     await rm(temp, { recursive: true, force: true });
   }
+});
+
+
+test('adds transparent palette index 0 to game sprites without modifying source PNGs', async () => {
+  const source = await readFile(new URL('../../graphics/pokemon/bulbasaur/anim_front.png', import.meta.url));
+  const transformed = withPaletteTransparency(source);
+  assert.notEqual(source.length, transformed.length);
+  assert.equal(transformed.length, source.length + 13);
+  assert.ok(transformed.includes(Buffer.from('tRNS')));
+  assert.ok(source.includes(Buffer.from('PLTE')));
+  assert.deepEqual(withPaletteTransparency(transformed), transformed, 'must not insert duplicate transparency');
 });
