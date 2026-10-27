@@ -257,3 +257,47 @@ test('actual scripted static sources and three modes mirror current game source'
   const normal = buildStaticAtlas(2026, data, 2, false);
   assert.ok(normal.every(x => x.original === x.speciesId));
 });
+
+
+test('unified Finder includes mode-specific scripted statics without hiding wild and starters', async () => {
+  const data = await exportRandomizerData();
+  const seed = 2026;
+  const wildRows = buildWildAtlas(seed, data);
+  const starterRows = buildStarterAtlas(seed, data);
+  const staticRows = buildStaticAtlas(seed, data, 2);
+  const all = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { query: '' }, staticRows);
+  assert.equal(all.statics.length, data.staticSites.length);
+  assert.equal(all.wild.length, data.wildSlots.length);
+  assert.equal(all.starters.length, 28);
+  const staticOnly = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { method: 'statics' }, staticRows);
+  assert.equal(staticOnly.statics.length, staticRows.length);
+  assert.equal(staticOnly.wild.length, 0);
+  assert.equal(staticOnly.starters.length, 0);
+  const grassOnly = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { method: '0' }, staticRows);
+  assert.equal(grassOnly.statics.length, 0);
+  assert.equal(grassOnly.starters.length, 0);
+  assert.ok(grassOnly.wild.every(x => x.area === 0));
+  const kanto = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { method: 'statics', region: 'KANTO' }, staticRows);
+  assert.ok(kanto.statics.length > 0);
+  assert.ok(kanto.statics.every(x => x.region === 'KANTO'));
+});
+
+test('all 65536 seeds yield legal current-version Full Chaos and bijective Shuffle results', async () => {
+  const data = await exportRandomizerData();
+  const site = data.staticSites.find(x => x.method === 'royal_duo' && x.slot === 0);
+  assert.ok(site);
+  const pool = data.species.filter(x => x.legendaryStatic && x.fieldStable).map(x => x.id);
+  assert.ok(pool.length >= 50);
+  for (let seed = 0; seed < 65536; seed++) {
+    const chaos = seededStatic(seed, site.original, site.slot,
+      site.group, site.num, data.species, 2);
+    assert.ok(data.species[chaos].fieldStable, 'Invalid Full Chaos candidate, seed ' + seed);
+    const shuffled = seededStatic(seed, site.original, site.slot,
+      site.group, site.num, data.species, 1);
+    assert.ok(pool.includes(shuffled), 'Invalid Legendary Shuffle member, seed ' + seed);
+  }
+});
