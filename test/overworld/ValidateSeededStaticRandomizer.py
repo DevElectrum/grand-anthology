@@ -45,6 +45,17 @@ for excluded in ("isMegaEvolution", "isPrimalReversion", "isUltraBurst",
 need(battle, "attempts < NUM_SPECIES - 1")
 need(battle, "WorldIsFieldStableDiscoverySpecies(result)")
 need(battle, "randomizerVersion == 0")
+# Save ABI stays at v13; the existing 3-bit version field selects the
+# seeded permutation. Version 1 must keep the older rotation indefinitely.
+need(fresh, "gSaveBlock2Ptr->randomizerVersion = 2;")
+need(migrate, "gSaveBlock2Ptr->randomizerVersion = 0;")
+need(layout, "u16 randomizerVersion:3;")
+need(battle, "gSaveBlock2Ptr->randomizerVersion < 2")
+need(battle, "NextLegendaryShuffleRandom(&state) % (i + 1)")
+need(battle, "sLegendaryShufflePool[(index + gSaveBlock2Ptr->randomizerSeed % count) % count]")
+need(battle, "state = 0xA511E9B3u ^ gSaveBlock2Ptr->randomizerSeed")
+need(battle, "sLegendaryShufflePool[index]")
+
 need(battle, "ResolveRandomizedStaticRelic(enum Species species, enum Item scriptedItem)")
 need(battle, "IsSpeciesEnabled(result)")
 single=battle.split("void CreateScriptedWildMon(",1)[1].split("void CreateScriptedDoubleWildMon(",1)[0]
