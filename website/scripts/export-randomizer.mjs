@@ -2,6 +2,7 @@ import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { exportStaticSites } from './export-static-sites.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const OUTPUT = resolve(ROOT, 'website/src/generated/randomizer-data.json');
@@ -110,7 +111,10 @@ export async function exportRandomizerData(root = ROOT) {
     return { id, symbol, dex: profile?.dex ?? null,
       name: profile?.name ?? symbol?.replace(/^SPECIES_/, '').replace(/_/g, ' ') ?? 'Unknown',
       enabled, fieldStable: enabled && !excludedForm && !transient,
-      starterEligible: enabled && !excludedForm };
+      starterEligible: enabled && !excludedForm,
+      legendaryStatic: Boolean(flags.isRestrictedLegendary || flags.isSubLegendary || flags.isMythical),
+      ultraBeast: Boolean(flags.isUltraBeast),
+      paradox: Boolean(flags.isParadox) };
   });
   if (species.filter(mon => mon?.fieldStable).length < 1000)
     throw new Error('Too few field-stable Pokémon; verify game-form flag extraction');
@@ -174,10 +178,22 @@ export async function exportRandomizerData(root = ROOT) {
         return speciesEnum.byName[symbol];
       }) };
   }
+  const catalog = (await readFile(resolve(root, 'data/catalog/world_acquisition.jsonl'), 'utf8'))
+    .split(/\r?\n/).filter(Boolean).map(JSON.parse);
+  const royalSource = await readFile(resolve(root, 'src/script_pokemon_util.c'), 'utf8');
+  const staticSources = await exportStaticSites({
+    root, catalog, maps: mapIndex, byName: speciesEnum.byName, royalSource
+  });
   const output = {
-    schema: 1, gameMode: 'New Game / randomizerVersion 1',
-    fingerprint: createHash('sha256').update(enumText + starterText + wildText + detailsText).digest('hex').slice(0, 16),
-    species, maps: mapIndex, wildSlots: mapSlots, starters
+    schema: 2, gameMode: 'New Game / randomizerVersion 1',
+    fingerprint: createHash('sha256').update(enumText + starterText + wildText + detailsText + royalSource).digest('hex').slice(0, 16),
+    species, maps: mapIndex, wildSlots: mapSlots, starters,
+    staticSites: staticSources.sites,
+    staticAudit: {
+      matched: staticSources.sites.length,
+      notMatched: staticSources.unmatched,
+      scannedScripts: staticSources.indexedScriptFiles
+    }
   };
   if (mapSlots.length < 2000) throw new Error('Suspiciously sparse wild slot export');
   return output;
@@ -189,5 +205,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   await writeFile(OUTPUT, JSON.stringify(data));
   console.log('Randomizer Atlas data: ' + data.wildSlots.length + ' wild slots, ' +
     data.species.length + ' internal species IDs, ' +
-    Object.keys(data.maps).length + ' maps; snapshot ' + data.fingerprint);
+    Object.keys(data.maps).length + ' maps, ' + data.staticSites.length +
+    ' source-matched statics (' + data.staticAudit.notMatched.length +
+    ' catalog candidates unmatched); snapshot ' + data.fingerprint);
 }
