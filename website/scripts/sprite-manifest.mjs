@@ -1,5 +1,43 @@
-import { copyFile, mkdir, readdir, stat, rm, writeFile } from 'node:fs/promises';
+import { readFile, mkdir, readdir, stat, rm, writeFile } from 'node:fs/promises';
 import { join, relative, resolve, dirname, sep } from 'node:path';
+
+// GBA palette-indexed sprite PNGs usually have no tRNS chunk. The game's
+// graphics converter treats palette index 0 as transparent; browsers do not.
+// Insert PNG-compliant alpha metadata without changing compressed pixel data.
+function crc32(bytes) {
+  let crc = 0xFFFFFFFF;
+  for (const value of bytes) {
+    crc ^= value;
+    for (let i = 0; i < 8; i++)
+      crc = crc & 1 ? (crc >>> 1) ^ 0xEDB88320 : crc >>> 1;
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+export function withPaletteTransparency(buffer) {
+  const magic = Buffer.from([137,80,78,71,13,10,26,10]);
+  if (!buffer.subarray(0, 8).equals(magic)) throw new Error('Unexpected sprite image format: expected PNG');
+  if (buffer[25] !== 3) return buffer; // RGB or RGBA images already handle alpha.
+  let offset = 8;
+  let paletteEnd = null;
+  let alreadyTransparent = false;
+  while (offset + 12 <= buffer.length) {
+    const length = buffer.readUInt32BE(offset);
+    const type = buffer.toString('ascii', offset + 4, offset + 8);
+    if (offset + length + 12 > buffer.length) throw new Error('Malformed sprite PNG chunk');
+    if (type === 'PLTE') paletteEnd = offset + length + 12;
+    if (type === 'tRNS') alreadyTransparent = true;
+    if (type === 'IDAT') break;
+    offset += length + 12;
+  }
+  if (alreadyTransparent || paletteEnd == null) return buffer;
+  const chunk = Buffer.alloc(13);
+  chunk.writeUInt32BE(1, 0);
+  chunk.write('tRNS', 4, 4, 'ascii');
+  chunk[8] = 0; // Alpha of index 0, all later indices remain opaque.
+  chunk.writeUInt32BE(crc32(chunk.subarray(4, 9)), 9);
+  return Buffer.concat([buffer.subarray(0, paletteEnd), chunk, buffer.subarray(paletteEnd)]);
+}
 
 const imageNames = { front: ['front.png', 'anim_front.png'], icon: ['icon.png'] };
 const specialForms = {
@@ -106,7 +144,7 @@ export async function buildSpriteManifest({ repository, website, pokemon, detail
     const target = join(publicDir, part);
     if (!copied.has(part)) {
       await mkdir(dirname(target), { recursive: true });
-      await copyFile(path, target);
+      await writeFile(target, withPaletteTransparency(await readFile(path)));
       copied.add(part);
     }
     return '/pokemon-sprites/' + part;
