@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { catalog, displayName, locationName, locationHref, pokemonHref, sourceMethod, levelLabel, evidenceLabel } from '../../lib/data';
+import { catalog, displayName, formName, locationName, locationHref, pokemonHref, sourceMethod, levelLabel, evidenceLabel } from '../../lib/data';
 export function getStaticPaths() {
   return catalog.locations.map(location => ({ params: { slug: location.slug }, props: { location } }));
 }
@@ -15,11 +15,11 @@ const items = location.entries.filter(entry => entry.kind === 'item');
     <div class="notice">Entries identify source-level acquisition candidates, not guaranteed reachable, catchable, or fully gameplay-tested encounters. Seed-specific replacements will appear in the separate Randomizer Atlas in a later phase.</div>
     <section class="panel"><h2>Indexed Pokémon <span class="muted">({pokemon.length})</span></h2>
       {pokemon.length ? <div class="table-scroll"><table class="data-table"><thead><tr><th>Pokémon</th><th>Method</th><th>Level</th><th>Evidence</th></tr></thead><tbody>
-        {pokemon.map(entry => <tr><td><a href={pokemonHref(entry.dex!)}><strong>{displayName(entry.name)}</strong></a>{entry.form && <small>Form: {displayName(entry.form)}</small>}</td><td>{sourceMethod(entry.method)}</td><td>{levelLabel(entry)}</td><td class="small-cell">{evidenceLabel(entry.gameplayVerified)}</td></tr>)}
+        {pokemon.map(entry => <tr><td><a href={pokemonHref(entry.dex!)}><strong>{displayName(entry.name)}</strong></a>{entry.form && <small>Form: {formName(entry.form)}</small>}</td><td>{sourceMethod(entry.method)}</td><td>{levelLabel(entry)}</td><td class="small-cell">{evidenceLabel(entry.gameplayVerified)}</td></tr>)}
       </tbody></table></div> : <p>No Pokémon source candidates indexed here.</p>}
     </section>
     {items.length > 0 && <section class="panel"><h2>Indexed items <span class="muted">({items.length})</span></h2><div class="table-scroll"><table class="data-table"><thead><tr><th>Item</th><th>Method</th><th>Notes</th></tr></thead><tbody>{items.map(entry => <tr><td><strong>{displayName(entry.name)}</strong></td><td>{sourceMethod(entry.method)}</td><td>{entry.detail ?? entry.note ?? 'Candidate acquisition source'}</td></tr>)}</tbody></table></div></section>}
-    {location.entries.some(entry => entry.required?.length || entry.note) && <section class="panel notes-panel"><h2>Source annotations</h2><ul class="notes-list">{location.entries.filter(entry => entry.required?.length || entry.note).map(entry => <li><strong>{displayName(entry.name)}:</strong> {entry.note ?? 'Story or source conditions apply.'}{entry.required?.length && <small class="standalone">Source flags: {entry.required.join(', ')}</small>}</li>)}</ul></section>}
+    {location.entries.some(entry => entry.required?.length || entry.note) && <section class="panel notes-panel"><h2>Source annotations</h2><ul class="notes-list">{location.entries.filter(entry => entry.required?.length || entry.note).map(entry => <li><strong>{displayName(entry.name)}:</strong> {entry.note ?? 'Story or source conditions apply.'}{entry.required?.length && <small class="standalone">Source flags: {entry.required.map(flag => displayName(flag.replace(/^FLAG_/, ''))).join(', ')}</small>}</li>)}</ul></section>}
     <div class="page-links"><a href="/locations/">← All locations</a><a href="/randomizer/">Randomizer Atlas roadmap →</a></div>
   </div>
 </Base>

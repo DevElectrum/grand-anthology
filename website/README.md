@@ -12,7 +12,7 @@ npm install
 npm run dev
 ```
 
-Astro requires Node.js 22.12 or newer. Visit the URL printed by the development server. For a production build run `npm run build`; output is written to `website/dist/`.
+Astro requires Node.js 22.12 or newer. The Pokémon reference-data extractor also requires Python 3 and GCC's C preprocessor (`gcc`). Visit the URL printed by the development server. For a production build run `npm run build`; output is written to `website/dist/`.
 
 Both dev and build automatically invoke `scripts/generate.mjs`, which:
 
@@ -21,9 +21,11 @@ Both dev and build automatically invoke `scripts/generate.mjs`, which:
 - emits `src/generated/catalog.json`, a build-time snapshot of catalog records and source-map groups;
 - copies a limited set of **existing** branding art and dated mGBA screenshots into `public/visuals/`.
 
-Generated files and copied visuals are ignored by Git. Keep the authoritative catalog in the game repository; do not edit the generated JSON.
+The build also extracts configured Pokémon stats, types, abilities, forms, descriptions and evolution data from the game's Gen 1–9 C species initializers, shared Pokédex text, ability definitions and form tables. GCC resolves compile-time conditionals and a balanced initializer parser imports the relevant fields. The separate result is `src/generated/pokemon-details.json`. Generated files and copied visuals are ignored by Git. Keep the authoritative catalog in the game repository; do not edit the generated JSON.
 
 The presentation importer conservatively merges **source aliases for the same physical event**: a special permanent Zygarde/Terapagos static plus its general scripted-battle index, or a named Mega Stone item-ball event plus its generic script reference. It retains genuinely different methods, such as Fishing versus Surfing and Battle Net free starter selection versus purchase. The raw catalog is untouched. Run `npm test` to check the normalization behavior against the current game data.
+
+The extracted stats and biology are source-level game data, not gameplay acceptance. The site does not import outside Pokémon statistics or publish all game sprites. Unsupported conditional details are reported as unavailable rather than guessed.
 
 ## Editorial and source accuracy
 

@@ -2,6 +2,7 @@ import { readFile, mkdir, writeFile, copyFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizeSourceEntries } from './normalize-sources.mjs';
+import { execFileSync } from 'node:child_process';
 
 const website = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repository = resolve(website, '..');
@@ -14,6 +15,7 @@ const rawRecords = raw.split(/\r?\n/).filter(Boolean).map((line, index) => {
   catch (error) { throw new Error(`Invalid catalog JSON at line ${index + 1}: ${error.message}`); }
 });
 const records = normalizeSourceEntries(rawRecords);
+execFileSync('python3', [resolve(website, 'scripts/export_species.py')], { cwd: repository, stdio: 'inherit' });
 
 const meta = records.find(record => record.kind === 'meta');
 const pokemon = records.filter(record => record.kind === 'pokemon');
@@ -28,6 +30,17 @@ if (pokemon.some(mon => !Array.isArray(mon.sources) || !Array.isArray(mon.evolve
 if ([...pokemon, ...items].some(entry => !Array.isArray(entry.sources)))
   throw new Error('One or more catalog records have invalid source fields');
 
+const mapGroups = JSON.parse(await readFile(resolve(repository, 'data/maps/map_groups.json'), 'utf8'));
+const regionByMap = new Map();
+let currentRegion = 'Hoenn';
+for (const group of mapGroups.group_order) {
+  if (group === 'gMapGroup_Link_Frlg') currentRegion = 'Kanto';
+  if (group === 'gMapGroup_JohtoTownsAndRoutes') currentRegion = 'Johto';
+  if (group === 'gMapGroup_RegionHub') currentRegion = null;
+  for (const map of mapGroups[group] ?? []) {
+    if (currentRegion) regionByMap.set(map, currentRegion);
+  }
+}
 const locationMap = new Map();
 for (const entry of [...pokemon, ...items]) {
   for (const source of entry.sources) {
@@ -38,7 +51,12 @@ for (const entry of [...pokemon, ...items]) {
       location = { id: source.map, slug, regions: [], entries: [] };
       locationMap.set(source.map, location);
     }
-    if (source.region && !location.regions.includes(source.region))
+    const mappedRegion = regionByMap.get(source.map)
+      ?? (source.map.startsWith('MAP_JOHTO_') ? 'Johto' : null)
+      ?? (source.map.endsWith('_FRLG') ? 'Kanto' : null);
+    if (mappedRegion && !location.regions.includes(mappedRegion))
+      location.regions.push(mappedRegion);
+    if (!mappedRegion && source.region && !location.regions.includes(source.region))
       location.regions.push(source.region);
     location.entries.push({
       kind: entry.kind, name: entry.name,

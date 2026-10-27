@@ -1,6 +1,7 @@
 import catalog from '../generated/catalog.json';
+import pokemonDetails from '../generated/pokemon-details.json';
 
-export { catalog };
+export { catalog, pokemonDetails };
 
 export function displayName(name: string): string {
   return String(name).toLowerCase().split(/([ _-]+)/).map(part =>
@@ -9,7 +10,7 @@ export function displayName(name: string): string {
 }
 
 export function locationName(id: string): string {
-  return displayName(id.replace(/^MAP_/, '').replaceAll('_', ' '));
+  return displayName(id.replace(/^MAP_/, '').replace(/_F[Rr][Ll][Gg]$/, '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b(Route|Floor)(\d+)/gi, '$1 $2').replaceAll('_', ' '));
 }
 
 export function generation(dex: number): number {
@@ -70,4 +71,32 @@ export function pokemonHref(dex: number): string {
 
 export function locationHref(slug: string): string {
   return `/locations/${slug}/`;
+}
+
+
+export function formName(symbol: string, gameName?: string | null): string {
+  const raw = symbol.replace(/^SPECIES_/, '');
+  const special: Record<string, string> = {
+    ZYGARDE_10_AURA_BREAK: '10% Forme (Aura Break)',
+    ZYGARDE_10_POWER_CONSTRUCT: '10% Forme (Power Construct)',
+    ZYGARDE_50_AURA_BREAK: '50% Forme (Aura Break)',
+    ZYGARDE_50_POWER_CONSTRUCT: '50% Forme (Power Construct)',
+    ZYGARDE_COMPLETE: 'Complete Forme',
+    TERAPAGOS_STELLAR: 'Stellar Form',
+    TERAPAGOS_TERASTAL: 'Terastal Form'
+  };
+  if (special[raw]) return special[raw];
+  if (raw.endsWith('_MEGA')) return 'Mega ' + (gameName || displayName(raw.slice(0, -5)));
+  if (raw.endsWith('_MEGA_X')) return 'Mega ' + (gameName || displayName(raw.slice(0, -7))) + ' X';
+  if (raw.endsWith('_MEGA_Y')) return 'Mega ' + (gameName || displayName(raw.slice(0, -7))) + ' Y';
+  if (gameName && raw === gameName.toUpperCase().replace(/[^A-Z0-9]+/g, '_')) return gameName;
+  return displayName(raw);
+}
+
+export function genderLabel(ratio?: string | null): string {
+  if (!ratio) return 'Not recorded';
+  if (ratio.includes('GENDERLESS')) return 'Genderless';
+  const match = ratio.match(/PERCENT_FEMALE\(([\d.]+)\)/);
+  if (match) return match[1] + '% female';
+  return 'Game-specific';
 }

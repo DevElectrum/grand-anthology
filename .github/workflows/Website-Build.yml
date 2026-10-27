@@ -5,11 +5,27 @@ on:
     paths:
       - 'website/**'
       - 'data/catalog/**'
+      - 'data/maps/map_groups.json'
+      - 'src/data/pokemon/species_info/**'
+      - 'src/data/pokemon/form_species_tables.h'
+      - 'src/data/abilities.h'
+      - 'include/constants/species.h'
+      - 'include/constants/pokedex.h'
+      - 'include/constants/pokemon.h'
+      - 'include/config/**'
       - '.github/workflows/Website-Build.yml'
   pull_request:
     paths:
       - 'website/**'
       - 'data/catalog/**'
+      - 'data/maps/map_groups.json'
+      - 'src/data/pokemon/species_info/**'
+      - 'src/data/pokemon/form_species_tables.h'
+      - 'src/data/abilities.h'
+      - 'include/constants/species.h'
+      - 'include/constants/pokedex.h'
+      - 'include/constants/pokemon.h'
+      - 'include/config/**'
       - '.github/workflows/Website-Build.yml'
 
 jobs:
@@ -20,6 +36,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Ensure C preprocessor and Python are available
+        run: |
+          gcc --version
+          python3 --version
       - name: Install website dependencies
         working-directory: website
         run: npm install --no-audit --no-fund
