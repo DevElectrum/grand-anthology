@@ -53,6 +53,7 @@ jobs:
           python3 test/overworld/ValidateSeededTrainerRandomizer.py
           python3 test/overworld/ValidateGlobalPcSearch.py
           python3 test/overworld/ValidateSeededStaticRandomizer.py
+          python3 test/overworld/ValidateLegendaryShufflePermutation.py
           python3 test/overworld/ValidateSeededGiftRandomizer.py
           python3 test/overworld/ValidateSeededStarterRandomizer.py
           python3 test/overworld/ValidatePlayerCheats.py
