@@ -128,3 +128,28 @@ JohtoVictoryRoad_1F_EventScript_ItemMaxElixir::
 JohtoVictoryRoad_1F_EventScript_ItemPPUp::
 	finditem ITEM_PP_UP
 	end
+@ A sealed meteorite marks the optional League-side chamber. No extra cave puzzle.
+JohtoVictoryRoad_1F_EventScript_EternatusSeal::
+    lock
+    faceplayer
+    goto_if_unset FLAG_ANTHOLOGY_ROYAL_DUO_CLAIMED, JohtoVictoryRoad_1F_EternatusStillSealed
+    msgbox JohtoVictoryRoad_1F_Text_EternatusOpen, MSGBOX_DEFAULT
+    closemessage
+    warp MAP_JOHTO_ETERNATUS_CHAMBER, 7, 6
+    waitstate
+    release
+    end
+
+JohtoVictoryRoad_1F_EternatusStillSealed::
+    msgbox JohtoVictoryRoad_1F_Text_EternatusSealed, MSGBOX_DEFAULT
+    release
+    end
+
+JohtoVictoryRoad_1F_Text_EternatusOpen:
+    .string "Two ancient guardians have\n"
+    .string "broken this dark seal...$"
+
+JohtoVictoryRoad_1F_Text_EternatusSealed:
+    .string "A cold light spills from the stone.\p"
+    .string "Two ancient guardians must\n"
+    .string "answer before it opens.$"
