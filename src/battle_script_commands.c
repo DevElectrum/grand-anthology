@@ -37,6 +37,7 @@
 #include "m4a.h"
 #include "mail.h"
 #include "event_data.h"
+#include "qol_multipliers.h"
 #include "pokemon_storage_system.h"
 #include "task.h"
 #include "naming_screen.h"
@@ -9994,7 +9995,7 @@ static u32 ComputeCaptureOdds(u32 wildMonBattler, u32 playerBattler)
     if (battleMon->status1 & STATUS1_CAN_MOVE)
         odds = odds * 15 / 10;
 
-    switch (gSaveBlock2Ptr->optionsCatchMultiplier) // QoL #15: CATCH RATE option
+    switch (GetCatchMultiplierChoice()) // QoL #15: CATCH RATE option
     {
     case OPTIONS_CATCH_MULT_0_5X:
         odds /= 2;
@@ -10006,6 +10007,15 @@ static u32 ComputeCaptureOdds(u32 wildMonBattler, u32 playerBattler)
         break;
     case OPTIONS_CATCH_MULT_2X:
         odds *= 2;
+        break;
+    case OPTIONS_CATCH_MULT_3X:
+        odds = (u64)odds * 3 > 255 ? 255 : odds * 3;
+        break;
+    case OPTIONS_CATCH_MULT_5X:
+        odds = (u64)odds * 5 > 255 ? 255 : odds * 5;
+        break;
+    case OPTIONS_CATCH_MULT_10X:
+        odds = (u64)odds * 10 > 255 ? 255 : odds * 10;
         break;
     }
 
@@ -11251,7 +11261,7 @@ void ApplyExperienceMultipliers(s32 *expAmount, u8 expGetterMonId, u8 faintedBat
     if (CheckBagHasItem(ITEM_EXP_CHARM, 1)) //is also for other exp boosting Powers if/when implemented
         *expAmount = (*expAmount * 150) / 100;
 
-    switch (gSaveBlock2Ptr->optionsExpMultiplier) // QoL #15: EXP GAIN option
+    switch (GetExpMultiplierChoice()) // QoL: legacy settings keep original rounding
     {
     case OPTIONS_EXP_MULT_0_5X:
         *expAmount /= 2;
@@ -11278,6 +11288,34 @@ void ApplyExperienceMultipliers(s32 *expAmount, u8 expGetterMonId, u8 faintedBat
         value /= sExperienceScalingFactors[faintedLevel + expGetterLevel + 10];
 
         *expAmount = value + 1;
+    }
+
+    // New high multipliers apply to the final scaled EXP result. Use u64 to
+    // avoid overflowing when traded, Lucky Egg, charm and scaling stack.
+    // The four original settings above retain their existing arithmetic.
+    {
+        u8 choice = GetExpMultiplierChoice();
+        u64 value = *expAmount;
+        switch (choice)
+        {
+        case OPTIONS_EXP_MULT_0_25X:
+            value /= 4;
+            if (value == 0)
+                value = 1;
+            break;
+        case OPTIONS_EXP_MULT_3X:
+            value *= 3;
+            break;
+        case OPTIONS_EXP_MULT_5X:
+            value *= 5;
+            break;
+        case OPTIONS_EXP_MULT_10X:
+            value *= 10;
+            break;
+        default:
+            return;
+        }
+        *expAmount = value > 0xFFFFFFFFu ? 0xFFFFFFFFu : value;
     }
 }
 

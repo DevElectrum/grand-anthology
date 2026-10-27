@@ -8,6 +8,7 @@
 
 #include "bg.h"
 #include "event_data.h"
+#include "qol_multipliers.h"
 #include "gpu_regs.h"
 #include "international_string_util.h"
 #include "list_menu.h"
@@ -141,10 +142,14 @@ static const u8 gText_ButtonTypeLR[]       = _("{COLOR GREEN}{SHADOW LIGHT_GREEN
 static const u8 gText_ButtonTypeLEqualsA[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}L=A");
 static const u8 gText_RunShortcutCursor[]  = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}Cursor");
 static const u8 gText_RunShortcutInstant[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}Instant");
+static const u8 gText_Mult0_25x[]          = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}0.25x");
 static const u8 gText_Mult0_5x[]           = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}0.5x");
 static const u8 gText_Mult1x[]             = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1x");
 static const u8 gText_Mult1_5x[]           = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1.5x");
 static const u8 gText_Mult2x[]             = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}2x");
+static const u8 gText_Mult3x[]             = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}3x");
+static const u8 gText_Mult5x[]             = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}5x");
+static const u8 gText_Mult10x[]            = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}10x");
 static const u8 gText_Shiny8192[]          = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1/8192");
 static const u8 gText_Shiny4096[]          = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1/4096");
 static const u8 gText_Shiny1024[]          = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1/1024");
@@ -320,8 +325,8 @@ void CB2_InitOptionMenu(void)
         gTasks[taskId].tAutoRun = gSaveBlock2Ptr->optionsAutoRun;
         gTasks[taskId].tAutosave = gSaveBlock2Ptr->optionsAutosave;
         gTasks[taskId].tRunShortcut = gSaveBlock2Ptr->optionsRunShortcut;
-        gTasks[taskId].tExpMult = gSaveBlock2Ptr->optionsExpMultiplier;
-        gTasks[taskId].tCatchMult = gSaveBlock2Ptr->optionsCatchMultiplier;
+        gTasks[taskId].tExpMult = GetExpMultiplierChoice();
+        gTasks[taskId].tCatchMult = GetCatchMultiplierChoice();
         gTasks[taskId].tShinyOdds = gSaveBlock2Ptr->optionsShinyOdds;
         gTasks[taskId].tNicknames = gSaveBlock2Ptr->optionsNicknames;
         gTasks[taskId].tScrollOffset = 0;
@@ -556,8 +561,7 @@ static void Task_OptionMenuSave(u8 taskId)
     gSaveBlock2Ptr->optionsAutoRun = gTasks[taskId].tAutoRun;
     gSaveBlock2Ptr->optionsAutosave = gTasks[taskId].tAutosave;
     gSaveBlock2Ptr->optionsRunShortcut = gTasks[taskId].tRunShortcut;
-    gSaveBlock2Ptr->optionsExpMultiplier = gTasks[taskId].tExpMult;
-    gSaveBlock2Ptr->optionsCatchMultiplier = gTasks[taskId].tCatchMult;
+    SetQolMultiplierChoices(gTasks[taskId].tExpMult, gTasks[taskId].tCatchMult);
     gSaveBlock2Ptr->optionsShinyOdds = gTasks[taskId].tShinyOdds;
     gSaveBlock2Ptr->optionsNicknames = gTasks[taskId].tNicknames;
 
@@ -993,87 +997,118 @@ static void RunShortcut_DrawChoices(u8 selection, s16 scrollOffset)
     DrawOptionMenuChoice(sTexts[selection], 104, y, 1);
 }
 
-// optionsExpMultiplier stores 1x as 0 (old-save compat) but the menu columns run
-// 0.5x/1x/1.5x/2x, so map value<->column; {1, 0, 2, 3} is its own inverse.
-static const u8 sExpMultValueCol[] = {1, 0, 2, 3};
+// Keep numeric save IDs unchanged, but display all multipliers in ascending order.
+// Only the current value is drawn: eight labels would not fit across the GBA screen.
+static const u8 sExpMultMenuOrder[OPTIONS_EXP_MULT_COUNT] =
+{
+    OPTIONS_EXP_MULT_0_25X,
+    OPTIONS_EXP_MULT_0_5X,
+    OPTIONS_EXP_MULT_1X,
+    OPTIONS_EXP_MULT_1_5X,
+    OPTIONS_EXP_MULT_2X,
+    OPTIONS_EXP_MULT_3X,
+    OPTIONS_EXP_MULT_5X,
+    OPTIONS_EXP_MULT_10X,
+};
+
+static const u8 *const sExpMultTexts[OPTIONS_EXP_MULT_COUNT] =
+{
+    [OPTIONS_EXP_MULT_1X] = gText_Mult1x,
+    [OPTIONS_EXP_MULT_0_5X] = gText_Mult0_5x,
+    [OPTIONS_EXP_MULT_1_5X] = gText_Mult1_5x,
+    [OPTIONS_EXP_MULT_2X] = gText_Mult2x,
+    [OPTIONS_EXP_MULT_0_25X] = gText_Mult0_25x,
+    [OPTIONS_EXP_MULT_3X] = gText_Mult3x,
+    [OPTIONS_EXP_MULT_5X] = gText_Mult5x,
+    [OPTIONS_EXP_MULT_10X] = gText_Mult10x,
+};
+
+static const u8 sCatchMultMenuOrder[OPTIONS_CATCH_MULT_COUNT] =
+{
+    OPTIONS_CATCH_MULT_0_5X,
+    OPTIONS_CATCH_MULT_1X,
+    OPTIONS_CATCH_MULT_1_5X,
+    OPTIONS_CATCH_MULT_2X,
+    OPTIONS_CATCH_MULT_3X,
+    OPTIONS_CATCH_MULT_5X,
+    OPTIONS_CATCH_MULT_10X,
+};
+
+static const u8 *const sCatchMultTexts[OPTIONS_CATCH_MULT_COUNT] =
+{
+    [OPTIONS_CATCH_MULT_1X] = gText_Mult1x,
+    [OPTIONS_CATCH_MULT_1_5X] = gText_Mult1_5x,
+    [OPTIONS_CATCH_MULT_2X] = gText_Mult2x,
+    [OPTIONS_CATCH_MULT_0_5X] = gText_Mult0_5x,
+    [OPTIONS_CATCH_MULT_3X] = gText_Mult3x,
+    [OPTIONS_CATCH_MULT_5X] = gText_Mult5x,
+    [OPTIONS_CATCH_MULT_10X] = gText_Mult10x,
+};
 
 static u8 ExpMult_ProcessInput(u8 selection)
 {
-    u8 col = sExpMultValueCol[selection];
+    u8 i;
 
+    for (i = 0; i < OPTIONS_EXP_MULT_COUNT; i++)
+        if (sExpMultMenuOrder[i] == selection)
+            break;
+    if (i == OPTIONS_EXP_MULT_COUNT)
+        i = 2; // original 1x default
     if (JOY_NEW(DPAD_RIGHT))
     {
-        col = col <= 2 ? col + 1 : 0;
+        i = (i + 1) % OPTIONS_EXP_MULT_COUNT;
         sArrowPressed = TRUE;
     }
-    if (JOY_NEW(DPAD_LEFT))
+    else if (JOY_NEW(DPAD_LEFT))
     {
-        col = col != 0 ? col - 1 : 3;
+        i = (i + OPTIONS_EXP_MULT_COUNT - 1) % OPTIONS_EXP_MULT_COUNT;
         sArrowPressed = TRUE;
     }
-    return sExpMultValueCol[col];
+    return sExpMultMenuOrder[i];
 }
 
 static void ExpMult_DrawChoices(u8 selection, s16 scrollOffset)
 {
-    u8 styles[4];
     u8 y;
-
     if (!GetOptionMenuItemY(MENUITEM_EXPMULT, scrollOffset, &y))
         return;
-
-    styles[0] = 0;
-    styles[1] = 0;
-    styles[2] = 0;
-    styles[3] = 0;
-    styles[sExpMultValueCol[selection]] = 1; // stored value -> menu column
-
-    DrawOptionMenuChoice(gText_Mult0_5x, 104, y, styles[0]);
-    DrawOptionMenuChoice(gText_Mult1x, 134, y, styles[1]);
-    DrawOptionMenuChoice(gText_Mult1_5x, 155, y, styles[2]);
-    DrawOptionMenuChoice(gText_Mult2x, GetStringRightAlignXOffset(FONT_SMALL, gText_Mult2x, 198), y, styles[3]);
+    if (selection >= OPTIONS_EXP_MULT_COUNT)
+        selection = OPTIONS_EXP_MULT_1X;
+    FillWindowPixelRect(WIN_OPTIONS, PIXEL_FILL(1), 104, y, 104, 16);
+    DrawOptionMenuChoice(sExpMultTexts[selection], 104, y, 1);
 }
-
-// Menu columns run 0.5x/1x/1.5x/2x, but optionsCatchMultiplier keeps its old-save values
-// (0=1x, 1=1.5x, 2=2x) and adds 0.5x as 3, so two lookups convert between value and column.
-static const u8 sCatchMultValueToCol[] = {1, 2, 3, 0}; // stored 1x/1.5x/2x/0.5x -> column
-static const u8 sCatchMultColToValue[] = {3, 0, 1, 2}; // column 0.5x/1x/1.5x/2x -> stored
 
 static u8 CatchMult_ProcessInput(u8 selection)
 {
-    u8 col = sCatchMultValueToCol[selection];
+    u8 i;
 
+    for (i = 0; i < OPTIONS_CATCH_MULT_COUNT; i++)
+        if (sCatchMultMenuOrder[i] == selection)
+            break;
+    if (i == OPTIONS_CATCH_MULT_COUNT)
+        i = 1; // original 1x default
     if (JOY_NEW(DPAD_RIGHT))
     {
-        col = col <= 2 ? col + 1 : 0;
+        i = (i + 1) % OPTIONS_CATCH_MULT_COUNT;
         sArrowPressed = TRUE;
     }
-    if (JOY_NEW(DPAD_LEFT))
+    else if (JOY_NEW(DPAD_LEFT))
     {
-        col = col != 0 ? col - 1 : 3;
+        i = (i + OPTIONS_CATCH_MULT_COUNT - 1) % OPTIONS_CATCH_MULT_COUNT;
         sArrowPressed = TRUE;
     }
-    return sCatchMultColToValue[col];
+    return sCatchMultMenuOrder[i];
 }
 
 static void CatchMult_DrawChoices(u8 selection, s16 scrollOffset)
 {
-    u8 styles[4];
     u8 y;
-
     if (!GetOptionMenuItemY(MENUITEM_CATCHMULT, scrollOffset, &y))
         return;
-
-    styles[0] = 0;
-    styles[1] = 0;
-    styles[2] = 0;
-    styles[3] = 0;
-    styles[sCatchMultValueToCol[selection]] = 1; // stored value -> menu column
-
-    DrawOptionMenuChoice(gText_Mult0_5x, 104, y, styles[0]);
-    DrawOptionMenuChoice(gText_Mult1x, 134, y, styles[1]);
-    DrawOptionMenuChoice(gText_Mult1_5x, 155, y, styles[2]);
-    DrawOptionMenuChoice(gText_Mult2x, GetStringRightAlignXOffset(FONT_SMALL, gText_Mult2x, 198), y, styles[3]);
+    if (selection >= OPTIONS_CATCH_MULT_COUNT)
+        selection = OPTIONS_CATCH_MULT_1X;
+    FillWindowPixelRect(WIN_OPTIONS, PIXEL_FILL(1), 104, y, 104, 16);
+    DrawOptionMenuChoice(sCatchMultTexts[selection], 104, y, 1);
 }
 
 // Show one option at a time, as the full odds set cannot fit on one row.
