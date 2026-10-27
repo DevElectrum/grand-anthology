@@ -587,11 +587,21 @@ for _dir,_p,_n,_species,_x,_y,_suffix,_multiple in _p0_new_statics:
         f"{_p}_PreLeagueOnTransition",
         f"{_p}_AnthologyHuntTransition",
         f"{_p}_{_n}Transition",
+        f"{_p}_{_n}OnTransition",  # e.g. Route44_TornadusOnTransition
     )
     assert any(
         f"call {hook}" in _script or f"map_script MAP_SCRIPT_ON_TRANSITION, {hook}" in _script
         for hook in _transition_hooks
     ), (_dir, _n, "missing encounter transition hook")
+    if (_dir, _n) == ("Route44", "Tornadus"):
+        # Route 44 dispatches through an ordinary map transition handler.
+        # Validate the entire entry chain instead of accepting an orphaned
+        # TornadusOnTransition label that would never execute in-game.
+        assert "map_script MAP_SCRIPT_ON_TRANSITION, Route44_OnTransition" in _script
+        _route44_entry = _script.split("Route44_OnTransition:", 1)[1].split("\n\tend", 1)[0]
+        assert "call Route44_TornadusOnTransition" in _route44_entry
+        assert "Route44_TornadusOnTransition::" in _script
+
     _part=_script.split(f"{_p}_EventScript_{_n}::")[1].split(f"{_p}_Anthology{_n}Retreated::")[0].split(f"{_p}_BigBatch{_n}Retreated::")[0].split(f"{_p}_SecondBatch{_n}Retreated::")[0].split(f"{_p}_Field{_n}Retreated::")[0]
     if _dir == "PokemonMansion_1F_Frlg" and _n == "Mew":
         # Mew is now a three-disguise endurance gauntlet followed by a
