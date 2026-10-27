@@ -1,34 +1,116 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { catalog, displayName, generation, locationHref, locationName, pokemonHref, sourceMethod, levelLabel, evidenceLabel } from '../../lib/data';
+import { catalog, pokemonDetails, displayName, formName, genderLabel, generation, locationHref, locationName, pokemonHref, sourceMethod, levelLabel, evidenceLabel } from '../../lib/data';
+
 export function getStaticPaths() {
   return catalog.pokemon.map(pokemon => ({ params: { dex: String(pokemon.dex) }, props: { pokemon } }));
 }
 const { pokemon } = Astro.props;
-const locationSlugs = new Map(catalog.locations.map(loc => [loc.id, loc.slug]));
+const all = pokemonDetails.species as Record<string, any>;
+const groups = pokemonDetails.formsByDex as Record<string, string[]>;
+const formKeys = [...new Set([pokemon.symbol, ...(groups[String(pokemon.dex)] ?? [])])].filter(key => all[key]);
+const first = all[pokemon.symbol] ?? all[formKeys[0]];
+const locations = new Map(catalog.locations.map(loc => [loc.id, loc.slug]));
 const sources = pokemon.sources ?? [];
-const relatives = (pokemon.evolves_from ?? []).map(name => catalog.pokemon.find(mon => mon.name === name)).filter(Boolean);
+const statOrder = [['baseHP','HP'],['baseAttack','Attack'],['baseDefense','Defense'],['baseSpAttack','Sp. Atk'],['baseSpDefense','Sp. Def'],['baseSpeed','Speed']];
+const evoEdges = new Map();
+for (const [key, form] of Object.entries(all)) {
+  for (const edge of form.evolutions ?? []) {
+    const destination = all[edge.target];
+    if (!destination?.dex || !form.dex) continue;
+    if (form.dex !== pokemon.dex && destination.dex !== pokemon.dex) continue;
+    evoEdges.set(key + edge.target + edge.requirement, { from: key, to: edge.target, fromDex: form.dex, toDex: destination.dex, method: edge.requirement });
+  }
+}
+const evolutions = [...evoEdges.values()].slice(0, 80);
+function label(symbol: string) {
+  return symbol === pokemon.symbol ? displayName(pokemon.name) : formName(symbol, all[symbol]?.name);
+}
 ---
-<Base title={`#${String(pokemon.dex).padStart(4, '0')} ${displayName(pokemon.name)}`} description={`Source-indexed Grand Anthology acquisition information for ${displayName(pokemon.name)}.`}>
+<Base title={'#' + String(pokemon.dex).padStart(4,'0') + ' ' + displayName(pokemon.name)} description={'Game-source Pokédex information and indexed acquisition locations for ' + displayName(pokemon.name)}>
   <div class="content-wrap wiki-wrap">
-    <div class="breadcrumbs"><a href="/pokedex/">National Pokédex</a><span>/</span>#{String(pokemon.dex).padStart(4, '0')}</div>
-    <div class="page-heading compact"><p class="eyebrow">Generation {generation(pokemon.dex)} · National #{String(pokemon.dex).padStart(4, '0')}</p><h1>{displayName(pokemon.name)}</h1><p>Source-indexed encounter and evolution information for the current Grand Anthology catalog.</p></div>
-    <div class="notice"><strong>Evidence:</strong> {evidenceLabel()}. A source candidate may be unreachable, non-catchable or affected by story flags. Consult current scripts for definitive behavior.</div>
-    <div class="detail-layout">
-      <section class="panel"><h2>Acquisition sources <span class="muted">({sources.length})</span></h2>
-        {sources.length ? <div class="table-scroll"><table class="data-table"><thead><tr><th>Method</th><th>Location</th><th>Level</th><th>Evidence</th></tr></thead><tbody>
-          {sources.map(source => <tr><td>{sourceMethod(source.method)}{source.form ? <small>Form: {displayName(source.form)}</small> : null}</td>
-            <td>{source.map && locationSlugs.has(source.map) ? <a href={locationHref(locationSlugs.get(source.map)!)}>{locationName(source.map)}</a> : <span class="muted">Not indexed</span>}</td>
-            <td>{levelLabel({level:source.level,levelMin:source.level_min,levelMax:source.level_max})}</td><td class="small-cell">{evidenceLabel(source.gameplay_verified)}</td></tr>)}
-        </tbody></table></div> : <p>No direct encounter source is indexed for this species. An evolution path may still exist; this does not establish unobtainability.</p>}
-      </section>
-      <aside class="panel side-panel"><h2>Evolution links</h2>
-        {relatives.length ? <ul class="link-list">{relatives.map(relative => <li><a href={pokemonHref(relative.dex)}>{displayName(relative.name)} ↗</a></li>)}</ul> : <p>No pre-evolution relationship recorded.</p>}
-        <h3>Catalog assignment</h3><p>{pokemon.audit_region ? displayName(pokemon.audit_region) : 'Not assigned'} <small class="standalone">This is an audit assignment, not an exclusive encounter region.</small></p>
-        <h3>Index status</h3><p class="muted">{displayName(pokemon.known_path_status ?? 'Unknown')}</p>
-      </aside>
-    </div>
-    {sources.some(source => source.note || source.required || source.requires) && <section class="panel notes-panel"><h2>Encounter notes and prerequisites</h2><ul class="notes-list">{sources.filter(source => source.note || source.required || source.requires).map(source => <li><strong>{source.map ? locationName(source.map) : sourceMethod(source.method)}:</strong> {source.note ?? 'Special prerequisites or script conditions are indexed.'}{(source.required ?? source.requires)?.length ? <small class="standalone">Source requirements: {(source.required ?? source.requires).join(', ')}</small> : null}</li>)}</ul></section>}
+    <div class="breadcrumbs"><a href="/pokedex/">National Pokédex</a><span>/</span>#{String(pokemon.dex).padStart(4,'0')}</div>
+    <header class="pokemon-hero">
+      <div class="pokemon-number">#{String(pokemon.dex).padStart(4,'0')}</div>
+      <div>
+        <p class="eyebrow">Generation {generation(pokemon.dex)} · Pokédex profile</p>
+        <h1>{displayName(pokemon.name)}</h1>
+        <p>{first?.category ? first.category + ' Pokémon' : 'Grand Anthology encyclopedia'}</p>
+        <div class="pokemon-types">{first?.types?.map((type:string) => <span class="pokemon-type" data-type={type.toLowerCase()}>{type}</span>)}</div>
+      </div>
+    </header>
+    {formKeys.length > 1 && <div class="form-choice">
+      <label for="form-selector"><strong>Form explorer</strong><small>Regional, alternate and battle forms from game source</small></label>
+      <select id="form-selector">{formKeys.map(key => <option value={key}>{label(key)}</option>)}</select>
+    </div>}
+    {formKeys.map((key,index) => {
+      const info = all[key];
+      return <section class="form-profile" data-form={key} hidden={index !== 0}>
+        <div class="pokemon-columns">
+          <article class="panel">
+            <p class="eyebrow">Pokédex entry</p>
+            <h2>{label(key)}</h2>
+            <div class="pokemon-types">{info.types?.map((type:string) => <span class="pokemon-type" data-type={type.toLowerCase()}>{type}</span>)}</div>
+            <p class="pokemon-flavor">{info.description ?? 'A form-specific description was not resolved from the game source.'}</p>
+            <dl class="pokemon-facts">
+              <div><dt>Category</dt><dd>{info.category ?? 'Not recorded'}</dd></div>
+              <div><dt>Height</dt><dd>{typeof info.height === 'number' ? (info.height/10).toFixed(1) + ' m' : 'Not resolved'}</dd></div>
+              <div><dt>Weight</dt><dd>{typeof info.weight === 'number' ? (info.weight/10).toFixed(1) + ' kg' : 'Not resolved'}</dd></div>
+              <div><dt>Catch rate</dt><dd>{info.catchRate ?? 'Not resolved'}</dd></div>
+              <div><dt>Gender</dt><dd>{genderLabel(info.genderRatio)}</dd></div>
+              <div><dt>Egg groups</dt><dd>{info.eggGroups?.join(', ') || 'Not recorded'}</dd></div>
+            </dl>
+          </article>
+          <article class="panel">
+            <p class="eyebrow">Battle data</p>
+            <h2>Base stats {info.bst && <span class="stat-total">BST {info.bst}</span>}</h2>
+            {info.stats ? <div class="pokemon-stat-list">{statOrder.map(([field,name]) => <div class="pokemon-stat">
+              <span>{name}</span><strong>{info.stats[field]}</strong>
+              <div class="pokemon-stat-track"><span style={'width:' + Math.min(100, Math.max(2, info.stats[field]/255*100)) + '%'}></span></div>
+            </div>)}</div> : <p class="muted">Stats for this form could not be extracted reliably.</p>}
+            <h3>Abilities</h3>
+            <div class="pokemon-abilities">
+              {info.abilities?.map((ability:any) => <div><strong>{ability.name}</strong><small>{ability.description ?? 'Description not resolved'}</small></div>)}
+              {info.hiddenAbility && <div><span class="ability-tag">Hidden ability</span><strong>{info.hiddenAbility.name}</strong><small>{info.hiddenAbility.description ?? 'Description not resolved'}</small></div>}
+              {!info.abilities?.length && !info.hiddenAbility && <p class="muted">No abilities resolved for this form.</p>}
+            </div>
+          </article>
+        </div>
+      </section>;
+    })}
+    <section class="panel">
+      <h2>Evolution relationships</h2>
+      {evolutions.length ? <div class="evolution-list">{evolutions.map((edge:any) => <div class="evolution-edge">
+        <a href={pokemonHref(edge.fromDex)}>{label(edge.from)}</a>
+        <span>{edge.method} <span aria-hidden="true">→</span></span>
+        <a href={pokemonHref(edge.toDex)}>{label(edge.to)}</a>
+      </div>)}</div> : <p>No conventional evolution relationship is recorded for this species.</p>}
+      <p class="fine-print">Conditional evolutions can require additional game-specific prerequisites beyond the displayed method.</p>
+    </section>
+    <div class="notice"><strong>Acquisition evidence:</strong> These records are source-indexed candidates, not guaranteed encounters. Stats and abilities come from Grand Anthology's configured game source rather than an external Pokédex.</div>
+    <section class="panel"><h2>Acquisition sources <span class="muted">({sources.length})</span></h2>
+      {sources.length ? <div class="table-scroll"><table class="data-table"><thead><tr><th>Method</th><th>Location</th><th>Level</th><th>Evidence</th></tr></thead><tbody>
+        {sources.map(source => <tr><td>{sourceMethod(source.method)}{source.form && <small>Form: {formName(source.form)}</small>}</td>
+          <td>{source.map && locations.has(source.map) ? <a href={locationHref(locations.get(source.map)!)}>{locationName(source.map)}</a> : <span class="muted">Not indexed</span>}</td>
+          <td>{levelLabel({level:source.level, levelMin:source.level_min, levelMax:source.level_max})}</td>
+          <td class="small-cell">{evidenceLabel(source.gameplay_verified)}</td></tr>)}
+      </tbody></table></div> : <p>No direct acquisition source is indexed. Evolution or gifts may still provide a path.</p>}
+    </section>
+    {sources.some(source => source.note || source.required || source.requires) && <section class="panel notes-panel">
+      <h2>Encounter notes and prerequisites</h2>
+      <ul class="notes-list">{sources.filter(source => source.note || source.required || source.requires).map(source => <li><strong>{source.map ? locationName(source.map) : sourceMethod(source.method)}:</strong> {source.note ?? 'Source prerequisites apply.'}
+        {(source.required ?? source.requires)?.length > 0 && <small class="standalone">Required flags: {(source.required ?? source.requires).map((x:string) => displayName(x.replace(/^FLAG_/,''))).join(', ')}</small>}
+      </li>)}</ul>
+    </section>}
+    <p class="fine-print">Data source: configured Grand Anthology Gen 1–9 species, forms and abilities. Battle-only forms are included where source-defined. Pokémon sprites are not bundled in the public website.</p>
     <div class="page-links"><a href="/pokedex/">← Back to the Pokédex</a><a href="/randomizer/">Seed-specific locations: planned →</a></div>
   </div>
+  <script>
+    const picker = document.querySelector<HTMLSelectElement>('#form-selector');
+    picker?.addEventListener('change', () => {
+      document.querySelectorAll<HTMLElement>('.form-profile').forEach(panel => {
+        panel.hidden = panel.dataset.form !== picker.value;
+      });
+    });
+  </script>
 </Base>
