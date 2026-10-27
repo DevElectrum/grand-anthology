@@ -140,6 +140,14 @@ def literal_strings(expr):
 def number_expr(expr):
     """Evaluate only a small, explicitly allowed arithmetic/ternary subset."""
     expr = expr.strip()
+    while expr.startswith("("):
+        try:
+            if closing(expr, 0, "(", ")") == len(expr) - 1:
+                expr = expr[1:-1].strip()
+            else:
+                break
+        except ValueError:
+            break
     if re.fullmatch(r"[-+]?\d+[uUlL]*", expr):
         return int(re.sub(r"[uUlL]+$", "", expr))
     if re.search(r"[A-Za-z_]", re.sub(r"\d+[uUlL]+", "0", expr)):
@@ -293,7 +301,7 @@ def main():
     for item in catalog:
         symbol = item["symbol"]
         if symbol not in details or not details[symbol]["stats"]:
-            raise ValueError("Missing compiled source stats for National #" + str(item["dex"]) + ": " + symbol)
+            raise ValueError("Missing compiled source stats for National #" + str(item["dex"]) + ": " + symbol + " => " + str(details.get(symbol)))
         if details[symbol]["dex"] != item["dex"]:
             raise ValueError("National Dex mismatch for " + symbol)
     missing_descriptions = [item["symbol"] for item in catalog if not details[item["symbol"]]["description"]]
