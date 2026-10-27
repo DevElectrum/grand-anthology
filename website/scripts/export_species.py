@@ -271,6 +271,8 @@ def main():
             ref = re.search(r"\bg[A-Za-z0-9_]+PokedexText\b", raw_description)
             description = shared_descriptions.get(ref.group(0)) if ref else None
         base = {key: number_expr(f.get(key, "")) for key in STATS}
+        if symbol in ("SPECIES_ARTICUNO", "SPECIES_MEWTWO", "SPECIES_NIHILEGO", "SPECIES_RAYQUAZA"):
+            print("STATIC FLAG RAW", symbol, {key: f.get(key) for key in ("isRestrictedLegendary", "isSubLegendary", "isMythical", "isUltraBeast", "isParadox")})
         abilities = symbols(f.get("abilities", ""), "ABILITY_")
         standard = [a for a in abilities[:2] if a != "ABILITY_NONE"]
         hidden = abilities[2] if len(abilities) > 2 and abilities[2] != "ABILITY_NONE" else None
