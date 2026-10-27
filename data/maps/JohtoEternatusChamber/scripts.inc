@@ -1,9 +1,9 @@
 // Reuse a small existing cave layout; this independent map is appended to JohtoLeague.
 JohtoEternatusChamber_MapScripts::
-    map_script MAP_SCRIPT_ON_TRANSITION, JohtoEternatusChamber_OnTransition
+    map_script MAP_SCRIPT_ON_TRANSITION, JohtoEternatusChamber_AnthologyOnTransition
     .byte 0
 
-JohtoEternatusChamber_OnTransition:
+JohtoEternatusChamber_AnthologyOnTransition:
     goto_if_unset FLAG_ANTHOLOGY_ROYAL_DUO_CLAIMED, JohtoEternatusChamber_Hide
     callnative AnthologyStaticRandomizerIsOn
     goto_if_eq VAR_RESULT, TRUE, JohtoEternatusChamber_SeededOnTransition
