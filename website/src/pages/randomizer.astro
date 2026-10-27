@@ -57,7 +57,7 @@ import Base from '../layouts/Base.astro';
   <script>
     import atlasData from '../generated/randomizer-data.json';
     import spriteData from '../generated/sprites.json';
-    import { buildWildAtlas, buildStarterAtlas, findSeededPokemonSources } from '../lib/randomizer.mjs';
+    import { buildWildAtlas, buildStarterAtlas, findSeededPokemonSources, pokemonDexHref } from '../lib/randomizer.mjs';
 
     const element = (id: string) => document.getElementById(id)!;
     const form = element('atlas-settings') as HTMLFormElement;
@@ -118,8 +118,7 @@ import Base from '../layouts/Base.astro';
       row.append(cell);
     }
     function pokedexHref(id: number): string | null {
-      const dex = species[id]?.dex;
-      return Number.isInteger(dex) && dex >= 1 && dex <= 1025 ? '/pokedex/' + dex + '/' : null;
+      return pokemonDexHref(id, species);
     }
     function pokemonCell(row: HTMLTableRowElement, id: number): void {
       const td = document.createElement('td');
