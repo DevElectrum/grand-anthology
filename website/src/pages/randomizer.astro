@@ -31,7 +31,7 @@ import Base from '../layouts/Base.astro';
             <option value="starters">Starter Viewer</option>
           </select>
         </label>
-        <label class="field" id="atlas-pokemon-field">Find randomized Pokémon
+        <label class="field" id="atlas-pokemon-field">Find Pokémon (wild + starters)
           <input type="search" id="atlas-pokemon-search" placeholder="Rayquaza, Ceruledge, Unown…" autocomplete="off"/>
         </label>
         <label class="field" id="atlas-location-field" hidden>Search locations
@@ -41,7 +41,7 @@ import Base from '../layouts/Base.astro';
           <select id="atlas-region"><option value="all">All regions</option><option value="KANTO">Kanto</option><option value="JOHTO">Johto</option><option value="HOENN">Hoenn</option></select>
         </label>
         <label class="field" id="atlas-method-field">Encounter method
-          <select id="atlas-method"><option value="all">All wild methods</option><option value="0">Grass / ground</option><option value="1">Surfing</option><option value="2">Rock Smash</option><option value="3">Fishing</option></select>
+          <select id="atlas-method"><option value="all">All sources</option><option value="starters">Starter choices</option><option value="0">Grass / ground</option><option value="1">Surfing</option><option value="2">Rock Smash</option><option value="3">Fishing</option></select>
         </label>
       </div>
       <p id="atlas-summary" class="atlas-summary" aria-live="polite">Preparing results…</p>
@@ -49,7 +49,7 @@ import Base from '../layouts/Base.astro';
     </section>
     <section class="panel">
       <h2>What these results cover</h2>
-      <p>Wild results represent the game's <strong>native encounter-table slots</strong>, including each slot's original species, level bracket, method and replacement species. The same species may occupy multiple slots; that's intentional. Ordinary supplemental grass, Surfing and fishing spawns are disabled while Wild Randomization is on and are not artificially added to these results.</p>
+      <p>Pokémon Finder includes every <strong>currently supported source type</strong>: native wild encounter slots and regional starter choices. Starter results show the professor, the original choice and its slot number. Scripted statics, optional gifts and NPC trainers will join the Finder when their randomizer logic is implemented. Wild results represent the game's <strong>native encounter-table slots</strong>, including each slot's original species, level bracket, method and replacement species. The same species may occupy multiple slots; that's intentional. Ordinary supplemental grass, Surfing and fishing spawns are disabled while Wild Randomization is on and are not artificially added to these results.</p>
       <p>Some areas, including Altering Cave, have multiple authored wild tables. Those rows are explicitly marked <strong>Alternative table</strong>; they are not simultaneously active and the active variant may depend on game state. The site currently excludes special Feebas/outbreak/roamer pathways, post-League research rotations, quest gates, and scripted static events. Some indexed maps are inaccessible until story progression or use encounter restrictions. Static encounter settings will be supported after the individual scripted sites have been audited for seed parity.</p>
       <p class="fine-print">Source snapshot: <code id="atlas-fingerprint">Loading…</code>. Calculations run locally in your browser; no seed data is uploaded. Results are a source-level mirror awaiting representative in-emulator validation.</p>
     </section>
@@ -57,7 +57,7 @@ import Base from '../layouts/Base.astro';
   <script>
     import atlasData from '../generated/randomizer-data.json';
     import spriteData from '../generated/sprites.json';
-    import { buildWildAtlas, buildStarterAtlas } from '../lib/randomizer.mjs';
+    import { buildWildAtlas, buildStarterAtlas, findSeededPokemonSources, pokemonDexHref } from '../lib/randomizer.mjs';
 
     const element = (id: string) => document.getElementById(id)!;
     const form = element('atlas-settings') as HTMLFormElement;
@@ -117,16 +117,19 @@ import Base from '../layouts/Base.astro';
       cell.textContent = value;
       row.append(cell);
     }
+    function pokedexHref(id: number): string | null {
+      return pokemonDexHref(id, species);
+    }
     function pokemonCell(row: HTMLTableRowElement, id: number): void {
       const td = document.createElement('td');
       const wrapper = document.createElement('span');
       wrapper.className = 'atlas-mon';
       wrapper.append(image(id));
       const label = document.createElement('span');
-      const entry = species[id];
-      if (entry?.dex >= 1 && entry.dex <= 1025) {
+      const href = pokedexHref(id);
+      if (href) {
         const anchor = document.createElement('a');
-        anchor.href = '/pokedex/' + entry.dex + '/';
+        anchor.href = href;
         anchor.textContent = nameFor(id);
         anchor.title = 'Open species Pokédex profile';
         label.append(anchor);
@@ -159,6 +162,11 @@ import Base from '../layouts/Base.astro';
       element('atlas-location-field').hidden = mode !== 'location';
       element('atlas-region-field').hidden = mode === 'starters';
       element('atlas-method-field').hidden = mode === 'starters';
+      const starterMethodOption = methodInput.querySelector<HTMLOptionElement>('option[value="starters"]')!;
+      starterMethodOption.hidden = mode === 'location';
+      if (mode === 'location' && methodInput.value === 'starters') methodInput.value = 'all';
+      methodInput.querySelector<HTMLOptionElement>('option[value="all"]')!.textContent =
+        mode === 'pokemon' ? 'All supported sources' : 'All wild methods';
       results.replaceChildren();
       if (mode === 'starters') {
         if (!Object.keys(starterRows).length) { summary.textContent = 'No starter data available.'; return; }
@@ -174,8 +182,14 @@ import Base from '../layouts/Base.astro';
           const grid = document.createElement('div');
           grid.className = 'atlas-starter-grid';
           for (const choice of roster) {
-            const card = document.createElement('div');
+            const href = pokedexHref(choice.id);
+            const card = document.createElement(href ? 'a' : 'div');
             card.className = 'atlas-starter-card';
+            if (href) {
+              card.setAttribute('href', href);
+              card.setAttribute('title', 'Open ' + nameFor(choice.id) + ' in the Pokédex');
+              card.setAttribute('aria-label', nameFor(choice.id) + ', choice ' + (choice.slot + 1) + ', view Pokédex');
+            }
             card.append(image(choice.id));
             const index = document.createElement('small');
             index.textContent = 'Choice ' + (choice.slot + 1);
@@ -192,40 +206,55 @@ import Base from '../layouts/Base.astro';
         results.append(deck);
         return;
       }
-      const search = (mode === 'pokemon' ? pokemonQuery.value : locationQuery.value).trim().toLowerCase();
       const region = regionInput.value;
       const method = methodInput.value;
-      const filtered = wildRows.filter(row => {
-        if (region !== 'all' && maps[row.map]?.region !== region) return false;
-        if (method !== 'all' && row.area !== Number(method)) return false;
-        if (!search) return true;
-        if (mode === 'pokemon') {
-          const mon = species[row.speciesId];
-          return nameFor(row.speciesId).toLowerCase().includes(search)
-            || mon?.symbol?.toLowerCase().replaceAll('_', ' ').includes(search)
-            || String(mon?.dex) === search;
-        }
-        return locationFor(row.map).toLowerCase().includes(search)
-          || row.map.toLowerCase().includes(search);
-      });
+      const matches = mode === 'pokemon'
+        ? findSeededPokemonSources(wildRows, starterRows, species, {
+            query: pokemonQuery.value, region, method
+          })
+        : { starters: [], wild: wildRows.filter(row => {
+            if (region !== 'all' && maps[row.map]?.region !== region) return false;
+            if (method !== 'all' && row.area !== Number(method)) return false;
+            const query = locationQuery.value.trim().toLowerCase();
+            return !query || locationFor(row.map).toLowerCase().includes(query)
+              || row.map.toLowerCase().includes(query);
+          }) };
+      const rows: any[] = [
+        ...matches.starters.map(choice => ({ ...choice, sourceKind: 'starter' })),
+        ...matches.wild.map(row => ({ ...row, sourceKind: 'wild' }))
+      ];
       const limit = 200;
-      summary.textContent = filtered.length.toLocaleString() + ' matching wild encounter slots'
-        + (filtered.length > limit ? ' · Showing first ' + limit.toLocaleString() + '. Narrow your search to see more.' : '.');
-      if (!filtered.length) {
+      const remaining = rows.length > limit
+        ? ' · Showing first ' + limit.toLocaleString() + '. Narrow your search to see more.' : '.';
+      summary.textContent = mode === 'pokemon'
+        ? matches.starters.length.toLocaleString() + ' starter choices · ' +
+          matches.wild.length.toLocaleString() + ' wild encounter slots' + remaining
+        : matches.wild.length.toLocaleString() + ' matching wild encounter slots' + remaining;
+      if (!rows.length) {
         const empty = document.createElement('p');
         empty.className = 'empty-state';
-        empty.textContent = 'No matching native encounter slots for these settings.';
+        empty.textContent = mode === 'pokemon'
+          ? 'No matching wild slots or regional starter choices for these settings.'
+          : 'No matching native encounter slots for these settings.';
         results.append(empty);
         return;
       }
-      const { wrapper, body } = makeTable(['Randomized Pokémon', 'Location', 'Method / slot', 'Level', 'Original Pokémon']);
-      for (const record of filtered.slice(0, limit)) {
+      const { wrapper, body } = makeTable(['Pokémon', 'Location', 'Source / slot', 'Level', 'Original Pokémon']);
+      for (const record of rows.slice(0, limit)) {
         const tr = document.createElement('tr');
         pokemonCell(tr, record.speciesId);
-        textCell(tr, locationFor(record.map) + (maps[record.map]?.region ? ' · ' + maps[record.map].region : ''));
-        textCell(tr, record.method + (record.rod ? ' (' + record.rod + ')' : '') + ', slot ' + (record.slot + 1)
-          + (record.variant ? ' · Alternative table: ' + record.variant : ''));
-        textCell(tr, record.min === record.max ? 'Lv. ' + record.min : 'Lv. ' + record.min + '–' + record.max);
+        if (record.sourceKind === 'starter') {
+          const professor = record.region === 'Kanto' ? 'Professor Oak'
+            : record.region === 'Johto' ? 'Professor Elm' : 'Professor Birch';
+          textCell(tr, professor + ' · ' + record.region.toUpperCase());
+          textCell(tr, 'Starter · choice ' + (record.slot + 1));
+          textCell(tr, 'Gift');
+        } else {
+          textCell(tr, locationFor(record.map) + (maps[record.map]?.region ? ' · ' + maps[record.map].region : ''));
+          textCell(tr, record.method + (record.rod ? ' (' + record.rod + ')' : '') + ', slot ' + (record.slot + 1)
+            + (record.variant ? ' · Alternative table: ' + record.variant : ''));
+          textCell(tr, record.min === record.max ? 'Lv. ' + record.min : 'Lv. ' + record.min + '–' + record.max);
+        }
         textCell(tr, nameFor(record.original));
         body.append(tr);
       }

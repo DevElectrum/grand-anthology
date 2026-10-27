@@ -79,3 +79,45 @@ export function buildStarterAtlas(seed, data, randomized = true) {
       .map((id, slot) => ({ id, original: roster.slots[slot], slot }))
   ]));
 }
+
+
+// The Finder searches all currently modeled source types. Keep this pure so
+// UI filters and regression tests cannot disagree about the starter roster.
+export function findSeededPokemonSources(wildRows, starterRows, species, options = {}) {
+  const query = String(options.query ?? '').trim().toLowerCase();
+  const region = options.region ?? 'all';
+  const method = options.method ?? 'all';
+
+  function matches(id) {
+    if (!query) return true;
+    const mon = species[id];
+    if (!mon) return false;
+    return String(mon.name ?? '').toLowerCase().includes(query)
+      || String(mon.symbol ?? '').replaceAll('_', ' ').toLowerCase().includes(query)
+      || String(mon.dex ?? '') === query;
+  }
+
+  const starters = [];
+  if (method === 'all' || method === 'starters') {
+    for (const [regionName, roster] of Object.entries(starterRows)) {
+      if (region !== 'all' && region !== regionName.toUpperCase()) continue;
+      for (const choice of roster) {
+        if (matches(choice.id))
+          starters.push({ ...choice, speciesId: choice.id, region: regionName });
+      }
+    }
+  }
+  const wild = method === 'starters' ? [] : wildRows.filter(row => {
+    if (region !== 'all' && row.region !== region) return false;
+    if (method !== 'all' && row.area !== Number(method)) return false;
+    return matches(row.speciesId);
+  });
+  return { starters, wild };
+}
+
+
+export function pokemonDexHref(id, species) {
+  const dex = species[id]?.dex;
+  return Number.isInteger(dex) && dex >= 1 && dex <= 1025
+    ? '/pokedex/' + dex + '/' : null;
+}

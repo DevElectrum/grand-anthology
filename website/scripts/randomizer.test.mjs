@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { mix32, seededWild, seededStarters, buildWildAtlas, buildStarterAtlas } from '../src/lib/randomizer.mjs';
+import { mix32, seededWild, seededStarters, buildWildAtlas, buildStarterAtlas, findSeededPokemonSources, pokemonDexHref } from '../src/lib/randomizer.mjs';
 import { exportRandomizerData, parseSpeciesEnum, parseStarterSlots } from './export-randomizer.mjs';
 
 function eligibleData(n = 170) {
@@ -111,4 +111,44 @@ test('every seed resolves to legal game Pokémon using actual internal species i
       assert.equal(new Set(ids.map(id => data.species[id].dex)).size, ids.length, region + ' seed ' + seed);
     }
   }
+});
+
+
+test('seed 02026 exposes Oak choice 7 Moltres in the unified Finder and Pokédex link', async () => {
+  const data = await exportRandomizerData();
+  const starterRows = buildStarterAtlas(2026, data);
+  const wildRows = buildWildAtlas(2026, data);
+  const oak = starterRows.Kanto.find(choice => choice.slot === 6);
+  assert.equal(data.species[oak.id].symbol, 'SPECIES_MOLTRES');
+  assert.equal(data.species[oak.original].symbol, 'SPECIES_ROWLET');
+  assert.equal(pokemonDexHref(oak.id, data.species), '/pokedex/146/');
+
+  const all = findSeededPokemonSources(wildRows, starterRows, data.species, { query: 'moltres' });
+  assert.ok(all.starters.some(row => row.region === 'Kanto' && row.slot === 6 && row.id === oak.id));
+  assert.ok(all.wild.length > 0, 'Wild Moltres sources must still be searchable');
+
+  const starterOnly = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { query: 'moltres', method: 'starters' });
+  assert.equal(starterOnly.wild.length, 0);
+  assert.ok(starterOnly.starters.some(row => row.region === 'Kanto' && row.slot === 6));
+
+  const grass = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { query: 'moltres', method: '0' });
+  assert.equal(grass.starters.length, 0);
+  assert.ok(grass.wild.every(row => row.area === 0));
+
+  const johto = findSeededPokemonSources(wildRows, starterRows, data.species,
+    { query: 'moltres', region: 'JOHTO' });
+  assert.ok(!johto.starters.some(row => row.region === 'Kanto'));
+
+  const nonRandomized = findSeededPokemonSources(wildRows, buildStarterAtlas(2026, data, false),
+    data.species, { query: 'moltres', method: 'starters' });
+  assert.equal(nonRandomized.starters.length, 0);
+
+  for (const roster of Object.values(starterRows)) {
+    for (const choice of roster) {
+      assert.match(pokemonDexHref(choice.id, data.species), /^\/pokedex\/\d+\/$/);
+    }
+  }
+  assert.equal(pokemonDexHref(0, data.species), null);
 });
