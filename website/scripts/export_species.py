@@ -199,7 +199,7 @@ def species_flag(body, name):
     # macro-owned chunk; split_fields then misses e.g. .isSubLegendary.
     # These are flat SpeciesInfo flag designators, so inspect the balanced
     # initializer directly, after C preprocessing resolves conditional code.
-    match = re.search(r"\\." + re.escape(name) + r"\\s*=\\s*([^,\\n}]+)", body)
+    match = re.search(r"\." + re.escape(name) + r"\s*=\s*([^,\n}]+)", body)
     if not match:
         return False
     expr = match.group(1).strip()
