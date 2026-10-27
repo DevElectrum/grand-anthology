@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { catalog, pokemonDetails, displayName, formName, genderLabel, generation, locationHref, locationName, pokemonHref, sourceMethod, levelLabel, evidenceLabel } from '../../lib/data';
+import { catalog, pokemonDetails, displayName, formName, genderLabel, generation, locationHref, locationName, pokemonHref, sourceMethod, levelLabel, evidenceLabel, pokemonSprite } from '../../lib/data';
 
 export function getStaticPaths() {
   return catalog.pokemon.map(pokemon => ({ params: { dex: String(pokemon.dex) }, props: { pokemon } }));
@@ -31,7 +31,15 @@ function label(symbol: string) {
   <div class="content-wrap wiki-wrap">
     <div class="breadcrumbs"><a href="/pokedex/">National Pokédex</a><span>/</span>#{String(pokemon.dex).padStart(4,'0')}</div>
     <header class="pokemon-hero">
-      <div class="pokemon-number">#{String(pokemon.dex).padStart(4,'0')}</div>
+      <div class="pokemon-portrait">
+        {formKeys.map((key, index) => {
+          const sprite = pokemonSprite(key, pokemon.dex);
+          return <div class="pokemon-portrait-form" data-sprite-form={key} hidden={index !== 0}>
+            {sprite.front || sprite.icon ? <img class="pokemon-portrait-image" src={sprite.front ?? sprite.icon!} alt={label(key) + ' game sprite'} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" width="176" height="176" /> : <span class="portrait-placeholder" aria-hidden="true">#{String(pokemon.dex).padStart(4,'0')}</span>}
+            {!sprite.exact && key !== pokemon.symbol && <small class="sprite-fallback-note">Default-form artwork</small>}
+          </div>;
+        })}
+      </div>
       <div>
         <p class="eyebrow">Generation {generation(pokemon.dex)} · Pokédex profile</p>
         <h1>{displayName(pokemon.name)}</h1>
@@ -103,7 +111,7 @@ function label(symbol: string) {
         {(source.required ?? source.requires)?.length > 0 && <small class="standalone">Required flags: {(source.required ?? source.requires).map((x:string) => displayName(x.replace(/^FLAG_/,''))).join(', ')}</small>}
       </li>)}</ul>
     </section>}
-    <p class="fine-print">Data source: configured Grand Anthology Gen 1–9 species, forms and abilities. Battle-only forms are included where source-defined. Pokémon sprites are not bundled in the public website.</p>
+    <p class="fine-print">Data source: configured Grand Anthology Gen 1–9 species, forms and abilities. The website uses frame-cropped copies of the game's existing Pokémon sprites, which remain franchise/artist-owned assets. Some alternate forms use labeled default-form artwork when their individual sprite is unavailable. See acknowledgments for credits.</p>
     <div class="page-links"><a href="/pokedex/">← Back to the Pokédex</a><a href="/randomizer/">Seed-specific locations: planned →</a></div>
   </div>
   <script>
@@ -111,6 +119,9 @@ function label(symbol: string) {
     picker?.addEventListener('change', () => {
       document.querySelectorAll<HTMLElement>('.form-profile').forEach(panel => {
         panel.hidden = panel.dataset.form !== picker.value;
+      });
+      document.querySelectorAll<HTMLElement>('.pokemon-portrait-form').forEach(frame => {
+        frame.hidden = frame.dataset.spriteForm !== picker.value;
       });
     });
   </script>

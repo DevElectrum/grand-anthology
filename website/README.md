@@ -22,13 +22,14 @@ Both dev and build automatically invoke `scripts/generate.mjs`, which:
 - requires exactly 1,025 distinct National Pokédex entries, 874 item constants and 92 Mega Stones;
 - emits `src/generated/catalog.json`, a build-time snapshot of catalog records and source-map groups;
 - enriches source-indexed supplemental grass, Surfing, fishing and rare-grass encounters with their *actual native-table level brackets* without mutating `data/catalog/world_acquisition.jsonl`. Grass/Surf use the first native slot; Fishing uses individual rod slot ranges. These are ordinary encounter levels, not Lure-adjusted or randomizer outcomes;
-- copies a limited set of **existing** branding art and dated mGBA screenshots into `public/visuals/`.
+- copies a limited set of **existing** branding art and dated mGBA screenshots into `public/visuals/`;
+- copies the minimal Pokémon sprite art from the existing game asset tree into ignored `public/pokemon-sprites/` and generates `src/generated/sprites.json`. Pokédex grid entries use menu icons; profile heroes use a first-frame front sprite. Form selection swaps to available matching form artwork, otherwise explicitly labels a default-form fallback. Animation sheets are *visually clipped to frame one* by CSS and are not edited or converted.
 
 The build also extracts configured Pokémon stats, types, abilities, forms, descriptions and evolution data from the game's Gen 1–9 C species initializers, shared Pokédex text, ability definitions and form tables. GCC resolves compile-time conditionals and a balanced initializer parser imports the relevant fields. The separate result is `src/generated/pokemon-details.json`. Generated files and copied visuals are ignored by Git. Keep the authoritative catalog in the game repository; do not edit the generated JSON.
 
 The presentation importer conservatively merges **source aliases for the same physical event**: a special permanent Zygarde/Terapagos static plus its general scripted-battle index, or a named Mega Stone item-ball event plus its generic script reference. It retains genuinely different methods, such as Fishing versus Surfing and Battle Net free starter selection versus purchase. The raw catalog is untouched. Run `npm test` to check the normalization behavior against the current game data.
 
-The extracted stats and biology are source-level game data, not gameplay acceptance. The site does not import outside Pokémon statistics or publish all game sprites. Unsupported conditional details are reported as unavailable rather than guessed.
+The extracted stats and biology are source-level game data, not gameplay acceptance. The site does not import outside Pokémon statistics or distribute all battle assets; the chosen existing sprite PNGs are generated for the public website and retain their original franchise/art provenance. Credit and copyright belong to their respective owners. Unsupported conditional details are reported as unavailable rather than guessed.
 
 ## Editorial and source accuracy
 
@@ -36,7 +37,7 @@ The catalog is a source-indexed **candidate acquisition inventory**, not a playa
 
 A website importer cannot replace actual scripted-event validation or emulator tests. The homepage's AI-generated atlas artwork is **concept art**, not gameplay. The legacy emulator gallery predates the present Grand Anthology title; captures are labeled accordingly.
 
-Do not distribute compiled ROMs, save files, or claim endorsement by Pokémon rights holders. Preserve upstream credits and review artwork provenance before expanding website usage.
+Do not distribute compiled ROMs, save files, or claim endorsement by Pokémon rights holders. Preserve upstream credits; the referenced Pokémon sprite graphics are fan-project/game-derived assets, not original website artwork, and should not be presented as separately licensed original work.
 
 ## Planned, not yet implemented
 
