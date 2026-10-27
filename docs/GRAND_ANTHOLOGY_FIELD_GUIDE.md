@@ -24,7 +24,7 @@ The story is meant to run **Kanto → Johto → Hoenn**, without forced level re
 | **Koraidon** | Underwater Route 128 Ancient Grotto | After seventh Hoenn badge and Space Center Magma victory. |
 | **Miraidon** | New Mauville Generator Annex | After seventh badge, Space Center victory and generator shutdown. |
 | **Kyurem** | Johto Ice Path B1F | Requires caught Reshiram and Zekrom; DNA Splicers tied to encounter. |
-| **Eternatus** | Johto Route 44 (current source) | Lv50 static. Proposed Victory Road move is NOT implemented. |
+| **Eternatus** | Johto Victory Road 1F, sealed chamber | Lv55; meteorite near the Indigo Plateau exit unlocks after the Royal Duo victory. |
 
 ## Find any Pokémon by National number
 Each collapsed generation opens into a searchable table. An **evolution candidate** does not certify that its exact evolution requirement was tested.
@@ -979,7 +979,7 @@ Each collapsed generation opens into a searchable table. An **evolution candidat
 | 887 | **DRAGAPULT** | Evolve DRAKLOAK |
 | 888 | **ZACIAN** | Defeat Royal Duo at Route 27 Lv50 |
 | 889 | **ZAMAZENTA** | Defeat Royal Duo at Route 27 Lv50 |
-| 890 | **ETERNATUS** | Scripted encounter at Route 44 Lv50 |
+| 890 | **ETERNATUS** | Scripted encounter in JOHTO ETERNATUS CHAMBER Lv55; enter from Victory Road 1F after Royal Duo |
 | 891 | **KUBFU** | Scripted encounter at Route 34 Lv18; Scripted encounter at Sprout Tower 2F Lv12 |
 | 892 | **URSHIFU** | Evolve KUBFU |
 | 893 | **ZARUDE** | Scripted event at Ilex Forest |
