@@ -114,3 +114,10 @@ export function findSeededPokemonSources(wildRows, starterRows, species, options
   });
   return { starters, wild };
 }
+
+
+export function pokemonDexHref(id, species) {
+  const dex = species[id]?.dex;
+  return Number.isInteger(dex) && dex >= 1 && dex <= 1025
+    ? '/pokedex/' + dex + '/' : null;
+}
