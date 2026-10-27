@@ -91,3 +91,24 @@ test('generated seed atlas uses real game map and form indexes', async () => {
   }
   assert.notDeepEqual(buildStarterAtlas(2026, data), buildStarterAtlas(2027, data));
 });
+
+
+test('every seed resolves to legal game Pokémon using actual internal species indexes', async () => {
+  const data = await exportRandomizerData();
+  const unknown = data.species.filter(mon => mon.starterEligible && (!mon.dex || mon.dex > 1025));
+  assert.deepEqual(unknown.map(mon => mon.symbol), [], 'No starter-eligible game form may lack National Dex identity');
+  const target = data.wildSlots.find(row => row.map === 'MAP_ROUTE1' && row.area === 0);
+  assert.ok(target, 'Route 1 source slot');
+  for (let seed = 0; seed < 65536; seed++) {
+    const id = seededWild(seed, target.original, target.slot, target.area,
+      target.group, target.num, data.species);
+    assert.ok(data.species[id].fieldStable, 'Invalid real-data mapping for seed ' + seed);
+  }
+  for (const seed of [0, 1, 100, 2026, 2027, 32768, 65535]) {
+    for (const [region, roster] of Object.entries(data.starters)) {
+      const ids = seededStarters(seed, roster, data.species);
+      assert.equal(ids.length, roster.slots.length, region);
+      assert.equal(new Set(ids.map(id => data.species[id].dex)).size, ids.length, region + ' seed ' + seed);
+    }
+  }
+});
