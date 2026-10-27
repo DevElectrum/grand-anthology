@@ -256,10 +256,8 @@ def main():
             description = shared_descriptions.get(ref.group(0)) if ref else None
         base = {key: number_expr(f.get(key, "")) for key in STATS}
         abilities = symbols(f.get("abilities", ""), "ABILITY_")
-        seen = []
-        for ability in abilities:
-            if ability != "ABILITY_NONE" and ability not in seen:
-                seen.append(ability)
+        standard = [a for a in abilities[:2] if a != "ABILITY_NONE"]
+        hidden = abilities[2] if len(abilities) > 2 and abilities[2] != "ABILITY_NONE" else None
         types = symbols(f.get("types", ""), "TYPE_")
         types = list(dict.fromkeys(t.replace("TYPE_", "").title() for t in types if t != "TYPE_NONE"))
         details[symbol] = {
@@ -270,8 +268,8 @@ def main():
             "stats": base if all(isinstance(x, int) and x > 0 for x in base.values()) else None,
             "bst": sum(base.values()) if all(isinstance(x, int) and x > 0 for x in base.values()) else None,
             "types": types[:2],
-            "abilities": [dict(id=a, **ability_data.get(a, {"name": readable(a[8:]), "description": None})) for a in seen[:2]],
-            "hiddenAbility": (dict(id=seen[2], **ability_data.get(seen[2], {"name": readable(seen[2][8:]), "description": None})) if len(seen) > 2 else None),
+            "abilities": [dict(id=a, **ability_data.get(a, {"name": readable(a[8:]), "description": None})) for a in standard],
+            "hiddenAbility": (dict(id=hidden, **ability_data.get(hidden, {"name": readable(hidden[8:]), "description": None})) if hidden else None),
             "catchRate": number_expr(f.get("catchRate", "")),
             "height": number_expr(f.get("height", "")),
             "weight": number_expr(f.get("weight", "")),
