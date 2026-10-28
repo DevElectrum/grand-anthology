@@ -7070,14 +7070,22 @@ static bool8 BulkReleaseEligible(u8 position)
 {
     u16 restrictedMoves[ARRAY_COUNT(sRestrictedReleaseMoves) + 1];
     enum Species species = GetBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_SPECIES);
+    enum Species baseSpecies;
     enum Item item;
 
     if (species == SPECIES_NONE
         || GetBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_IS_EGG)
-        || (GetBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_MARKINGS) & (1 << 3))
-        || gSpeciesInfo[species].isRestrictedLegendary
+        || (GetBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_MARKINGS) & (1 << 3)))
+        return FALSE;
+
+    // Form species may omit flags carried by their National Dex base species.
+    baseSpecies = NationalPokedexNumToSpecies(gSpeciesInfo[species].natDexNum);
+    if (gSpeciesInfo[species].isRestrictedLegendary
         || gSpeciesInfo[species].isSubLegendary
-        || gSpeciesInfo[species].isMythical)
+        || gSpeciesInfo[species].isMythical
+        || gSpeciesInfo[baseSpecies].isRestrictedLegendary
+        || gSpeciesInfo[baseSpecies].isSubLegendary
+        || gSpeciesInfo[baseSpecies].isMythical)
         return FALSE;
 
     item = GetBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_HELD_ITEM);
