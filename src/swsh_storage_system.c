@@ -101,6 +101,10 @@ enum {
     MSG_CANT_STORE_MAIL,
     MSG_DEFAULT_BOX_SET,
     MSG_DEFAULT_BOX_CLEARED,
+    MSG_BULK_SELECT,
+    MSG_BULK_CONFIRM,
+    MSG_BULK_DONE,
+    MSG_BULK_NONE,
 };
 
 // IDs for how to resolve variables in the above messages
@@ -113,6 +117,8 @@ enum {
     MSG_VAR_RELEASE_MON_2, // Unused
     MSG_VAR_RELEASE_MON_3,
     MSG_VAR_ITEM_NAME,
+    MSG_VAR_BULK_COUNT,
+    MSG_VAR_BULK_REVIEW,
 };
 
 // IDs for menu selection items. See SetMenuText, HandleMenuInput, etc
@@ -127,6 +133,8 @@ enum {
     MENU_RELEASE,
     MENU_MARK,
     MENU_JUMP,
+    MENU_BULK_RELEASE,
+    MENU_CLEAR_BOX,
     MENU_WALLPAPER,
     MENU_NAME,
     MENU_TAKE,
@@ -587,6 +595,10 @@ EWRAM_DATA static bool8 sJustOpenedBag = 0;
 EWRAM_DATA static bool8 sRefreshDisplayMonGfx = FALSE;
 EWRAM_DATA static u8 sMessageWindowSpriteIds[6] = {0};
 EWRAM_DATA static struct MarkingsMenuSwSh *sMarkMenu = NULL;
+EWRAM_DATA static u32 sBulkReleaseMask = 0;
+EWRAM_DATA static u8 sBulkReleaseCount = 0;
+EWRAM_DATA static u8 sBulkKeptCount = 0;
+EWRAM_DATA static bool8 sBulkClearBox = FALSE;
 
 // Main tasks
 static void Task_InitPokeStorage(u8);
@@ -610,6 +622,11 @@ static void Task_TakeItemForMoving(u8);
 static void Task_ShowMarkMenu(u8);
 static void Task_ShowMonSummary(u8);
 static void Task_ReleaseMon(u8);
+static void Task_BulkRelease(u8);
+static bool8 BulkReleaseEligible(u8 position);
+static void BulkReleasePrepare(void);
+static void BulkReleaseUpdateIcons(void);
+static void BulkReleaseFinish(void);
 static void Task_ReshowPokeStorage(u8);
 static void Task_PokeStorageMain(u8);
 static void Task_JumpBox(u8);
@@ -2786,6 +2803,157 @@ static void Task_DepositMon(u8 taskId)
     }
 }
 
+static void Task_BulkRelease(u8 taskId)
+{
+    u8 i;
+    s16 next = sCursorPosition;
+
+    switch (sStorage->state)
+    {
+    case 0:
+        sBulkReleaseMask = 0;
+        sBulkReleaseCount = 0;
+        sStorage->inMenuInteraction = TRUE;
+        if (sBulkClearBox)
+        {
+            for (i = 0; i < IN_BOX_COUNT; i++)
+                if (BulkReleaseEligible(i))
+                    sBulkReleaseMask |= (1u << i);
+            BulkReleasePrepare();
+            if (sBulkReleaseCount == 0)
+            {
+                PrintMessage(MSG_BULK_NONE);
+                sStorage->state = 6;
+            }
+            else
+            {
+                PrintMessage(MSG_BULK_CONFIRM);
+                ShowYesNoWindow(1);
+                sStorage->state = 4;
+            }
+        }
+        else
+        {
+            SetCursorPosition(CURSOR_AREA_IN_BOX, 0);
+            sStorage->state = 1;
+        }
+        break;
+    case 1:
+        if (!UpdateCursorPos())
+        {
+            PrintMessage(MSG_BULK_SELECT);
+            sStorage->state = 2;
+        }
+        break;
+    case 2:
+        if (JOY_NEW(B_BUTTON))
+        {
+            BulkReleaseFinish();
+        }
+        else if (JOY_NEW(START_BUTTON))
+        {
+            BulkReleasePrepare();
+            BulkReleaseUpdateIcons();
+            if (sBulkReleaseCount == 0)
+            {
+                PrintMessage(MSG_BULK_NONE);
+                sStorage->state = 6;
+            }
+            else
+            {
+                PrintMessage(MSG_BULK_CONFIRM);
+                ShowYesNoWindow(1);
+                sStorage->state = 4;
+            }
+        }
+        else if (JOY_NEW(A_BUTTON))
+        {
+            u32 bit = (1u << sCursorPosition);
+            if (sBulkReleaseMask & bit)
+            {
+                sBulkReleaseMask &= ~bit;
+                sBulkReleaseCount--;
+                PlaySE(SE_SELECT);
+            }
+            else if (BulkReleaseEligible(sCursorPosition))
+            {
+                sBulkReleaseMask |= bit;
+                sBulkReleaseCount++;
+                PlaySE(SE_SELECT);
+            }
+            else
+            {
+                PlaySE(SE_FAILURE);
+            }
+            BulkReleaseUpdateIcons();
+            PrintMessage(MSG_BULK_SELECT);
+        }
+        else
+        {
+            if (JOY_REPEAT(DPAD_UP) && next >= IN_BOX_COLUMNS)
+                next -= IN_BOX_COLUMNS;
+            else if (JOY_REPEAT(DPAD_DOWN) && next + IN_BOX_COLUMNS < IN_BOX_COUNT)
+                next += IN_BOX_COLUMNS;
+            else if (JOY_REPEAT(DPAD_LEFT) && next % IN_BOX_COLUMNS != 0)
+                next--;
+            else if (JOY_REPEAT(DPAD_RIGHT) && (next + 1) % IN_BOX_COLUMNS != 0)
+                next++;
+            if (next != sCursorPosition)
+            {
+                SetCursorPosition(CURSOR_AREA_IN_BOX, next);
+                sStorage->state = 3;
+            }
+        }
+        break;
+    case 3:
+        if (!UpdateCursorPos())
+            sStorage->state = 2;
+        break;
+    case 4:
+        switch (Menu_ProcessInputNoWrapClearOnChoose())
+        {
+        case MENU_B_PRESSED:
+        case 1:
+            ClearBottomWindow();
+            if (sBulkClearBox)
+                BulkReleaseFinish();
+            else
+            {
+                PrintMessage(MSG_BULK_SELECT);
+                sStorage->state = 2;
+            }
+            break;
+        case 0:
+            ClearBottomWindow();
+            sBulkReleaseCount = 0;
+            for (i = 0; i < IN_BOX_COUNT; i++)
+            {
+                if (sBulkReleaseMask & (1u << i))
+                {
+                    enum Item item = GetBoxMonDataAt(StorageGetCurrentBox(), i, MON_DATA_HELD_ITEM);
+                    // Return the held item before touching the Pokémon data.
+                    if (item != ITEM_NONE && !AddBagItem(item, 1))
+                        continue;
+                    DestroyBoxMonIconAtPosition(i);
+                    ZeroBoxMonAt(StorageGetCurrentBox(), i);
+                    sBulkReleaseCount++;
+                }
+            }
+            sBulkKeptCount = CountMonsInBox(StorageGetCurrentBox());
+            sBulkReleaseMask = 0;
+            BulkReleaseUpdateIcons();
+            PrintMessage(MSG_BULK_DONE);
+            sStorage->state = 6;
+            break;
+        }
+        break;
+    case 6:
+        if (JOY_NEW(A_BUTTON | B_BUTTON | START_BUTTON | DPAD_ANY))
+            BulkReleaseFinish();
+        break;
+    }
+}
+
 static void Task_ReleaseMon(u8 taskId)
 {
     switch (sStorage->state)
@@ -3378,6 +3546,16 @@ static void Task_HandleBoxOptions(u8 taskId)
         case MENU_MAKE_DEFAULT:
             PlaySE(SE_SELECT);
             SetPokeStorageTask(Task_MakeDefaultBox);
+            break;
+        case MENU_BULK_RELEASE:
+            sBulkClearBox = FALSE;
+            PlaySE(SE_SELECT);
+            SetPokeStorageTask(Task_BulkRelease);
+            break;
+        case MENU_CLEAR_BOX:
+            sBulkClearBox = TRUE;
+            PlaySE(SE_SELECT);
+            SetPokeStorageTask(Task_BulkRelease);
             break;
         }
         break;
@@ -4601,6 +4779,16 @@ static void PrintMessage(u8 id)
     case MSG_VAR_RELEASE_MON_2:
     case MSG_VAR_RELEASE_MON_3:
         DynamicPlaceholderTextUtil_SetPlaceholderPtr(0, sStorage->releaseMonName);
+        break;
+    case MSG_VAR_BULK_COUNT:
+    case MSG_VAR_BULK_REVIEW:
+        ConvertIntToDecimalStringN(gStringVar1, sBulkReleaseCount, STR_CONV_MODE_LEFT_ALIGN, 2);
+        DynamicPlaceholderTextUtil_SetPlaceholderPtr(0, gStringVar1);
+        if (sMessages[id].format == MSG_VAR_BULK_REVIEW)
+        {
+            ConvertIntToDecimalStringN(gStringVar2, sBulkKeptCount, STR_CONV_MODE_LEFT_ALIGN, 2);
+            DynamicPlaceholderTextUtil_SetPlaceholderPtr(1, gStringVar2);
+        }
         break;
     case MSG_VAR_ITEM_NAME:
         if (IsMovingItem())
@@ -6877,6 +7065,72 @@ static s8 RunCanReleaseMon(void)
     return -1;
 }
 
+static bool8 BulkReleaseEligible(u8 position)
+{
+    u16 restrictedMoves[ARRAY_COUNT(sRestrictedReleaseMoves) + 1];
+    enum Species species = GetBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_SPECIES);
+    enum Item item;
+
+    if (species == SPECIES_NONE
+        || GetBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_IS_EGG)
+        || (GetBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_MARKINGS) & (1 << 3))
+        || gSpeciesInfo[species].isRestrictedLegendary
+        || gSpeciesInfo[species].isSubLegendary
+        || gSpeciesInfo[species].isMythical)
+        return FALSE;
+
+    item = GetBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_HELD_ITEM);
+    if (ItemIsMail(item))
+        return FALSE;
+
+    // Conservative bulk safety: never erase Pokémon with restricted field moves.
+    GetRestrictedReleaseMoves(restrictedMoves);
+    if (GetAndCopyBoxMonDataAt(StorageGetCurrentBox(), position, MON_DATA_KNOWN_MOVES, (u8 *)restrictedMoves))
+        return FALSE;
+    return TRUE;
+}
+
+static void BulkReleasePrepare(void)
+{
+    u32 remaining = CountPartyNonEggMons() + CountStorageNonEggMons();
+    u32 releaseLimit = (remaining > 3) ? remaining - 3 : 0;
+    u8 i;
+
+    sBulkReleaseCount = 0;
+    for (i = 0; i < IN_BOX_COUNT; i++)
+    {
+        u32 bit = 1u << i;
+        if (!(sBulkReleaseMask & bit))
+            continue;
+        if (!BulkReleaseEligible(i) || sBulkReleaseCount >= releaseLimit)
+            sBulkReleaseMask &= ~bit;
+        else
+            sBulkReleaseCount++;
+    }
+    sBulkKeptCount = CountMonsInBox(StorageGetCurrentBox()) - sBulkReleaseCount;
+}
+
+static void BulkReleaseUpdateIcons(void)
+{
+    u8 i;
+
+    for (i = 0; i < IN_BOX_COUNT; i++)
+        if (sStorage->boxMonsSprites[i] != NULL)
+            sStorage->boxMonsSprites[i]->oam.objMode =
+                (sBulkReleaseMask & (1u << i)) ? ST_OAM_OBJ_BLEND : ST_OAM_OBJ_NORMAL;
+}
+
+static void BulkReleaseFinish(void)
+{
+    sBulkReleaseMask = 0;
+    BulkReleaseUpdateIcons();
+    sStorage->inMenuInteraction = FALSE;
+    ClearBottomWindow();
+    RefreshDisplayMon();
+    RefreshDisplayMonData();
+    SetPokeStorageTask(Task_PokeStorageMain);
+}
+
 static void SaveMovingMon(void)
 {
     if (sIsMonBeingMoved)
@@ -7836,6 +8090,11 @@ static void AddBoxOptionsMenu(void)
     SetMenuText(MENU_WALLPAPER);
     SetMenuText(MENU_NAME);
     SetMenuText(MENU_MAKE_DEFAULT);
+    if (sStorage->boxOption == OPTION_MOVE_MONS && !sIsMonBeingMoved)
+    {
+        SetMenuText(MENU_BULK_RELEASE);
+        SetMenuText(MENU_CLEAR_BOX);
+    }
 }
 
 static u8 SetSelectionMenuTexts(void)
