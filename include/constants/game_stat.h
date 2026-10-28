@@ -54,9 +54,9 @@
 #define GAME_STAT_NUM_UNION_ROOM_BATTLES      50
 #define GAME_STAT_PLAYED_BERRY_CRUSH          51
 #define GAME_STAT_DEXNAV_SCANNED              52
-// P0 field Research target. 0 = rotate the full enabled roster.
-// This was a reserved game-stat slot in the existing 64-stat save array.
-#define GAME_STAT_WORLD_DISCOVERY_TARGET      53
+// Retired gameplay stat 53. Keep the slot allocated, unused, and the
+// game-stat array length unchanged for older battery-save compatibility.
+#define GAME_STAT_RESERVED_53                 53
 
 #define NUM_USED_GAME_STATS                   54
 #define NUM_GAME_STATS                        64
