@@ -284,6 +284,23 @@ these are on, and each has its own config flag.
 | Message / name box | SwSh message and name box; NPC trainers can auto-show a name box | `SWSH_MESSAGE_BOX` |
 | Map-name pop-up | Gen-8-style map pop-ups | `OW_POPUP_GENERATION == GEN_8` |
 
+**PC box cleanup (source implemented; live gameplay acceptance pending)** — in **Move
+Pokémon**, select the current box title and choose **Bulk Release** or **Clear Box**.
+Bulk Release lets you toggle individual box slots with A, move with the D-Pad, review
+with START, and cancel with B; Clear Box queues every eligible Pokémon in that
+box. Confirmation defaults to No. Only the current box is affected.
+
+Bulk actions **protect heart-marked favorites (the fourth marking), Legendary
+and Mythical Pokémon including alternate forms, Eggs, mail holders, and Pokémon
+with restricted field moves**. Shinies, Ultra Beasts and Paradox Pokémon have
+no automatic protection unless they are heart-marked. A held item is placed in
+the Bag before its Pokémon is deleted; if this fails, that Pokémon stays in
+storage. A minimum of three non-Egg Pokémon remain across party and boxes.
+The normal single-Pokémon Release command is unchanged, so a player may
+deliberately release a favorited or Legendary Pokémon one at a time.
+No save layout is changed. Back up your save before first use; source validation
+and ROM compilation do not constitute an emulator acceptance test.
+
 **Unbound-style graphical start menu** (`PW_GRAPHICAL_START_MENU`) — sprite-icon Start menu
 entries the player can rearrange, day/night compatible. The classic list menu is kept as a
 fallback.
