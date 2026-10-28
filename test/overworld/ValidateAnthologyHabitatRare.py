@@ -226,7 +226,7 @@ area_screen = (root / "src/pokedex_area_screen.c").read_text()
 assert "AnthologyMapHasHabitatSpecies(header->mapGroup, header->mapNum" in area_screen
 assert "MapHasSpecies(header, headerSectionId, species)" in area_screen
 assert '#include "data/anthology_rare_habitats.h"' in wild
-assert "gSaveBlock1Ptr->location.mapGroup =" not in wild.split("bool8 AnthologyMapHasHabitatSpecies(")[1].split("static enum Species WorldChoosePostLeagueDiscoverySpecies")[0]
+assert "gSaveBlock1Ptr->location.mapGroup =" not in wild.split("bool8 AnthologyMapHasHabitatSpecies(")[1].split("void CreateWildMon(enum Species species, u8 level)")[0]
 print("P0 regional Pokédex area mapping: native+170 curated+extra habitats guarded")
 
 # C preprocessor macro continuations must end with one backslash, never
@@ -287,9 +287,9 @@ assert "sGreninjaBattleBondFormChangeTable[]" in forms
 assert "{FORM_CHANGE_BATTLE_BOND, SPECIES_GRENINJA_ASH," in forms
 print("P0 Battle Bond Greninja: pre-Champion Hoenn acquisition + Gen 7 transform guarded")
 
-# The seeded randomizer, research rotation and biome catalog must all use the
-# same field-stable predicate; otherwise permanent wild catches can become
-# temporary transformed battle forms. Battle Bond's base remains eligible.
+# The seeded randomizer and curated biome catalog must both use the field-stable
+# predicate; otherwise permanent wild catches can become battle-only forms.
+# Battle Bond's base remains eligible.
 stable_source = (root / "src/wild_encounter.c").read_text()
 stable_check = stable_source.split("bool8 WorldIsFieldStableDiscoverySpecies(enum Species species)", 1)[1].split("// Supplemental ordinary species", 1)[0]
 for temporary in ("GRENINJA_ASH", "AEGISLASH_BLADE", "WISHIWASHI_SCHOOL", "MIMIKYU_BUSTED", "PALAFIN_HERO", "CRAMORANT_GULPING", "CRAMORANT_GORGING", "MORPEKO_HANGRY", "ZYGARDE_COMPLETE", "CASTFORM_SUNNY", "CASTFORM_RAINY", "CASTFORM_SNOWY", "DARMANITAN_ZEN", "DARMANITAN_GALAR_ZEN", "CHERRIM_SUNSHINE", "EISCUE_NOICE", "MINIOR_CORE_RED", "MINIOR_CORE_ORANGE", "MINIOR_CORE_YELLOW", "MINIOR_CORE_GREEN", "MINIOR_CORE_BLUE", "MINIOR_CORE_INDIGO", "MINIOR_CORE_VIOLET"):
@@ -300,7 +300,7 @@ assert "case SPECIES_GRENINJA_BATTLE_BOND:" not in stable_check
 randomizer_check = stable_source.split("enum Species WorldRandomizeWildSpeciesAtMap(", 1)[1].split("// The original API remains", 1)[0]
 assert "if (WorldIsFieldStableDiscoverySpecies(result))" in randomizer_check
 assert "return WorldRandomizeWildSpeciesAtMap(original, slot, area," in stable_source
-print("P0 permanent field form vs temporary battle transformation: shared randomizer/discovery policy PASS")
+print("P0 permanent field form vs temporary battle transformation: natural habitat and seeded randomizer policy PASS")
 
 
 # Do not guess approach geometry in mGBA tests: the tile immediately north
