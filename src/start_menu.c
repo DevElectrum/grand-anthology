@@ -390,7 +390,7 @@ static void BuildNormalStartMenu(void)
     AddStartMenuAction(MENU_ACTION_OPTION);
     AddStartMenuAction(MENU_ACTION_CHEATS);
 #if ALL_REGIONS
-    if (FlagGet(FLAG_SYS_GAME_CLEAR))
+    if (IsRegionChampion(GetActiveRegion()))
         AddStartMenuAction(MENU_ACTION_DISCOVERY);
 #endif
     AddStartMenuAction(MENU_ACTION_EXIT);
