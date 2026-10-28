@@ -16,8 +16,16 @@ wild = read("src/wild_encounter.c")
 flags = read("include/constants/flags.h")
 species = read("include/constants/species.h")
 need(flags, "FLAG_SYS_GAME_CLEAR")
+region_code = read("src/region_switch.c")
+for region in ("KANTO", "JOHTO", "HOENN"):
+    need(region_code, f"case REGION_{region}: return FlagGet(FLAG_{region}_CHAMPION);")
+# Global game-clear remains an any-region Hall-of-Fame bit, never a Research gate.
+research = wild.split("static enum Species WorldChoosePostLeagueDiscoverySpecies(enum Species original)", 1)[1].split("void CreateWildMon", 1)[0]
+assert "FLAG_SYS_GAME_CLEAR" not in research
+
+need(wild, "#include \"regions.h\"")
 need(wild, "static enum Species WorldChoosePostLeagueDiscoverySpecies(enum Species original)")
-for guard in ("!FlagGet(FLAG_SYS_GAME_CLEAR)", "gSaveBlock2Ptr->randomizerWild",
+for guard in ("!IsRegionChampion(GetActiveRegion())", "gSaveBlock2Ptr->randomizerWild",
               "GetSafariZoneFlag()", "InBattlePike()", "PYRAMID_LOCATION_NONE",
               "MAP_BATTLE_SCENE_FRONTIER", "IsSpeciesEnabled(species)"):
     need(wild, guard)
@@ -64,7 +72,7 @@ need(stats, "#define NUM_GAME_STATS                        64")
 need(stats, "#define NUM_USED_GAME_STATS                   54")
 menu = read("src/start_menu.c")
 need(menu, "MENU_ACTION_DISCOVERY")
-need(menu, "FlagGet(FLAG_SYS_GAME_CLEAR)")
+need(menu, "IsRegionChampion(GetActiveRegion())")
 need(menu, "Debug_ShowDiscoveryMenu();")
 ui = read("src/debug.c")
 for guard in ("DebugAction_Discovery_EditTarget", "DebugAction_Discovery_HandleTarget",
