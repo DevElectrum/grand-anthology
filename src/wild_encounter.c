@@ -17,6 +17,7 @@
 #include "pokemon.h"
 #include "random.h"
 #include "roamer.h"
+#include "regions.h"
 #include "safari_zone.h"
 #include "script.h"
 #include "tv.h"
@@ -962,13 +963,13 @@ static enum Species WorldChoosePostLeagueDiscoverySpecies(enum Species original)
 
     if (original == SPECIES_NONE || original == SPECIES_EGG
      || gSaveBlock1Ptr == NULL || gSaveBlock2Ptr == NULL
-     || !FlagGet(FLAG_SYS_GAME_CLEAR) || gSaveBlock2Ptr->randomizerWild
+     || !IsRegionChampion(GetActiveRegion()) || gSaveBlock2Ptr->randomizerWild
      || GetSafariZoneFlag() || InBattlePike()
      || CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE
      || gMapHeader.battleType == MAP_BATTLE_SCENE_FRONTIER)
         return original;
 
-    // Count is incremented by BattleSetup_StartWildBattle after generation.
+    // Only the current campaign region\'s Champion flag unlocks Research rotation.\n    // Count is incremented by BattleSetup_StartWildBattle after generation.
     // Every third qualifying battle uses a rotating ID. A long, ordinary
     // postgame encounter sequence reaches every eligible index in one cycle,
     // instead of hoping an RNG happened to select a rare species.
