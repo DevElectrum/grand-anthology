@@ -72,7 +72,6 @@ enum Species WorldRandomizeWildSpeciesAtMap(enum Species original, u32 slot, enu
                                             u8 mapGroup, u8 mapNum);
 bool8 WorldIsFieldStableDiscoverySpecies(enum Species species);
 bool8 WorldIsNaturalDiscoverySpecies(enum Species species);
-bool8 WorldIsPostLeagueResearchSpecies(enum Species species);
 // Shared pre-Champion rare habitat lookup for natural fights and DexNav.
 enum Species AnthologyGetRareHabitatSpecies(enum WildPokemonArea area, const struct WildPokemonInfo *info);
 // Up to four supplements using spare grass DexNav icons on the current map.
