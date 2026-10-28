@@ -49,6 +49,7 @@ jobs:
           python3 tools/pack_latin_fonts.py --self-test
           python3 test/overworld/ValidateBardPacking.py
           python3 test/overworld/ValidatePartyContinuity.py
+          python3 test/overworld/ValidateJohtoFieldMoveBadges.py
           python3 test/overworld/ValidateStarterIsolation.py
           python3 test/overworld/ValidateRegionalStarterOrder.py
           python3 test/overworld/ValidateShinyOdds.py

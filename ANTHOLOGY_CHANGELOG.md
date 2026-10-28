@@ -7,6 +7,16 @@ see [CHANGELOG.md](CHANGELOG.md).
 
 ## Unreleased development: October 2026
 
+### Johto field-move badge correction (28 October 2026)
+
+- Fixed four Johto HM field-use gates that incorrectly reused Hoenn badge order:
+  Flash now requires Falkner's Zephyr Badge (1), Cut Bugsy's Hive Badge (2),
+  Strength Whitney's Plain Badge (3), and Fly Chuck's Storm Badge (5).
+  The other regions' field-move requirements remain unchanged.
+- Added a source regression check grounded in each Johto Gym's actual badge
+  award, wired into the P0 gameplay build CI. Existing saves do not need
+  a new flag, item, or migration; a newly compiled ROM is required.
+
 ### Research retirement (28 October 2026)
 
 - Removed the post-Champion Research species-substitution mechanism from
