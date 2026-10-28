@@ -671,6 +671,7 @@ static void SetMovingMonPriority(u8);
 static void SpriteCB_HeldMon(struct Sprite *);
 static struct Sprite *CreateMonIconSprite(enum Species species, u32 personality, s16 x, s16 y, u8 oamPriority, u8 subpriority, bool32 isEgg);
 static void DestroyBoxMonIcon(struct Sprite *);
+static void DestroyBoxMonIconAtPosition(u8);
 
 // Pokémon data
 static void MoveMon(void);
