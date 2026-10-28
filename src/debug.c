@@ -369,9 +369,6 @@ static void DebugAction_PcSearch_Open(u8 taskId);
 static void DebugAction_PcSearch_SelectSpecies(u8 taskId);
 static void DebugAction_PcSearch_Search(u8 taskId);
 static void DebugAction_PcSearch_Browse(u8 taskId);
-static void DebugAction_Discovery_EditTarget(u8 taskId);
-static void DebugAction_Discovery_ClearTarget(u8 taskId);
-static void DebugAction_Discovery_HandleTarget(u8 taskId);
 static void DebugAction_Randomizer_EnableWild(u8 taskId);
 static void DebugAction_Randomizer_DisableWild(u8 taskId);
 static void DebugAction_Randomizer_EnableTrainers(u8 taskId);
@@ -693,15 +690,6 @@ static const struct DebugMenuOption sDebugMenu_Actions_Give[] =
 // expose developer Flags/Vars, Clear Party/Boxes, arbitrary warps or story edits.
 // This menu remains available in release builds; DEBUG_OVERWORLD_MENU stays
 // dev-only. It intentionally reuses tested item/mon generation interfaces.
-// Research is a normal post-League encounter activity, not a free Pokémon.
-static const struct DebugMenuOption sPlayerDiscoveryMenu_Main[] =
-{
-    { COMPOUND_STRING("Choose target"), DebugAction_Discovery_EditTarget },
-    { COMPOUND_STRING("Rotate all"),    DebugAction_Discovery_ClearTarget },
-    { COMPOUND_STRING("Cancel"),        DebugAction_Cancel },
-    { NULL }
-};
-
 static const struct DebugMenuOption sPlayerCheatMenu_Pokemon[] =
 {
     { COMPOUND_STRING("Check IVs"),       DebugAction_ExecuteScript, Debug_EventScript_CheckIVs },
@@ -927,13 +915,6 @@ void Debug_ShowPlayerCheatMenu(void)
     sDebugMenuListData = AllocZeroed(sizeof(*sDebugMenuListData));
     sDebugMenuListData->menuType = DEBUG_BASIC_MENU;
     Debug_ShowMenu(DebugTask_HandleMenuInput_General, sPlayerCheatMenu_Main);
-}
-
-void Debug_ShowDiscoveryMenu(void)
-{
-    sDebugMenuListData = AllocZeroed(sizeof(*sDebugMenuListData));
-    sDebugMenuListData->menuType = DEBUG_BASIC_MENU;
-    Debug_ShowMenu(DebugTask_HandleMenuInput_General, sPlayerDiscoveryMenu_Main);
 }
 
 #define tMenuTaskId          data[0]
@@ -3873,85 +3854,6 @@ static void DebugAction_Give_Decoration_SelectId(u8 taskId)
 
 // Select one of two unambiguous explicit states, then close the menu.
 // Save from the ordinary in-game Save icon to persist these v12 settings.
-// Research target editor: 0 rotates the roster, other IDs must be
-// enabled, lore-appropriate wild Pokémon. Only the reserved stat changes.
-static void DebugAction_Discovery_DrawTarget(u8 taskId)
-{
-    enum Species species = (u16)gTasks[taskId].tInput;
-    StringCopy(gStringVar2, gText_DigitIndicator[gTasks[taskId].tDigit]);
-    if (species == SPECIES_NONE)
-        StringCopy(gStringVar1, COMPOUND_STRING("Rotate all"));
-    else if (WorldIsPostLeagueResearchSpecies(species))
-        StringCopy(gStringVar1, GetSpeciesName(species));
-    else
-        StringCopy(gStringVar1, COMPOUND_STRING("Unavailable"));
-    ConvertIntToDecimalStringN(gStringVar3, species, STR_CONV_MODE_LEADING_ZEROS, 4);
-    StringExpandPlaceholders(gStringVar4,
-        COMPOUND_STRING("Hunt ID:{STR_VAR_3}{CLEAR_TO 90}\n"
-                        "{STR_VAR_1}{CLEAR_TO 90}\n"
-                        "{STR_VAR_2}{CLEAR_TO 90}\n"
-                        "A Save  B Back"));
-    FillWindowPixelBuffer(gTasks[taskId].tSubWindowId, PIXEL_FILL(1));
-    AddTextPrinterParameterized(gTasks[taskId].tSubWindowId, DEBUG_MENU_FONT,
-                                gStringVar4, 0, 0, 0, NULL);
-    CopyWindowToVram(gTasks[taskId].tSubWindowId, COPYWIN_GFX);
-}
-
-static void DebugAction_Discovery_EditTarget(u8 taskId)
-{
-    u8 windowId;
-    u32 target = GetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET);
-    if (target >= NUM_SPECIES || (target != SPECIES_NONE && !WorldIsPostLeagueResearchSpecies(target)))
-        target = SPECIES_NONE;
-    ClearStdWindowAndFrame(gTasks[taskId].tWindowId, TRUE);
-    RemoveWindow(gTasks[taskId].tWindowId);
-    HideMapNamePopUpWindow();
-    LoadMessageBoxAndBorderGfx();
-    windowId = AddWindow(&sDebugMenuWindowTemplateExtra);
-    DrawStdWindowFrame(windowId, FALSE);
-    CopyWindowToVram(windowId, COPYWIN_FULL);
-    gTasks[taskId].tSubWindowId = windowId;
-    gTasks[taskId].tInput = target;
-    gTasks[taskId].tDigit = 0;
-    DebugAction_Discovery_DrawTarget(taskId);
-    gTasks[taskId].func = DebugAction_Discovery_HandleTarget;
-}
-
-static void DebugAction_Discovery_HandleTarget(u8 taskId)
-{
-    if (JOY_REPEAT(DPAD_ANY))
-    {
-        if (JOY_NEW(DPAD_ANY))
-            PlaySE(SE_SELECT);
-        Debug_HandleInput_Numeric(taskId, 0, NUM_SPECIES - 1, 4);
-        DebugAction_Discovery_DrawTarget(taskId);
-    }
-    if (JOY_NEW(A_BUTTON))
-    {
-        enum Species target = (u16)gTasks[taskId].tInput;
-        if (target != SPECIES_NONE && !WorldIsPostLeagueResearchSpecies(target))
-        {
-            PlaySE(SE_PC_OFF);
-            return;
-        }
-        SetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET, target);
-        PlaySE(SE_SELECT);
-        DebugAction_DestroyExtraWindow(taskId);
-    }
-    else if (JOY_NEW(B_BUTTON))
-    {
-        PlaySE(SE_SELECT);
-        DebugAction_DestroyExtraWindow(taskId);
-    }
-}
-
-static void DebugAction_Discovery_ClearTarget(u8 taskId)
-{
-    SetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET, SPECIES_NONE);
-    Debug_DestroyMenu_Full(taskId);
-    ScriptContext_Enable();
-}
-
 static void DebugAction_Randomizer_EnableWild(u8 taskId)
 {
 #if ALL_REGIONS
