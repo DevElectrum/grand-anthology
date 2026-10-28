@@ -1,96 +1,98 @@
 #!/usr/bin/env python3
-"""Post-League natural discovery access: source guards and cycle mathematics.
+"""Research retirement guard: normal encounters stay tied to real map habitats.
 
-This is a source/algorithm contract, not an in-emulator catchability or form
-legality certification. It does not claim battle-exclusive transformations
-can be caught as normal permanent Pokémon.
+The retired Research mechanic must never substitute unrelated species into
+ordinary overworld, grass, Surf or fishing encounters. This is a source-level
+regression check, not an emulator capture-certification test.
 """
 from pathlib import Path
-import re
+import json
 
 root = Path(__file__).resolve().parents[2]
-def read(p): return (root / p).read_text()
-def need(text, part): assert part in text, "missing discovery contract: " + part
+
+def read(path):
+    return (root / path).read_text()
+
+def require(condition, reason):
+    assert condition, reason
 
 wild = read("src/wild_encounter.c")
-flags = read("include/constants/flags.h")
-species = read("include/constants/species.h")
-need(flags, "FLAG_SYS_GAME_CLEAR")
-region_code = read("src/region_switch.c")
-for region in ("KANTO", "JOHTO", "HOENN"):
-    need(region_code, f"case REGION_{region}: return FlagGet(FLAG_{region}_CHAMPION);")
-# Global game-clear remains an any-region Hall-of-Fame bit, never a Research gate.
-research = wild.split("static enum Species WorldChoosePostLeagueDiscoverySpecies(enum Species original)", 1)[1].split("void CreateWildMon", 1)[0]
-assert "FLAG_SYS_GAME_CLEAR" not in research
-
-need(wild, "#include \"regions.h\"")
-need(wild, "static enum Species WorldChoosePostLeagueDiscoverySpecies(enum Species original)")
-for guard in ("!IsRegionChampion(GetActiveRegion())", "gSaveBlock2Ptr->randomizerWild",
-              "GetSafariZoneFlag()", "InBattlePike()", "PYRAMID_LOCATION_NONE",
-              "MAP_BATTLE_SCENE_FRONTIER", "IsSpeciesEnabled(species)"):
-    need(wild, guard)
-for excluded in ("isMegaEvolution", "isPrimalReversion", "isUltraBurst",
-                 "isGigantamax", "isTeraForm", "isTotem"):
-    need(wild, "!gSpeciesInfo[species]." + excluded)
-for hook in (
-    "WorldRandomizeWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, wildMonIndex, area)",
-    "WorldChoosePostLeagueDiscoverySpecies(wildSpecies)",
-    "WorldChoosePostLeagueDiscoverySpecies(WorldRandomizeWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, wildMonIndex, WILD_AREA_FISHING))",
-):
-    need(wild, hook)
-# Keep scripted static/roamer/Feebas and outbreaks outside the new pipeline.
-need(wild, "CreateWildMon(gSaveBlock1Ptr->outbreakPokemonSpecies, gSaveBlock1Ptr->outbreakPokemonLevel);")
-need(wild, "CreateWildMon(species, level);")
-need(wild, "CreateWildMon(gSaveBlock1Ptr->outbreakPokemonSpecies")
-need(wild, "battles = GetGameStat(GAME_STAT_WILD_BATTLES);")
-need(wild, "if (battles % 3 != 2)")
-need(wild, "result = 1 + (battles / 3) % (NUM_SPECIES - 1);")
-need(wild, "attempts < NUM_SPECIES - 1")
-need(wild, "GetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET)")
-need(wild, "WorldIsPostLeagueResearchSpecies(result)")
-# Wild randomization deliberately keeps the broader field-stable pool.
-randomizer = wild.split("enum Species WorldRandomizeWildSpeciesAtMap(", 1)[1].split("// The original API remains", 1)[0]
-need(randomizer, "WorldIsFieldStableDiscoverySpecies(result)")
-# Excluded Legendaries cannot be introduced by post-League Research/rotation.
-natural = wild.split("bool8 WorldIsNaturalDiscoverySpecies")[1].split("// Supplemental ordinary species")[0]
-for guard in ("isRestrictedLegendary", "isSubLegendary", "isMythical",
-              "isUltraBeast", "isParadox", "SPECIES_ZARUDE",
-              "SPECIES_MELTAN", "SPECIES_PHIONE"):
-    need(natural, guard)
-postgame = wild.split("static enum Species WorldChoosePostLeagueDiscoverySpecies")[1].split("void CreateWildMon")[0]
-assert "WorldIsFieldStableDiscoverySpecies(result)" not in postgame
-assert postgame.count("WorldIsPostLeagueResearchSpecies(result)") == 2
-research_guard = wild.split("bool8 WorldIsPostLeagueResearchSpecies")[1].split("// Supplemental ordinary species")[0]
-for excluded in ("isRestrictedLegendary", "isSubLegendary", "isMythical"):
-    need(research_guard, excluded)
-need(wild, "WorldIsNaturalDiscoverySpecies(rare)")
-need(wild, "WorldIsNaturalDiscoverySpecies(sAnthologyExtraHabitats[i].species)")
-need(wild, "WorldIsNaturalDiscoverySpecies(species)")
-stats = read("include/constants/game_stat.h")
-need(stats, "#define GAME_STAT_WORLD_DISCOVERY_TARGET      53")
-need(stats, "#define NUM_GAME_STATS                        64")
-need(stats, "#define NUM_USED_GAME_STATS                   54")
+header = read("include/wild_encounter.h")
 menu = read("src/start_menu.c")
-need(menu, "MENU_ACTION_DISCOVERY")
-need(menu, "IsRegionChampion(GetActiveRegion())")
-need(menu, "Debug_ShowDiscoveryMenu();")
-ui = read("src/debug.c")
-for guard in ("DebugAction_Discovery_EditTarget", "DebugAction_Discovery_HandleTarget",
-              "DebugAction_Discovery_ClearTarget",
-              "SetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET, target)",
-              "WorldIsPostLeagueResearchSpecies(target)"):
-    need(ui, guard)
+debug = read("src/debug.c")
+debug_header = read("include/debug.h")
+stats = read("include/constants/game_stat.h")
+graphical = read("src/unbound_start_menu.c")
 
-# All assigned raw indices must appear in exactly one regular, uninterrupted
-# cycle of (NUM_SPECIES-1) postgame discovery encounters.
-last = re.search(r"SPECIES_GLIMMORA_MEGA = (\d+)", species)
-assert last, "species enum layout changed"
-num_species = int(last.group(1)) + 1 # CUSTOM_START aliases this ID; CUSTOM_END/Egg is next
-eligible_slots = num_species - 1
-encounter_ids = [1 + ((battle // 3) % eligible_slots)
-                 for battle in range(2, 3 * eligible_slots, 3)]
-assert len(encounter_ids) == eligible_slots
-assert set(encounter_ids) == set(range(1, num_species))
-# No discovery effect in first two ordinary fights of each 3-battle group.
-assert [b for b in range(12) if b % 3 == 2] == [2, 5, 8, 11]
-print("P0 scoped natural habitats, nonlegendary Research and randomizer-exempt rotation PASS")
+for retired in (
+    "WorldChoosePostLeagueDiscoverySpecies",
+    "WorldIsPostLeagueResearchSpecies",
+    "GAME_STAT_WORLD_DISCOVERY_TARGET",
+):
+    for label, source in (
+        ("encounters", wild), ("header", header), ("text menu", menu),
+        ("debug UI", debug), ("debug header", debug_header),
+        ("game stats", stats), ("graphical menu", graphical),
+    ):
+        require(retired not in source, f"Research code remains in {label}: {retired}")
+
+for token in ("MENU_ACTION_DISCOVERY", "StartMenuDiscoveryCallback",
+              "sText_MenuDiscovery", '_("RESEARCH")'):
+    require(token not in menu, f"Classic Start still exposes {token}")
+for token in ("Debug_ShowDiscoveryMenu", "DebugAction_Discovery_EditTarget",
+              "DebugAction_Discovery_ClearTarget", "DebugAction_Discovery_HandleTarget",
+              "sPlayerDiscoveryMenu_Main"):
+    require(token not in debug and token not in debug_header, f"Research editor survives: {token}")
+
+require("#define GAME_STAT_RESERVED_53                 53" in stats,
+        "The retired stat index must remain allocated for saved games")
+require("#define NUM_USED_GAME_STATS                   54" in stats,
+        "Do not shrink the persisted game-stat array")
+require("#define NUM_GAME_STATS                        64" in stats,
+        "Do not move following save data")
+
+# No post-League override: the route's natural/seeded species passes straight
+# into the standard creation routine, and native fish can only be replaced by
+# the authored aquatic habitat or optional seeded randomizer.
+grass = wild.split("bool8 TryGenerateWildMon(", 1)[1].split(
+    "static u16 GenerateFishingWildMon(", 1)[0]
+fish = wild.split("static u16 GenerateFishingWildMon(", 1)[1].split(
+    "bool8 SetUpMassOutbreakEncounter(", 1)[0]
+require("CreateWildMon(wildSpecies, level);" in grass, "Grass/overworld creation must be direct")
+require("WorldRandomizeWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, wildMonIndex, area)" in grass,
+        "Preserve the optional seeded wild Randomizer")
+for term in ("AnthologyGetRareHabitatSpecies(area, wildMonInfo)",
+             "AnthologyGetExtraHabitatSpecies(area, wildMonInfo, habitatSlot)",
+             "AnthologyGetAquaticHabitatSpecies(area, wildMonInfo)",
+             "if (useRare)", "else if (extra != SPECIES_NONE)", "else if (useAquatic)"):
+    require(term in grass, f"Natural habitat lost: {term}")
+require("enum Species wildMonSpecies = WorldRandomizeWildSpecies(" in fish,
+        "Preserve native/randomized fishing species selection")
+require("AnthologyGetAquaticHabitatSpecies(WILD_AREA_FISHING, wildMonInfo)" in fish,
+        "Authored fishing habitat lost")
+require("wildMonSpecies = aquatic;" in fish and "CreateWildMon(wildMonSpecies, level);" in fish,
+        "Fishing must use native or authored aquatic species")
+require("GAME_STAT_WILD_BATTLES" not in wild,
+        "Wild battle count must not manipulate the species pool")
+require("WorldIsFieldStableDiscoverySpecies(result)" in wild,
+        "Keep field-stable form restrictions on seeded randomizer")
+for token in ("WorldIsNaturalDiscoverySpecies(rare)",
+              "WorldIsNaturalDiscoverySpecies(sAnthologyExtraHabitats[i].species)",
+              "WorldIsNaturalDiscoverySpecies(species)"):
+    require(token in wild, f"Natural habitat eligibility lost: {token}")
+require("CreateWildMon(gSaveBlock1Ptr->outbreakPokemonSpecies, gSaveBlock1Ptr->outbreakPokemonLevel);" in wild,
+        "Keep native mass outbreaks")
+
+# The optimistic collection catalog predates this retirement and does not
+# depend on Research as a source. It is not a claim of emulator reachability.
+catalog = []
+for line in read("data/catalog/world_acquisition.jsonl").splitlines():
+    if line.strip():
+        entry = json.loads(line)
+        if entry.get("kind") == "pokemon":
+            catalog.append(entry)
+require(len(catalog) == 1025, "The National Pokédex source catalog changed")
+for entry in catalog:
+    require("research" not in json.dumps(entry.get("sources", [])).lower(),
+            f"Research-only source for dex {entry['dex']}")
+print("PASS: Research retired; native habitats, seeded Randomizer and save ABI retained")
