@@ -284,9 +284,9 @@ static const struct StorageMessage sMessages[] =
     [MSG_CANT_STORE_MAIL]      = {COMPOUND_STRING("Mail can't be stored!"),      MSG_VAR_NONE},
     [MSG_DEFAULT_BOX_SET]      = {COMPOUND_STRING("New catches go to this box."), MSG_VAR_NONE},
     [MSG_DEFAULT_BOX_CLEARED]  = {COMPOUND_STRING("Default box setting cleared."), MSG_VAR_NONE},
-    [MSG_BULK_SELECT]         = {COMPOUND_STRING("A: Pick  START: Release\\n{DYNAMIC 0} selected. B: Cancel"), MSG_VAR_BULK_COUNT},
-    [MSG_BULK_CONFIRM]        = {COMPOUND_STRING("Release {DYNAMIC 0} Pokémon?\\n{DYNAMIC 1} will remain."), MSG_VAR_BULK_REVIEW},
-    [MSG_BULK_DONE]           = {COMPOUND_STRING("{DYNAMIC 0} released.\\n{DYNAMIC 1} remain."), MSG_VAR_BULK_REVIEW},
+    [MSG_BULK_SELECT]         = {COMPOUND_STRING("A: Pick  START: Release\n{DYNAMIC 0} selected. B: Cancel"), MSG_VAR_BULK_COUNT},
+    [MSG_BULK_CONFIRM]        = {COMPOUND_STRING("Release {DYNAMIC 0} Pokémon?\n{DYNAMIC 1} will remain."), MSG_VAR_BULK_REVIEW},
+    [MSG_BULK_DONE]           = {COMPOUND_STRING("{DYNAMIC 0} released.\n{DYNAMIC 1} remain."), MSG_VAR_BULK_REVIEW},
     [MSG_BULK_NONE]           = {COMPOUND_STRING("No Pokémon selected or eligible."), MSG_VAR_NONE},
 };
 
