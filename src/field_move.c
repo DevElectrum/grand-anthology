@@ -19,14 +19,14 @@ static bool32 IsFieldMoveUnlocked_Cut(void)
 #endif
     {
         enum Region region = GetCurrentRegion();
-        return HasBadge(region, region == REGION_KANTO ? 1 : 0); // Kanto Cascade / else 1st gym
+        return HasBadge(region, region == REGION_HOENN ? 0 : 1); // Hoenn Stone; Kanto Cascade / Johto Hive
     }
 }
 
 static bool32 IsFieldMoveUnlocked_Flash(void)
 {
     enum Region region = GetCurrentRegion();
-    return HasBadge(region, region == REGION_KANTO ? 0 : 1); // Kanto Boulder / else 2nd gym
+    return HasBadge(region, region == REGION_HOENN ? 1 : 0); // Hoenn Knuckle; Kanto Boulder / Johto Zephyr
 }
 
 static bool32 IsFieldMoveUnlocked_RockSmash(void)
@@ -47,7 +47,10 @@ static bool32 IsFieldMoveUnlocked_Strength(void)
     if (CheckBagHasItem(gFieldMoveInfo[FIELD_MOVE_STRENGTH].toolItemId, 1))
         return TRUE;
 #endif
-    return HasCurrentRegionBadge(3); // 4th gym in every region
+    {
+        enum Region region = GetCurrentRegion();
+        return HasBadge(region, region == REGION_JOHTO ? 2 : 3); // Johto Plain / Kanto Rainbow / Hoenn Heat
+    }
 }
 
 static bool32 IsFieldMoveUnlocked_Surf(void)
@@ -68,7 +71,11 @@ static bool32 IsFieldMoveUnlocked_Surf(void)
 static bool32 IsFieldMoveUnlocked_Fly(void)
 {
     enum Region region = GetCurrentRegion();
-    return HasBadge(region, region == REGION_KANTO ? 2 : 5); // Kanto Thunder / else 6th gym
+    if (region == REGION_KANTO)
+        return HasBadge(region, 2); // Thunder Badge
+    if (region == REGION_JOHTO)
+        return HasBadge(region, 4); // Storm Badge
+    return HasBadge(region, 5); // Hoenn Feather Badge
 }
 
 static bool32 IsFieldMoveUnlocked_Dive(void)
