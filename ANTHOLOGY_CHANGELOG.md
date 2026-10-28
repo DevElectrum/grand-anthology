@@ -7,6 +7,20 @@ see [CHANGELOG.md](CHANGELOG.md).
 
 ## Unreleased development: October 2026
 
+### Research retirement (28 October 2026)
+
+- Removed the post-Champion Research species-substitution mechanism from
+  grass, walking overworld Pokémon, Surf and fishing. Finishing a regional
+  League no longer changes unrelated route wild encounter species.
+- Removed Research from the legacy text Start menu and deleted the
+  target/rotation debug UI. The graphical menu never implemented it.
+- Kept the optional seeded Wild Randomizer and all authored native, rare,
+  supplemental and aquatic habitats, statics, eggs, gifts and evolutions.
+- Reserved the now-unused game-stat index 53 without altering save layouts
+  or clearing existing saves. The optimistic 1,025-species acquisition
+  catalog has no Research-only sources; runtime accessibility remains
+  a separate gameplay acceptance matter.
+
 ### Gameplay engineering in progress
 
 - Expanded the source roster to all **1,025 National Pokédex IDs** through
