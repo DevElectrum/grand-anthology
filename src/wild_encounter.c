@@ -17,7 +17,6 @@
 #include "pokemon.h"
 #include "random.h"
 #include "roamer.h"
-#include "regions.h"
 #include "safari_zone.h"
 #include "script.h"
 #include "tv.h"
@@ -26,7 +25,6 @@
 #include "battle_pike.h"
 #include "battle_pyramid.h"
 #include "constants/abilities.h"
-#include "constants/game_stat.h"
 #include "constants/item.h"
 #include "constants/items.h"
 #include "constants/layouts.h"
@@ -671,17 +669,8 @@ enum Species AnthologyGetRareHabitatSpecies(enum WildPokemonArea area, const str
 #endif
 }
 
-// P0 post-League discovery rotation: each third *ordinary* wild encounter
-// offers another enabled, field-stable species/form, including Gen 4-9 and
-// regional variants. The persisted wild-battle counter makes the rotation
-// repeatable across saves without changing any cartridge save structure.
-// Original regional encounter tables remain untouched before the first
-// championship, with wild randomizer ON, and in facilities/Safari. Scripted
-// statics, roamers, outbreaks, gifts and story battles bypass this hook.
-// This is a broad catchability path, not yet a finished targeted encounter UI.
-// Shared eligibility check for post-League encounter rotation and the
-// player Research target. The field-stability check here intentionally remains
-// broader than natural Research eligibility because randomizer uses it too.
+// Shared eligibility for natural habitats and the optional seeded wild randomizer.
+// Reject battle-only forms from permanent wild encounters.
 bool8 WorldIsFieldStableDiscoverySpecies(enum Species species)
 {
 #if ALL_REGIONS
@@ -732,8 +721,8 @@ bool8 WorldIsFieldStableDiscoverySpecies(enum Species species)
 #endif
 }
 
-// Eligibility for ordinary habitats and post-League Research is deliberately
-// narrower than seeded randomizer eligibility. Legendary/Mythical species use
+// Eligibility for authored natural habitats is deliberately narrower than
+// seeded randomizer eligibility. Legendary/Mythical species use
 // authored statics unless natural populations make an existing wild habitat
 // lore-appropriate. This does not create new encounters for these exceptions.
 // Ultra Beasts and Paradox species are ordinary rare wildlife for this game.
@@ -761,22 +750,6 @@ bool8 WorldIsNaturalDiscoverySpecies(enum Species species)
         }
     }
     return TRUE;
-#else
-    return FALSE;
-#endif
-}
-
-// Post-League Research substitutes into unrelated routes, so its pool excludes
-// all Legendary/Mythical species, including those with natural populations.
-// An authored local habitat may separately allow those lore exceptions.
-bool8 WorldIsPostLeagueResearchSpecies(enum Species species)
-{
-#if ALL_REGIONS
-    if (!WorldIsNaturalDiscoverySpecies(species))
-        return FALSE;
-    return !gSpeciesInfo[species].isRestrictedLegendary
-        && !gSpeciesInfo[species].isSubLegendary
-        && !gSpeciesInfo[species].isMythical;
 #else
     return FALSE;
 #endif
@@ -955,47 +928,6 @@ bool8 AnthologyMapHasAquaticHabitatSpecies(u8 mapGroup, u8 mapNum, enum WildPoke
         && AnthologyFindAquaticHabitat(mapGroup, mapNum, area, info) == species;
 }
 
-static enum Species WorldChoosePostLeagueDiscoverySpecies(enum Species original)
-{
-#if ALL_REGIONS
-    u32 battles, attempts;
-    enum Species result;
-
-    if (original == SPECIES_NONE || original == SPECIES_EGG
-     || gSaveBlock1Ptr == NULL || gSaveBlock2Ptr == NULL
-     || !IsRegionChampion(GetActiveRegion()) || gSaveBlock2Ptr->randomizerWild
-     || GetSafariZoneFlag() || InBattlePike()
-     || CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE
-     || gMapHeader.battleType == MAP_BATTLE_SCENE_FRONTIER)
-        return original;
-
-    // Only the current campaign region\'s Champion flag unlocks Research rotation.\n    // Count is incremented by BattleSetup_StartWildBattle after generation.
-    // Every third qualifying battle uses a rotating ID. A long, ordinary
-    // postgame encounter sequence reaches every eligible index in one cycle,
-    // instead of hoping an RNG happened to select a rare species.
-    battles = GetGameStat(GAME_STAT_WILD_BATTLES);
-    if (battles % 3 != 2)
-        return original;
-
-    // A chosen Research target is a real wild encounter, not a gift.
-    // Invalid or uninitialized old-save values safely fall back to rotation.
-    result = GetGameStat(GAME_STAT_WORLD_DISCOVERY_TARGET);
-    if (WorldIsPostLeagueResearchSpecies(result))
-        return result;
-    result = 1 + (battles / 3) % (NUM_SPECIES - 1);
-    for (attempts = 0; attempts < NUM_SPECIES - 1; attempts++)
-    {
-        // Battle-only forms need their respective battle mechanics; never
-        // materialize those as permanent caught Pokémon.
-        if (WorldIsPostLeagueResearchSpecies(result))
-            return result;
-        if (++result >= NUM_SPECIES)
-            result = 1;
-    }
-#endif
-    return original;
-}
-
 void CreateWildMon(enum Species species, u8 level)
 {
     ZeroEnemyPartyMons();
@@ -1107,14 +1039,14 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
         wildSpecies = extra;
     else if (useAquatic)
         wildSpecies = aquatic;
-    CreateWildMon(WorldChoosePostLeagueDiscoverySpecies(wildSpecies), level);
+    CreateWildMon(wildSpecies, level);
     return TRUE;
 }
 
 static u16 GenerateFishingWildMon(const struct WildPokemonInfo *wildMonInfo, u8 rod)
 {
     u8 wildMonIndex = ChooseWildMonIndex_Fishing(rod);
-    enum Species wildMonSpecies = WorldChoosePostLeagueDiscoverySpecies(WorldRandomizeWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, wildMonIndex, WILD_AREA_FISHING));
+    enum Species wildMonSpecies = WorldRandomizeWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, wildMonIndex, WILD_AREA_FISHING);
     u8 level = ChooseWildMonLevel(wildMonInfo->wildPokemon, wildMonIndex, WILD_AREA_FISHING);
     enum Species aquatic = AnthologyGetAquaticHabitatSpecies(WILD_AREA_FISHING, wildMonInfo);
 

@@ -22,6 +22,25 @@ the modified all-generation game has passed a complete three-region playthrough.
 | **Offline convenience, options and collection** | Evolution changes, shiny odds, seeded randomizers, edits, regional Dex and rewards in varying states of implementation and validation |
 | **Original continuous campaigns** | Pokémon World's Kanto, Johto, Hoenn and World Transit source retained; one persistent party/save is intended, with representative travel/save acceptance already recorded |
 
+### Wild encounters: Research retired
+
+**Post-League Research has been removed.** Neither clearing Kanto, Johto nor
+Hoenn's League substitutes unrelated species into ordinary wild encounters:
+grass, walking overworld Pokémon, Surf and fishing now use their authored
+native encounters, curated regional rare/extra/aquatic habitats, and (only if
+explicitly enabled) the independent seeded Wild Randomizer. The legacy
+Research target menu is gone from the classic Start menu; the graphical
+Start menu never exposed it.
+
+This change makes the route location atlas and DexNav correspond to the
+ordinary non-randomized spawn sources. Legendaries and Mythicals retain
+their designed static/story encounters, and Ultra Beasts/Paradox Pokémon
+retain their deliberate rare natural habitats. Existing battery saves keep
+all Pokémon, party/PC data, game stats, completed Leagues and encounter
+progress. Game-stat index 53 stays reserved but unused so save layout does
+not change. The 1,025-species source catalog lists no Research acquisition
+paths, but its coverage remains optimistic until verified in gameplay.
+
 ### Seeded starter choices without duplicates
 
 When **Starter Randomization** is enabled, Oak offers **10 distinct randomized choices** in Kanto, while Elm and Birch each offer **9 distinct choices**. Choices are determined by the saved seed and regional starter slot, not the frame or number of menu openings. If two slots would produce the same National Pokédex species, including different forms such as Unown letters, the later slot advances deterministically to another valid species. **Alternate forms are not banned:** any eligible form can still be rolled, but the same menu cannot offer both regular and Alolan Vulpix, for example, because they share one National Pokédex number. This restriction applies **within each region's current starter menu only**; it does not exclude forms from wild encounters, gifts or other randomizer categories. The maintainer explicitly accepts this grouping of cosmetic and gameplay-significant forms for starter-menu uniqueness; do not silently replace it with form-specific exceptions. Each option keeps its original story slot; this change does **not** redesign rival behavior. This is a source-implemented feature pending gameplay acceptance on the updated ROM.
