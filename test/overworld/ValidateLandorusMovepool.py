@@ -9,8 +9,18 @@ root = Path(__file__).resolve().parents[2]
 def read(path):
     return (root / path).read_text()
 
-learnsets = read("src/data/pokemon/level_up_learnsets/gen_5.h")
+# Test the learnset actually compiled by src/pokemon.c under the active config.
+config = read("include/config/pokemon.h")
+pokemon = read("src/pokemon.c")
+assert "#define P_LVL_UP_LEARNSETS          GEN_LATEST" in config
+assert "#if P_LVL_UP_LEARNSETS >= GEN_9" in pokemon
+assert '#include "data/pokemon/level_up_learnsets/gen_9.h"' in pokemon
+learnsets = read("src/data/pokemon/level_up_learnsets/gen_9.h")
 landorus = learnsets.split("static const struct LevelUpMove sLandorusLevelUpLearnset[] = {", 1)[1].split("LEVEL_UP_END", 1)[0]
+assert landorus.count("LEVEL_UP_MOVE(") <= 20, "Move Relearner scans MAX_LEVEL_UP_MOVES=20 entries"
+# The screenshot's original moves confirm this is the active Gen 9 table.
+for move in ("SMACK_DOWN", "SAND_TOMB", "LEER", "BLOCK", "BULLDOZE"):
+    assert f"MOVE_{move}" in landorus, f"Wrong Landorus learnset: {move}"
 for level, move in ((37, "AIR_SLASH"), (43, "NASTY_PLOT"), (55, "HURRICANE")):
     assert f"LEVEL_UP_MOVE({level:2d}, MOVE_{move})" in landorus, (level, move)
 species = read("src/data/pokemon/species_info/gen_5_families.h")
