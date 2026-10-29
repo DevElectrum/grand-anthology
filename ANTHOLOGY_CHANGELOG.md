@@ -7,6 +7,22 @@ see [CHANGELOG.md](CHANGELOG.md).
 
 ## Unreleased development: October 2026
 
+### Landorus special Flying coverage and TM51 (29 October 2026)
+
+- Landorus (Incarnate and Therian) now learns **Air Slash** at Lv37,
+  **Nasty Plot** at Lv43, and **Hurricane** at Lv55 through the existing
+  shared level-up moveset. Already-caught Landorus can recover eligible
+  previous-level moves with the Move Relearner.
+- Previously inactive **TM51** is now reusable **Nasty Plot** (same item
+  ID 632), priced at 3,000, obtainable from the TM clerks in Celadon
+  2F, Goldenrod 5F, and Lilycove 4F. Goldenrod's clerk intentionally
+  shares Lilycove's TM shop list.
+- The teachable-learnset generator uses a single explicit Grand Anthology
+  exception so Landorus can use TM51 regardless of upstream learnability
+  data. Other Pokémon keep the existing cross-game teaching policy.
+- No save or item ID migrations. Existing ROMs must be rebuilt; code
+  validation and real gameplay acceptance are separate.
+
 ### Johto field-move badge correction (28 October 2026)
 
 - Fixed four Johto HM field-use gates that incorrectly reused Hoenn badge order:
