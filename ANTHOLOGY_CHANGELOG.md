@@ -7,6 +7,21 @@ see [CHANGELOG.md](CHANGELOG.md).
 
 ## Unreleased development: October 2026
 
+### Landorus active learnset correction (29 October 2026)
+
+- Corrected the earlier Landorus move additions: the previous commit changed
+  only `gen_5.h`, which is **not compiled** while `P_LVL_UP_LEARNSETS`
+  is set to `GEN_LATEST`. The current engine compiles `gen_9.h`.
+- Added Air Slash (Lv37), Nasty Plot (Lv43), and Hurricane (Lv55) to
+  the **active Gen 9 Landorus learnset**, preserving the existing moves.
+  Relearner eligibility now includes Air Slash for existing Lv42 Landorus.
+- Hardened the automated regression check to assert the game uses the
+  Gen 9 source before verifying the requested moves. The original build
+  passed only because its test mistakenly inspected the inactive Gen 5 file.
+- No player save change; a newer rebuilt ROM is necessary to activate the
+  corrected level-up data. TM51/Nasty Plot shop availability from the
+  earlier commit remains unchanged.
+
 ### Landorus special Flying coverage and TM51 (29 October 2026)
 
 - Landorus (Incarnate and Therian) now learns **Air Slash** at Lv37,
