@@ -20,7 +20,7 @@ for form in ("INCARNATE", "THERIAN"):
     assert ".teachableLearnset = sLandorusTeachableLearnset," in section, form
 
 tms = read("include/constants/tms_hms.h").split("#define FOREACH_TM(F)", 1)[1].split("#define FOREACH_HM(F)", 1)[0]
-tms_in_order = re.findall(r"F\\((\\w+)\\)", tms)
+tms_in_order = re.findall(r"F\((\w+)\)", tms)
 assert len(tms_in_order) == 51, len(tms_in_order)
 assert tms_in_order[-1] == "NASTY_PLOT", "TM51 must be Nasty Plot"
 assert "ITEM_TM51 = 632" in read("include/constants/items.h"), "Preserve TM51 save item ID"
