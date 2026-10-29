@@ -104,6 +104,7 @@ def prepare_output(all_learnables: dict[str, set[str]], tms: list[str], tutors: 
                     learnables = filter(lambda m: m not in special_movesets["universalMoves"], learnables)
             else:
                 learnables = all_learnables[species_upper] + special_movesets["universalMoves"]
+                learnables += special_movesets.get("customTmLearnsets", {}).get(species_upper, [])
             part1 = list(filter(lambda m: m in learnables, tms))
             part2 = list(filter(lambda m: m in learnables, tutors))
 
