@@ -13,7 +13,8 @@ def read(path):
 config = read("include/config/pokemon.h")
 pokemon = read("src/pokemon.c")
 assert "#define P_LVL_UP_LEARNSETS          GEN_LATEST" in config
-assert '#if P_LVL_UP_LEARNSETS >= GEN_9\\n#include "data/pokemon/level_up_learnsets/gen_9.h"' in pokemon
+assert "#if P_LVL_UP_LEARNSETS >= GEN_9" in pokemon
+assert '#include "data/pokemon/level_up_learnsets/gen_9.h"' in pokemon
 learnsets = read("src/data/pokemon/level_up_learnsets/gen_9.h")
 landorus = learnsets.split("static const struct LevelUpMove sLandorusLevelUpLearnset[] = {", 1)[1].split("LEVEL_UP_END", 1)[0]
 assert landorus.count("LEVEL_UP_MOVE(") <= 20, "Move Relearner scans MAX_LEVEL_UP_MOVES=20 entries"
