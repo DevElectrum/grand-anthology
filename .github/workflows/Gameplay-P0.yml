@@ -50,6 +50,7 @@ jobs:
           python3 test/overworld/ValidateBardPacking.py
           python3 test/overworld/ValidatePartyContinuity.py
           python3 test/overworld/ValidateJohtoFieldMoveBadges.py
+          python3 test/overworld/ValidateIcePathEntrance.py
           python3 test/overworld/ValidateLandorusMovepool.py
           python3 test/overworld/ValidateStarterIsolation.py
           python3 test/overworld/ValidateRegionalStarterOrder.py
