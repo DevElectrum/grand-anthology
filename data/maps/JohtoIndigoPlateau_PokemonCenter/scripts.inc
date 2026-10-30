@@ -22,7 +22,12 @@ JohtoIndigoPlateau_PokemonCenter_Enter::
 
 JohtoIndigoPlateau_Pokecenter_OnTransition::
 	setrespawn HEAL_LOCATION_JOHTO_INDIGO_PLATEAU
+	call_if_ge VAR_ROUTE27_STATE, 1, JohtoIndigoPlateau_EventScript_HideLeagueBlackBelt
 	end
+
+JohtoIndigoPlateau_EventScript_HideLeagueBlackBelt::
+	setflag FLAG_HIDE_LEAGUE_BLACKBELT
+	return
 
 
 JohtoIndigoPlateau_EventScript_Cooltrainer::

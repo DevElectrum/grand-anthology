@@ -55,7 +55,6 @@ JohtoPokemonLeague_HallOfFame_EventScript_CutsceneKantoChamp::
 	end
 
 JohtoPokemonLeague_HallOfFame_EventScript_SetFirstGameClearFlags::
-	clearflag FLAG_HIDE_LEAGUE_BLACKBELT
 	setflag FLAG_INDIGOJUNCTION_HIDE_SILVER_GUARD
 	setflag FLAG_INDIGOJUNCTION_HIDE_KANTO_GUARD
 	setflag FLAG_IS_CHAMPION
