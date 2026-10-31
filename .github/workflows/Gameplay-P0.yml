@@ -53,6 +53,7 @@ jobs:
           python3 test/overworld/ValidateIcePathEntrance.py
           python3 test/overworld/ValidateRoute27Passage.py
           python3 test/overworld/ValidateJohtoLeagueBlackBelt.py
+          python3 test/overworld/ValidateNationalParkSootheBell.py
           python3 test/overworld/ValidateLandorusMovepool.py
           python3 test/overworld/ValidateStarterIsolation.py
           python3 test/overworld/ValidateRegionalStarterOrder.py
