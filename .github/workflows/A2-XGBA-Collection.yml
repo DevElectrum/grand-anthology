@@ -12,6 +12,8 @@ on:
       - 'src/xgba_a2_fingerprint.c'
       - 'src/xgba_a2_cohort.c'
       - 'src/xgba_a2_transaction.c'
+      - 'src/save.c'
+      - 'Makefile'
       - 'include/xgba_a2_transaction.h'
       - 'include/xgba_a2_cohort.h'
       - 'test/overworld/xgba_a2_cohort_harness.c'
@@ -103,4 +105,20 @@ jobs:
             --elf xgba-anthology-a1-native-release.elf \
             --manifest build/xgba-a1-release/a1-manifest.json
           python3 -c "f=open('xgba-anthology-a1.gba','rb'); f.seek(0xBC); assert f.read(1)==bytes([0]); f.close()"
+      - name: Shadow-compile guarded A2 save integration (do not publish)
+        shell: bash
+        run: |
+          set -o pipefail
+          # Keep all existing A1 objects, rebuild the guarded save bridge and
+          # relink the native game with XGBA_A2 enabled, without ROM packaging.
+          touch src/save.c
+          make release -j4 XGBA_A1=1 XGBA_A2=1 BUILD_NAME=xgba-a1 \
+            FILE_NAME=xgba-anthology-a1-native-release > /tmp/a2-shadow.log 2>&1 || {
+            grep -n -E 'error:|undefined reference|overflowed|Error:|collect2:' /tmp/a2-shadow.log | tail -n 90 || true
+            tail -n 80 /tmp/a2-shadow.log
+            exit 1
+          }
+          test -s xgba-anthology-a1-native-release.elf
+          echo "A2 guarded save.c compiled and linked successfully; no A2 ROM published."
+
       # No ROM binaries or user saves are uploaded.

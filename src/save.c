@@ -123,6 +123,11 @@ EWRAM_DATA static bool8 sA2Ready = FALSE;
 
 void ClearSaveData(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // No new-game bootstrap exists yet for the 16 MiB journal. Refuse to
+    // destroy the old native slots while metadata still references them.
+    return;
+#else
     u16 i;
 
     // Clear the full save two sectors at a time
@@ -131,6 +136,7 @@ void ClearSaveData(void)
         EraseFlashSector(i);
         EraseFlashSector(i + SECTORS_COUNT / 2);
     }
+#endif
 }
 
 void Save_ResetSaveCounters(void)
@@ -954,6 +960,10 @@ u8 TrySavingData(u8 saveType)
 
 bool8 LinkFullSave_Init(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
+    return TRUE;
+#endif
     if (gFlashMemoryPresent != TRUE)
         return TRUE;
     UpdateSaveAddresses();
@@ -964,6 +974,10 @@ bool8 LinkFullSave_Init(void)
 
 bool8 LinkFullSave_WriteSector(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
+    return TRUE;
+#endif
     u8 status = HandleWriteIncrementalSector(NUM_SECTORS_PER_SLOT, gRamSaveSectorLocations);
     if (gDamagedSaveSectors)
         DoSaveFailedScreen(SAVE_NORMAL);
@@ -979,6 +993,10 @@ bool8 LinkFullSave_WriteSector(void)
 
 bool8 LinkFullSave_ReplaceLastSector(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
+    return TRUE;
+#endif
     HandleReplaceSectorAndVerify(NUM_SECTORS_PER_SLOT, gRamSaveSectorLocations);
     if (gDamagedSaveSectors)
         DoSaveFailedScreen(SAVE_NORMAL);
@@ -987,6 +1005,10 @@ bool8 LinkFullSave_ReplaceLastSector(void)
 
 bool8 LinkFullSave_SetLastSectorSignature(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
+    return TRUE;
+#endif
     CopySectorSignatureByte(NUM_SECTORS_PER_SLOT, gRamSaveSectorLocations);
     if (gDamagedSaveSectors)
         DoSaveFailedScreen(SAVE_NORMAL);
@@ -995,6 +1017,10 @@ bool8 LinkFullSave_SetLastSectorSignature(void)
 
 bool8 WriteSaveBlock2(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
+    return TRUE;
+#endif
     if (gFlashMemoryPresent != TRUE)
         return TRUE;
 
@@ -1013,6 +1039,10 @@ bool8 WriteSaveBlock2(void)
 // It returns TRUE when finished.
 bool8 WriteSaveBlock1Sector(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
+    return TRUE;
+#endif
     bool32 finished = FALSE;
     u16 sectorId = ++gIncrementalSectorId; // Because WriteSaveBlock2 will have been called prior, this will be SECTOR_ID_SAVEBLOCK1_START
     if (sectorId <= SECTOR_ID_SAVEBLOCK1_END)
