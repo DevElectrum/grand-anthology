@@ -1,0 +1,39 @@
+# Anthology A2: Collection and persistence engineering record
+
+**Status:** A2 Stage 1 source implemented and CI green; in-game A2 functionality NOT implemented. Active branch: xgba/a2-collection-lab (based on A1 documentation head cf4cc98d). Protect main, xgba/expansion-lab, the A1 ROM and current player saves.
+
+## Implemented now (not a paper-only plan)
+
+1. tools/xgba_a2_storage.py creates a NEW 16 MiB XGBA E6 save from one intact native v13 save; it refuses target overwrite, mismatched save format, partial sectors, bad region checksum, unexpected native size, or mismatched PC data. Existing test/overworld/SavePatch.py validates the live 14-sector rotating Flash layout, complete active slot, source and exact no-op roundtrip.
+2. The native 128 KiB Flash at file offsets 0..0x1FFFF remains unchanged. E6 24-byte superblocks at 0x20000 and 0xFFF000 match the accepted emulator. The initial A2 metadata SHA256-prefix and counter tie a collection snapshot to that exact native save.
+3. PC pages occupy file 0x200000..0x28FFFF as 8 pages × 2 A/B records × 0x9000. Each header is 32 bytes with magic, version, page, monotonic generation, byte length, payload CRC32 and header CRC32. Each stores exactly the native 34,144-byte PokemonStorage ABI, including box names, wallpapers and four fusions. Page one copies the native PC byte for byte; other pages start empty and valid. 112 global boxes = 3,360 slots.
+4. Metadata uses two 64-byte slots starting at 0x290000. Each stores a 24-byte payload: 16-byte truncated SHA-256 of native flash, native save counter, selected page. The converter writes independent A/B generations to PC pages and metadata, audits the temporary image, fsyncs, then atomically publishes with a create-only hardlink. It optionally relocates a 16-byte RTC trailer unchanged to the end of the 16 MiB E6 image.
+5. An offline audit selects the newest **valid** A/B record after verifying both CRCs, recovers a corrupted latest copy via its older backup, and refuses missing double copies, bad extension header, changed native generation or page-one/native mismatch. Both emulator E6 headers must match for the current offline image policy. No real user save was used in tests.
+
+**CI:** A2 XGBA Collection Storage Contract workflow, run 41270716312, 11 synthetic migration/failure tests PASS plus SavePatch ABI check. Source code commit 897468fa; tests+workflow commit 8dd5d61d.
+
+## Next necessary integrated implementation batch
+
+- **Guest runtime / 0x0F byte bus:** Implement a single resident 34,144-byte PokemonStorage page only, CRC32 table in ROM, two copy headers with independent validation, bounded metadata, dirty-page tracking, and a fail-closed E6 capability handshake. No 16/32-bit guest extension access. Do not clone the 20-world Emerald game's 0x380000 sidecar.
+- **Native/extended transaction coordinator:** This is the difficult atomicity problem. The initial converter binds page-zero and metadata to the native save SHA; an in-game save will change native Flash. The runtime must advance a coherent native + extension generation and choose a recoverable old/new pair on interrupted saves. Do not simply flush page then call SaveGame, or permanently require the original flash hash after legitimate saves. Use an explicit two-phase commit, recovery journal/superblock, and deterministic crash-point tests that preserve either a fully old or a fully new state. A/B page-level validity alone is not enough.
+- **Global 112-box PC:** Retain the 14-box resident PokemonStorage and all 420 native slot APIs; use 8 virtual pages, explicit page switch/capture/withdraw/move hooks, read-your-writes, and a safely defined mapping for native sector 5..13. Preserve BoxPokemon ABI and save migration; never raise TOTAL_BOXES_COUNT to 112.
+- **Search/favorites/bulk protections:** Bounded indices, sorted view not moving original mons; persistent protection that moves with record, not box coordinates. Egg, favorites and legendary/mythical protections, and held item return checks must survive page transitions.
+- **Bag:** One shared global bag. Decide whether true expandable pocket arrays belong in extension or whether new UI and key-item dedup suffice; make bounded, tested capacity changes with explicit ABI migration.
+- **ROM packaging:** Only after runtime and native coupling work. New opt-in make xgba-a2 must emit XGBA256 with software revision E6 and correctly recomputed GBA complement, while make xgba-a1 must keep revision 0 and native 128 KiB Flash. Do not change A1 default output.
+- **CI / acceptance:** Use source layout fixtures, C guest/emulator save persistence tests and injected interruptions after each write boundary. One user-facing combined gameplay smoke with a copied save only after all stages pass. A1's own gameplay acceptance remains independently pending. No repeated E7 256 MiB capacity test.
+
+## Boundaries and known design constraints
+
+- Existing native GBA Flash uses dual rotating 14-sector saves. Source includes SaveBlock1 14,752 B, SaveBlock2 3,884 B, SaveBlock3 1,264 B, PokemonStorage 34,144 B, format v13.
+- The E6 emulator does not automatically know Anthology's transaction format. 24-byte superblocks activate guest 0x0F access, but do **not** implement atomicity, game-level CRC, schema migration, or in-game page switching.
+- EWRAM 256 KiB, IWRAM 32 KiB, native linked ROM 32 MiB remain hard budgets. No full 16 MiB scans at boot or O(3,360 × full-Pokemon) searches per menu frame.
+- Keep the original global traveling party, global dex, global bag and global collection. Nine separate regions is not twenty virtual copies of Hoenn.
+- A2 is not completed until the in-game 112 boxes, collection UI, bag decisions, safe migration, runtime save/restart/recovery and one user smoke are actually passed.
+
+## Internal commands (developer-only, DO NOT use on actual saves yet)
+
+python3 tools/xgba_a2_storage.py layout
+python3 tools/xgba_a2_storage.py init pristine-v13.sav NEW-a2.sav
+python3 tools/xgba_a2_storage.py audit NEW-a2.sav
+
+Never run conversion on a live emulator-managed save; always close emulator and work from a backed-up copy.
