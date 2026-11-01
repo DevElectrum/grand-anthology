@@ -181,6 +181,24 @@ int main(void)
         assert(memcmp(readback, old, PAGE_BYTES) == 0);
     }
 
+    // A crashed stage must not allow the next stage to overwrite a page
+    // referenced by the last committed metadata generation.
+    memset(disk.bytes, 0xFF, MEMORY_SIZE);
+    Fixture(&disk, 4, 0, 7, old, PAGE_BYTES);
+    Fixture(&disk, 4, 1, 8, old, PAGE_BYTES);
+    disk.remainingWrites = -1;
+    assert(XgbaA2JournalStagePage(&io, 4, 8, newPage, PAGE_BYTES, &result) == 0);
+    assert(result.generation == 9 && result.slot == 0);
+    assert(XgbaA2JournalReadPageGeneration(&io, 4, 8, readback, PAGE_BYTES, &result) == 0);
+    assert(memcmp(readback, old, PAGE_BYTES) == 0);
+    Fill(readback, 59);
+    assert(XgbaA2JournalStagePage(&io, 4, 8, readback, PAGE_BYTES, &result) == 0);
+    assert(result.generation == 10 && result.slot == 0);
+    assert(XgbaA2JournalReadPageGeneration(&io, 4, 8, readback, PAGE_BYTES, &result) == 0);
+    assert(memcmp(readback, old, PAGE_BYTES) == 0);
+    assert(XgbaA2JournalReadPageGeneration(&io, 4, 9, readback, PAGE_BYTES, &result)
+           == XGBA_A2_JOURNAL_MISSING);
+
     // A page with no initialized records is never silently created.
     assert(XgbaA2JournalReadPage(&io, 7, readback, PAGE_BYTES, &result) == XGBA_A2_JOURNAL_MISSING);
     assert(XgbaA2JournalReadPage(&io, 8, readback, PAGE_BYTES, &result) == XGBA_A2_JOURNAL_INVALID_ARG);

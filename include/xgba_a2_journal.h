@@ -46,4 +46,22 @@ int XgbaA2JournalWriteMeta(const struct XgbaA2JournalIo *io,
                            const void *source, uint32_t bytes,
                            struct XgbaA2JournalInfo *info);
 
+// Game runtime must load pages by EXACT metadata-referenced generation,
+// not by newest physical generation (which may be an aborted transaction).
+int XgbaA2JournalReadPageGeneration(const struct XgbaA2JournalIo *io,
+                                    uint8_t page, uint32_t generation,
+                                    void *destination, uint32_t bytes,
+                                    struct XgbaA2JournalInfo *info);
+int XgbaA2JournalStagePage(const struct XgbaA2JournalIo *io,
+                           uint8_t page, uint32_t protectedGeneration,
+                           const void *source, uint32_t bytes,
+                           struct XgbaA2JournalInfo *info);
+int XgbaA2JournalReadMetaGeneration(const struct XgbaA2JournalIo *io,
+                                    uint32_t generation, void *destination,
+                                    uint32_t bytes,
+                                    struct XgbaA2JournalInfo *info);
+int XgbaA2JournalStageMeta(const struct XgbaA2JournalIo *io,
+                           uint32_t protectedGeneration, const void *source,
+                           uint32_t bytes, struct XgbaA2JournalInfo *info);
+
 #endif

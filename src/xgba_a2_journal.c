@@ -188,7 +188,7 @@ static int FindRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
 
 static int ReadRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
                       uint8_t page, void *destination, uint32_t bytes,
-                      struct XgbaA2JournalInfo *info)
+                      uint32_t requiredGeneration, struct XgbaA2JournalInfo *info)
 {
     struct Candidate best;
     uint8_t count;
@@ -205,6 +205,18 @@ static int ReadRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
     status = FindRecord(io, isMeta, page, bytes, &best, &count);
     if (status != XGBA_A2_JOURNAL_OK)
         return status;
+
+    if (requiredGeneration != 0 && best.generation != requiredGeneration)
+    {
+        struct Candidate other;
+        status = CheckCandidate(io, isMeta, page, (uint8_t)(1 - best.slot),
+                                bytes, &other);
+        if (status != XGBA_A2_JOURNAL_OK)
+            return status;
+        if (!other.valid || other.generation != requiredGeneration)
+            return XGBA_A2_JOURNAL_MISSING;
+        best = other;
+    }
 
     offset = RecordOffset(isMeta, page, best.slot) + HEADER_BYTES;
     remaining = bytes;
@@ -250,6 +262,7 @@ static int SameAsRecord(const struct XgbaA2JournalIo *io, uint32_t offset,
 
 static int WriteRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
                        uint8_t page, const void *source, uint32_t bytes,
+                       uint32_t protectedGeneration,
                        struct XgbaA2JournalInfo *info)
 {
     struct Candidate best;
@@ -262,6 +275,7 @@ static int WriteRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
     uint32_t offset;
     uint32_t remaining;
     uint32_t actualCrc;
+    uint32_t nextGeneration;
     int compareResult, status;
 
     if (!IoReady(io) || source == NULL
@@ -274,6 +288,23 @@ static int WriteRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
     status = FindRecord(io, isMeta, page, bytes, &best, &count);
     if (status != XGBA_A2_JOURNAL_OK)
         return status;
+
+    // The committed metadata, not the highest physical sequence, owns
+    // the protected generation. After a crashed stage, the other slot may
+    // contain a valid yet UNCOMMITTED newer record: rewrite that slot,
+    // never the copy referenced by the last committed metadata generation.
+    nextGeneration = best.generation;
+    if (protectedGeneration != 0 && best.generation != protectedGeneration)
+    {
+        struct Candidate prior;
+        status = CheckCandidate(io, isMeta, page, (uint8_t)(1 - best.slot),
+                                bytes, &prior);
+        if (status != XGBA_A2_JOURNAL_OK)
+            return status;
+        if (!prior.valid || prior.generation != protectedGeneration)
+            return XGBA_A2_JOURNAL_MISSING;
+        best = prior;
+    }
 
     offset = RecordOffset(isMeta, page, best.slot);
     if (best.dataCrc == CrcRam(payload, bytes))
@@ -293,7 +324,7 @@ static int WriteRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
         }
     }
 
-    if (best.generation == UINT32_MAX)
+    if (nextGeneration == UINT32_MAX)
         return XGBA_A2_JOURNAL_GENERATION_FULL;
 
     targetSlot = (uint8_t)(1 - best.slot);
@@ -323,7 +354,7 @@ static int WriteRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
     Write16(header + 8, XGBA_A2_RECORD_VERSION);
     Write16(header + 10, 0);
     header[12] = page;
-    Write32(header + 16, best.generation + 1);
+    Write32(header + 16, nextGeneration + 1);
     Write32(header + 20, bytes);
     Write32(header + 24, actualCrc);
     Write32(header + 28, CrcRam(header, 28));
@@ -343,7 +374,7 @@ static int WriteRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
     struct Candidate verified;
     status = CheckCandidate(io, isMeta, page, targetSlot, bytes, &verified);
     if (status != XGBA_A2_JOURNAL_OK || !verified.valid
-        || verified.generation != best.generation + 1)
+        || verified.generation != nextGeneration + 1)
         return XGBA_A2_JOURNAL_IO_ERROR;
 
     if (info != NULL)
@@ -359,26 +390,67 @@ int XgbaA2JournalReadPage(const struct XgbaA2JournalIo *io, uint8_t page,
                           void *destination, uint32_t bytes,
                           struct XgbaA2JournalInfo *info)
 {
-    return ReadRecord(io, 0, page, destination, bytes, info);
+    return ReadRecord(io, 0, page, destination, bytes, 0, info);
 }
 
 int XgbaA2JournalWritePage(const struct XgbaA2JournalIo *io, uint8_t page,
                            const void *source, uint32_t bytes,
                            struct XgbaA2JournalInfo *info)
 {
-    return WriteRecord(io, 0, page, source, bytes, info);
+    return WriteRecord(io, 0, page, source, bytes, 0, info);
 }
 
 int XgbaA2JournalReadMeta(const struct XgbaA2JournalIo *io,
                           void *destination, uint32_t bytes,
                           struct XgbaA2JournalInfo *info)
 {
-    return ReadRecord(io, 1, 0, destination, bytes, info);
+    return ReadRecord(io, 1, 0, destination, bytes, 0, info);
 }
 
 int XgbaA2JournalWriteMeta(const struct XgbaA2JournalIo *io,
                            const void *source, uint32_t bytes,
                            struct XgbaA2JournalInfo *info)
 {
-    return WriteRecord(io, 1, 0, source, bytes, info);
+    return WriteRecord(io, 1, 0, source, bytes, 0, info);
+}
+
+// These cohort-aware APIs are mandatory for A2 game-save transaction work.
+// Uncommitted newer records must NEVER displace committed protected generations.
+int XgbaA2JournalReadPageGeneration(const struct XgbaA2JournalIo *io,
+                                    uint8_t page, uint32_t generation,
+                                    void *destination, uint32_t bytes,
+                                    struct XgbaA2JournalInfo *info)
+{
+    if (generation == 0)
+        return XGBA_A2_JOURNAL_INVALID_ARG;
+    return ReadRecord(io, 0, page, destination, bytes, generation, info);
+}
+
+int XgbaA2JournalStagePage(const struct XgbaA2JournalIo *io,
+                           uint8_t page, uint32_t protectedGeneration,
+                           const void *source, uint32_t bytes,
+                           struct XgbaA2JournalInfo *info)
+{
+    if (protectedGeneration == 0)
+        return XGBA_A2_JOURNAL_INVALID_ARG;
+    return WriteRecord(io, 0, page, source, bytes, protectedGeneration, info);
+}
+
+int XgbaA2JournalReadMetaGeneration(const struct XgbaA2JournalIo *io,
+                                    uint32_t generation, void *destination,
+                                    uint32_t bytes,
+                                    struct XgbaA2JournalInfo *info)
+{
+    if (generation == 0)
+        return XGBA_A2_JOURNAL_INVALID_ARG;
+    return ReadRecord(io, 1, 0, destination, bytes, generation, info);
+}
+
+int XgbaA2JournalStageMeta(const struct XgbaA2JournalIo *io,
+                           uint32_t protectedGeneration, const void *source,
+                           uint32_t bytes, struct XgbaA2JournalInfo *info)
+{
+    if (protectedGeneration == 0)
+        return XGBA_A2_JOURNAL_INVALID_ARG;
+    return WriteRecord(io, 1, 0, source, bytes, protectedGeneration, info);
 }
