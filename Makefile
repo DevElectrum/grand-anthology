@@ -174,7 +174,10 @@ XGBA_A1 ?= 0
 XGBA_A2 ?= 0
 ifeq ($(XGBA_A2),1)
   ifneq ($(XGBA_A1),1)
-    $(error A2 shadow compile requires A1 high-ROM mode)
+    $(error A2 requires A1 high-ROM mode)
+  endif
+  ifneq ($(BUILD_NAME),xgba-a2)
+    $(error A2 requires an isolated BUILD_NAME=xgba-a2; never reuse A1 object files)
   endif
   CPPFLAGS += -DXGBA_A2=1
 endif

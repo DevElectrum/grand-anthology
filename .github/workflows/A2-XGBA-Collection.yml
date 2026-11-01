@@ -118,17 +118,17 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          # Keep all existing A1 objects, rebuild the guarded save bridge and
-          # relink the native game with XGBA_A2 enabled, without ROM packaging.
-          touch src/save.c src/new_game.c src/swsh_storage_system.c src/pokemon.c src/pokemon_storage_system.c
-          make release -j4 XGBA_A1=1 XGBA_A2=1 BUILD_NAME=xgba-a1 \
-            FILE_NAME=xgba-anthology-a1-native-release > /tmp/a2-shadow.log 2>&1 || {
+          # FULL, isolated A2 rebuild. Never reuse A1 objects: CPPFLAGS are
+          # not part of Makefile's normal dependency fingerprint.
+          make release -j4 XGBA_A1=1 XGBA_A2=1 BUILD_NAME=xgba-a2 \
+            FILE_NAME=xgba-anthology-a2-native-release > /tmp/a2-shadow.log 2>&1 || {
             grep -n -E 'error:|undefined reference|overflowed|Error:|collect2:' /tmp/a2-shadow.log | tail -n 90 || true
             tail -n 80 /tmp/a2-shadow.log
             exit 1
           }
-          test -s xgba-anthology-a1-native-release.elf
-          echo "A2 guarded save.c compiled and linked successfully; no A2 ROM published."
+          test -s xgba-anthology-a2-native-release.elf
+          test -s build/xgba-a2-release/a1-manifest.json
+          echo "A2 fully isolated ARM build linked; no A2 ROM published."
       - name: Verify separate E6 development cartridge header (never publish)
         shell: bash
         run: |
@@ -136,8 +136,8 @@ jobs:
           # Inputs come from the macro-enabled shadow ELF just compiled.
           # Reuse A1's tested high-ROM geometry layout, but opt in to E6.
           python3 tools/xgba_a1_assets.py pack \
-            --native xgba-anthology-a1-native-release.gba \
-            --manifest build/xgba-a1-release/a1-manifest.json \
+            --native xgba-anthology-a2-native-release.gba \
+            --manifest build/xgba-a2-release/a1-manifest.json \
             --output /tmp/xgba-a2-shadow-layout.gba
           python3 tools/xgba_a2_rom.py tag \
             /tmp/xgba-a2-shadow-layout.gba /tmp/xgba-a2-dev-e6.gba
