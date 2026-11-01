@@ -1162,7 +1162,15 @@ u16 GetSaveBlocksPointersBaseOffset(void)
     if (gFlashMemoryPresent != TRUE)
         return 0;
     UpdateSaveAddresses();
+#if defined(XGBA_A2) && XGBA_A2
+    // This helper must not independently select a newer, uncommitted Flash
+    // slot after the A2 loader has approved a different native generation.
+    if (!sA2Ready)
+        return 0;
+    gSaveCounter = sA2Committed.nativeCounter;
+#else
     GetSaveValidStatus(gRamSaveSectorLocations);
+#endif
     slotOffset = NUM_SECTORS_PER_SLOT * (gSaveCounter % NUM_SAVE_SLOTS);
     for (i = 0; i < NUM_SECTORS_PER_SLOT; i++)
     {
