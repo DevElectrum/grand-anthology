@@ -305,7 +305,17 @@ int main(void)
     assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter, NULL,
                                   scratch, old, &selected)
            == XGBA_A2_JOURNAL_MISSING);
-    puts("A2 fresh E6 bootstrap and crash budget matrix PASS");
+
+    // Hall of Fame history occupies native Flash sectors 28/29, outside the
+    // fourteen-sector alternating game saves. Its independent archive write
+    // (or a crash partway through it) cannot invalidate the committed PC.
+    memset(sDisk + 28 * SECTOR_BYTES, 0xA7, SECTOR_BYTES);
+    memset(sDisk + 29 * SECTOR_BYTES, 0x3C, SECTOR_BYTES / 2);
+    assert(XgbaA2CohortSelect(&io, NativeRead, NULL,
+                              scratch, &selected) == XGBA_A2_JOURNAL_OK);
+    assert(selected.nativeCounter == 1 && selected.nativeSlot == 1);
+    assert(selected.activePage == 0 && selected.metadataGeneration == 1);
+    puts("A2 fresh E6 bootstrap, HOF independence and crash budget matrix PASS");
 
     // Reset for existing independent multi-generation transaction tests.
     memset(sDisk, 0xFF, DISK_BYTES);
