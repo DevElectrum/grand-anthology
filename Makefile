@@ -831,7 +831,9 @@ $(SYM): $(ELF)
 # No normal GBA release, save or user's pre-existing ROM is overwritten.
 .PHONY: xgba-a1
 xgba-a1:
-	$(MAKE) release -j4 XGBA_A1=1 BUILD_NAME=xgba-a1 FILE_NAME=xgba-anthology-a1-native
+	# Command-line FILE_NAME overrides Makefile's implicit -release suffix;
+	# specify that suffix explicitly so the packer consumes the verified output.
+	$(MAKE) release -j4 XGBA_A1=1 BUILD_NAME=xgba-a1 FILE_NAME=xgba-anthology-a1-native-release
 	@mkdir -p build/xgba-a1-package
 	@rm -f build/xgba-a1-package/xgba-anthology-a1-stage.gba
 	python3 tools/xgba_a1_assets.py pack --native xgba-anthology-a1-native-release.gba --manifest build/xgba-a1-release/a1-manifest.json --output build/xgba-a1-package/xgba-anthology-a1-stage.gba
