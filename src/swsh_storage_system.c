@@ -49,6 +49,9 @@
 #include "constants/songs.h"
 #include "constants/pokemon_icon.h"
 #include "swsh_storage_system.h"
+#if defined(XGBA_A2) && XGBA_A2
+#include "xgba_a2_game.h"
+#endif
 
 /*
     NOTE: This file is large. Some general groups of functions have
@@ -198,6 +201,10 @@ enum {
     INPUT_MULTIMOVE_PLACE_MONS,
     INPUT_TOGGLE_MON_INFO,
     INPUT_SELECT_MON,
+#if defined(XGBA_A2) && XGBA_A2
+    INPUT_A2_PAGE_NEXT,
+    INPUT_A2_PAGE_PREVIOUS,
+#endif
 };
 
 enum {
@@ -602,6 +609,9 @@ EWRAM_DATA static bool8 sBulkClearBox = FALSE;
 
 // Main tasks
 static void Task_InitPokeStorage(u8);
+#if defined(XGBA_A2) && XGBA_A2
+static void Task_A2ReopenPage(u8);
+#endif
 static void Task_PlaceMon(u8);
 static void Task_ChangeScreen(u8);
 static void Task_ShowPokeStorage(u8);
@@ -2036,6 +2046,30 @@ enum {
     MSTATE_WAIT_ITEM_ANIM,
 };
 
+#if defined(XGBA_A2) && XGBA_A2
+static void Task_A2ReopenPage(u8 taskId)
+{
+    (void)taskId;
+    switch (sStorage->state)
+    {
+    case 0:
+        BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
+        sStorage->state++;
+        break;
+    case 1:
+        if (!UpdatePaletteFade())
+        {
+            // Full UI teardown is required. Box icons, wallpaper, counts,
+            // names and cursor references all belong to the former page.
+            sWhichToReshow = 0xFF;
+            FreePokeStorageData();
+            CB2_ReturnToPokeStorage();
+        }
+        break;
+    }
+}
+#endif
+
 static void Task_PokeStorageMain(u8 taskId)
 {
     switch (sStorage->state)
@@ -2076,6 +2110,41 @@ static void Task_PokeStorageMain(u8 taskId)
         case INPUT_IN_MENU:
             SetPokeStorageTask(Task_OnSelectedMon);
             break;
+#if defined(XGBA_A2) && XGBA_A2
+        case INPUT_A2_PAGE_NEXT:
+        case INPUT_A2_PAGE_PREVIOUS:
+            if (sStorage->boxOption != OPTION_SELECT_MON
+                && !IsMonBeingMoved() && !IsMovingItem()
+                && sCursorMode != CURSOR_MODE_MULTI_MOVE)
+            {
+                u8 page = XgbaA2GamePage();
+                u8 next = page;
+                if (HandleInput_OnBox != NULL)
+                {
+                    // This input is accepted only when the cursor is on the
+                    // title, not while selecting or carrying Pokemon.
+                    if (gMain.newKeys & R_BUTTON)
+                        next = (page + 1) % XGBA_A2_PC_PAGES;
+                    else
+                        next = (page + XGBA_A2_PC_PAGES - 1)
+                            % XGBA_A2_PC_PAGES;
+                }
+                if (XgbaA2GameSwitchPage(next))
+                {
+                    PlaySE(SE_SELECT);
+                    SetPokeStorageTask(Task_A2ReopenPage);
+                }
+                else
+                {
+                    PlaySE(SE_FAILURE);
+                }
+            }
+            else
+            {
+                PlaySE(SE_FAILURE);
+            }
+            break;
+#endif
         case INPUT_SCROLL_RIGHT:
             PlaySE(SE_SELECT);
             sStorage->newCurrBoxId = StorageGetCurrentBox() + 1;
@@ -5799,7 +5868,18 @@ static void UpdateBoxTitle(u8 boxId)
     }
 
     FreeSpriteTilesByTag(GFXTAG_BOX_TITLE);
+#if defined(XGBA_A2) && XGBA_A2
+    {
+        u8 titledBox[BOX_NAME_LENGTH + 4];
+        u8 *end = StringCopy(titledBox, GetBoxNamePtr(boxId));
+        end = StringCopy(end, _("/"));
+        ConvertIntToDecimalStringN(end, XgbaA2GamePage() + 1,
+                                   STR_CONV_MODE_LEFT_ALIGN, 1);
+        RenderBoxTitleCentered(titledBox);
+    }
+#else
     RenderBoxTitleCentered(GetBoxNamePtr(boxId));
+#endif
     LoadSpriteSheet(&spriteSheet);
 
     if (sCursorArea == CURSOR_AREA_BOX_TITLE)
@@ -8018,6 +8098,14 @@ static u8 HandleInput_OnBox(void)
             break;
         }
 
+#if defined(XGBA_A2) && XGBA_A2
+        // Select+L/R pages the entire 14-box collection. Plain L/R
+        // continues moving between boxes within the active page.
+        if (JOY_HELD(SELECT_BUTTON) && JOY_NEW(L_BUTTON))
+            return INPUT_A2_PAGE_PREVIOUS;
+        if (JOY_HELD(SELECT_BUTTON) && JOY_NEW(R_BUTTON))
+            return INPUT_A2_PAGE_NEXT;
+#endif
         if (JOY_HELD(DPAD_LEFT))
             return INPUT_SCROLL_LEFT;
         if (JOY_HELD(DPAD_RIGHT))

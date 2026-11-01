@@ -16,6 +16,7 @@
 #if defined(XGBA_A2) && XGBA_A2
 #include "xgba_a2_guest_bus.h"
 #include "xgba_a2_transaction.h"
+#include "xgba_a2_game.h"
 #endif
 
 static u16 CalculateChecksum(void *, u16);
@@ -814,6 +815,27 @@ static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
     result = WriteSaveSectorOrSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);
     return result == SAVE_STATUS_OK && !gDamagedSaveSectors
         && gSaveCounter == counter;
+}
+
+u8 XgbaA2GamePage(void)
+{
+    return sA2Ready ? sA2Pager.activePage : 0;
+}
+
+bool8 XgbaA2GameSwitchPage(u8 page)
+{
+    if (!sA2Ready || sA2Pager.fatal || page >= XGBA_A2_PC_PAGES)
+        return FALSE;
+    if (page == sA2Pager.activePage)
+        return TRUE;
+    if (XgbaA2PagerSwitch(&sA2Pager, page) != XGBA_A2_JOURNAL_OK)
+    {
+        // A failed read may have partially replaced the resident PC.
+        // Refuse any subsequent save until a clean reload.
+        sA2Ready = FALSE;
+        return FALSE;
+    }
+    return TRUE;
 }
 
 static u8 A2Save(u8 saveType)
