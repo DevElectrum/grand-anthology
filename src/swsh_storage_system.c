@@ -2119,16 +2119,13 @@ static void Task_PokeStorageMain(u8 taskId)
             {
                 u8 page = XgbaA2GamePage();
                 u8 next = page;
-                if (HandleInput_OnBox != NULL)
-                {
-                    // This input is accepted only when the cursor is on the
-                    // title, not while selecting or carrying Pokemon.
-                    if (gMain.newKeys & R_BUTTON)
-                        next = (page + 1) % XGBA_A2_PC_PAGES;
-                    else
-                        next = (page + XGBA_A2_PC_PAGES - 1)
-                            % XGBA_A2_PC_PAGES;
-                }
+                // The input is returned only while the cursor is on the
+                // box title, not while selecting or carrying Pokemon.
+                if (gMain.newKeys & R_BUTTON)
+                    next = (page + 1) % XGBA_A2_PC_PAGES;
+                else
+                    next = (page + XGBA_A2_PC_PAGES - 1)
+                        % XGBA_A2_PC_PAGES;
                 if (XgbaA2GameSwitchPage(next))
                 {
                     PlaySE(SE_SELECT);
