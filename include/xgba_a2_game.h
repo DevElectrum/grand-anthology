@@ -8,6 +8,8 @@
 // Page index is zero-based, with 14 local boxes per page.
 // A failed switch locks out saves until reloading the last valid cohort.
 #if defined(XGBA_A2) && XGBA_A2
+// Grants exactly one pristine-E6 first-save attempt after NewGameInitData.
+void XgbaA2GameArmFreshSave(void);
 u8 XgbaA2GamePage(void);
 bool8 XgbaA2GameSwitchPage(u8 page);
 // Reports another page with free slots without changing the live PC.

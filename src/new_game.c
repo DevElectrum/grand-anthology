@@ -34,6 +34,9 @@
 #include "frontier_util.h"
 #include "pokedex.h"
 #include "save.h"
+#if defined(XGBA_A2) && XGBA_A2
+#include "xgba_a2_game.h"
+#endif
 #include "link_rfu.h"
 #include "main.h"
 #include "contest.h"
@@ -391,6 +394,11 @@ void NewGameInitData(void)
     ResetItemFlags();
     ResetDexNav();
     ClearFollowerNPCData();
+#if defined(XGBA_A2) && XGBA_A2
+    // Permission comes from the actual new-game path, not missing metadata.
+    // First-save bootstrap independently requires a completely erased E6.
+    XgbaA2GameArmFreshSave();
+#endif
 #if ALL_REGIONS
     // ClearSav1/InitEventData discarded the pre-intro Shared EXP flag.
     if (sNewGameSharedExp)

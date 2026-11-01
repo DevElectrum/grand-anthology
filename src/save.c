@@ -16,6 +16,7 @@
 #if defined(XGBA_A2) && XGBA_A2
 #include "xgba_a2_guest_bus.h"
 #include "xgba_a2_transaction.h"
+#include "xgba_a2_bootstrap.h"
 #include "xgba_a2_game.h"
 #include "pokemon.h"
 #endif
@@ -121,6 +122,7 @@ EWRAM_DATA static struct XgbaA2JournalIo sA2Io;
 EWRAM_DATA static struct XgbaA2Cohort sA2Committed;
 EWRAM_DATA static struct XgbaA2Pager sA2Pager;
 EWRAM_DATA static bool8 sA2Ready = FALSE;
+EWRAM_DATA static bool8 sA2FreshSaveArmed = FALSE;
 #endif
 
 void ClearSaveData(void)
@@ -145,6 +147,7 @@ void Save_ResetSaveCounters(void)
 {
 #if defined(XGBA_A2) && XGBA_A2
     sA2Ready = FALSE;
+    sA2FreshSaveArmed = FALSE;
 #endif
     gSaveCounter = 0;
     gLastWrittenSector = 0;
@@ -767,7 +770,7 @@ static void UpdateSaveAddresses(void)
 static int A2NativeRead(void *context, uint8_t physical, uint8_t *buffer)
 {
     (void)context;
-    if (physical >= NUM_SAVE_SLOTS * NUM_SECTORS_PER_SLOT
+    if (physical >= SECTORS_COUNT
         || gFlashMemoryPresent != TRUE)
         return 0;
     ReadFlash(physical, 0, buffer, SECTOR_SIZE);
@@ -779,6 +782,7 @@ static bool8 A2ChooseLoad(void)
     struct XgbaA2Cohort selection;
 
     sA2Ready = FALSE;
+    sA2FreshSaveArmed = FALSE;
     if (!XgbaA2GuestBusBind(&sA2Bus, (volatile uint8_t *)0x0F000000))
         return FALSE;
     XgbaA2GuestBusCreateIo(&sA2Bus, &sA2Io);
@@ -868,6 +872,13 @@ bool8 XgbaA2GameFindFreePage(u8 *foundPage)
     return FALSE;
 }
 
+// Only called when the player explicitly starts a new game.
+void XgbaA2GameArmFreshSave(void)
+{
+    sA2FreshSaveArmed = TRUE;
+    sA2Ready = FALSE;
+}
+
 u8 XgbaA2GamePage(void)
 {
     return sA2Ready ? sA2Pager.activePage : 0;
@@ -897,10 +908,13 @@ static u8 A2Save(u8 saveType)
     u32 *backupVar;
     int result;
 
-    // Unsupported direct/partial save modes must not bypass the global
-    // native-slot + metadata transaction. No A2 new-game bootstrap yet.
-    if (!sA2Ready || (saveType != SAVE_NORMAL && saveType != SAVE_LINK
-                      && saveType != SAVE_EREADER))
+    // Partial sector writes remain forbidden. SAVE_OVERWRITE_DIFFERENT_FILE
+    // is the first-save request from the game's standard save dialog.
+    if (saveType != SAVE_NORMAL && saveType != SAVE_LINK
+        && saveType != SAVE_EREADER
+        && saveType != SAVE_OVERWRITE_DIFFERENT_FILE)
+        return SAVE_STATUS_ERROR;
+    if (!sA2Ready && !sA2FreshSaveArmed)
         return SAVE_STATUS_ERROR;
 
     backupVar = gTrainerHillVBlankCounter;
@@ -910,6 +924,30 @@ static u8 A2Save(u8 saveType)
 
     UpdateSaveAddresses();
     CopyPartyAndObjectsToSave();
+
+    if (sA2FreshSaveArmed)
+    {
+        // One-shot authorization: even an interrupted initial save cannot
+        // be retried in the same session without explicit new-game setup.
+        sA2FreshSaveArmed = FALSE;
+        if (!XgbaA2GuestBusBind(&sA2Bus, (volatile uint8_t *)0x0F000000))
+            goto failed;
+        XgbaA2GuestBusCreateIo(&sA2Bus, &sA2Io);
+        result = XgbaA2BootstrapCommit(
+            &sA2Io, A2NativeRead, A2NativeWrite, NULL,
+            (uint8_t *)&gSaveDataBuffer, gPokemonStoragePtr, &newCohort);
+        if (result != XGBA_A2_JOURNAL_OK)
+            goto failed;
+        if (XgbaA2PagerInit(&sA2Pager, &sA2Io, gPokemonStoragePtr,
+                             newCohort.activePage, newCohort.pages)
+            != XGBA_A2_JOURNAL_OK)
+            goto failed;
+        sA2Committed = newCohort;
+        sA2Ready = TRUE;
+        gTrainerHillVBlankCounter = backupVar;
+        return SAVE_STATUS_OK;
+    }
+
     result = XgbaA2TransactionCommit(
         &sA2Pager, &sA2Committed, A2NativeRead, A2NativeWrite,
         NULL, (uint8_t *)&gSaveDataBuffer, &newCohort);
@@ -920,8 +958,11 @@ static u8 A2Save(u8 saveType)
         return SAVE_STATUS_OK;
     }
 
-    // A complete new native slot with an UNCOMMITTED metadata record must
-    // never become the basis for a subsequent save attempt in this session.
+failed:
+    // A failed initialization or transaction may have persisted the new
+    // native slot or even the commit marker. No speculative retry is safe.
+    sA2Ready = FALSE;
+    sA2FreshSaveArmed = FALSE;
     gSaveCounter = savedCounter;
     gLastWrittenSector = savedSector;
     gTrainerHillVBlankCounter = backupVar;
