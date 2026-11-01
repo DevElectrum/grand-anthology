@@ -337,6 +337,24 @@ int main(void)
     assert(selected.metadataGeneration == 2 && selected.nativeSlot == 0);
     assert(selected.nativeCounter == 2 && selected.pages[0] == 2);
 
+    // Simulate the exact boot-order hazard: the alternate native Flash slot
+    // has a completely valid, NEWER save counter and a different trainer-id
+    // byte, but the A2 metadata was never committed. Boot relocation and the
+    // main loader MUST both keep using the metadata-pinned older native slot.
+    BuildNative(1, 3, next);
+    {
+        uint8_t *newTrainer = sDisk + 14U * SECTOR_BYTES;
+        newTrainer[0] = 0xD7;
+        newTrainer[1] = 0x31;
+        U16(newTrainer + FOOTER + 2, LegacyChecksum(newTrainer, 3884));
+    }
+    assert(XgbaA2CohortVerifyNativeSlot(NativeRead, NULL, scratch, 1, 3));
+    assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected)
+           == XGBA_A2_JOURNAL_OK);
+    assert(selected.nativeSlot == 0 && selected.nativeCounter == 2);
+    assert(selected.metadataGeneration == 2 && !selected.recovered);
+    assert(sDisk[14U * SECTOR_BYTES] != sDisk[0]);
+
     // Start from the proven coherent v2 collection, then simulate a real
     // game save with a direct BoxPokemon edit and an interrupted native slot.
     {
