@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "xgba_a2_journal.h"
+#include "xgba_a2_guest_bus.h"
 
 #define MEMORY_SIZE 0x2A0000
 #define PAGE_BYTES XGBA_A2_PC_BYTES
@@ -205,6 +206,32 @@ int main(void)
         assert(XgbaA2JournalWriteMeta(&io, updated, 24, &result) == 0);
         assert(XgbaA2JournalReadMeta(&io, output, 24, &result) == 0);
         assert(memcmp(output, updated, 24) == 0);
+    }
+
+    // The 0x0F adapter must not mistake native Flash offsets for extended
+    // storage, and must reject an absent E6 superblock without writes.
+    {
+        struct XgbaA2GuestBus guest;
+        struct XgbaA2JournalIo guestIo;
+        uint8_t signature[24] = {
+            'X','G','B','A','E','6','S',0,
+            2,0,0,0,0,0,2,0,0,0,0,1,
+            0xB0,0x2B,0x5B,0x12
+        };
+        uint8_t testByte = 0;
+        uint8_t value = 0x4B;
+        disk.bytes[XGBA_A2_NATIVE_BYTES] = 0xFF;
+        assert(!XgbaA2GuestBusBind(&guest, disk.bytes + XGBA_A2_NATIVE_BYTES));
+        XgbaA2GuestBusCreateIo(&guest, &guestIo);
+        assert(!guestIo.write(guestIo.context, XGBA_A2_PC_BASE, &value, 1));
+        memcpy(disk.bytes + XGBA_A2_NATIVE_BYTES, signature, sizeof(signature));
+        assert(XgbaA2GuestBusBind(&guest, disk.bytes + XGBA_A2_NATIVE_BYTES));
+        assert(!guestIo.read(guestIo.context, XGBA_A2_NATIVE_BYTES - 1, &testByte, 1));
+        assert(!guestIo.read(guestIo.context, XGBA_A2_SAVE_BYTES, &testByte, 1));
+        assert(guestIo.write(guestIo.context, XGBA_A2_PC_BASE + 17, &value, 1));
+        assert(guestIo.read(guestIo.context, XGBA_A2_PC_BASE + 17, &testByte, 1));
+        assert(testByte == value);
+        assert(disk.bytes[XGBA_A2_PC_BASE + 17] == value);
     }
 
     printf("A2 C journal: A/B writes, no-op, corruption recovery, page bounds, metadata,");
