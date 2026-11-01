@@ -65,6 +65,26 @@ class A2Tests(unittest.TestCase):
 
     def test_empty_pages_keep_legal_names_and_wallpapers_but_no_pokemon(self):
         native_fixture(self.src)
+        # A nonempty name and wallpaper byte must survive on every empty page.
+        # Box and fusion Pokémon, however, must not be duplicated.
+        name_offset = a2.BOX_REGION_END
+        fusion_offset = a2.FUSION_REGION_START
+        logical = sp.ID_PK_START + name_offset // sp.SECTOR_DATA_SIZE
+        begin = logical * sp.SECTOR_SIZE
+        with self.src.open("r+b") as f:
+            f.seek(begin)
+            sector = bytearray(f.read(sp.SECTOR_SIZE))
+            local_name = name_offset % sp.SECTOR_DATA_SIZE
+            local_fusion = fusion_offset % sp.SECTOR_DATA_SIZE
+            sector[local_name:local_name + 6] = bytes.fromhex("bcc9d200a1ff")
+            sector[local_fusion:local_fusion + 6] = bytes.fromhex("112233445566")
+            wallpaper = local_name + a2.BOXES_PER_PAGE * 9
+            sector[wallpaper] = 7
+            checksum = sp.calc_checksum(sector, sp.SLOT_LAYOUT[logical][1])
+            struct.pack_into("<H", sector, sp.SECTOR_DATA_SIZE + sp.SB3_CHUNK + 2,
+                             checksum)
+            f.seek(begin)
+            f.write(sector)
         a2.prepare(self.src, self.dst)
         with self.dst.open("rb") as src:
             page0, _ = a2.best_record(src, [a2.page_offset(0, 0), a2.page_offset(0, 1)],
@@ -80,6 +100,13 @@ class A2Tests(unittest.TestCase):
                          bytes(a2.PC_BYTES - a2.FUSION_REGION_START))
         self.assertEqual(page1[a2.BOX_REGION_END:a2.FUSION_REGION_START],
                          page0[a2.BOX_REGION_END:a2.FUSION_REGION_START])
+        self.assertEqual(page1[a2.BOX_REGION_END:a2.BOX_REGION_END + 6],
+                         bytes.fromhex("bcc9d200a1ff"))
+        self.assertEqual(page1[a2.BOX_REGION_END + a2.BOXES_PER_PAGE * 9], 7)
+        self.assertEqual(page0[a2.FUSION_REGION_START:a2.FUSION_REGION_START + 6],
+                         bytes.fromhex("112233445566"))
+        self.assertEqual(page1[a2.FUSION_REGION_START:a2.FUSION_REGION_START + 6],
+                         bytes(6))
         self.assertEqual(a2.audit(self.dst)["pc_boxes"], 112)
 
     def test_rtc_preserved_in_new_trailer(self):
