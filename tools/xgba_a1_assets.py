@@ -62,8 +62,16 @@ def manifest_plan():
             if not source.is_file():
                 raise ValueError(f"Missing layout source: {source}")
             size = source.stat().st_size
-            if suffix == "Blockdata" and size != width * height * 2:
-                raise ValueError(f"{label} has {size} bytes, expected {width * height * 2}")
+            # Some original 1x1/odd-area layouts include assembler word padding.
+            # Keep the exact source blob, but allow only zero-padded 4-byte alignment.
+            expected = width * height * 2
+            if suffix == "Blockdata" and size not in (expected, align(expected)):
+                raise ValueError(f"{label} has {size} bytes, expected {expected} or its word-padded size")
+            if suffix == "Blockdata" and size > expected:
+                with source.open("rb") as src:
+                    src.seek(expected)
+                    if any(src.read()):
+                        raise ValueError(f"Nonzero map padding in {label}")
             if size % 2:
                 raise ValueError(f"{label} is not 16-bit aligned in size")
             offset = align(next_offset[lane])
