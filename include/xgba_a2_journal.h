@@ -27,6 +27,7 @@ enum XgbaA2JournalResult
 {
     XGBA_A2_JOURNAL_OK = 0,
     XGBA_A2_JOURNAL_UNCHANGED = 1,
+    XGBA_A2_JOURNAL_DIFFERENT = 2,
     XGBA_A2_JOURNAL_INVALID_ARG = -1,
     XGBA_A2_JOURNAL_MISSING = -2,
     XGBA_A2_JOURNAL_IO_ERROR = -3,
@@ -63,5 +64,11 @@ int XgbaA2JournalReadMetaGeneration(const struct XgbaA2JournalIo *io,
 int XgbaA2JournalStageMeta(const struct XgbaA2JournalIo *io,
                            uint32_t protectedGeneration, const void *source,
                            uint32_t bytes, struct XgbaA2JournalInfo *info);
+
+// Compares a live 34,144-byte page to exactly one metadata-pinned generation
+// without copying or altering the resident PC. No heap allocation.
+int XgbaA2JournalEqualsPageGeneration(const struct XgbaA2JournalIo *io,
+                                      uint8_t page, uint32_t generation,
+                                      const void *source, uint32_t bytes);
 
 #endif

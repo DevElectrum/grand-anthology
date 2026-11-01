@@ -454,3 +454,36 @@ int XgbaA2JournalStageMeta(const struct XgbaA2JournalIo *io,
         return XGBA_A2_JOURNAL_INVALID_ARG;
     return WriteRecord(io, 1, 0, source, bytes, protectedGeneration, info);
 }
+
+int XgbaA2JournalEqualsPageGeneration(const struct XgbaA2JournalIo *io,
+                                      uint8_t page, uint32_t generation,
+                                      const void *source, uint32_t bytes)
+{
+    struct Candidate left, right;
+    uint32_t offset;
+    int same;
+    int status;
+
+    if (!IoReady(io) || source == NULL || generation == 0
+        || page >= XGBA_A2_PC_PAGES || bytes != XGBA_A2_PC_BYTES)
+        return XGBA_A2_JOURNAL_INVALID_ARG;
+
+    status = CheckCandidate(io, 0, page, 0, bytes, &left);
+    if (status != XGBA_A2_JOURNAL_OK)
+        return status;
+    status = CheckCandidate(io, 0, page, 1, bytes, &right);
+    if (status != XGBA_A2_JOURNAL_OK)
+        return status;
+
+    if (left.valid && left.generation == generation)
+        offset = RecordOffset(0, page, 0);
+    else if (right.valid && right.generation == generation)
+        offset = RecordOffset(0, page, 1);
+    else
+        return XGBA_A2_JOURNAL_MISSING;
+
+    same = SameAsRecord(io, offset, source, bytes);
+    if (same < 0)
+        return XGBA_A2_JOURNAL_IO_ERROR;
+    return same ? XGBA_A2_JOURNAL_OK : XGBA_A2_JOURNAL_DIFFERENT;
+}
