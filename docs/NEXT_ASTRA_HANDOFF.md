@@ -1,3 +1,17 @@
+# A2 autonomous takeover and runtime gate (Nov 1, 2026)
+
+**Owner request:** No Nyx babysitting while ill. Plan entire remaining A2 and execute independent safe work without asking routine questions. This does not authorize modifying player saves, merging/releasing, or claiming unattended work after a conversation ends.
+
+**New canonical plan:** `docs/ANTHOLOGY_A2_AUTONOMOUS_PLAN.md`, created at `193dfb80`, covering save integrity, disposable emulator execution, 112-box integration, collection UI, expanded bag, regression and one final acceptance gate.
+
+**Audited critical hazard:** `docs/ANTHOLOGY_A2_SAVE_ENTRY_AUDIT.md`. In A2, `LinkFullSave_*` and `WriteSaveBlock*` return TRUE without committing, and trading/other link callers may advance. Do not replace these blindly: the trade flow delays its native final-signature publication until after a partner-sync boundary. Either stage A2 save before sync and publish the metadata marker on final handshake, or explicitly fail closed before irreversible trade. Old link failures must not be advertised as success.
+
+**New CI exploration:** `.github/workflows/A2-XGBA-Boot-Probe.yml` at `8cc79b5d` checks out frozen `DevElectrum/xgba` E7 `9aa5e11e`, separately builds/assembles A2 E6 ROM, creates only an erased 16 MiB template, and runs the actual headless emulator for a bounded interval. Its initial run is `41358710392` (<https://github.com/DevElectrum/grand-anthology/actions/runs/41358710392>); **inspect actual run result before claiming success**. This first probe is not automated New Game/save/restart recovery, and no binary is uploaded. If it fails, diagnose and fix without involving Nyx.
+
+**Pre-existing green checkpoint:** run `41297349236` passed both storage-format and full isolated ARM regression on code `e8f5f02a`. No gameplay/runtime acceptance yet. Keep `main`, `xgba/expansion-lab`, accepted E7 and all real saves untouched. Next: finish save-path audit and runtime harness, then collection features and bag. Record new CI evidence and last green commit as changes land.
+
+---
+
 # A2 save-integrity checkpoint, Nov 1, 2026
 
 Active branch: xgba/a2-collection-lab. No A1 or stable emulator changes, no user save touched.
