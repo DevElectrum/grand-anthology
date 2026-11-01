@@ -1,3 +1,19 @@
+# A2 checkpoint: first-save bootstrap implementation (Nov 1, 2026)
+
+Active branch: xgba/a2-collection-lab. Stable A1 and XGBA E7 remain untouched. No playable A2 ROM, player save conversion, or user playtest. A1's own gameplay acceptance is separate.
+
+Last confirmed full ARM success: GitHub Actions 41289711143, covering unchanged A1 256 MiB ROM and guarded A2 PC UI/capture/save coordinator. Subsequent bootstrap run 41294626762 is pending: inspect its A2 shadow compile result before claiming new-game code works in the game. Storage-format and host C bootstrap crash budget matrix PASS on the new source.
+
+Implemented: tools/xgba_a2_storage.py supports create-only blank DEST.sav and audit-blank DEST.sav developer commands, strictly 16 MiB erased E6 with two exact emulator superblocks, no native data or Pokemon, entire-file verification, refusal of existing destinations and symlinked paths. These are developer fixtures, NOT save migration.
+
+src/xgba_a2_bootstrap.c confirms two E6 superblocks, all 32 native erased Flash sectors and the full reserved PC/metadata area are pristine, then writes two independently checked records for 8 pages (14 boxes each) using only 128-byte chunks and the original PokemonStorage memory. Inactive pages preserve encoded names/wallpapers but zero mons and fusions. It writes/verifies physical native slot 1, counter 1, commits the first 56-byte A2 metadata record LAST and independently reselects the coherent global save. Any partial disk write blocks reinit. Native harness covers bad native/extended bytes, zero-byte failures, 15 interrupted-write budgets and successful initial commit. No second 34 KiB RAM allocation.
+
+Under XGBA_A2=1 only, src/new_game.c grants a one-shot first-save authorization from NewGameInitData. src/save.c consumes it, binds E6, invokes bootstrap then starts the pager. Failure disallows repeated speculative writes. The existing A1 build is unaffected; unsupported HOF/direct-sector save variants still fail closed.
+
+Pending: confirm guarded ARM success for this new-game path; verify actual E6 emulator revision/tag; create a distinct development ROM without changing A1; prove newgame/save/quit/reload and interruption rollback on XGBA using disposable template or copied v13 saves; handle Hall of Fame and special saves; global favorites/search/release/bag; one user acceptance test. Never declare A2 playable or modify a player's existing Hoenn save before those gates.
+
+---
+
 # A2 safe new-game bootstrap design
 
 Status: DESIGN ONLY. Not implemented or playable. Do not modify A1, the E7 emulator release, existing player saves, or enable an E6-tagged game before this protocol passes.
