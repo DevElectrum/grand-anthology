@@ -6,6 +6,7 @@
 
 #include "xgba_a2_journal.h"
 #include "xgba_a2_guest_bus.h"
+#include "xgba_a2_pager.h"
 
 #define MEMORY_SIZE 0x2A0000
 #define PAGE_BYTES XGBA_A2_PC_BYTES
@@ -250,6 +251,59 @@ int main(void)
         assert(guestIo.read(guestIo.context, XGBA_A2_PC_BASE + 17, &testByte, 1));
         assert(testByte == value);
         assert(disk.bytes[XGBA_A2_PC_BASE + 17] == value);
+    }
+
+    // Eight pages, one 34 KiB resident object, no mutation-hook dependency.
+    // Mutate page zero via direct pointer: switch must detect and stage it.
+    {
+        struct XgbaA2Pager pager;
+        uint32_t committed[XGBA_A2_PC_PAGES];
+        uint32_t planned[XGBA_A2_PC_PAGES];
+        uint8_t *original = malloc(PAGE_BYTES);
+        unsigned page;
+        assert(original != NULL);
+        memset(disk.bytes, 0xFF, MEMORY_SIZE);
+        for (page = 0; page < XGBA_A2_PC_PAGES; page++)
+        {
+            Fill(original, (uint8_t)(10 + page));
+            Fixture(&disk, page, 0, 1, original, PAGE_BYTES);
+            Fixture(&disk, page, 1, 2, original, PAGE_BYTES);
+            committed[page] = 2;
+        }
+        Fill(old, 10);
+        assert(XgbaA2PagerInit(&pager, &io, old, 0, committed) == 0);
+        old[13] ^= 0xA5;
+        assert(XgbaA2PagerSwitch(&pager, 1) == 0);
+        assert(pager.activePage == 1 && pager.staged[0] == 3);
+        Fill(original, 11);
+        assert(memcmp(old, original, PAGE_BYTES) == 0);
+        old[17] ^= 0x63;
+        assert(XgbaA2PagerSwitch(&pager, 0) == 0);
+        assert(pager.activePage == 0 && pager.staged[1] == 3);
+        Fill(original, 10);
+        original[13] ^= 0xA5;
+        assert(memcmp(old, original, PAGE_BYTES) == 0);
+        assert(XgbaA2PagerPrepareSave(&pager, planned) == 0);
+        assert(planned[0] == 3 && planned[1] == 3);
+        for (page = 2; page < XGBA_A2_PC_PAGES; page++)
+            assert(planned[page] == 2);
+
+        // Without a successful metadata commit, the original generations
+        // remain accessible and cannot be overwritten by a failed stage.
+        Fill(original, 10);
+        assert(XgbaA2JournalReadPageGeneration(&io, 0, 2,
+                                                readback, PAGE_BYTES, NULL) == 0);
+        assert(memcmp(readback, original, PAGE_BYTES) == 0);
+        disk.remainingWrites = 0;
+        old[20] ^= 0xF0;
+        assert(XgbaA2PagerSwitch(&pager, 2) == XGBA_A2_JOURNAL_IO_ERROR);
+        assert(pager.activePage == 0);
+        disk.remainingWrites = -1;
+        assert(XgbaA2PagerPrepareSave(&pager, planned) == 0);
+        assert(planned[0] > 3);
+        assert(XgbaA2PagerCommit(&pager, planned) == 0);
+        assert(pager.staged[0] == 0 && pager.staged[1] == 0);
+        free(original);
     }
 
     printf("A2 C journal: A/B writes, no-op, corruption recovery, page bounds, metadata,");

@@ -8,6 +8,8 @@ on:
       - 'tools/xgba_a2_storage.py'
       - 'src/xgba_a2_journal.c'
       - 'src/xgba_a2_guest_bus.c'
+      - 'src/xgba_a2_pager.c'
+      - 'include/xgba_a2_pager.h'
       - 'include/xgba_a2_guest_bus.h'
       - 'include/xgba_a2_journal.h'
       - 'test/overworld/xgba_a2_journal_harness.c'
@@ -34,7 +36,7 @@ jobs:
         run: python3 -m unittest discover -s test/overworld -p 'test_xgba_a2_*.py' -v
       - name: Compile and execute standalone A2 C journal corruption tests
         run: |
-          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_journal.c src/xgba_a2_guest_bus.c test/overworld/xgba_a2_journal_harness.c -o /tmp/xgba-a2-journal-test
+          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_journal.c src/xgba_a2_guest_bus.c src/xgba_a2_pager.c test/overworld/xgba_a2_journal_harness.c -o /tmp/xgba-a2-journal-test
           /tmp/xgba-a2-journal-test
       - name: Print storage geometry
         run: python3 tools/xgba_a2_storage.py layout
