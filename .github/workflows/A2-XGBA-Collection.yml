@@ -13,6 +13,7 @@ on:
       - 'test/overworld/xgba_a2_journal_harness.c'
       - 'include/xgba_a2_storage_format.h'
       - 'test/overworld/test_xgba_a2_storage.py'
+      - 'test/overworld/test_xgba_a2_transactions.py'
       - 'test/overworld/SavePatch.py'
       - 'test/save.c'
       - 'include/save.h'
@@ -30,7 +31,7 @@ jobs:
       - name: Verify native Flash and save schema pins
         run: python3 test/overworld/SavePatch.py --check
       - name: Validate A2 E6 layout and fail-closed migration
-        run: python3 -m unittest discover -s test/overworld -p 'test_xgba_a2_storage.py' -v
+        run: python3 -m unittest discover -s test/overworld -p 'test_xgba_a2_*.py' -v
       - name: Compile and execute standalone A2 C journal corruption tests
         run: |
           cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_journal.c src/xgba_a2_guest_bus.c test/overworld/xgba_a2_journal_harness.c -o /tmp/xgba-a2-journal-test
