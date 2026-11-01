@@ -13,6 +13,11 @@
 #include "link.h"
 #include "constants/game_stat.h"
 
+#if defined(XGBA_A2) && XGBA_A2
+#include "xgba_a2_guest_bus.h"
+#include "xgba_a2_transaction.h"
+#endif
+
 static u16 CalculateChecksum(void *, u16);
 static bool8 ReadFlashSector(u8, struct SaveSector *);
 static u8 GetSaveValidStatus(const struct SaveSectorLocation *);
@@ -22,6 +27,15 @@ static u8 HandleWriteSector(u16, const struct SaveSectorLocation *);
 static u8 HandleReplaceSector(u16, const struct SaveSectorLocation *);
 static void CopyToSaveBlock3(u32, struct SaveSector *);
 static void CopyFromSaveBlock3(u32, struct SaveSector *);
+
+#if defined(XGBA_A2) && XGBA_A2
+static int A2NativeRead(void *context, uint8_t physical, uint8_t *buffer);
+static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
+                         const void *pc, uint32_t bytes);
+static bool8 A2ChooseLoad(void);
+static bool8 A2FinishLoad(void);
+static u8 A2Save(u8 saveType);
+#endif
 
 // Divide save blocks into individual chunks to be written to flash sectors
 
@@ -97,6 +111,16 @@ COMMON_DATA u8 gSaveVersionRefusal = 0; // SAVE_VERSION_REFUSAL_*; set by LoadGa
 
 EWRAM_DATA struct SaveSector gSaveDataBuffer = {0}; // Buffer used for reading/writing sectors
 
+#if defined(XGBA_A2) && XGBA_A2
+// Temporary opt-in, NOT enabled by xgba-a1 or normal releases.
+// The existing 4 KiB gSaveDataBuffer is reused for SHA and CRC inspection.
+EWRAM_DATA static struct XgbaA2GuestBus sA2Bus;
+EWRAM_DATA static struct XgbaA2JournalIo sA2Io;
+EWRAM_DATA static struct XgbaA2Cohort sA2Committed;
+EWRAM_DATA static struct XgbaA2Pager sA2Pager;
+EWRAM_DATA static bool8 sA2Ready = FALSE;
+#endif
+
 void ClearSaveData(void)
 {
     u16 i;
@@ -111,6 +135,9 @@ void ClearSaveData(void)
 
 void Save_ResetSaveCounters(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    sA2Ready = FALSE;
+#endif
     gSaveCounter = 0;
     gLastWrittenSector = 0;
     gDamagedSaveSectors = 0;
@@ -481,7 +508,18 @@ static u8 TryLoadSaveSlot(u16 sectorId, struct SaveSectorLocation *locations)
     else
     {
         status = GetSaveValidStatus(locations);
+#if defined(XGBA_A2) && XGBA_A2
+        // Ignore an incomplete newer native Flash slot unless its exact PC
+        // generations have a committed E6 metadata record. Never fall back
+        // to a native-only save in an E6-mode game.
+        if (!A2ChooseLoad())
+            return SAVE_STATUS_CORRUPT;
+#endif
         CopySaveSlotData(FULL_SAVE_SLOT, locations);
+#if defined(XGBA_A2) && XGBA_A2
+        if (!A2FinishLoad())
+            return SAVE_STATUS_CORRUPT;
+#endif
     }
 
     return status;
@@ -717,8 +755,108 @@ static void UpdateSaveAddresses(void)
     }
 }
 
+#if defined(XGBA_A2) && XGBA_A2
+static int A2NativeRead(void *context, uint8_t physical, uint8_t *buffer)
+{
+    (void)context;
+    if (physical >= NUM_SAVE_SLOTS * NUM_SECTORS_PER_SLOT
+        || gFlashMemoryPresent != TRUE)
+        return 0;
+    ReadFlash(physical, 0, buffer, SECTOR_SIZE);
+    return 1;
+}
+
+static bool8 A2ChooseLoad(void)
+{
+    struct XgbaA2Cohort selection;
+
+    sA2Ready = FALSE;
+    if (!XgbaA2GuestBusBind(&sA2Bus, (volatile uint8_t *)0x0F000000))
+        return FALSE;
+    XgbaA2GuestBusCreateIo(&sA2Bus, &sA2Io);
+
+    if (XgbaA2CohortSelect(&sA2Io, A2NativeRead, NULL,
+                            (uint8_t *)&gSaveDataBuffer, &selection)
+        != XGBA_A2_JOURNAL_OK)
+        return FALSE;
+    sA2Committed = selection;
+    gSaveCounter = selection.nativeCounter;
+    return TRUE;
+}
+
+static bool8 A2FinishLoad(void)
+{
+    if (XgbaA2PagerInit(&sA2Pager, &sA2Io,
+                         gPokemonStoragePtr, sA2Committed.activePage,
+                         sA2Committed.pages) != XGBA_A2_JOURNAL_OK)
+        return FALSE;
+    sA2Ready = TRUE;
+    return TRUE;
+}
+
+static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
+                         const void *pc, uint32_t bytes)
+{
+    u8 result;
+    (void)context;
+
+    if (slot >= NUM_SAVE_SLOTS || bytes != sizeof(struct PokemonStorage)
+        || pc != gPokemonStoragePtr || counter != gSaveCounter + 1
+        || slot != (counter % NUM_SAVE_SLOTS))
+        return 0;
+
+    result = WriteSaveSectorOrSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);
+    return result == SAVE_STATUS_OK && !gDamagedSaveSectors
+        && gSaveCounter == counter;
+}
+
+static u8 A2Save(u8 saveType)
+{
+    struct XgbaA2Cohort newCohort;
+    u32 savedCounter;
+    u16 savedSector;
+    u32 *backupVar;
+    int result;
+
+    // Unsupported direct/partial save modes must not bypass the global
+    // native-slot + metadata transaction. No A2 new-game bootstrap yet.
+    if (!sA2Ready || (saveType != SAVE_NORMAL && saveType != SAVE_LINK
+                      && saveType != SAVE_EREADER))
+        return SAVE_STATUS_ERROR;
+
+    backupVar = gTrainerHillVBlankCounter;
+    gTrainerHillVBlankCounter = NULL;
+    savedCounter = gSaveCounter;
+    savedSector = gLastWrittenSector;
+
+    UpdateSaveAddresses();
+    CopyPartyAndObjectsToSave();
+    result = XgbaA2TransactionCommit(
+        &sA2Pager, &sA2Committed, A2NativeRead, A2NativeWrite,
+        NULL, (uint8_t *)&gSaveDataBuffer, &newCohort);
+    if (result == XGBA_A2_JOURNAL_OK)
+    {
+        sA2Committed = newCohort;
+        gTrainerHillVBlankCounter = backupVar;
+        return SAVE_STATUS_OK;
+    }
+
+    // A complete new native slot with an UNCOMMITTED metadata record must
+    // never become the basis for a subsequent save attempt in this session.
+    gSaveCounter = savedCounter;
+    gLastWrittenSector = savedSector;
+    gTrainerHillVBlankCounter = backupVar;
+    return SAVE_STATUS_ERROR;
+}
+#endif
+
 u8 HandleSavingData(u8 saveType)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // The only permitted gameplay save entrypoint in E6 mode. Every native
+    // save must also publish an exact 112-box generation vector.
+    return A2Save(saveType);
+#else
     u8 i;
     u32 *backupVar = gTrainerHillVBlankCounter;
 
@@ -780,6 +918,7 @@ u8 HandleSavingData(u8 saveType)
     }
     gTrainerHillVBlankCounter = backupVar;
     return 0;
+#endif
 }
 
 u8 TrySavingData(u8 saveType)
@@ -790,7 +929,16 @@ u8 TrySavingData(u8 saveType)
         return SAVE_STATUS_ERROR;
     }
 
+#if defined(XGBA_A2) && XGBA_A2
+    if (HandleSavingData(saveType) != SAVE_STATUS_OK)
+    {
+        gSaveAttemptStatus = SAVE_STATUS_ERROR;
+        DoSaveFailedScreen(saveType);
+        return SAVE_STATUS_ERROR;
+    }
+#else
     HandleSavingData(saveType);
+#endif
     if (!gDamagedSaveSectors)
     {
         gSaveAttemptStatus = SAVE_STATUS_OK;

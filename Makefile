@@ -171,6 +171,13 @@ CPPFLAGS := $(INCLUDE_CPP_ARGS) -Wno-trigraphs -DMODERN=1 -DTESTING=$(TEST) -D$(
 # A1 only: redirect generated raw layout data to an extended XGBA address
 # table; all executable code and normal scripts still link below 32 MiB.
 XGBA_A1 ?= 0
+XGBA_A2 ?= 0
+ifeq ($(XGBA_A2),1)
+  ifneq ($(XGBA_A1),1)
+    $(error A2 shadow compile requires A1 high-ROM mode)
+  endif
+  CPPFLAGS += -DXGBA_A2=1
+endif
 ifeq ($(XGBA_A1),1)
   ifneq ($(ALL_REGIONS),1)
     $(error A1 requires ALL_REGIONS=1)
