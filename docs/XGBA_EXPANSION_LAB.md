@@ -1,6 +1,6 @@
 # Grand Anthology XGBA expansion laboratory
 
-> **A1 implemented, CI acceptance underway:** see [the detailed A1 design](ANTHOLOGY_A1_DESIGN.md) and newest [handoff](NEXT_ASTRA_HANDOFF.md). The user explicitly authorized implementation. All 1,043 map layouts' 2,086 raw blobs now compile as high-ROM absolute pointers, and the optimized 256 MiB ROM pack passed full CI at https://github.com/DevElectrum/grand-anthology/actions/runs/41257793084. A stricter linked-ELF pointer gate is still being checked. The native 128 KiB Flash/save v13, native code and all map IDs remain unchanged. **One gameplay acceptance remains**, not another E6/E7 test marathon.
+> **A1 current status (31 Oct 2026):** full native 256 MiB source implementation and strict all-pointer CI are **GREEN** on [run 41258642793](https://github.com/DevElectrum/grand-anthology/actions/runs/41258642793), verifying exact ROM bytes, native Flash revision 0, all 1,043 layouts / 2,086 high ROM assets and linker symbols. **One user gameplay acceptance is still pending.** See [A1 design](ANTHOLOGY_A1_DESIGN.md) and [living handoff](NEXT_ASTRA_HANDOFF.md). All pre-A1 statements below describing this branch as an unimplemented source baseline are historical and superseded by this status.
 
 ## Updated charter: TWO PROJECTS, ONE EXPERIMENTAL EMULATOR (31 October 2026)
 
@@ -15,7 +15,7 @@
 **Branch discipline:** `xgba/expansion-lab` is the engineering branch. `main` remains an original source anchor and website for now, while `xgba/pre-expansion-20261031` anchors `ee129df0`. No automatic merges, updates to Mosaic, website redeployments, uploaded ROMs or user-save changes. Keep source attribution and noncommercial public status. A separate Git worktree with an independently named test ROM and disposable .sav is strongly preferred. Rebranding of Mosaic is deliberately delegated away from this work.
 
 
-**Status:** isolated source baseline, not an implemented 256 MiB port.
+**Historical status (at initial branch creation):** isolated source baseline. **Superseded:** A1 source is now implemented and both CI jobs have passed; game acceptance remains.
 
 ## Branches and immutable source checkpoint
 
