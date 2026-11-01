@@ -9,6 +9,9 @@ on:
       - 'src/xgba_a2_journal.c'
       - 'src/xgba_a2_guest_bus.c'
       - 'src/xgba_a2_pager.c'
+      - 'src/xgba_a2_fingerprint.c'
+      - 'include/xgba_a2_fingerprint.h'
+      - 'test/overworld/xgba_a2_fingerprint_harness.c'
       - 'include/xgba_a2_pager.h'
       - 'include/xgba_a2_guest_bus.h'
       - 'include/xgba_a2_journal.h'
@@ -38,6 +41,10 @@ jobs:
         run: |
           cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_journal.c src/xgba_a2_guest_bus.c src/xgba_a2_pager.c test/overworld/xgba_a2_journal_harness.c -o /tmp/xgba-a2-journal-test
           /tmp/xgba-a2-journal-test
+      - name: Validate on-cartridge SHA-256 native-slot anchors
+        run: |
+          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_fingerprint.c test/overworld/xgba_a2_fingerprint_harness.c -o /tmp/xgba-a2-fingerprint-test
+          /tmp/xgba-a2-fingerprint-test
       - name: Print storage geometry
         run: python3 tools/xgba_a2_storage.py layout
 
