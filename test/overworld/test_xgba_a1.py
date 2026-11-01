@@ -2,6 +2,8 @@
 import importlib.util
 import tempfile
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -46,6 +48,21 @@ class A1Tests(unittest.TestCase):
         self.assertIn(".4byte RegionHub_Layout_Blockdata", result)
         with self.assertRaisesRegex(ValueError, "omitted"):
             a1.rewrite_layout_assembly(rows[0], self.plan)
+
+    def test_compiled_elf_absolute_symbols_are_mandatory(self):
+        fake_plan = {"assets": [
+            {"label": "A_Map", "address": 0x14000100},
+            {"label": "B_Map", "address": 0x1FF00000},
+        ]}
+        valid_nm = "14000100 A A_Map\\n1ff00000 A B_Map\\n"
+        with patch.object(a1.subprocess, "run", return_value=SimpleNamespace(stdout=valid_nm)):
+            a1.verify_symbols(fake_plan, "fake.elf")
+        with patch.object(a1.subprocess, "run", return_value=SimpleNamespace(stdout=valid_nm.replace("1ff00000", "1ff00004"))):
+            with self.assertRaisesRegex(ValueError, "mismatch"):
+                a1.verify_symbols(fake_plan, "fake.elf")
+        with patch.object(a1.subprocess, "run", return_value=SimpleNamespace(stdout="14000100 A A_Map\\n")):
+            with self.assertRaisesRegex(ValueError, "Missing"):
+                a1.verify_symbols(fake_plan, "fake.elf")
 
     def test_header_tag_is_rom_only_and_complement_correct(self):
         native = bytearray([0xFF] * 0xC0)

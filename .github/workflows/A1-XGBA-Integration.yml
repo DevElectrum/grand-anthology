@@ -62,6 +62,9 @@ jobs:
           test "$(stat -c%s xgba-anthology-a1.gba)" -eq 268435456
       - name: Independently verify packed assets and ROM-only native Flash revision
         run: |
+          python3 tools/xgba_a1_assets.py check-symbols \
+            --elf xgba-anthology-a1-native-release.elf \
+            --manifest build/xgba-a1-release/a1-manifest.json
           python3 tools/xgba_a1_assets.py verify \
             --native xgba-anthology-a1-native-release.gba \
             --manifest build/xgba-a1-release/a1-manifest.json \

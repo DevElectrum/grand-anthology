@@ -837,4 +837,5 @@ xgba-a1:
 	@mkdir -p build/xgba-a1-package
 	@rm -f build/xgba-a1-package/xgba-anthology-a1-stage.gba
 	python3 tools/xgba_a1_assets.py pack --native xgba-anthology-a1-native-release.gba --manifest build/xgba-a1-release/a1-manifest.json --output build/xgba-a1-package/xgba-anthology-a1-stage.gba
+	python3 tools/xgba_a1_assets.py check-symbols --elf xgba-anthology-a1-native-release.elf --manifest build/xgba-a1-release/a1-manifest.json
 	mv -f build/xgba-a1-package/xgba-anthology-a1-stage.gba xgba-anthology-a1.gba
