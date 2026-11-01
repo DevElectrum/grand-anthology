@@ -1,3 +1,17 @@
+# A2 checkpoint: page UI, safe blank pages, 112-box capture routing (Nov 1, 2026)
+
+Branch: xgba/a2-collection-lab. Source as of 5b18818f and this documentation-only commit. No A2 ROM offered to user, no player saves touched. A1 gameplay acceptance remains pending.
+
+- Original full A1 256 MiB ROM and A2 save.c shadow ARM build PASS in GitHub Actions 41281719510. The first ARM build containing guarded SwSh page UI and cross-page capture is run 41288887853. Check result before claiming these new paths compile.
+- A2-only Select+L/R when cursor is on SwSh PC box title cycles the 8 pages of 14 boxes. Handler rejects moving mons/items and multi-move. On success the UI is fully reinitialized (icons, cursor, wallpaper, title) after fading; a read fault disables further saving until reload. Titles have /1 through /8 suffixes. Source remains guarded XGBA_A2=1, not yet gameplay-qualified.
+- Capture handling in CopyMonToPC, IsPokemonStorageFull, CheckFreePokemonStorageSpace: fast original 14-box path unchanged. Only if resident page is full do routines CRC-validate other pages and inspect 80-byte BoxPokemon records without allocating any second 34 KiB resident PC. Capture can advance to another page before deposit. Any failed read locks saves and refuses to advertise free space.
+- Offline converter tools/xgba_a2_storage.py initializes empty pages by cloning original legal GBA box names and wallpapers and clearing ONLY 420 BoxPokemon and 4 fusion Pokemon, rather than blanket-zeroing whole PokemonStorage. Regression test seeds name/wallpaper/fusion bytes into valid native Flash sector; verifies names and wallpaper survive, but Pokemon do not get cloned.
+- CI storage-format includes Python corruption/migration, C CRC/pager/native fingerprint/cohort/transaction tests. Native job checks unchanged A1 256 MiB ROM and separately shadow-recompiles save.c, swsh_storage_system.c, pokemon.c, pokemon_storage_system.c in experimental A2 mode. Still no E6-tagged A2 playable release.
+
+Next gates: wait for and FIX latest guarded ARM build; then create safe E6 new-game bootstrap (new-game saves are currently intentionally rejected), handle special Hall-of-Fame save paths, add in-emulator E6 save/exit/relaunch testing on copy-only v13 saves, check PC UI transitions and capture when the active page is full. Expanded search, favorites/release protections across pages, bag expansion remain pending. Never mark A2 complete, merge into A1, or ask user to test a live save until all gates pass.
+
+---
+
 # A2 checkpoint: full save coordinator + guarded game integration (Nov 1, 2026)
 
 Active development branch: xgba/a2-collection-lab. No commit was made to main, the stable A1 expansion branch, or the XGBA emulator.
