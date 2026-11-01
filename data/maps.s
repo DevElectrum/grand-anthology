@@ -12,7 +12,9 @@
 	.section .rodata
 
 #if XGBA_A1
-	.include "build/xgba-a1-release/xgba-a1-layouts.inc"
+	// Each build variant consumes its OWN generated layout symbols.
+	// XGBA_LAYOUT_INCLUDE is supplied by the Makefile for the active OBJ_DIR.
+	.include XGBA_LAYOUT_INCLUDE
 #else
 	.include "data/layouts/layouts.inc"
 #endif
