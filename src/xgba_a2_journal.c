@@ -5,7 +5,7 @@
 
 #define HEADER_BYTES 32
 #define TRANSFER_BYTES 128
-#define META_BYTES 24
+#define META_BYTES 56
 
 static const uint8_t sPageMagic[8] = { 'X', 'G', 'B', 'A', 'A', '2', 'P', 0 };
 static const uint8_t sMetaMagic[8] = { 'X', 'G', 'B', 'A', 'A', '2', 'M', 0 };

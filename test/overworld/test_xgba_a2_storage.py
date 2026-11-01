@@ -44,7 +44,7 @@ class A2Tests(unittest.TestCase):
     def test_layout_and_emulator_header(self):
         self.assertEqual(a2.PAGE_MAGIC, b"XGBAA2P\x00")
         self.assertEqual(a2.HEADER.size, 32)
-        self.assertEqual(a2.META_PAYLOAD.size, 24)
+        self.assertEqual(a2.META_PAYLOAD.size, 56)
         self.assertEqual(a2.PC_BYTES, 34144)
         self.assertEqual(a2.page_offset(7, 1) + a2.PC_STRIDE, a2.META_BASE)
         self.assertLess(a2.META_BASE + 2 * a2.META_STRIDE, a2.SUPER_BACKUP)
@@ -87,7 +87,7 @@ class A2Tests(unittest.TestCase):
             for slot in (0, 1):
                 f.seek(a2.page_offset(0, slot) + a2.HEADER.size + 18)
                 f.write(b"\x99")
-        with self.assertRaisesRegex(a2.A2Error, "both copies"):
+        with self.assertRaisesRegex(a2.A2Error, "No coherent"):
             a2.audit(self.dst)
 
     def test_native_generation_mismatch_fails(self):
@@ -132,8 +132,45 @@ class A2Tests(unittest.TestCase):
                 altered[4] = 77
                 f.seek(a2.page_offset(0, slot))
                 f.write(a2.make_record(a2.PAGE_MAGIC, 0, seq, altered))
-        with self.assertRaisesRegex(a2.A2Error, "byte-identical"):
+        with self.assertRaisesRegex(a2.A2Error, "No coherent"):
             a2.audit(self.dst)
+
+    def test_uncommitted_native_save_rolls_back_to_previous_commit(self):
+        native_fixture(self.src)
+        a2.prepare(self.src, self.dst)
+        with self.dst.open("r+b") as stream:
+            for logical in range(sp.SECTORS_PER_SLOT):
+                stream.seek(logical * sp.SECTOR_SIZE)
+                block = bytearray(stream.read(sp.SECTOR_SIZE))
+                struct.pack_into("<I", block, sp.SECTOR_SIZE - 4, 3)
+                stream.seek((sp.SECTORS_PER_SLOT + logical) * sp.SECTOR_SIZE)
+                stream.write(block)
+        result = a2.audit(self.dst)
+        self.assertEqual(result["native_slot"], 0)
+        self.assertEqual(result["counter"], 2)
+        self.assertTrue(result["recovery_required"])
+
+    def test_uncommitted_newer_page_is_never_selected(self):
+        native_fixture(self.src)
+        a2.prepare(self.src, self.dst)
+        with self.dst.open("r+b") as stream:
+            stream.seek(a2.page_offset(0, 0))
+            stream.write(a2.make_record(a2.PAGE_MAGIC, 0, 3,
+                                        bytes([27]) * a2.PC_BYTES))
+        result = a2.audit(self.dst)
+        self.assertEqual(result["page_generations"][0], 2)
+        self.assertFalse(result["recovery_required"])
+
+    def test_corrupt_newest_page_selects_prior_coherent_commit(self):
+        native_fixture(self.src)
+        a2.prepare(self.src, self.dst)
+        with self.dst.open("r+b") as stream:
+            stream.seek(a2.page_offset(3, 1) + a2.HEADER.size + 9)
+            stream.write(b"\x9B")
+        result = a2.audit(self.dst)
+        self.assertEqual(result["metadata_generation"], 1)
+        self.assertEqual(result["page_generations"], [1] * 8)
+        self.assertTrue(result["recovery_required"])
 
     def test_c_format_contract_and_save_abi(self):
         header = (ROOT / "include/xgba_a2_storage_format.h").read_text()

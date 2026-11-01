@@ -90,7 +90,7 @@ static void Fixture(struct FakeDisk *d, int page, int slot, uint32_t generation,
     uint8_t *dst = d->bytes + PageOffset(page, slot);
     static const uint8_t magic[8] = {'X','G','B','A','A','2','P',0};
     memcpy(h, magic, 8);
-    Write16(h + 8, 1);
+    Write16(h + 8, 2);
     h[12] = (uint8_t)page;
     Write32(h + 16, generation);
     Write32(h + 20, length);
@@ -188,24 +188,24 @@ int main(void)
     // The metadata journal has the exact same A/B safety contract.
     {
         uint8_t h[32] = {0};
-        uint8_t meta[24] = {0};
-        uint8_t updated[24] = {0};
-        uint8_t output[24] = {0};
+        uint8_t meta[56] = {0};
+        uint8_t updated[56] = {0};
+        uint8_t output[56] = {0};
         uint8_t *p = disk.bytes + XGBA_A2_PC_META_BASE;
         const uint8_t magic[8] = {'X','G','B','A','A','2','M',0};
         memcpy(h, magic, 8);
-        Write16(h + 8, 1);
+        Write16(h + 8, 2);
         Write32(h + 16, 2);
-        Write32(h + 20, 24);
+        Write32(h + 20, 56);
         meta[20] = 0;
-        Write32(h + 24, Crc(meta, 24));
+        Write32(h + 24, Crc(meta, 56));
         Write32(h + 28, Crc(h, 28));
         memcpy(p, h, 32);
         memcpy(p + 32, meta, 24);
         updated[20] = 3;
-        assert(XgbaA2JournalWriteMeta(&io, updated, 24, &result) == 0);
-        assert(XgbaA2JournalReadMeta(&io, output, 24, &result) == 0);
-        assert(memcmp(output, updated, 24) == 0);
+        assert(XgbaA2JournalWriteMeta(&io, updated, 56, &result) == 0);
+        assert(XgbaA2JournalReadMeta(&io, output, 56, &result) == 0);
+        assert(memcmp(output, updated, 56) == 0);
     }
 
     // The 0x0F adapter must not mistake native Flash offsets for extended

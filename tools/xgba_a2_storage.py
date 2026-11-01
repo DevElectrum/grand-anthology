@@ -31,17 +31,18 @@ BOX_SLOTS = 30
 PC_BYTES = 34144
 PC_STRIDE = 0x9000
 META_BASE = PC_BASE + PC_PAGES * 2 * PC_STRIDE
-META_STRIDE = 0x40
+META_STRIDE = 0x80
 HEADER = struct.Struct("<8sHHBBHIIII")
 PAGE_MAGIC = b"XGBAA2P\x00"
 META_MAGIC = b"XGBAA2M\x00"
-FORMAT_VERSION = 1
-META_PAYLOAD = struct.Struct("<16sIB3x")
+FORMAT_VERSION = 2
+META_PAYLOAD = struct.Struct("<16sIBB2x8I")
 EMPTY = b"\xFF" * 8
 
 assert len(SUPER_HEADER) == 24
 assert HEADER.size == 32
-assert META_PAYLOAD.size == 24
+assert META_PAYLOAD.size == 56
+assert META_PAYLOAD.size + HEADER.size <= META_STRIDE
 assert PC_BYTES == sp.PK_SIZE
 assert PC_BYTES + HEADER.size <= PC_STRIDE
 assert META_BASE + META_STRIDE * 2 < SUPER_BACKUP
@@ -52,8 +53,12 @@ class A2Error(ValueError):
     pass
 
 
-def fingerprint(native):
-    return hashlib.sha256(native).digest()[:16]
+def fingerprint(native, native_slot):
+    if native_slot not in (0, 1):
+        raise A2Error('Native slot must be 0 or 1')
+    size = sp.SECTORS_PER_SLOT * sp.SECTOR_SIZE
+    start = native_slot * size
+    return hashlib.sha256(native[start:start + size]).digest()[:16]
 
 
 def crc(data):
@@ -134,58 +139,90 @@ def verify_native(path):
 
 
 def audit(path):
+    """Resolve metadata, native slot and exact PC generations as one cohort."""
     sp.require_pins()
     path = Path(path)
     size = path.stat().st_size
     if size not in (SAVE_BYTES, SAVE_BYTES + 16):
         raise A2Error(f"Wrong E6 image size {size}")
-    with path.open("rb") as src:
-        src.seek(SUPER_PRIMARY)
-        first = src.read(24)
-        src.seek(SUPER_BACKUP)
-        last = src.read(24)
+    with path.open("rb") as stream:
+        stream.seek(SUPER_PRIMARY)
+        first = stream.read(24)
+        stream.seek(SUPER_BACKUP)
+        last = stream.read(24)
         if first != SUPER_HEADER or last != SUPER_HEADER:
             raise A2Error("Both emulator E6 superblocks must match")
-        src.seek(0)
-        native = src.read(NATIVE_BYTES)
-        payload, meta_copies = best_record(
-            src, [meta_offset(0), meta_offset(1)],
-            META_MAGIC, 0, META_PAYLOAD.size
-        )
-        digest, counter, selected = META_PAYLOAD.unpack(payload)
-        if digest != fingerprint(native) or selected >= PC_PAGES:
-            raise A2Error("Native Flash and A2 metadata are not the same generation")
-        page_counts = []
-        for page in range(PC_PAGES):
-            _, valid_copies = best_record(
-                src, [page_offset(page, 0), page_offset(page, 1)],
-                PAGE_MAGIC, page, PC_BYTES
-            )
-            page_counts.append(valid_copies)
-    try:
-        sv = sp.self_test(str(path))
-        sp.require_intact_slot(sv)
-    except SystemExit as exc:
-        raise A2Error(f"Invalid native sectors in E6 image: {exc}") from exc
-    if sv.slots[sv.active]["status"] != "OK":
-        raise A2Error("Incomplete native save slot")
-    if sv.save_counter != counter:
-        raise A2Error("Native save counter differs from A2 metadata")
-    with path.open("rb") as src:
-        page_zero, _ = best_record(src, [page_offset(0, 0), page_offset(0, 1)],
-                                   PAGE_MAGIC, 0, PC_BYTES)
-    if page_zero != bytes(sv.pk):
-        raise A2Error("Original 14-box PC is not byte-identical in A2 page one")
-    return {
-        "size": size,
-        "version": sv.sb2[sp.V["SB2.saveVersion"]],
-        "counter": counter,
-        "active_page": selected + 1,
-        "pc_boxes": PC_PAGES * BOXES_PER_PAGE,
-        "slots": PC_PAGES * BOXES_PER_PAGE * BOX_SLOTS,
-        "healthy_page_copies": page_counts,
-        "healthy_metadata_copies": meta_copies,
-    }
+        stream.seek(0)
+        native = stream.read(NATIVE_BYTES)
+        metadata = []
+        for slot in (0, 1):
+            row = candidate(stream, meta_offset(slot), META_MAGIC, 0,
+                            META_PAYLOAD.size)
+            if row is not None:
+                metadata.append((row[0], slot, row[1]))
+        if not metadata:
+            raise A2Error("No valid A2 metadata commit")
+        metadata.sort(key=lambda item: item[0], reverse=True)
+        newest = metadata[0][0]
+
+    for meta_generation, meta_slot, payload in metadata:
+        digest, counter, selected, native_slot, *generations = META_PAYLOAD.unpack(payload)
+        if (selected >= PC_PAGES or native_slot not in (0, 1)
+                or any(generation == 0 for generation in generations)):
+            continue
+        if digest != fingerprint(native, native_slot):
+            continue
+        try:
+            save = sp.self_test(str(path), slot=native_slot)
+            sp.require_intact_slot(save)
+        except SystemExit:
+            continue
+        if save.slots[native_slot]["status"] != "OK":
+            continue
+        if save.slots[native_slot]["counter"] != counter:
+            continue
+        if save.sb2[sp.V["SB2.saveVersion"]] != sp.SAVE_FORMAT_VERSION:
+            continue
+        if save.u16(save.sb2, sp.V["SB2.regionChecksum"]) != save.region_checksum():
+            continue
+
+        pages = []
+        counts = []
+        with path.open("rb") as stream:
+            for page in range(PC_PAGES):
+                valid = []
+                for slot in (0, 1):
+                    row = candidate(stream, page_offset(page, slot),
+                                    PAGE_MAGIC, page, PC_BYTES)
+                    if row is not None:
+                        valid.append(row)
+                counts.append(len(valid))
+                selected_record = next((row[1] for row in valid
+                                        if row[0] == generations[page]), None)
+                if selected_record is None:
+                    break
+                pages.append(selected_record)
+        if len(pages) != PC_PAGES:
+            continue
+        if pages[selected] != bytes(save.pk):
+            continue
+
+        return {
+            "size": size,
+            "version": save.sb2[sp.V["SB2.saveVersion"]],
+            "counter": counter,
+            "native_slot": native_slot,
+            "active_page": selected + 1,
+            "pc_boxes": PC_PAGES * BOXES_PER_PAGE,
+            "slots": PC_PAGES * BOXES_PER_PAGE * BOX_SLOTS,
+            "healthy_page_copies": counts,
+            "healthy_metadata_copies": len(metadata),
+            "metadata_generation": meta_generation,
+            "page_generations": list(generations),
+            "recovery_required": (meta_generation != newest
+                                  or save.save_counter != counter),
+        }
+    raise A2Error("No coherent native save slot and referenced PC-page generation")
 
 
 def prepare(source, target):
@@ -215,9 +252,12 @@ def prepare(source, target):
                 for slot, seq in ((0, 1), (1, 2)):
                     out.seek(page_offset(page, slot))
                     out.write(make_record(PAGE_MAGIC, page, seq, payload))
-            meta = META_PAYLOAD.pack(fingerprint(native[:NATIVE_BYTES]),
-                                     save.save_counter, 0)
             for slot, seq in ((0, 1), (1, 2)):
+                meta = META_PAYLOAD.pack(
+                    fingerprint(native[:NATIVE_BYTES], save.active),
+                    save.slots[save.active]["counter"],
+                    0, save.active, *([seq] * PC_PAGES)
+                )
                 out.seek(meta_offset(slot))
                 out.write(make_record(META_MAGIC, 0, seq, meta))
             if len(native) > NATIVE_BYTES:
