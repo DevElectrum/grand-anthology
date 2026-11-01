@@ -11,7 +11,11 @@
 
 	.section .rodata
 
+#if XGBA_A1
+	.include "build/xgba-a1-release/xgba-a1-layouts.inc"
+#else
 	.include "data/layouts/layouts.inc"
+#endif
 	.include "data/layouts/layouts_table.inc"
 	.include "data/maps/headers.inc"
 	.include "data/maps/groups.inc"

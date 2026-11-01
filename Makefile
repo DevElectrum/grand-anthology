@@ -168,6 +168,16 @@ else
 O_LEVEL ?= 2
 endif
 CPPFLAGS := $(INCLUDE_CPP_ARGS) -Wno-trigraphs -DMODERN=1 -DTESTING=$(TEST) -D$(GAME_VERSION) -DALL_REGIONS=$(ALL_REGIONS) -std=gnu17
+# A1 only: redirect generated raw layout data to an extended XGBA address
+# table; all executable code and normal scripts still link below 32 MiB.
+XGBA_A1 ?= 0
+ifeq ($(XGBA_A1),1)
+  ifneq ($(ALL_REGIONS),1)
+    $(error A1 requires ALL_REGIONS=1)
+  endif
+  CPPFLAGS += -DXGBA_A1=1
+  ASFLAGS += --defsym XGBA_A1=1
+endif
 ifeq ($(RELEASE),1)
 	override CPPFLAGS += -DRELEASE
 	ifeq ($(USE_LTO_ON_RELEASE),1)
@@ -296,7 +306,7 @@ MAKEFLAGS += --no-print-directory
 # Delete files that weren't built properly
 .DELETE_ON_ERROR:
 
-RULES_NO_SCAN += libagbsyscall clean clean-assets tidy tidymodern tidycheck tidyrelease generated clean-generated clean-teachables clean-teachables_intermediates
+RULES_NO_SCAN += xgba-a1 libagbsyscall clean clean-assets tidy tidymodern tidycheck tidyrelease generated clean-generated clean-teachables clean-teachables_intermediates
 .PHONY: all rom agbcc modern check validate obstacles debug release symbols
 .PHONY: $(RULES_NO_SCAN)
 
@@ -574,6 +584,16 @@ $(C_BUILDDIR)/title_screen_world.d $(C_BUILDDIR)/title_screen_world.o: $(ANTHOLO
 
 include graphics_file_rules.mk
 include map_data_rules.mk
+
+ifeq ($(XGBA_A1),1)
+XGBA_A1_ASM := $(OBJ_DIR)/xgba-a1-layouts.inc
+XGBA_A1_MANIFEST := $(OBJ_DIR)/a1-manifest.json
+# All map geometry files are direct inputs: edits regenerate the absolute
+# pointers and packed asset manifest rather than silently using stale ROM data.
+$(XGBA_A1_ASM): data/layouts/layouts.inc data/layouts/layouts.json $(wildcard data/layouts/*/*.bin) tools/xgba_a1_assets.py
+	python3 tools/xgba_a1_assets.py generate --source-asm data/layouts/layouts.inc --asm $(XGBA_A1_ASM) --manifest $(XGBA_A1_MANIFEST)
+$(DATA_ASM_BUILDDIR)/maps.o: $(XGBA_A1_ASM)
+endif
 include spritesheet_rules.mk
 include json_data_rules.mk
 include audio_rules.mk
@@ -805,3 +825,14 @@ leafgreen: all
 # Symbol file (`make syms`)
 $(SYM): $(ELF)
 	$(OBJDUMP) -t $< | sort -u | grep -E "^0[2389]" | $(PERL) -p -e 's/^(\w{8}) (\w).{6} \S+\t(\w{8}) (\S+)$$/\1 \2 \3 \4/g' > $@
+
+# Explicit opt-in XGBA-only build. The recursive build keeps the original
+# depth-two linker relative paths and its own object-cache directory.
+# No normal GBA release, save or user's pre-existing ROM is overwritten.
+.PHONY: xgba-a1
+xgba-a1:
+	$(MAKE) release -j4 XGBA_A1=1 BUILD_NAME=xgba-a1 FILE_NAME=xgba-anthology-a1-native
+	@mkdir -p build/xgba-a1-package
+	@rm -f build/xgba-a1-package/xgba-anthology-a1-stage.gba
+	python3 tools/xgba_a1_assets.py pack --native xgba-anthology-a1-native-release.gba --manifest build/xgba-a1-release/a1-manifest.json --output build/xgba-a1-package/xgba-anthology-a1-stage.gba
+	mv -f build/xgba-a1-package/xgba-anthology-a1-stage.gba xgba-anthology-a1.gba
