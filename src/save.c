@@ -909,13 +909,18 @@ static u8 A2Save(u8 saveType)
     u32 *backupVar;
     int result;
 
-    // Partial sector writes remain forbidden. SAVE_OVERWRITE_DIFFERENT_FILE
-    // is the first-save request from the game's standard save dialog.
+    // All full-game save requests share the same native+PC transaction.
+    // The Hall of Fame archive lives in separate native sectors 28/29;
+    // write it only AFTER the game's global commit is independently valid.
     if (saveType != SAVE_NORMAL && saveType != SAVE_LINK
-        && saveType != SAVE_EREADER
+        && saveType != SAVE_EREADER && saveType != SAVE_HALL_OF_FAME
         && saveType != SAVE_OVERWRITE_DIFFERENT_FILE)
         return SAVE_STATUS_ERROR;
+    if (saveType == SAVE_OVERWRITE_DIFFERENT_FILE && !sA2FreshSaveArmed)
+        return SAVE_STATUS_ERROR;
     if (!sA2Ready && !sA2FreshSaveArmed)
+        return SAVE_STATUS_ERROR;
+    if (saveType == SAVE_HALL_OF_FAME && gHoFSaveBuffer == NULL)
         return SAVE_STATUS_ERROR;
 
     backupVar = gTrainerHillVBlankCounter;
@@ -924,6 +929,9 @@ static u8 A2Save(u8 saveType)
     savedSector = gLastWrittenSector;
 
     UpdateSaveAddresses();
+    if (saveType == SAVE_HALL_OF_FAME
+        && GetGameStat(GAME_STAT_ENTERED_HOF) < 999)
+        IncrementGameStat(GAME_STAT_ENTERED_HOF);
     CopyPartyAndObjectsToSave();
 
     if (sA2FreshSaveArmed)
@@ -955,6 +963,22 @@ static u8 A2Save(u8 saveType)
     if (result == XGBA_A2_JOURNAL_OK)
     {
         sA2Committed = newCohort;
+
+        if (saveType == SAVE_HALL_OF_FAME)
+        {
+            u8 *hofData = (u8 *)gHoFSaveBuffer;
+            // These optional Hall of Fame archive sectors are NOT part of
+            // the collection commit. A failure is visible and forces reload,
+            // but cannot roll back or tear the already committed Pokemon data.
+            if (HandleWriteSectorNBytes(SECTOR_ID_HOF_1, hofData,
+                                        SECTOR_DATA_SIZE) != SAVE_STATUS_OK)
+                goto failed;
+            if (HandleWriteSectorNBytes(SECTOR_ID_HOF_2,
+                                        hofData + SECTOR_DATA_SIZE,
+                                        SECTOR_DATA_SIZE) != SAVE_STATUS_OK)
+                goto failed;
+        }
+
         gTrainerHillVBlankCounter = backupVar;
         return SAVE_STATUS_OK;
     }
