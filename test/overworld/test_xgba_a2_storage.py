@@ -52,6 +52,52 @@ class A2Tests(unittest.TestCase):
         self.assertEqual(a2.SUPER_HEADER[8:12], b"\x02\x00\x00\x00")
         self.assertEqual(a2.SAVE_BYTES, 0x1000000)
 
+    def test_create_only_blank_e6_seed_contains_no_native_or_pc_data(self):
+        result = a2.create_blank(self.dst)
+        self.assertEqual(result["state"], "erased E6")
+        self.assertEqual(self.dst.stat().st_size, a2.SAVE_BYTES)
+        self.assertEqual(a2.verify_blank(self.dst), result)
+        with self.dst.open("rb") as stream:
+            for offset in (0, 0x1FFFF, a2.PC_BASE,
+                           a2.page_offset(7, 1), a2.meta_offset(1)):
+                stream.seek(offset)
+                self.assertEqual(stream.read(1), b"\xFF")
+            for offset in (a2.SUPER_PRIMARY, a2.SUPER_BACKUP):
+                stream.seek(offset)
+                self.assertEqual(stream.read(24), a2.SUPER_HEADER)
+        with self.assertRaisesRegex(a2.A2Error, "overwrite"):
+            a2.create_blank(self.dst)
+        self.assertEqual(a2.verify_blank(self.dst), result)
+
+    def test_blank_seed_refuses_symlinks_and_corrupt_or_partial_images(self):
+        self.dst.symlink_to(self.src)
+        with self.assertRaisesRegex(a2.A2Error, "overwrite"):
+            a2.create_blank(self.dst)
+        self.dst.unlink()
+        link_dir = Path(self.tmp.name) / "linked"
+        link_dir.symlink_to(Path(self.tmp.name), target_is_directory=True)
+        with self.assertRaisesRegex(a2.A2Error, "symlinked"):
+            a2.create_blank(link_dir / "seed.sav")
+        a2.create_blank(self.dst)
+        for offset in (0, a2.PC_BASE, a2.meta_offset(0),
+                       a2.SUPER_BACKUP, a2.SAVE_BYTES - 1):
+            with self.subTest(offset=offset):
+                with self.dst.open("r+b") as stream:
+                    stream.seek(offset)
+                    original = stream.read(1)
+                    stream.seek(offset)
+                    stream.write(bytes([original[0] ^ 0xFF]))
+                with self.assertRaises(a2.A2Error):
+                    a2.verify_blank(self.dst)
+                with self.dst.open("r+b") as stream:
+                    stream.seek(offset)
+                    stream.write(original)
+        self.assertEqual(a2.verify_blank(self.dst)["state"], "erased E6")
+        with self.dst.open("ab") as stream:
+            stream.write(b"\xFF")
+        with self.assertRaisesRegex(a2.A2Error, "16 MiB"):
+            a2.verify_blank(self.dst)
+
     def test_create_only_preserves_every_native_byte(self):
         before = native_fixture(self.src)
         result = a2.prepare(self.src, self.dst)

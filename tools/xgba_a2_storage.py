@@ -243,6 +243,59 @@ def empty_page_template(source_pc):
     return bytes(empty)
 
 
+def verify_blank(path):
+    """Assert the entire disposable E6 seed contains NO user or game data."""
+    path = Path(path)
+    if not path.is_file() or path.is_symlink() or path.stat().st_size != SAVE_BYTES:
+        raise A2Error("Blank E6 template must be a regular 16 MiB file")
+    chunk_size = 0x100000
+    with path.open("rb") as stream:
+        for offset in range(0, SAVE_BYTES, chunk_size):
+            actual = stream.read(chunk_size)
+            expected = bytearray(b"\xFF" * chunk_size)
+            for marker in (SUPER_PRIMARY, SUPER_BACKUP):
+                if offset <= marker < offset + chunk_size:
+                    index = marker - offset
+                    expected[index:index + len(SUPER_HEADER)] = SUPER_HEADER
+            if actual != expected:
+                raise A2Error(f"Unexpected data in blank E6 template at block 0x{offset:X}")
+        if stream.read(1):
+            raise A2Error("Blank E6 image contains trailing data")
+    return {"size": SAVE_BYTES, "state": "erased E6", "native_slots": "both blank",
+            "a2_metadata": "absent", "pc_pages": "all blank"}
+
+
+def create_blank(target):
+    """Create a strict first-run E6 seed without modifying any existing save."""
+    target = Path(target).expanduser().absolute()
+    if os.path.lexists(target):
+        raise A2Error("Refusing to overwrite an existing save or symlink")
+    if not target.parent.is_dir():
+        raise A2Error("Destination directory does not exist")
+    for parent in (target.parent, *target.parent.parents):
+        if parent.is_symlink():
+            raise A2Error("Refusing symlinked destination directory")
+    fd, temp = tempfile.mkstemp(prefix=".xgba-a2-blank-", dir=target.parent)
+    try:
+        with os.fdopen(fd, "w+b") as stream:
+            chunk = b"\xFF" * 0x100000
+            for _ in range(SAVE_BYTES // len(chunk)):
+                stream.write(chunk)
+            stream.seek(SUPER_PRIMARY)
+            stream.write(SUPER_HEADER)
+            stream.seek(SUPER_BACKUP)
+            stream.write(SUPER_HEADER)
+            stream.flush()
+            os.fsync(stream.fileno())
+        result = verify_blank(temp)
+        # Same-directory hard link is create-only even if another process
+        # creates the destination between validation and publication.
+        os.link(temp, target, follow_symlinks=False)
+        return result
+    finally:
+        Path(temp).unlink(missing_ok=True)
+
+
 def prepare(source, target):
     source = Path(source).expanduser()
     target = Path(target).expanduser()
@@ -298,6 +351,10 @@ def main():
     init = sub.add_parser("init", help="Create a NEW E6 image from intact v13 native save")
     init.add_argument("source")
     init.add_argument("destination")
+    blank = sub.add_parser("blank", help="Create a NEW erased E6 first-run template, never overwrite")
+    blank.add_argument("destination")
+    blank_check = sub.add_parser("audit-blank", help="Prove E6 seed contains no save data")
+    blank_check.add_argument("save")
     check = sub.add_parser("audit", help="Verify E6 headers and protected A2 PC records")
     check.add_argument("save")
     sub.add_parser("layout", help="Print reserved A2 collection-storage geometry")
@@ -306,6 +363,11 @@ def main():
         if args.command == "init":
             result = prepare(args.source, args.destination)
             print(f"Created {args.destination} (original unchanged)")
+        elif args.command == "blank":
+            result = create_blank(args.destination)
+            print(f"Created disposable E6 seed {args.destination}")
+        elif args.command == "audit-blank":
+            result = verify_blank(args.save)
         elif args.command == "audit":
             result = audit(args.save)
         else:
