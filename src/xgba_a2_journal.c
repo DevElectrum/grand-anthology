@@ -201,21 +201,35 @@ static int ReadRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
         || bytes != (isMeta ? META_BYTES : XGBA_A2_PC_BYTES))
         return XGBA_A2_JOURNAL_INVALID_ARG;
 
-    // CRC validate the record BEFORE changing the caller's live page buffer.
-    status = FindRecord(io, isMeta, page, bytes, &best, &count);
-    if (status != XGBA_A2_JOURNAL_OK)
-        return status;
-
-    if (requiredGeneration != 0 && best.generation != requiredGeneration)
+    // For metadata-pinned page reads, inspect only the referenced copy.
+    // A newer (uncommitted) A/B copy is irrelevant to this transaction.
+    if (requiredGeneration != 0 && !isMeta)
     {
-        struct Candidate other;
-        status = CheckCandidate(io, isMeta, page, (uint8_t)(1 - best.slot),
-                                bytes, &other);
+        struct XgbaA2JournalInfo exact;
+        status = XgbaA2JournalFindPageGeneration(
+            io, page, requiredGeneration, &exact);
         if (status != XGBA_A2_JOURNAL_OK)
             return status;
-        if (!other.valid || other.generation != requiredGeneration)
-            return XGBA_A2_JOURNAL_MISSING;
-        best = other;
+        best.slot = exact.slot;
+        best.generation = requiredGeneration;
+        count = 1;
+    }
+    else
+    {
+        status = FindRecord(io, isMeta, page, bytes, &best, &count);
+        if (status != XGBA_A2_JOURNAL_OK)
+            return status;
+        if (requiredGeneration != 0 && best.generation != requiredGeneration)
+        {
+            struct Candidate other;
+            status = CheckCandidate(io, isMeta, page,
+                                    (uint8_t)(1 - best.slot), bytes, &other);
+            if (status != XGBA_A2_JOURNAL_OK)
+                return status;
+            if (!other.valid || other.generation != requiredGeneration)
+                return XGBA_A2_JOURNAL_MISSING;
+            best = other;
+        }
     }
 
     offset = RecordOffset(isMeta, page, best.slot) + HEADER_BYTES;
@@ -459,7 +473,7 @@ int XgbaA2JournalEqualsPageGeneration(const struct XgbaA2JournalIo *io,
                                       uint8_t page, uint32_t generation,
                                       const void *source, uint32_t bytes)
 {
-    struct Candidate left, right;
+    struct XgbaA2JournalInfo exact;
     uint32_t offset;
     int same;
     int status;
@@ -468,20 +482,11 @@ int XgbaA2JournalEqualsPageGeneration(const struct XgbaA2JournalIo *io,
         || page >= XGBA_A2_PC_PAGES || bytes != XGBA_A2_PC_BYTES)
         return XGBA_A2_JOURNAL_INVALID_ARG;
 
-    status = CheckCandidate(io, 0, page, 0, bytes, &left);
-    if (status != XGBA_A2_JOURNAL_OK)
-        return status;
-    status = CheckCandidate(io, 0, page, 1, bytes, &right);
+    status = XgbaA2JournalFindPageGeneration(io, page, generation, &exact);
     if (status != XGBA_A2_JOURNAL_OK)
         return status;
 
-    if (left.valid && left.generation == generation)
-        offset = RecordOffset(0, page, 0);
-    else if (right.valid && right.generation == generation)
-        offset = RecordOffset(0, page, 1);
-    else
-        return XGBA_A2_JOURNAL_MISSING;
-
+    offset = RecordOffset(0, page, exact.slot);
     same = SameAsRecord(io, offset, source, bytes);
     if (same < 0)
         return XGBA_A2_JOURNAL_IO_ERROR;
@@ -523,13 +528,34 @@ int XgbaA2JournalFindPageGeneration(const struct XgbaA2JournalIo *io,
                                     struct XgbaA2JournalInfo *info)
 {
     struct Candidate checked;
+    static const uint8_t magic[8] = {'X','G','B','A','A','2','P',0};
+    uint8_t header[HEADER_BYTES];
     uint8_t slot;
 
     if (!IoReady(io) || page >= XGBA_A2_PC_PAGES || generation == 0)
         return XGBA_A2_JOURNAL_INVALID_ARG;
+
     for (slot = 0; slot < 2; slot++)
     {
-        int status = CheckCandidate(io, 0, page, slot, XGBA_A2_PC_BYTES, &checked);
+        uint32_t offset = RecordOffset(0, page, slot);
+        int status;
+
+        // Skip an unrelated generation after a 32-byte header read.
+        // Do NOT CRC-scan 34 KiB of a record the committed metadata did
+        // not reference. The referenced record still receives full CRC.
+        if (!io->read(io->context, offset, header, HEADER_BYTES))
+            return XGBA_A2_JOURNAL_IO_ERROR;
+        if (memcmp(header, magic, 8) != 0
+            || Read16(header + 8) != XGBA_A2_RECORD_VERSION
+            || Read16(header + 10) != 0
+            || header[12] != page || header[13] != 0
+            || Read16(header + 14) != 0
+            || Read32(header + 16) != generation
+            || Read32(header + 20) != XGBA_A2_PC_BYTES
+            || Read32(header + 28) != CrcRam(header, 28))
+            continue;
+
+        status = CheckCandidate(io, 0, page, slot, XGBA_A2_PC_BYTES, &checked);
         if (status != XGBA_A2_JOURNAL_OK)
             return status;
         if (checked.valid && checked.generation == generation)

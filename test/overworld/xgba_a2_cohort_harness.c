@@ -14,6 +14,7 @@
 
 static uint8_t *sDisk;
 static uint32_t sWriterSectors = 14;
+static uint32_t sExtensionBytesRead = 0;
 
 static void U16(uint8_t *p, uint16_t v)
 {
@@ -63,6 +64,7 @@ static int IoRead(void *context, uint32_t offset, uint8_t *dst, uint32_t length)
     if ((uint64_t)offset + length > DISK_BYTES)
         return 0;
     memcpy(dst, sDisk + offset, length);
+    sExtensionBytesRead += length;
     return 1;
 }
 
@@ -203,7 +205,11 @@ int main(void)
     MakeMeta(0, 1, 0, 2, 1);
     MakeMeta(1, 2, 0, 2, 2);
 
+    sExtensionBytesRead = 0;
     assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
+    // A clean boot must not hash both 8-page cohorts. The metadata-pinned
+    // generation selector scans one 34 KiB copy per page, not both.
+    assert(sExtensionBytesRead < 400000);
     assert(selected.metadataGeneration == 2 && selected.nativeSlot == 0);
     assert(selected.nativeCounter == 2 && selected.pages[0] == 2);
 

@@ -152,40 +152,58 @@ int XgbaA2CohortSelect(const struct XgbaA2JournalIo *io,
                        XgbaA2ReadNativeSector reader, void *nativeContext,
                        uint8_t *scratch, struct XgbaA2Cohort *selected)
 {
-    struct XgbaA2Cohort candidates[2];
-    uint8_t ok[2] = {0, 0};
-    uint8_t slot, winner;
+    uint8_t metaPayload[2][XGBA_A2_META_PAYLOAD_BYTES];
+    struct XgbaA2JournalInfo record[2];
+    struct XgbaA2Cohort candidate;
+    uint8_t valid[2] = {0, 0};
+    uint8_t first, second;
+    uint8_t slot;
 
     if (io == NULL || io->read == NULL || io->write == NULL
         || reader == NULL || scratch == NULL || selected == NULL)
         return XGBA_A2_JOURNAL_INVALID_ARG;
 
+    // First read only 2 tiny metadata records. Verify the newest COMPLETE
+    // cohort; only scan the older 8-page cohort when recovery is needed.
     for (slot = 0; slot < 2; slot++)
     {
-        int status = TrySlot(io, reader, nativeContext, scratch,
-                             slot, &candidates[slot]);
+        int status = XgbaA2JournalReadMetaSlot(io, slot,
+                                               metaPayload[slot], &record[slot]);
         if (status == XGBA_A2_JOURNAL_OK)
-            ok[slot] = 1;
+            valid[slot] = 1;
         else if (status == XGBA_A2_JOURNAL_IO_ERROR)
             return status;
     }
-    if (!ok[0] && !ok[1])
-        return XGBA_A2_JOURNAL_MISSING;
-    winner = ok[1] && (!ok[0]
-        || candidates[1].metadataGeneration > candidates[0].metadataGeneration) ? 1 : 0;
-
-    if (ok[0] && ok[1]
-        && candidates[0].metadataGeneration == candidates[1].metadataGeneration
-        && (candidates[0].nativeCounter != candidates[1].nativeCounter
-            || candidates[0].nativeSlot != candidates[1].nativeSlot
-            || candidates[0].activePage != candidates[1].activePage
-            || memcmp(candidates[0].pages, candidates[1].pages,
-                      sizeof(candidates[0].pages))))
+    if (!valid[0] && !valid[1])
         return XGBA_A2_JOURNAL_MISSING;
 
-    *selected = candidates[winner];
-    selected->recovered = !(ok[0] && ok[1]);
-    return XGBA_A2_JOURNAL_OK;
+    if (valid[0] && valid[1]
+        && record[0].generation == record[1].generation
+        && memcmp(metaPayload[0], metaPayload[1],
+                  XGBA_A2_META_PAYLOAD_BYTES) != 0)
+        return XGBA_A2_JOURNAL_MISSING;
+
+    first = valid[1] && (!valid[0]
+        || record[1].generation > record[0].generation) ? 1 : 0;
+    second = (uint8_t)(1 - first);
+
+    if (TrySlot(io, reader, nativeContext, scratch, first, &candidate)
+        == XGBA_A2_JOURNAL_OK)
+    {
+        *selected = candidate;
+        selected->recovered = 0;
+        return XGBA_A2_JOURNAL_OK;
+    }
+
+    if (valid[second] && TrySlot(io, reader, nativeContext,
+                                 scratch, second, &candidate)
+        == XGBA_A2_JOURNAL_OK)
+    {
+        *selected = candidate;
+        selected->recovered = 1;
+        return XGBA_A2_JOURNAL_OK;
+    }
+    return XGBA_A2_JOURNAL_MISSING;
 }
 
 int XgbaA2CohortVerifyNativeSlot(XgbaA2ReadNativeSector reader,
