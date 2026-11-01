@@ -275,9 +275,13 @@ int main(void)
             {
                 assert(recovered == XGBA_A2_JOURNAL_MISSING);
                 assert(result != XGBA_A2_JOURNAL_OK);
-                assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter,
-                                              NULL, scratch, old, &selected)
-                       == XGBA_A2_JOURNAL_MISSING);
+                // Zero bytes written leaves the pristine disk available
+                // for a fresh explicitly authorized game. Any actual partial
+                // write makes the disk non-pristine and blocks re-bootstrap.
+                if (budgets[trial] > 0)
+                    assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter,
+                                                  NULL, scratch, old, &selected)
+                           == XGBA_A2_JOURNAL_MISSING);
             }
         }
     }
