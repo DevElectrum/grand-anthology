@@ -523,7 +523,14 @@ static void FreeAllHoFMem(void)
 static void Task_Hof_TrySaveData(u8 taskId)
 {
     gGameContinueCallback = CB2_DoHallOfFameScreenDontSaveData;
+#if defined(XGBA_A2) && XGBA_A2
+    // The extended save can fail without setting legacy damaged-sector bits
+    // (e.g. a metadata or page verification failure). Never play the save
+    // success sound or advance the Hall of Fame scene in that case.
+    if (TrySavingData(SAVE_HALL_OF_FAME) == SAVE_STATUS_ERROR)
+#else
     if (TrySavingData(SAVE_HALL_OF_FAME) == SAVE_STATUS_ERROR && gDamagedSaveSectors != 0)
+#endif
     {
         UnsetBgTilemapBuffer(1);
         UnsetBgTilemapBuffer(3);
