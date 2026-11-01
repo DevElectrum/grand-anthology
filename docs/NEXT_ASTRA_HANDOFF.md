@@ -1,3 +1,19 @@
+# A2 autonomous security checkpoint: save-failure escape closed (Nov 1, 2026)
+
+**Branch:** `xgba/a2-collection-lab`. **Owner unwell:** no Nyx/manual involvement requested. Full plan: `docs/ANTHOLOGY_A2_AUTONOMOUS_PLAN.md`; callsite risk audit: `docs/ANTHOLOGY_A2_SAVE_ENTRY_AUDIT.md`. Neither authorizes a production merge, ROM publish or player-save mutation.
+
+**New critical defect addressed:** `src/save_failed_screen.c` used the inherited `CB2_WipeSave` retry/erase path even when an A2 journal transaction had failed. When `gDamagedSaveSectors==0` it could falsely display `Save Complete` for failed extended metadata; when bits were set it could erase live native sectors and retry against uncertain A2 state. Under `XGBA_A2=1`, the screen now explicitly reports verification failure, **never wipes/retries native Flash**, clears the continue callback and returns to soft-reset for a fresh global cohort selection. Original non-A2 behavior remains in `#else`. Source-contract regression: `test/overworld/test_xgba_a2_save_fail_screen.py`. Code change `2f47ba93`, test `f66910a0`; independently isolated ARM/runtime confirmation pending at this checkpoint.
+
+**Boot selection regression:** `test/overworld/xgba_a2_cohort_harness.c` now constructs a newer fully valid native Flash slot with a different trainer byte but *no committed metadata*, then proves selection remains on the older metadata-approved slot; commit `c40a1bde`. This host test does **not** simulate real GBA trainer-ID relocation, which still needs runtime verification. Storage-format job in run `41359238246` has passed including both new regressions; ARM job still running at last check: <https://github.com/DevElectrum/grand-anthology/actions/runs/41359238246>.
+
+**New remote runtime gate:** `.github/workflows/A2-XGBA-Boot-Probe.yml` compiles actual A2 and accepted frozen XGBA E7, creates disposable `16 MiB` E6 blank seed and attempts a bounded headless boot. Initial workflow `41358710392` failed **before emulator execution** because the `data/maps.s` XGBA include requires the A1 build artifact. `4bfe07d5` now explicitly builds A1 first, then A2; corrected run `41359226988` is in progress at this checkpoint: <https://github.com/DevElectrum/grand-anthology/actions/runs/41359226988>. Boot probe alone is NOT save/restart validation. Both temporary ROM and save are deleted, never uploaded.
+
+**Collection design refinement:** existing `MON_DATA_MARKINGS & (1<<3)` heart marker already lives *inside the Pokémon record* and is protected by `BulkReleaseEligible`, so no separate favorites-ID database is required. Existing release is per box, and `AddBagItem` failure skips individual targets: collection-wide release must preflight held-item capacity and avoid unannounced partial completion. Reuse existing egg, Legendary/Mythical, held-mail and restricted-move protections.
+
+**Still critical/open:** `LinkFullSave_*` and `WriteSaveBlock*` A2 routines currently return TRUE without saving; trade final signature happens AFTER partner sync. Do not publish until these paths are either made transactional with correct staging/finalization or prevented from entering a success state. Full XGBA save/restart/HOF recovery, global collection UX, bag and gameplay acceptance are not yet validated. Continue autonomous work; never report a CI job as passed until its actual conclusion is checked.
+
+---
+
 # A2 autonomous takeover and runtime gate (Nov 1, 2026)
 
 **Owner request:** No Nyx babysitting while ill. Plan entire remaining A2 and execute independent safe work without asking routine questions. This does not authorize modifying player saves, merging/releasing, or claiming unattended work after a conversation ends.
