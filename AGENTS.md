@@ -1,3 +1,13 @@
+# A2 packaging/isolation checkpoint (Nov 1, 2026)
+
+Latest source on branch xgba/a2-collection-lab includes the newgame bootstrap, 112-box resident pager, cross-page capture fallback, and a developer-only E6 ROM tagger. The E6 tagger at tools/xgba_a2_rom.py confirms the source is a 256 MiB XGBA256 revision-zero A1-layout ROM and has a valid GBA checksum and last-byte probe, then creates a separate revision-E6 image with only header revision 0xBC and complement 0xBD changed. It refuses overwrites and does not publish binaries. Standalone unit tests prove those two bytes alone change and malformed input is refused.
+
+CRITICAL: Makefile now rejects XGBA_A2=1 unless BUILD_NAME=xgba-a2 and XGBA_A1=1. Prior shadow builds reused build/xgba-a1-release and could retain stale objects with wrong CPPFLAGS. The new full native A2 build is ISOLATED at build/xgba-a2-release with output xgba-anthology-a2-native-release.gba. CI builds regular A1 first, independently builds A2 from a separate object directory, packs A2 high-ROM assets using build/xgba-a2-release/a1-manifest.json, validates E6 header geometry and deletes the temporary dev ROM. Nothing is uploaded, no player save is touched. Run 41295322213 is the first independent-build + developer-tag CI; check its outcome before claiming qualification. Prior build 41294626762 PASS covered guarded newgame save integration but was a same-object shadow build.
+
+Next: after CI pass, run actual XGBA emulator first-run, save, restart and interrupted recovery using only disposable 16 MiB E6 seeds; special Hall of Fame sector policies, favorites/collection search/release, expanded bag and acceptance remain pending. Do NOT merge or publish an A2 gameplay ROM yet. A1 original 256 MiB remains revision 0/native 128 KiB Flash and untouched.
+
+---
+
 # A2 checkpoint: first-save bootstrap implementation (Nov 1, 2026)
 
 Active branch: xgba/a2-collection-lab. Stable A1 and XGBA E7 remain untouched. No playable A2 ROM, player save conversion, or user playtest. A1's own gameplay acceptance is separate.
