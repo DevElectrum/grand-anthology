@@ -1,6 +1,6 @@
 # A1 Architecture Decision Record: XGBA-native Grand Anthology
 
-**Status:** SOURCE IMPLEMENTED ON LAB BRANCH; FIRST FULL 256 MiB ROM CI GREEN, stricter ELF pointer CI in progress; single XGBA gameplay acceptance still pending. User explicitly authorized A1 implementation on 31 October 2026. No production or Mosaic code was changed.
+**Status:** SOURCE IMPLEMENTED ON LAB BRANCH; FULL 256 MiB ROM AND STRICT LINKED-SYMBOL CI GREEN; single XGBA gameplay acceptance still pending. User explicitly authorized A1 implementation on 31 October 2026. No production or Mosaic code was changed.
 
 ## 1. Definition of done
 
