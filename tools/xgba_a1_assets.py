@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
 import struct
 import sys
 import zlib
@@ -174,6 +175,37 @@ def verify_manifest(plan):
     return current
 
 
+
+def verify_symbols(plan, elf_path, nm="arm-none-eabi-nm"):
+    """Assert ALL generated A1 pointer symbols resolve to actual high addresses.
+
+    Linker garbage collection/LTO and declaration mismatches must never permit
+    a seemingly correct host pack with native code still reading old blobs.
+    """
+    result = subprocess.run(
+        [nm, "--defined-only", str(elf_path)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    symbols = {}
+    for line in result.stdout.splitlines():
+        match = re.fullmatch(r"\\s*([0-9a-fA-F]+)\\s+([A-Za-z])\\s+(\\S+)\\s*", line)
+        if match and match.group(2).upper() == "A":
+            symbols[match.group(3)] = int(match.group(1), 16)
+
+    for entry in plan["assets"]:
+        actual = symbols.get(entry["label"])
+        if actual != entry["address"]:
+            if actual is None:
+                raise ValueError(f"Missing absolute ELF symbol: {entry['label']}")
+            raise ValueError(
+                f"ELF pointer mismatch {entry['label']}: "
+                f"{actual:#x}, expected {entry['address']:#x}"
+            )
+    print(f"A1 LINKED SYMBOLS VERIFIED: {len(plan['assets'])} high-address absolute pointers")
+
+
 def pack(args):
     plan = json.loads(Path(args.manifest).read_text())
     verify_manifest(plan)
@@ -235,11 +267,13 @@ def verify(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=("generate", "pack", "verify", "check-plan"))
+    parser.add_argument("command", choices=("generate", "pack", "verify", "check-plan", "check-symbols"))
     parser.add_argument("--source-asm", default="data/layouts/layouts.inc")
     parser.add_argument("--asm", default="build/xgba-a1/native/xgba-a1-layouts.inc")
     parser.add_argument("--manifest", default="build/xgba-a1/native/a1-manifest.json")
     parser.add_argument("--native", default="")
+    parser.add_argument("--elf", default="")
+    parser.add_argument("--nm", default="arm-none-eabi-nm")
     parser.add_argument("--output", default="xgba-anthology-a1.gba")
     args = parser.parse_args()
     if args.command == "generate":
@@ -247,6 +281,12 @@ def main():
     elif args.command == "check-plan":
         plan = manifest_plan()
         print(f"A1 manifest source valid: {plan['count']} layouts, {len(plan['assets'])} binaries")
+    elif args.command == "check-symbols":
+        if not args.elf:
+            parser.error("check-symbols requires --elf")
+        plan = json.loads(Path(args.manifest).read_text())
+        verify_manifest(plan)
+        verify_symbols(plan, args.elf, args.nm)
     elif args.command == "pack":
         if not args.native:
             parser.error("pack requires --native")
