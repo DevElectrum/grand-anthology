@@ -63,6 +63,25 @@ class A2Tests(unittest.TestCase):
         with self.assertRaises(a2.A2Error):
             a2.prepare(self.src, self.dst)
 
+    def test_empty_pages_keep_legal_names_and_wallpapers_but_no_pokemon(self):
+        native_fixture(self.src)
+        a2.prepare(self.src, self.dst)
+        with self.dst.open("rb") as src:
+            page0, _ = a2.best_record(src, [a2.page_offset(0, 0), a2.page_offset(0, 1)],
+                                      a2.PAGE_MAGIC, 0, a2.PC_BYTES)
+            page1, _ = a2.best_record(src, [a2.page_offset(1, 0), a2.page_offset(1, 1)],
+                                      a2.PAGE_MAGIC, 1, a2.PC_BYTES)
+        self.assertEqual(page0[4:12], bytes.fromhex("0102030405060708"))
+        self.assertEqual(page1[4:12], bytes(8))
+        self.assertEqual(page1[0], 0)
+        self.assertEqual(page1[a2.BOX_REGION_START:a2.BOX_REGION_END],
+                         bytes(a2.BOX_REGION_END - a2.BOX_REGION_START))
+        self.assertEqual(page1[a2.FUSION_REGION_START:],
+                         bytes(a2.PC_BYTES - a2.FUSION_REGION_START))
+        self.assertEqual(page1[a2.BOX_REGION_END:a2.FUSION_REGION_START],
+                         page0[a2.BOX_REGION_END:a2.FUSION_REGION_START])
+        self.assertEqual(a2.audit(self.dst)["pc_boxes"], 112)
+
     def test_rtc_preserved_in_new_trailer(self):
         before = native_fixture(self.src, rtc=True)
         a2.prepare(self.src, self.dst)

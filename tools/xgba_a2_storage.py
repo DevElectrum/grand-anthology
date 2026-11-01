@@ -47,6 +47,13 @@ assert PC_BYTES == sp.PK_SIZE
 assert PC_BYTES + HEADER.size <= PC_STRIDE
 assert META_BASE + META_STRIDE * 2 < SUPER_BACKUP
 assert PC_PAGES * BOXES_PER_PAGE * BOX_SLOTS == 3360
+# The native PokemonStorage ABI has 420 BoxPokemon × 80 bytes and 4
+# full Pokemon × 100 bytes. Names/wallpaper are NOT zero-terminated strings.
+BOX_REGION_START = 4
+BOX_REGION_END = BOX_REGION_START + BOXES_PER_PAGE * BOX_SLOTS * 80
+FUSION_REGION_START = PC_BYTES - 4 * 100
+assert BOX_REGION_END == 0x8344
+assert FUSION_REGION_START == 0x83D0
 
 
 class A2Error(ValueError):
@@ -225,6 +232,17 @@ def audit(path):
     raise A2Error("No coherent native save slot and referenced PC-page generation")
 
 
+def empty_page_template(source_pc):
+    """Preserve valid GBA-encoded box names and wallpaper, clear all Mons."""
+    if len(source_pc) != PC_BYTES:
+        raise A2Error("Cannot initialize boxes from an unknown storage ABI")
+    empty = bytearray(source_pc)
+    empty[0] = 0
+    empty[BOX_REGION_START:BOX_REGION_END] = bytes(BOX_REGION_END - BOX_REGION_START)
+    empty[FUSION_REGION_START:PC_BYTES] = bytes(PC_BYTES - FUSION_REGION_START)
+    return bytes(empty)
+
+
 def prepare(source, target):
     source = Path(source).expanduser()
     target = Path(target).expanduser()
@@ -247,8 +265,9 @@ def prepare(source, target):
             out.write(SUPER_HEADER)
             out.seek(SUPER_BACKUP)
             out.write(SUPER_HEADER)
+            empty_page = empty_page_template(bytes(save.pk))
             for page in range(PC_PAGES):
-                payload = bytes(save.pk) if page == 0 else bytes(PC_BYTES)
+                payload = bytes(save.pk) if page == 0 else empty_page
                 for slot, seq in ((0, 1), (1, 2)):
                     out.seek(page_offset(page, slot))
                     out.write(make_record(PAGE_MAGIC, page, seq, payload))
