@@ -1,6 +1,6 @@
 # A1 Architecture Decision Record: XGBA-native Grand Anthology
 
-**Status:** DESIGN ONLY. User requested a proper adversarial plan; no A1 gameplay, linker, emulator or save code has been implemented. Implementation requires a separate explicit start instruction. Date: 2026-10-31.
+**Status:** SOURCE IMPLEMENTED ON LAB BRANCH; FIRST FULL 256 MiB ROM CI GREEN, stricter ELF pointer CI in progress; single XGBA gameplay acceptance still pending. User explicitly authorized A1 implementation on 31 October 2026. No production or Mosaic code was changed.
 
 ## 1. Definition of done
 
@@ -92,4 +92,4 @@ After CI green, build A1 in its separate local worktree and test with a **dispos
 
 A2 will design the actual native-compatible Flash-to-XGBA 16 MiB save migration, PC data model, bag schema, dual-copy CRC/recovery, performant lookup and collection UI. A3 will redesign regional progress/map IDs, independent of asset offsets. A4 covers modern battle rules. A5 begins actual new Sinnoh gameplay. No A1 task is allowed to silently pull these into scope.
 
-**Next action authorized by this design:** none yet. User asked for proper planning; proceed to implementation only on explicit `Begin A1` or equivalent.
+**Implementation began by explicit user approval.** CI must fully pass before a single disposable-copy gameplay acceptance. Do not start A2 or merge this experiment prematurely.

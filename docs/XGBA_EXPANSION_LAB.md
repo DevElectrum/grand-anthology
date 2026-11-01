@@ -1,6 +1,6 @@
 # Grand Anthology XGBA expansion laboratory
 
-> **A1 plan is complete:** read [the detailed adversarial design](ANTHOLOGY_A1_DESIGN.md). A1 is currently design-only, not an implemented port. All 1,043 map layouts' raw map/border data will be externally packed via generated absolute symbols; native ROM/saves, ids and scripts remain intact; XGBA 256 MiB ROM uses revision 0x00 until A2 save work. Await explicit start authorization.
+> **A1 implemented, CI acceptance underway:** see [the detailed A1 design](ANTHOLOGY_A1_DESIGN.md) and newest [handoff](NEXT_ASTRA_HANDOFF.md). The user explicitly authorized implementation. All 1,043 map layouts' 2,086 raw blobs now compile as high-ROM absolute pointers, and the optimized 256 MiB ROM pack passed full CI at https://github.com/DevElectrum/grand-anthology/actions/runs/41257793084. A stricter linked-ELF pointer gate is still being checked. The native 128 KiB Flash/save v13, native code and all map IDs remain unchanged. **One gameplay acceptance remains**, not another E6/E7 test marathon.
 
 ## Updated charter: TWO PROJECTS, ONE EXPERIMENTAL EMULATOR (31 October 2026)
 
