@@ -8,6 +8,7 @@ on:
       - '.github/workflows/A2-XGBA-Boot-Probe.yml'
       - 'src/save.c'
       - 'src/save_failed_screen.c'
+      - 'src/trade.c'
       - 'src/new_game.c'
       - 'src/main.c'
       - 'src/xgba_a2_*.c'
