@@ -1812,7 +1812,10 @@ static void CB2_ReturnToPokeStorage(void)
     sStorage = AllocZeroed(sizeof(*sStorage));
     if (sStorage == NULL)
     {
-        if (sStorage->boxOption == OPTION_SELECT_MON)
+        // Reopening after naming, summary or A2 paging must not dereference
+        // an allocation that just failed. The selected mode is saved before
+        // freeing the old PC screen.
+        if (sCurrentBoxOption == OPTION_SELECT_MON)
             SetMainCallback2(CB2_ReturnToFieldContinueScript);
         else
             SetMainCallback2(CB2_ExitPokeStorage);
