@@ -187,21 +187,29 @@ int XgbaA2CohortSelect(const struct XgbaA2JournalIo *io,
         || record[1].generation > record[0].generation) ? 1 : 0;
     second = (uint8_t)(1 - first);
 
-    if (TrySlot(io, reader, nativeContext, scratch, first, &candidate)
-        == XGBA_A2_JOURNAL_OK)
     {
-        *selected = candidate;
-        selected->recovered = 0;
-        return XGBA_A2_JOURNAL_OK;
+        int status = TrySlot(io, reader, nativeContext, scratch, first, &candidate);
+        if (status == XGBA_A2_JOURNAL_OK)
+        {
+            *selected = candidate;
+            selected->recovered = 0;
+            return XGBA_A2_JOURNAL_OK;
+        }
+        if (status == XGBA_A2_JOURNAL_IO_ERROR)
+            return status;
     }
 
-    if (valid[second] && TrySlot(io, reader, nativeContext,
-                                 scratch, second, &candidate)
-        == XGBA_A2_JOURNAL_OK)
+    if (valid[second])
     {
-        *selected = candidate;
-        selected->recovered = 1;
-        return XGBA_A2_JOURNAL_OK;
+        int status = TrySlot(io, reader, nativeContext, scratch, second, &candidate);
+        if (status == XGBA_A2_JOURNAL_OK)
+        {
+            *selected = candidate;
+            selected->recovered = 1;
+            return XGBA_A2_JOURNAL_OK;
+        }
+        if (status == XGBA_A2_JOURNAL_IO_ERROR)
+            return status;
     }
     return XGBA_A2_JOURNAL_MISSING;
 }
