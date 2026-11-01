@@ -1,3 +1,11 @@
+# A2 autonomous execution authorization (Nov 1, 2026)
+
+The owner is currently sick and explicitly requested: **plan the rest of A2, proceed without requiring Nyx supervision, and do not interrupt for routine choices**. Work on `xgba/a2-collection-lab` only, using GitHub CI, XGBA headless/test infrastructure, and disposable files. Never touch actual player saves, Mosaic, main, or frozen XGBA. No asynchronous/background work is promised; continuation requires active tool execution.
+
+**Canonical full execution plan:** `docs/ANTHOLOGY_A2_AUTONOMOUS_PLAN.md`. **Known critical defect:** `docs/ANTHOLOGY_A2_SAVE_ENTRY_AUDIT.md` documents A2's `LinkFullSave_*` and `WriteSaveBlock*` early-TRUE no-op behavior. Do not call those paths safe; design synchronized stage/commit or guard unsupported link flows before irreversible actions. The A2 XGBA boot-probe workflow builds a disposable E6 ROM+save and exercises the frozen E7 headless emulator; it is only a boot probe, **not save/restart gameplay acceptance**. Continue large, self-contained engineering batches with adversarial CI and accurate evidence. Handoff after meaningful milestones.
+
+---
+
 # A2 save-integrity checkpoint, Nov 1, 2026
 
 Active branch: xgba/a2-collection-lab. No A1 or stable emulator changes, no user save touched.
