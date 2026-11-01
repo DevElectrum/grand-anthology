@@ -1,3 +1,9 @@
+# A2 isolated-build verification PASS, Nov 1 2026
+
+GitHub Actions run 41295322213 is GREEN in BOTH storage-format and native-a1-regression. The latter verified original 256 MiB A1 ROM/revision-zero, a FULL separately compiled XGBA_A2=1 ARM build using build/xgba-a2-release rather than reusing A1 objects, and a temporary development 256 MiB E6-tagged A2 cartridge with corrected GBA header checksum, full A1 high-address layout, and intact final ROM probe. CI deleted the temporary E6 ROM and did NOT upload any game binary. The first-save E6 blank template, C journal initializer and interruption matrix also passed. This is *build/format acceptance*, NOT actual XGBA emulator gameplay acceptance. Next needed: emulator boot, New Game, save, exit/reopen and interrupted native/E6 recovery on disposable saves; HOF/special-save support; cross-page search/favorites/bulk release/bag; one user smoke. Keep A1 and real player saves untouched.
+
+---
+
 # A2 packaging/isolation checkpoint (Nov 1, 2026)
 
 Latest source on branch xgba/a2-collection-lab includes the newgame bootstrap, 112-box resident pager, cross-page capture fallback, and a developer-only E6 ROM tagger. The E6 tagger at tools/xgba_a2_rom.py confirms the source is a 256 MiB XGBA256 revision-zero A1-layout ROM and has a valid GBA checksum and last-byte probe, then creates a separate revision-E6 image with only header revision 0xBC and complement 0xBD changed. It refuses overwrites and does not publish binaries. Standalone unit tests prove those two bytes alone change and malformed input is refused.
