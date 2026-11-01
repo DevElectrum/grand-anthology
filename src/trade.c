@@ -441,6 +441,14 @@ static void InitTradeMenu(void)
 
 void CB2_StartCreateTradeMenu(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // The original link trade publishes its final save signature only after
+    // partner synchronization. An A2 global metadata commit cannot be
+    // substituted blindly. Reject before either Pokémon is exchanged.
+    CloseLink();
+    DoA2UnsupportedLinkScreen();
+    return;
+#endif
     SetMainCallback2(CB2_CreateTradeMenu);
     gMain.callback1 = NULL;
     gPartiesCount[B_TRAINER_OPPONENT_A] = 0;
@@ -2796,6 +2804,13 @@ static void LoadTradeMonPic(struct Pokemon *mon, u8 state)
 
 void CB2_LinkTrade(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // Defensive gate for link states entered without opening the normal
+    // trade menu. Never reach the Pokémon swap with a no-op save path.
+    CloseLink();
+    DoA2UnsupportedLinkScreen();
+    return;
+#endif
     switch (gMain.state)
     {
     case 0:
