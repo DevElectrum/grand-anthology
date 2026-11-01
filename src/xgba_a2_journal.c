@@ -330,7 +330,13 @@ static int WriteRecord(const struct XgbaA2JournalIo *io, uint8_t isMeta,
 
     if (!io->write(io->context, offset + 8, header + 8, HEADER_BYTES - 8))
         return XGBA_A2_JOURNAL_IO_ERROR;
-    if (!io->write(io->context, offset, header, 8))
+
+    // A 7/8-byte partial magic write could accidentally complete the magic
+    // because its final byte is already zero. Keep byte zero INVALID until
+    // the last single, atomic 8-bit store. This is the actual commit point.
+    if (!io->write(io->context, offset + 1, header + 1, 7))
+        return XGBA_A2_JOURNAL_IO_ERROR;
+    if (!io->write(io->context, offset, header, 1))
         return XGBA_A2_JOURNAL_IO_ERROR;
 
     // Verify the committed record from physical storage, not assumptions.
