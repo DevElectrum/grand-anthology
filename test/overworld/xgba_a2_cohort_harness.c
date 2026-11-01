@@ -6,8 +6,9 @@
 
 #include "xgba_a2_cohort.h"
 #include "xgba_a2_transaction.h"
+#include "xgba_a2_bootstrap.h"
 
-#define DISK_BYTES 0x2A0000U
+#define DISK_BYTES 0x1000000U
 #define SECTOR_BYTES 4096U
 #define DATA_BYTES 3968U
 #define FOOTER 4084U
@@ -15,6 +16,7 @@
 static uint8_t *sDisk;
 static uint32_t sWriterSectors = 14;
 static uint32_t sExtensionBytesRead = 0;
+static int64_t sWriteBudget = -1;
 
 static void U16(uint8_t *p, uint16_t v)
 {
@@ -73,6 +75,14 @@ static int IoWrite(void *context, uint32_t offset, const uint8_t *src, uint32_t 
     (void)context;
     if ((uint64_t)offset + length > DISK_BYTES)
         return 0;
+    if (sWriteBudget >= 0)
+    {
+        uint32_t count = (uint32_t)(sWriteBudget < length ? sWriteBudget : length);
+        if (count)
+            memcpy(sDisk + offset, src, count);
+        sWriteBudget -= count;
+        return count == length;
+    }
     memcpy(sDisk + offset, src, length);
     return 1;
 }
@@ -80,7 +90,7 @@ static int IoWrite(void *context, uint32_t offset, const uint8_t *src, uint32_t 
 static int NativeRead(void *context, uint8_t physical, uint8_t *buffer)
 {
     (void)context;
-    if (physical >= 28)
+    if (physical >= 32)
         return 0;
     memcpy(buffer, sDisk + (uint32_t)physical * SECTOR_BYTES, SECTOR_BYTES);
     return 1;
@@ -173,6 +183,19 @@ static void MakeMeta(uint8_t copy, uint32_t generation,
                generation, payload, 56);
 }
 
+static void BlankSeed(void)
+{
+    static const uint8_t superblock[24] =
+    {
+        'X','G','B','A','E','6','S',0,
+        2,0,0,0,0,0,2,0,0,0,0,1,
+        0xB0,0x2B,0x5B,0x12
+    };
+    memset(sDisk, 0xFF, DISK_BYTES);
+    memcpy(sDisk + 0x20000, superblock, sizeof(superblock));
+    memcpy(sDisk + 0xFFF000, superblock, sizeof(superblock));
+}
+
 int main(void)
 {
     struct XgbaA2JournalIo io;
@@ -195,6 +218,93 @@ int main(void)
     next[4] ^= 0x5A;
     next[25000] ^= 0x22;
 
+    // New-game protocol cannot run unless BOTH native slots and all reserved
+    // extension records are genuinely blank. Test bad legacy data first.
+    BlankSeed();
+    sDisk[5 * SECTOR_BYTES + 42] = 0;
+    assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter, NULL,
+                                  scratch, old, &selected)
+           == XGBA_A2_JOURNAL_MISSING);
+    BlankSeed();
+    sDisk[XGBA_A2_PC_BASE + 140] = 0;
+    assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter, NULL,
+                                  scratch, old, &selected)
+           == XGBA_A2_JOURNAL_MISSING);
+
+    // A failed initial native write must NOT turn staged pages into a save.
+    BlankSeed();
+    sWriterSectors = 7;
+    assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter, NULL,
+                                  scratch, old, &selected)
+           == XGBA_A2_JOURNAL_IO_ERROR);
+    assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected)
+           == XGBA_A2_JOURNAL_MISSING);
+    assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter, NULL,
+                                  scratch, old, &selected)
+           == XGBA_A2_JOURNAL_MISSING);
+
+    // Crash at each stage. There is only either a complete cohort or NO
+    // selectable cohort; never a half-initialized global Pokemon collection.
+    sWriterSectors = 14;
+    {
+        static const int64_t budgets[] =
+        {
+            0, 1, 7, 31, 32, 1024, 32768, 100000,
+            250000, 500000, 550000, 552000, 557000,
+            559000, 600000
+        };
+        uint32_t trial;
+        for (trial = 0; trial < sizeof(budgets) / sizeof(budgets[0]); trial++)
+        {
+            int result, recovered;
+            BlankSeed();
+            sWriteBudget = budgets[trial];
+            result = XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter,
+                                            NULL, scratch, old, &selected);
+            sWriteBudget = -1;
+            recovered = XgbaA2CohortSelect(&io, NativeRead, NULL,
+                                            scratch, &selected);
+            if (recovered == XGBA_A2_JOURNAL_OK)
+            {
+                assert(selected.nativeSlot == 1 && selected.nativeCounter == 1);
+                assert(selected.metadataGeneration == 1 && selected.activePage == 0);
+                assert(result == XGBA_A2_JOURNAL_OK
+                       || result == XGBA_A2_JOURNAL_IO_ERROR);
+            }
+            else
+            {
+                assert(recovered == XGBA_A2_JOURNAL_MISSING);
+                assert(result != XGBA_A2_JOURNAL_OK);
+                assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter,
+                                              NULL, scratch, old, &selected)
+                       == XGBA_A2_JOURNAL_MISSING);
+            }
+        }
+    }
+
+    BlankSeed();
+    assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter, NULL,
+                                  scratch, old, &selected) == 0);
+    assert(selected.nativeCounter == 1 && selected.nativeSlot == 1);
+    assert(selected.metadataGeneration == 1);
+    for (page = 0; page < XGBA_A2_PC_PAGES; page++)
+        assert(selected.pages[page] == 2);
+    assert(memcmp(sDisk + XGBA_A2_PC_BASE + XGBA_A2_PC_STRIDE + 32,
+                  old, XGBA_A2_PC_BYTES) == 0);
+    {
+        uint32_t empty = XGBA_A2_PC_BASE + 3 * XGBA_A2_PC_STRIDE + 32;
+        assert(sDisk[empty] == 0);
+        assert(sDisk[empty + 4] == 0);
+        assert(sDisk[empty + 0x8344] == old[0x8344]);
+        assert(sDisk[empty + 0x83D0] == 0);
+    }
+    assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter, NULL,
+                                  scratch, old, &selected)
+           == XGBA_A2_JOURNAL_MISSING);
+    puts("A2 fresh E6 bootstrap and crash budget matrix PASS");
+
+    // Reset for existing independent multi-generation transaction tests.
+    memset(sDisk, 0xFF, DISK_BYTES);
     BuildNative(0, 2, old);
     for (page = 0; page < XGBA_A2_PC_PAGES; page++)
     {
