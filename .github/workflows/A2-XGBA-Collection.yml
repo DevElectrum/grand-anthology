@@ -1,0 +1,30 @@
+name: A2 XGBA Collection Storage Contract
+on:
+  push:
+    branches:
+      - xgba/a2-collection-lab
+    paths:
+      - '.github/workflows/A2-XGBA-Collection.yml'
+      - 'tools/xgba_a2_storage.py'
+      - 'include/xgba_a2_storage_format.h'
+      - 'test/overworld/test_xgba_a2_storage.py'
+      - 'test/overworld/SavePatch.py'
+      - 'test/save.c'
+      - 'include/save.h'
+      - 'include/constants/global.h'
+      - 'include/pokemon_storage_system.h'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  storage-format:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify native Flash and save schema pins
+        run: python3 test/overworld/SavePatch.py --check
+      - name: Validate A2 E6 layout and fail-closed migration
+        run: python3 -m unittest discover -s test/overworld -p 'test_xgba_a2_storage.py' -v
+      - name: Print storage geometry
+        run: python3 tools/xgba_a2_storage.py layout
