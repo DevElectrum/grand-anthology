@@ -598,6 +598,9 @@ include map_data_rules.mk
 ifeq ($(XGBA_A1),1)
 XGBA_A1_ASM := $(OBJ_DIR)/xgba-a1-layouts.inc
 XGBA_A1_MANIFEST := $(OBJ_DIR)/a1-manifest.json
+# data/maps.s must consume the current variant's generated absolute symbols,
+# not the similarly named A1 release output. GNU cpp receives a quoted path.
+CPPFLAGS += -DXGBA_LAYOUT_INCLUDE=\"$(XGBA_A1_ASM)\"
 # All map geometry files are direct inputs: edits regenerate the absolute
 # pointers and packed asset manifest rather than silently using stale ROM data.
 $(XGBA_A1_ASM): data/layouts/layouts.inc data/layouts/layouts.json $(wildcard data/layouts/*/*.bin) tools/xgba_a1_assets.py
