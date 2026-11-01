@@ -120,5 +120,8 @@ void Task_LinkFullSave(u8 taskId);
 
 // save_failed_screen.c
 void DoSaveFailedScreen(u8 saveType);
+#if defined(XGBA_A2) && XGBA_A2
+void DoA2UnsupportedLinkScreen(void);
+#endif
 
 #endif // GUARD_SAVE_H
