@@ -54,13 +54,13 @@ class A1Tests(unittest.TestCase):
             {"label": "A_Map", "address": 0x14000100},
             {"label": "B_Map", "address": 0x1FF00000},
         ]}
-        valid_nm = "14000100 A A_Map\\n1ff00000 A B_Map\\n"
+        valid_nm = "14000100 A A_Map\n1ff00000 A B_Map\n"
         with patch.object(a1.subprocess, "run", return_value=SimpleNamespace(stdout=valid_nm)):
             a1.verify_symbols(fake_plan, "fake.elf")
         with patch.object(a1.subprocess, "run", return_value=SimpleNamespace(stdout=valid_nm.replace("1ff00000", "1ff00004"))):
             with self.assertRaisesRegex(ValueError, "mismatch"):
                 a1.verify_symbols(fake_plan, "fake.elf")
-        with patch.object(a1.subprocess, "run", return_value=SimpleNamespace(stdout="14000100 A A_Map\\n")):
+        with patch.object(a1.subprocess, "run", return_value=SimpleNamespace(stdout="14000100 A A_Map\n")):
             with self.assertRaisesRegex(ValueError, "Missing"):
                 a1.verify_symbols(fake_plan, "fake.elf")
 
