@@ -71,4 +71,14 @@ int XgbaA2JournalEqualsPageGeneration(const struct XgbaA2JournalIo *io,
                                       uint8_t page, uint32_t generation,
                                       const void *source, uint32_t bytes);
 
+// Inspect a specific physical A/B record even if it is not the newest.
+// Needed to recover an older globally coherent native+PC save generation.
+int XgbaA2JournalReadMetaSlot(const struct XgbaA2JournalIo *io,
+                              uint8_t slot, void *destination,
+                              struct XgbaA2JournalInfo *info);
+// Checks a page generation's header and payload CRC without copying 34 KiB.
+int XgbaA2JournalFindPageGeneration(const struct XgbaA2JournalIo *io,
+                                    uint8_t page, uint32_t generation,
+                                    struct XgbaA2JournalInfo *info);
+
 #endif

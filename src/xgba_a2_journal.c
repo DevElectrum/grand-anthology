@@ -487,3 +487,61 @@ int XgbaA2JournalEqualsPageGeneration(const struct XgbaA2JournalIo *io,
         return XGBA_A2_JOURNAL_IO_ERROR;
     return same ? XGBA_A2_JOURNAL_OK : XGBA_A2_JOURNAL_DIFFERENT;
 }
+
+
+int XgbaA2JournalReadMetaSlot(const struct XgbaA2JournalIo *io,
+                              uint8_t slot, void *destination,
+                              struct XgbaA2JournalInfo *info)
+{
+    struct Candidate checked;
+    uint32_t offset;
+    int status;
+
+    if (!IoReady(io) || destination == NULL || slot > 1)
+        return XGBA_A2_JOURNAL_INVALID_ARG;
+
+    status = CheckCandidate(io, 1, 0, slot, META_BYTES, &checked);
+    if (status != XGBA_A2_JOURNAL_OK)
+        return status;
+    if (!checked.valid)
+        return XGBA_A2_JOURNAL_MISSING;
+
+    offset = RecordOffset(1, 0, slot) + HEADER_BYTES;
+    if (!io->read(io->context, offset, destination, META_BYTES))
+        return XGBA_A2_JOURNAL_IO_ERROR;
+    if (info != NULL)
+    {
+        info->generation = checked.generation;
+        info->slot = slot;
+        info->validCopies = 1;
+    }
+    return XGBA_A2_JOURNAL_OK;
+}
+
+int XgbaA2JournalFindPageGeneration(const struct XgbaA2JournalIo *io,
+                                    uint8_t page, uint32_t generation,
+                                    struct XgbaA2JournalInfo *info)
+{
+    struct Candidate checked;
+    uint8_t slot;
+
+    if (!IoReady(io) || page >= XGBA_A2_PC_PAGES || generation == 0)
+        return XGBA_A2_JOURNAL_INVALID_ARG;
+    for (slot = 0; slot < 2; slot++)
+    {
+        int status = CheckCandidate(io, 0, page, slot, XGBA_A2_PC_BYTES, &checked);
+        if (status != XGBA_A2_JOURNAL_OK)
+            return status;
+        if (checked.valid && checked.generation == generation)
+        {
+            if (info != NULL)
+            {
+                info->generation = generation;
+                info->slot = slot;
+                info->validCopies = 1;
+            }
+            return XGBA_A2_JOURNAL_OK;
+        }
+    }
+    return XGBA_A2_JOURNAL_MISSING;
+}
