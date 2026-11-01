@@ -28,7 +28,7 @@ MAGIC = b"XGBA256"
 PROBE_PREFIX = b"XGBAA1!!"
 PROBE_OFFSET = ROM_BYTES - 16
 LABEL_RE = re.compile(
-    r'(?m)^([A-Za-z_][A-Za-z0-9_]*)::\s*\n[ \t]*\\.incbin[ \t]+"([^"]+)"[ \t]*\n'
+    r'(?m)^([A-Za-z_][A-Za-z0-9_]*)::\n[ \t]*\.incbin[ \t]+"([^"]+)"[ \t]*\n'
 )
 
 
