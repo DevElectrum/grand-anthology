@@ -239,16 +239,33 @@ int main(void)
         assert(pager.committed[0] == 3 && pager.staged[0] == 0);
         assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
         assert(selected.metadataGeneration == 3 && selected.nativeSlot == 1);
+
+        // Make a second committed save after switching to another PC page.
+        // The alternate native slot is recycled; the previous GLOBAL
+        // metadata commit must still point to an intact native+PC pair.
+        assert(XgbaA2PagerSwitch(&pager, 1) == XGBA_A2_JOURNAL_OK);
+        old[47] ^= 0x39;
+        committed = result;
+        assert(XgbaA2TransactionCommit(&pager, &committed, NativeRead,
+                                       NativeWriter, NULL, scratch, &result) == 0);
+        assert(result.metadataGeneration == 4 && result.nativeSlot == 0);
+        assert(result.nativeCounter == 4 && result.activePage == 1);
+        assert(result.pages[1] == 3);
+        assert(result.pages[0] == 3);
+        assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
+        assert(selected.metadataGeneration == 4 && selected.activePage == 1);
     }
 
-    // Corrupt latest page -> consistent rollback to old native slot.
-    sDisk[XGBA_A2_PC_BASE + 32 + 11] ^= 0x80;
+    // Latest active page is page 1; corrupt its new generation, not the
+    // prior save's still-committed page-0 record.
+    sDisk[XGBA_A2_PC_BASE + 2 * XGBA_A2_PC_STRIDE + 32 + 11] ^= 0x80;
     assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
-    assert(selected.metadataGeneration == 2 && selected.nativeSlot == 0);
+    assert(selected.metadataGeneration == 3 && selected.nativeSlot == 1);
+    assert(selected.nativeCounter == 3 && selected.activePage == 0);
     assert(selected.recovered);
 
-    // Also corrupt the old native Flash: never silently load mixed progress.
-    sDisk[5 * SECTOR_BYTES + 100] ^= 0x40;
+    // Also corrupt the previously committed native slot: fail closed.
+    sDisk[(14 + 5) * SECTOR_BYTES + 100] ^= 0x40;
     assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected)
            == XGBA_A2_JOURNAL_MISSING);
 
