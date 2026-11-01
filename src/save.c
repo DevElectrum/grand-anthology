@@ -17,6 +17,7 @@
 #include "xgba_a2_guest_bus.h"
 #include "xgba_a2_transaction.h"
 #include "xgba_a2_game.h"
+#include "pokemon.h"
 #endif
 
 static u16 CalculateChecksum(void *, u16);
@@ -815,6 +816,56 @@ static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
     result = WriteSaveSectorOrSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);
     return result == SAVE_STATUS_OK && !gDamagedSaveSectors
         && gSaveCounter == counter;
+}
+
+bool8 XgbaA2GameFindFreePage(u8 *foundPage)
+{
+    struct XgbaA2JournalInfo pageInfo;
+    struct BoxPokemon sample;
+    u8 offset;
+    if (!sA2Ready || sA2Pager.fatal || foundPage == NULL)
+        return FALSE;
+
+    // Only called when all 420 slots on the resident page are full.
+    // Pages are CRC-checked ONCE before inspecting their box data.
+    // No 34 KiB temporary page, no 3,360-mon memory allocation.
+    for (offset = 1; offset < XGBA_A2_PC_PAGES; offset++)
+    {
+        u8 page = (sA2Pager.activePage + offset) % XGBA_A2_PC_PAGES;
+        u32 generation = sA2Pager.staged[page] != 0
+            ? sA2Pager.staged[page] : sA2Pager.committed[page];
+        u32 firstOffset;
+        u32 mon;
+        if (XgbaA2JournalFindPageGeneration(
+            &sA2Io, page, generation, &pageInfo) != XGBA_A2_JOURNAL_OK)
+        {
+            // Cannot establish the complete PC's capacity. Fail closed:
+            // never claim that a catch can safely be stored.
+            sA2Ready = FALSE;
+            return FALSE;
+        }
+        firstOffset = XGBA_A2_PC_BASE
+            + ((u32)page * 2 + pageInfo.slot) * XGBA_A2_PC_STRIDE
+            + XGBA_A2_RECORD_HEADER_BYTES
+            + offsetof(struct PokemonStorage, boxes);
+
+        for (mon = 0; mon < TOTAL_BOXES_COUNT * IN_BOX_COUNT; mon++)
+        {
+            if (!sA2Io.read(sA2Io.context,
+                            firstOffset + mon * sizeof(struct BoxPokemon),
+                            (u8 *)&sample, sizeof(sample)))
+            {
+                sA2Ready = FALSE;
+                return FALSE;
+            }
+            if (GetBoxMonData(&sample, MON_DATA_SPECIES) == SPECIES_NONE)
+            {
+                *foundPage = page;
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
 }
 
 u8 XgbaA2GamePage(void)

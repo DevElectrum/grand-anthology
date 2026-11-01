@@ -47,6 +47,9 @@
 #include "constants/songs.h"
 #include "constants/pokemon_icon.h"
 #include "swsh_storage_system.h"
+#if defined(XGBA_A2) && XGBA_A2
+#include "xgba_a2_game.h"
+#endif
 
 /*
     NOTE: This file is large. Some general groups of functions have
@@ -9757,6 +9760,13 @@ bool8 CheckFreePokemonStorageSpace(void)
         }
     }
 
+#if defined(XGBA_A2) && XGBA_A2
+    {
+        u8 otherPage;
+        if (XgbaA2GameFindFreePage(&otherPage))
+            return TRUE;
+    }
+#endif
     return FALSE;
 }
 

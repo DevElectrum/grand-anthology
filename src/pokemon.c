@@ -40,6 +40,9 @@
 #include "pokemon_icon.h"
 #include "pokemon_summary_screen.h"
 #include "pokemon_storage_system.h"
+#if defined(XGBA_A2) && XGBA_A2
+#include "xgba_a2_game.h"
+#endif
 #include "script_pokemon_util.h"
 #include "pokerus.h"
 #include "random.h"
@@ -3051,6 +3054,40 @@ u8 CopyMonToPC(struct Pokemon *mon)
             boxNo = 0;
     } while (boxNo != startBox);
 
+#if defined(XGBA_A2) && XGBA_A2
+    // Resident 14 boxes are full. Search CRC-validated remote pages only
+    // now, not after every ordinary catch. Page change stages any pending
+    // edits; it never writes a new global save generation on its own.
+    {
+        u8 otherPage;
+        if (XgbaA2GameFindFreePage(&otherPage)
+            && XgbaA2GameSwitchPage(otherPage))
+        {
+            startBox = GetIntendedDepositBox();
+            boxNo = startBox;
+            do
+            {
+                for (boxPos = 0; boxPos < IN_BOX_COUNT; boxPos++)
+                {
+                    struct BoxPokemon *checkingMon = GetBoxedMonPtr(boxNo, boxPos);
+                    if (GetBoxMonData(checkingMon, MON_DATA_SPECIES) == SPECIES_NONE)
+                    {
+                        MonRestorePP(mon);
+                        CopyMon(checkingMon, &mon->box, sizeof(mon->box));
+                        gSpecialVar_MonBoxId = boxNo;
+                        gSpecialVar_MonBoxPos = boxPos;
+                        FlagClear(FLAG_SHOWN_BOX_WAS_FULL_MESSAGE);
+                        VarSet(VAR_PC_BOX_TO_SEND_MON, boxNo);
+                        return MON_GIVEN_TO_PC;
+                    }
+                }
+                boxNo++;
+                if (boxNo == TOTAL_BOXES_COUNT)
+                    boxNo = 0;
+            } while (boxNo != startBox);
+        }
+    }
+#endif
     return MON_CANT_GIVE;
 }
 
@@ -3233,6 +3270,13 @@ bool8 IsPokemonStorageFull(void)
             if (GetBoxMonDataAt(i, j, MON_DATA_SPECIES) == SPECIES_NONE)
                 return FALSE;
 
+#if defined(XGBA_A2) && XGBA_A2
+    {
+        u8 otherPage;
+        if (XgbaA2GameFindFreePage(&otherPage))
+            return FALSE;
+    }
+#endif
     return TRUE;
 }
 

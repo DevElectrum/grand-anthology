@@ -9,6 +9,8 @@
 #if defined(XGBA_A2) && XGBA_A2
 u8 XgbaA2GamePage(void);
 bool8 XgbaA2GameSwitchPage(u8 page);
+// Reports another page with free slots without changing the live PC.
+bool8 XgbaA2GameFindFreePage(u8 *page);
 #endif
 
 #endif
