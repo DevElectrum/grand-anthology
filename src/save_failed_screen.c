@@ -253,8 +253,27 @@ static void CB2_SaveFailedScreen(void)
     }
 }
 
+#if defined(XGBA_A2) && XGBA_A2
+static const u8 sText_A2SaveFailed[] = _(
+    "XGBA save verification failed.\\n"
+    "No repair was attempted.\\n"
+    "Press A to restart.");
+#endif
+
 static void CB2_WipeSave(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // The legacy failure screen wipes Flash sectors and retries the save.
+    // A2 cannot safely use that path: a failure may be in extended metadata,
+    // and the physical sector marked damaged could belong to a committed
+    // cohort. No automatic erase, retry, or false "save complete" message.
+    // Restart so boot chooses the last independently verified global cohort.
+    sClockInfo[CLOCK_RUNNING] = FALSE;
+    FillWindowPixelBuffer(sWindowIds[TEXT_WIN_ID], PIXEL_FILL(1));
+    SaveFailedScreenTextPrint(sText_A2SaveFailed, 1, 0);
+    gGameContinueCallback = NULL;
+    SetMainCallback2(CB2_FadeAndReturnToTitleScreen);
+#else
     u8 wipeTries = 0;
 
     sClockInfo[CLOCK_RUNNING] = TRUE;
@@ -298,6 +317,7 @@ static void CB2_WipeSave(void)
     }
 
     SetMainCallback2(CB2_FadeAndReturnToTitleScreen);
+#endif
 }
 
 static void CB2_GameplayCannotBeContinued(void)
