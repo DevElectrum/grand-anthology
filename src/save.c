@@ -1097,11 +1097,24 @@ u8 TrySavingData(u8 saveType)
     }
 }
 
+#if defined(XGBA_A2) && XGBA_A2
+static bool8 A2RejectIncrementalSave(void)
+{
+    // Older trade/mixing paths use TRUE as "all sectors finished".
+    // Returning TRUE without a journal commit was silently losing data.
+    // Route to a visible fatal save error and force a clean cohort reload.
+    sA2Ready = FALSE;
+    sA2FreshSaveArmed = FALSE;
+    gSaveAttemptStatus = SAVE_STATUS_ERROR;
+    DoA2UnsupportedLinkScreen();
+    return TRUE;
+}
+#endif
+
 bool8 LinkFullSave_Init(void)
 {
 #if defined(XGBA_A2) && XGBA_A2
-    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
-    return TRUE;
+    return A2RejectIncrementalSave();
 #endif
     if (gFlashMemoryPresent != TRUE)
         return TRUE;
@@ -1114,8 +1127,7 @@ bool8 LinkFullSave_Init(void)
 bool8 LinkFullSave_WriteSector(void)
 {
 #if defined(XGBA_A2) && XGBA_A2
-    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
-    return TRUE;
+    return A2RejectIncrementalSave();
 #endif
     u8 status = HandleWriteIncrementalSector(NUM_SECTORS_PER_SLOT, gRamSaveSectorLocations);
     if (gDamagedSaveSectors)
@@ -1133,8 +1145,7 @@ bool8 LinkFullSave_WriteSector(void)
 bool8 LinkFullSave_ReplaceLastSector(void)
 {
 #if defined(XGBA_A2) && XGBA_A2
-    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
-    return TRUE;
+    return A2RejectIncrementalSave();
 #endif
     HandleReplaceSectorAndVerify(NUM_SECTORS_PER_SLOT, gRamSaveSectorLocations);
     if (gDamagedSaveSectors)
@@ -1145,8 +1156,7 @@ bool8 LinkFullSave_ReplaceLastSector(void)
 bool8 LinkFullSave_SetLastSectorSignature(void)
 {
 #if defined(XGBA_A2) && XGBA_A2
-    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
-    return TRUE;
+    return A2RejectIncrementalSave();
 #endif
     CopySectorSignatureByte(NUM_SECTORS_PER_SLOT, gRamSaveSectorLocations);
     if (gDamagedSaveSectors)
@@ -1157,8 +1167,7 @@ bool8 LinkFullSave_SetLastSectorSignature(void)
 bool8 WriteSaveBlock2(void)
 {
 #if defined(XGBA_A2) && XGBA_A2
-    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
-    return TRUE;
+    return A2RejectIncrementalSave();
 #endif
     if (gFlashMemoryPresent != TRUE)
         return TRUE;
@@ -1179,8 +1188,7 @@ bool8 WriteSaveBlock2(void)
 bool8 WriteSaveBlock1Sector(void)
 {
 #if defined(XGBA_A2) && XGBA_A2
-    // Direct sector writes cannot bypass the A2 native+PC commit protocol.
-    return TRUE;
+    return A2RejectIncrementalSave();
 #endif
     bool32 finished = FALSE;
     u16 sectorId = ++gIncrementalSectorId; // Because WriteSaveBlock2 will have been called prior, this will be SECTOR_ID_SAVEBLOCK1_START
