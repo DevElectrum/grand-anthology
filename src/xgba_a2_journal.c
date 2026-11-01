@@ -79,7 +79,7 @@ static const uint32_t sCrcTable[256] = {
     0xBDBDF21CU, 0xCABAC28AU, 0x53B39330U, 0x24B4A3A6U, 0xBAD03605U, 0xCDD70693U, 0x54DE5729U, 0x23D967BFU,
     0xB3667A2EU, 0xC4614AB8U, 0x5D681B02U, 0x2A6F2B94U, 0xB40BBE37U, 0xC30C8EA1U, 0x5A05DF1BU, 0x2D02EF8DU,
 
-}
+};
 
 static uint32_t CrcUpdate(uint32_t crc, const uint8_t *buffer, uint32_t count)
 {
