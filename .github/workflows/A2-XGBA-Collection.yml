@@ -40,3 +40,47 @@ jobs:
           /tmp/xgba-a2-journal-test
       - name: Print storage geometry
         run: python3 tools/xgba_a2_storage.py layout
+
+
+  native-a1-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install native ARM7TDMI toolchain
+        timeout-minutes: 20
+        run: |
+          set -e
+          for source in /etc/apt/sources.list.d/*; do
+            if [ -f "$source" ] && grep -q 'packages.microsoft.com' "$source"; then
+              sudo mv "$source" "$source.disabled"
+            fi
+          done
+          sudo apt-get update -o Acquire::Retries=5
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev libelf1 python3
+      - name: Verify whole Anthology ARM ROM still links under A1 budget
+        shell: bash
+        run: |
+          set -o pipefail
+          make xgba-a1 > /tmp/a2-rom.log 2>&1 || {
+            grep -n -E 'Error:|error:|undefined reference|overflowed|ROM:|No rule|Traceback' /tmp/a2-rom.log | tail -n 100 || true
+            tail -n 100 /tmp/a2-rom.log
+            exit 1
+          }
+          tail -n 24 /tmp/a2-rom.log
+          test "$(stat -c%s xgba-anthology-a1.gba)" -eq 268435456
+      - name: Verify original A1 extended ROM and native-only Flash revision
+        run: |
+          python3 tools/xgba_a1_assets.py verify \
+            --native xgba-anthology-a1-native-release.gba \
+            --manifest build/xgba-a1-release/a1-manifest.json \
+            --output xgba-anthology-a1.gba
+          python3 tools/xgba_a1_assets.py check-symbols \
+            --elf xgba-anthology-a1-native-release.elf \
+            --manifest build/xgba-a1-release/a1-manifest.json
+          python3 -c "f=open('xgba-anthology-a1.gba','rb'); f.seek(0xBC); assert f.read(1)==bytes([0]); f.close()"
+      # No ROM binaries or user saves are uploaded.
