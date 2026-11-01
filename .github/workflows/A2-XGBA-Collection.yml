@@ -6,6 +6,9 @@ on:
     paths:
       - '.github/workflows/A2-XGBA-Collection.yml'
       - 'tools/xgba_a2_storage.py'
+      - 'src/xgba_a2_journal.c'
+      - 'include/xgba_a2_journal.h'
+      - 'test/overworld/xgba_a2_journal_harness.c'
       - 'include/xgba_a2_storage_format.h'
       - 'test/overworld/test_xgba_a2_storage.py'
       - 'test/overworld/SavePatch.py'
@@ -26,5 +29,9 @@ jobs:
         run: python3 test/overworld/SavePatch.py --check
       - name: Validate A2 E6 layout and fail-closed migration
         run: python3 -m unittest discover -s test/overworld -p 'test_xgba_a2_storage.py' -v
+      - name: Compile and execute standalone A2 C journal corruption tests
+        run: |
+          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_journal.c test/overworld/xgba_a2_journal_harness.c -o /tmp/xgba-a2-journal-test
+          /tmp/xgba-a2-journal-test
       - name: Print storage geometry
         run: python3 tools/xgba_a2_storage.py layout

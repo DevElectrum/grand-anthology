@@ -125,7 +125,7 @@ int main(void)
     uint8_t *old = malloc(PAGE_BYTES);
     uint8_t *newPage = malloc(PAGE_BYTES);
     uint8_t *readback = malloc(PAGE_BYTES);
-    int64_t failPoints[] = {0, 1, 8, 16, 64, 256, 1024, 16384, 34140, 34500};
+    int64_t failPoints[] = {0, 1, 8, 16, 64, 256, 1024, 16384, 34140, 34183};
     unsigned i;
 
     assert(old != NULL && newPage != NULL && readback != NULL);

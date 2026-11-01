@@ -7,6 +7,8 @@
 // Offsets are absolute 16 MiB save-file offsets, not guest CPU addresses.
 // Each callback must use ONLY byte transfers on the 0x0F guest save window.
 // The driver does not allocate a second PokemonStorage or a large stack buffer.
+// ReadPage callers should stage data in a non-live buffer if their IO layer can
+// report a mid-read fault: failed reads may partially populate destination.
 struct XgbaA2JournalIo
 {
     void *context;
