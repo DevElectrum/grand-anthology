@@ -201,7 +201,7 @@ int main(void)
         Write32(h + 24, Crc(meta, 56));
         Write32(h + 28, Crc(h, 28));
         memcpy(p, h, 32);
-        memcpy(p + 32, meta, 24);
+        memcpy(p + 32, meta, 56);
         updated[20] = 3;
         assert(XgbaA2JournalWriteMeta(&io, updated, 56, &result) == 0);
         assert(XgbaA2JournalReadMeta(&io, output, 56, &result) == 0);
