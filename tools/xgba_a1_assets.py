@@ -190,7 +190,7 @@ def verify_symbols(plan, elf_path, nm="arm-none-eabi-nm"):
     )
     symbols = {}
     for line in result.stdout.splitlines():
-        match = re.fullmatch(r"\\s*([0-9a-fA-F]+)\\s+([A-Za-z])\\s+(\\S+)\\s*", line)
+        match = re.fullmatch(r"\s*([0-9a-fA-F]+)\s+([A-Za-z])\s+(\S+)\s*", line)
         if match and match.group(2).upper() == "A":
             symbols[match.group(3)] = int(match.group(1), 16)
 
