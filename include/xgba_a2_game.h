@@ -2,6 +2,7 @@
 #define GUARD_XGBA_A2_GAME_H
 
 #include "global.h"
+#include "xgba_a2_storage_format.h"
 
 // Available ONLY in a separately qualified A2 experimental build.
 // Page index is zero-based, with 14 local boxes per page.

@@ -5870,9 +5870,10 @@ static void UpdateBoxTitle(u8 boxId)
     FreeSpriteTilesByTag(GFXTAG_BOX_TITLE);
 #if defined(XGBA_A2) && XGBA_A2
     {
+        static const u8 sPageSeparator[] = _("/");
         u8 titledBox[BOX_NAME_LENGTH + 4];
         u8 *end = StringCopy(titledBox, GetBoxNamePtr(boxId));
-        end = StringCopy(end, _("/"));
+        end = StringCopy(end, sPageSeparator);
         ConvertIntToDecimalStringN(end, XgbaA2GamePage() + 1,
                                    STR_CONV_MODE_LEFT_ALIGN, 1);
         RenderBoxTitleCentered(titledBox);
