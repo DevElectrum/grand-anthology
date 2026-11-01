@@ -53,9 +53,9 @@
 
 ### A2.4 Global collection user experience
 
-- First define stable Pokémon identity versus box coordinates. Preserve favorites with an identity-linked, versioned persistence model; consider unique IDs and compatibility with identical species/OT/PID and old-save imports. No favorite may jump to another mon when sorted, traded, evolved, moved, or reboxed.
+- Reuse the **existing** favorite/heart protection bit `MON_DATA_MARKINGS & (1 << 3)` in each 80-byte BoxPokemon record. This follows the Pokémon through normal moves and page copies, so do **not** invent a second favorite database or an unnecessary unique-ID migration. Verify mark preservation with identical species/OT/PID and old-save imports; a favorite must never jump to another mon via sorting, page changes or reboxing.
 - Collection-wide bounded search/filter/sort as an **index/view** without moving physical records. Off-page scan/index rebuild only on relevant mutations and on initial requested search. Search fields: species, types, shiny, legendary/mythical, favorites, item and box/page location (implement UI affordances consistent with 256 KiB EWRAM).
-- Bulk release stages a preview and confirms before mutation, preserving favorite and Legendary/Mythical Pokémon; shiny status alone is not protection per approved policy. Protect from accidental releases while navigating pages, held-item return must check bag capacity and rollback if it cannot fit. Never treat failure as successful count; backup cohort survives power loss.
+- Existing `src/swsh_storage_system.c` already protects heart-marked Pokémon, eggs, restricted Legendary/Mythical forms, held mail and restricted-field-move Pokémon in `BulkReleaseEligible`. Extend that policy to collection-wide operations. Bulk release stages a preview and confirms before mutation; shiny status alone is not protection. The current per-box execution skips an individual release when `AddBagItem` fails, allowing **partial completion**. For global bulk release, preflight held-item return and entire operation capacity, then apply deterministically or cancel without partial loss; document transactional boundaries and survival of the backup cohort.
 - Include regular one-by-one release. Test zero/all-protected/mixed/last-party/eggs/held items/full bag, rollback, duplicate entries and maximum 3,360 slots.
 
 ### A2.5 Global expanded bag
