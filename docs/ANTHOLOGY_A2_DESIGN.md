@@ -1,3 +1,17 @@
+# A2 save-integrity checkpoint, Nov 1, 2026
+
+Active branch: xgba/a2-collection-lab. No A1 or stable emulator changes, no user save touched.
+
+Critical early-load defect fixed in src/save.c: CB2_InitCopyrightScreenAfterBootup calls GetSaveBlocksPointersBaseOffset() BEFORE LoadGameSave(). Previous A2 returned zero unless sA2Ready, mis-relocating SaveBlock1/2 on valid A2 saves. It now resolves the globally coherent A2 cohort before taking the trainer-id relocation from native Flash. TryLoadSaveSlot selects the exact metadata-approved cohort BEFORE copying native data; it returns SAVE_STATUS_OK on verified recovery even when an aborted newer native Flash slot exists. Never let native GetSaveValidStatus override A2 global cohort selection.
+
+Hall of Fame A2 support routes SAVE_HALL_OF_FAME through global PC+native Flash transaction, increments HOF stat before snapshot, and saves auxiliary archive sectors 28/29 AFTER global Pokemon commit. Auxiliary failure disables saving until reload but cannot invalidate the committed PC. SAVE_OVERWRITE_DIFFERENT_FILE is permitted only for a pristine first save explicitly armed through NewGameInitData. Emerald and FRLG Hall of Fame task handlers stop on any A2 save error; the ordinary A1 paths remain unchanged.
+
+C regression proves a partly corrupted Hall of Fame archive cannot invalidate a metadata-pinned native/PC cohort. At last check, CI 41297349236: storage-format PASS, isolated ARM build running. Inspect its conclusion before claiming full pass. Last fully green isolated A1/A2/E6 header run was 41295322213.
+
+Still open: actual XGBA emulator boot, save, exit, restart and crash recovery using disposable E6 images; real trainer-id relocation and Hall of Fame success/failure gameplay tests; cross-page favorites/search/bulk release, expanded bag, link incremental save policy. Do not publish an A2 gameplay ROM or merge to stable before these gates. Plan optimization/error paths before each new stage, with substantial coherent changes rather than repetitive fixes.
+
+---
+
 # A2 isolated-build verification PASS, Nov 1 2026
 
 GitHub Actions run 41295322213 is GREEN in BOTH storage-format and native-a1-regression. The latter verified original 256 MiB A1 ROM/revision-zero, a FULL separately compiled XGBA_A2=1 ARM build using build/xgba-a2-release rather than reusing A1 objects, and a temporary development 256 MiB E6-tagged A2 cartridge with corrected GBA header checksum, full A1 high-address layout, and intact final ROM probe. CI deleted the temporary E6 ROM and did NOT upload any game binary. The first-save E6 blank template, C journal initializer and interruption matrix also passed. This is *build/format acceptance*, NOT actual XGBA emulator gameplay acceptance. Next needed: emulator boot, New Game, save, exit/reopen and interrupted native/E6 recovery on disposable saves; HOF/special-save support; cross-page search/favorites/bulk release/bag; one user smoke. Keep A1 and real player saves untouched.
