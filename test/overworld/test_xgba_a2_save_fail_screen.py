@@ -19,7 +19,7 @@ class TestA2SaveFailureScreen(unittest.TestCase):
         self.assertNotIn("gText_SaveComplete", branch)
         self.assertIn("gGameContinueCallback = NULL;", branch)
         self.assertIn("SetMainCallback2(CB2_FadeAndReturnToTitleScreen);", branch)
-        self.assertIn("SaveFailedScreenTextPrint(sText_A2SaveFailed", branch)
+        self.assertIn("SaveFailedScreenTextPrint(sA2UnsupportedLink ?", branch)
 
     def test_original_legacy_failure_code_remains_separate(self):
         source = (Path(__file__).resolve().parents[2] / "src" / "save_failed_screen.c").read_text()
