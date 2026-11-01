@@ -1,3 +1,11 @@
+# A2 final source correction and verification gate (Nov 1, 2026)
+
+**Latest code:** `7abf92073e50bbdacf499c2ce483e4d990da8123` on `xgba/a2-collection-lab`. No production merge. New A2 branch-specific map include rule is now *literal*, not a dynamic assembler macro. `data/maps.s` chooses `build/xgba-a2-release/xgba-a1-layouts.inc` for A2 release, `build/xgba-a2/xgba-a1-layouts.inc` for A2 development, and A1-specific equivalents; `Makefile` generates the matching include from `$(OBJ_DIR)`. The dynamic `XGBA_LAYOUT_INCLUDE` approach from earlier notes was **discarded**: custom `tools/preproc` rejected the macro-based `.include` even after `CPPFLAGS` was passed. Do not restore it. The newest isolated tests are [A2 collection CI 41360604899](https://github.com/DevElectrum/grand-anthology/actions/runs/41360604899) and [A2 disposable XGBA headless boot CI 41360604746](https://github.com/DevElectrum/grand-anthology/actions/runs/41360604746); both were pending/in progress when this note was written. Inspect results before asserting success.
+
+Important: `test_xgba_a2_legacy_link.py` and `test_xgba_a2_save_fail_screen.py` have passed storage-format earlier; final ARM rebuild of the newest code remains to be verified. The pretrade A2 guard is intentional until a two-phase journal commit can respect bilateral trade sync; do not mark trading functional. Source/host green != real XGBA save/restart acceptance. Continue without owner's Nyx; player is sick.
+
+---
+
 # A2 autonomous save-closure batch (Nov 1, 2026)
 
 **Experimental branch only:** `xgba/a2-collection-lab`. Owner is ill and requested no Nyx supervision. All code/source checks use GitHub and disposable emulator data; no real player saves, Mosaic, main, website, or accepted XGBA E7 have been modified.
