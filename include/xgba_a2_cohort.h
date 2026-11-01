@@ -25,4 +25,8 @@ int XgbaA2CohortSelect(const struct XgbaA2JournalIo *io,
                        XgbaA2ReadNativeSector reader,
                        void *nativeContext, uint8_t *scratch,
                        struct XgbaA2Cohort *selected);
+
+int XgbaA2CohortVerifyNativeSlot(XgbaA2ReadNativeSector reader,
+                                 void *nativeContext, uint8_t *scratch,
+                                 uint8_t slot, uint32_t counter);
 #endif

@@ -187,3 +187,13 @@ int XgbaA2CohortSelect(const struct XgbaA2JournalIo *io,
     selected->recovered = !(ok[0] && ok[1]);
     return XGBA_A2_JOURNAL_OK;
 }
+
+int XgbaA2CohortVerifyNativeSlot(XgbaA2ReadNativeSector reader,
+                                 void *nativeContext, uint8_t *scratch,
+                                 uint8_t slot, uint32_t counter)
+{
+    uint8_t positions[14];
+    if (reader == NULL || scratch == NULL)
+        return 0;
+    return VerifyNative(reader, nativeContext, scratch, slot, counter, positions);
+}
