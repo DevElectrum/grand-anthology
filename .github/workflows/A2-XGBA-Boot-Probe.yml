@@ -1,0 +1,131 @@
+name: A2 XGBA disposable boot probe
+
+on:
+  push:
+    branches:
+      - xgba/a2-collection-lab
+    paths:
+      - '.github/workflows/A2-XGBA-Boot-Probe.yml'
+      - 'src/save.c'
+      - 'src/new_game.c'
+      - 'src/main.c'
+      - 'src/xgba_a2_*.c'
+      - 'include/xgba_a2_*.h'
+      - 'tools/xgba_a2_storage.py'
+      - 'tools/xgba_a2_rom.py'
+      - 'tools/xgba_a1_assets.py'
+      - 'Makefile'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anthology-a2-xgba-boot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  disposable-xgba-boot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out only experimental Anthology source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check out frozen XGBA E7 source without modifying it
+        uses: actions/checkout@v4
+        with:
+          repository: DevElectrum/xgba
+          ref: 9aa5e11e08274e5df09379be8f088e7e6db8f139
+          path: build/a2-ci-xgba-src
+          persist-credentials: false
+
+      - name: Install GBA toolchain and headless XGBA dependencies
+        shell: bash
+        run: |
+          set -e
+          for source in /etc/apt/sources.list.d/*; do
+            if [ -f "$source" ] && grep -q 'packages.microsoft.com' "$source"; then
+              sudo mv "$source" "$source.disabled"
+            fi
+          done
+          sudo apt-get update -o Acquire::Retries=5
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev libelf1 python3 build-essential cmake ninja-build \
+            pkg-config zlib1g-dev libcmocka-dev libsdl2-dev
+
+      - name: Build isolated A2 ARM game
+        shell: bash
+        run: |
+          set -euo pipefail
+          make release -j4 XGBA_A1=1 XGBA_A2=1 BUILD_NAME=xgba-a2 \
+            FILE_NAME=xgba-anthology-a2-native-release > /tmp/a2-boot-build.log 2>&1 || {
+            grep -n -E 'error:|undefined reference|overflowed|Error:|collect2:' /tmp/a2-boot-build.log | tail -n 80 || true
+            tail -n 90 /tmp/a2-boot-build.log
+            exit 1
+          }
+          test -s xgba-anthology-a2-native-release.elf
+          test -s build/xgba-a2-release/a1-manifest.json
+          tail -n 20 /tmp/a2-boot-build.log
+
+      - name: Create temporary E6 ROM and empty disposable E6 save
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/a2-ci-runtime
+          python3 tools/xgba_a1_assets.py pack \
+            --native xgba-anthology-a2-native-release.gba \
+            --manifest build/xgba-a2-release/a1-manifest.json \
+            --output build/a2-ci-runtime/a2-layout.gba
+          python3 tools/xgba_a2_rom.py tag \
+            build/a2-ci-runtime/a2-layout.gba build/a2-ci-runtime/a2-boot.gba
+          python3 tools/xgba_a2_rom.py verify build/a2-ci-runtime/a2-boot.gba
+          python3 tools/xgba_a2_storage.py blank build/a2-ci-runtime/a2-boot.sav
+          python3 tools/xgba_a2_storage.py audit-blank build/a2-ci-runtime/a2-boot.sav
+          test "$(stat -c%s build/a2-ci-runtime/a2-boot.gba)" -eq 268435456
+          test "$(stat -c%s build/a2-ci-runtime/a2-boot.sav)" -eq 16777216
+
+      - name: Compile frozen XGBA headless runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S build/a2-ci-xgba-src -B build/a2-ci-xgba-runner -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DM_CORE_GBA=ON -DM_CORE_GB=OFF \
+            -DBUILD_QT=OFF -DBUILD_SDL=OFF \
+            -DBUILD_HEADLESS=ON -DBUILD_SUITE=OFF \
+            -DENABLE_SCRIPTING=OFF -DUSE_FFMPEG=OFF \
+            -DUSE_EDITLINE=OFF -DUSE_DISCORD_RPC=OFF
+          cmake --build build/a2-ci-xgba-runner --target mgba-headless --parallel 2
+          test -x build/a2-ci-xgba-runner/mgba-headless
+
+      - name: Prove E6-tagged Anthology stays executing in real XGBA core
+        shell: bash
+        run: |
+          set -uo pipefail
+          # This is a bounded, noninteractive BOOT probe. It is NOT a claim
+          # that New Game was navigated or an in-game save was verified.
+          # -S 255 prevents the normal software shutdown SWI from ending
+          # the test before the deliberate timer interrupt.
+          timeout --signal=INT --kill-after=5s 20s \
+            build/a2-ci-xgba-runner/mgba-headless -S 255 \
+            build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-boot.log 2>&1
+          result=$?
+          tail -n 100 /tmp/a2-xgba-boot.log
+          if [ "$result" -ne 124 ]; then
+            echo "XGBA exited early or did not survive the bounded runtime. Exit: $result"
+            exit 1
+          fi
+          echo "Real XGBA headless process survived 20 seconds of execution."
+          python3 tools/xgba_a2_storage.py audit-blank build/a2-ci-runtime/a2-boot.sav
+
+      - name: Delete temporary developer ROM and save regardless of outcome
+        if: always()
+        run: |
+          rm -f build/a2-ci-runtime/a2-layout.gba
+          rm -f build/a2-ci-runtime/a2-boot.gba
+          rm -f build/a2-ci-runtime/a2-boot.sav
+          echo "No ROM or save uploaded. No user files touched."
