@@ -23,6 +23,11 @@ struct XgbaA2JournalInfo
     uint8_t validCopies;
 };
 
+// Streaming CRC32 seed is 0xFFFFFFFF; invert the result after final block.
+// Shares the ROM-resident table with the regular page journal.
+uint32_t XgbaA2JournalCrcExtend(uint32_t state, const uint8_t *bytes,
+                                uint32_t length);
+
 enum XgbaA2JournalResult
 {
     XGBA_A2_JOURNAL_OK = 0,

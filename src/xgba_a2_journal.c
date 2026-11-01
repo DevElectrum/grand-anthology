@@ -89,6 +89,14 @@ static uint32_t CrcUpdate(uint32_t crc, const uint8_t *buffer, uint32_t count)
     return crc;
 }
 
+uint32_t XgbaA2JournalCrcExtend(uint32_t state, const uint8_t *bytes,
+                                uint32_t length)
+{
+    if (bytes == NULL)
+        return state;
+    return CrcUpdate(state, bytes, length);
+}
+
 static uint32_t CrcRam(const uint8_t *data, uint32_t bytes)
 {
     return ~CrcUpdate(0xFFFFFFFFU, data, bytes);
