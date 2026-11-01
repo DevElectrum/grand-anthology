@@ -518,18 +518,19 @@ static u8 TryLoadSaveSlot(u16 sectorId, struct SaveSectorLocation *locations)
     }
     else
     {
-        status = GetSaveValidStatus(locations);
 #if defined(XGBA_A2) && XGBA_A2
-        // Ignore an incomplete newer native Flash slot unless its exact PC
-        // generations have a committed E6 metadata record. Never fall back
-        // to a native-only save in an E6-mode game.
+        // Choose the globally committed native+PC cohort FIRST, not the
+        // newest physical Flash counter. A newer native slot may be an
+        // uncommitted/aborted save despite having valid legacy checksums.
         if (!A2ChooseLoad())
             return SAVE_STATUS_CORRUPT;
-#endif
         CopySaveSlotData(FULL_SAVE_SLOT, locations);
-#if defined(XGBA_A2) && XGBA_A2
         if (!A2FinishLoad())
             return SAVE_STATUS_CORRUPT;
+        status = SAVE_STATUS_OK;
+#else
+        status = GetSaveValidStatus(locations);
+        CopySaveSlotData(FULL_SAVE_SLOT, locations);
 #endif
     }
 
@@ -1277,11 +1278,17 @@ u16 GetSaveBlocksPointersBaseOffset(void)
         return 0;
     UpdateSaveAddresses();
 #if defined(XGBA_A2) && XGBA_A2
-    // This helper must not independently select a newer, uncommitted Flash
-    // slot after the A2 loader has approved a different native generation.
-    if (!sA2Ready)
+    // On boot this is called BEFORE LoadGameSave: it determines the pointer
+    // relocation from SaveBlock2's trainer id. Resolve the globally coherent
+    // cohort here, before trusting ANY native save slot for those pointers.
+    // Returning 0 for all pre-load calls silently corrupts save-block layout.
+    // If new-game bootstrap is armed, do not touch its one-shot permission.
+    if (sA2FreshSaveArmed)
         return 0;
-    gSaveCounter = sA2Committed.nativeCounter;
+    if (sA2Ready)
+        gSaveCounter = sA2Committed.nativeCounter;
+    else if (!A2ChooseLoad())
+        return 0;
 #else
     GetSaveValidStatus(gRamSaveSectorLocations);
 #endif
