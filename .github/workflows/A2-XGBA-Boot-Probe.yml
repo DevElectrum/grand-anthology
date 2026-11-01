@@ -16,6 +16,7 @@ on:
       - 'tools/xgba_a2_rom.py'
       - 'tools/xgba_a1_assets.py'
       - 'Makefile'
+      - 'data/maps.s'
   workflow_dispatch:
 
 permissions:
@@ -57,21 +58,6 @@ jobs:
             binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
             libpng-dev libelf1 python3 build-essential cmake ninja-build \
             pkg-config zlib1g-dev libcmocka-dev libsdl2-dev
-
-      - name: Generate A1 map-layout include dependency without modifying stable source
-        shell: bash
-        run: |
-          set -euo pipefail
-          # data/maps.s references the A1 layout include even in the separate
-          # A2 ARM build. This prerequisite is explicit in the existing
-          # successful A2 storage CI and must be built before A2.
-          make xgba-a1 > /tmp/a2-boot-a1-prereq.log 2>&1 || {
-            grep -n -E 'error:|undefined reference|overflowed|Error:|collect2:' /tmp/a2-boot-a1-prereq.log | tail -n 80 || true
-            tail -n 90 /tmp/a2-boot-a1-prereq.log
-            exit 1
-          }
-          test -s build/xgba-a1-release/xgba-a1-layouts.inc
-          test -s xgba-anthology-a1.gba
 
       - name: Build isolated A2 ARM game
         shell: bash
