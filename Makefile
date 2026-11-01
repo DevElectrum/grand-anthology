@@ -838,6 +838,7 @@ $(SYM): $(ELF)
 # No normal GBA release, save or user's pre-existing ROM is overwritten.
 .PHONY: xgba-a1
 xgba-a1:
+	@if [ "$(XGBA_A2)" != "0" ]; then echo "Refusing to package an A2 save-runtime binary as an A1 native-Flash ROM"; exit 1; fi
 	# Command-line FILE_NAME overrides Makefile's implicit -release suffix;
 	# specify that suffix explicitly so the packer consumes the verified output.
 	$(MAKE) release -j4 XGBA_A1=1 BUILD_NAME=xgba-a1 FILE_NAME=xgba-anthology-a1-native-release
