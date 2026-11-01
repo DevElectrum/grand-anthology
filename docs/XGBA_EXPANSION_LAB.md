@@ -1,5 +1,7 @@
 # Grand Anthology XGBA expansion laboratory
 
+> **A1 plan is complete:** read [the detailed adversarial design](ANTHOLOGY_A1_DESIGN.md). A1 is currently design-only, not an implemented port. All 1,043 map layouts' raw map/border data will be externally packed via generated absolute symbols; native ROM/saves, ids and scripts remain intact; XGBA 256 MiB ROM uses revision 0x00 until A2 save work. Await explicit start authorization.
+
 ## Updated charter: TWO PROJECTS, ONE EXPERIMENTAL EMULATOR (31 October 2026)
 
 **This supersedes the original isolation-only intent below.** The source transfer is complete. The playable, standard-emulator three-region project is now in independent `DevElectrum/pokemon-mosaic`. The user intentionally retained `DevElectrum/grand-anthology` as the true **XGBA-only** game, not as a branch-based variation of Mosaic. The source currently inherited here still contains only Kanto, Johto and Hoenn; the next goals are entirely new software, not claims of existing features.
