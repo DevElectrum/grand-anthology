@@ -11,6 +11,8 @@ on:
       - 'src/xgba_a2_pager.c'
       - 'src/xgba_a2_fingerprint.c'
       - 'src/xgba_a2_cohort.c'
+      - 'src/xgba_a2_transaction.c'
+      - 'include/xgba_a2_transaction.h'
       - 'include/xgba_a2_cohort.h'
       - 'test/overworld/xgba_a2_cohort_harness.c'
       - 'include/xgba_a2_fingerprint.h'
@@ -50,7 +52,7 @@ jobs:
           /tmp/xgba-a2-fingerprint-test
       - name: Verify coherent native and extended PC save cohort selector
         run: |
-          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_cohort.c src/xgba_a2_journal.c src/xgba_a2_fingerprint.c test/overworld/xgba_a2_cohort_harness.c -o /tmp/xgba-a2-cohort-test
+          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_cohort.c src/xgba_a2_transaction.c src/xgba_a2_pager.c src/xgba_a2_journal.c src/xgba_a2_fingerprint.c test/overworld/xgba_a2_cohort_harness.c -o /tmp/xgba-a2-cohort-test
           /tmp/xgba-a2-cohort-test
       - name: Print storage geometry
         run: python3 tools/xgba_a2_storage.py layout

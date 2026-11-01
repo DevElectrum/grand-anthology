@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "xgba_a2_cohort.h"
+#include "xgba_a2_transaction.h"
 
 #define DISK_BYTES 0x2A0000U
 #define SECTOR_BYTES 4096U
@@ -12,6 +13,7 @@
 #define FOOTER 4084U
 
 static uint8_t *sDisk;
+static uint32_t sWriterSectors = 14;
 
 static void U16(uint8_t *p, uint16_t v)
 {
@@ -97,7 +99,7 @@ static uint32_t Length(uint32_t logical)
 static void BuildNative(uint8_t slot, uint32_t counter, const uint8_t *pc)
 {
     uint32_t id;
-    for (id = 0; id < 14; id++)
+    for (id = 0; id < sWriterSectors; id++)
     {
         uint32_t size = Length(id);
         uint8_t *physical = sDisk + (slot * 14U + id) * SECTOR_BYTES;
@@ -109,6 +111,16 @@ static void BuildNative(uint8_t slot, uint32_t counter, const uint8_t *pc)
         U32(physical + FOOTER + 4, 0x08012025U);
         U32(physical + FOOTER + 8, counter);
     }
+}
+
+static int NativeWriter(void *context, uint8_t slot, uint32_t counter,
+                        const void *pc, uint32_t bytes)
+{
+    (void)context;
+    if (slot > 1 || bytes != XGBA_A2_PC_BYTES)
+        return 0;
+    BuildNative(slot, counter, pc);
+    return sWriterSectors == 14;
 }
 
 static void MakeRecord(uint8_t *at, const uint8_t magic[8],
@@ -195,20 +207,33 @@ int main(void)
     assert(selected.metadataGeneration == 2 && selected.nativeSlot == 0);
     assert(selected.nativeCounter == 2 && selected.pages[0] == 2);
 
-    // A newer complete native slot with no matching metadata isn't committed.
-    BuildNative(1, 3, next);
-    assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
-    assert(selected.nativeSlot == 0 && selected.nativeCounter == 2);
+    // Start from the proven coherent v2 collection, then simulate a real
+    // game save with a direct BoxPokemon edit and an interrupted native slot.
+    {
+        struct XgbaA2Pager pager;
+        struct XgbaA2Cohort committed = selected;
+        struct XgbaA2Cohort result;
+        assert(XgbaA2PagerInit(&pager, &io, old, 0, selected.pages) == 0);
+        memcpy(old, next, XGBA_A2_PC_BYTES);
 
-    MakePage(0, 0, 3, next);
-    assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
-    assert(selected.nativeSlot == 0 && selected.pages[0] == 2);
+        sWriterSectors = 7;
+        assert(XgbaA2TransactionCommit(&pager, &committed, NativeRead,
+                                       NativeWriter, NULL, scratch, &result)
+               == XGBA_A2_JOURNAL_IO_ERROR);
+        // Corrupt/partial new native Flash cannot become a successful save.
+        assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
+        assert(selected.metadataGeneration == 2 && selected.nativeSlot == 0);
+        assert(pager.committed[0] == 2 && pager.staged[0] == 3);
 
-    // Metadata is the only global commit boundary.
-    MakeMeta(0, 3, 1, 3, 3);
-    assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
-    assert(selected.metadataGeneration == 3 && selected.nativeSlot == 1);
-    assert(selected.pages[0] == 3 && selected.nativeCounter == 3);
+        sWriterSectors = 14;
+        assert(XgbaA2TransactionCommit(&pager, &committed, NativeRead,
+                                       NativeWriter, NULL, scratch, &result) == 0);
+        assert(result.metadataGeneration == 3 && result.nativeSlot == 1);
+        assert(result.nativeCounter == 3 && result.pages[0] == 3);
+        assert(pager.committed[0] == 3 && pager.staged[0] == 0);
+        assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
+        assert(selected.metadataGeneration == 3 && selected.nativeSlot == 1);
+    }
 
     // Corrupt latest page -> consistent rollback to old native slot.
     sDisk[XGBA_A2_PC_BASE + 32 + 11] ^= 0x80;
