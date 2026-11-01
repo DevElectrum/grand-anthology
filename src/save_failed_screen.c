@@ -41,6 +41,9 @@ enum
 };
 
 static EWRAM_DATA u16 sSaveFailedType = {0};
+#if defined(XGBA_A2) && XGBA_A2
+static EWRAM_DATA bool8 sA2UnsupportedLink = FALSE;
+#endif
 static EWRAM_DATA u16 sClockInfo[2] = {0};
 static EWRAM_DATA u8 sWindowIds[2] = {0};
 
@@ -159,11 +162,24 @@ void DoSaveFailedScreen(u8 saveType)
 {
     SetMainCallback2(CB2_SaveFailedScreen);
     sSaveFailedType = saveType;
+#if defined(XGBA_A2) && XGBA_A2
+    sA2UnsupportedLink = FALSE;
+#endif
     sClockInfo[CLOCK_RUNNING] = FALSE;
     sClockInfo[DEBUG_TIMER] = 0;
     sWindowIds[TEXT_WIN_ID] = 0;
     sWindowIds[CLOCK_WIN_ID] = 0;
 }
+
+#if defined(XGBA_A2) && XGBA_A2
+void DoA2UnsupportedLinkScreen(void)
+{
+    // All older link-sector paths would otherwise pretend to have saved.
+    // Reject before publishing an incomplete global PC/native generation.
+    DoSaveFailedScreen(SAVE_LINK);
+    sA2UnsupportedLink = TRUE;
+}
+#endif
 
 static void VBlankCB(void)
 {
@@ -258,6 +274,10 @@ static const u8 sText_A2SaveFailed[] = _(
     "XGBA save verification failed.\\n"
     "No repair was attempted.\\n"
     "Press A to restart.");
+static const u8 sText_A2UnsupportedLink[] = _(
+    "XGBA A2 link saving is not\\n"
+    "available yet. No data saved.\\n"
+    "Press A to restart.");
 #endif
 
 static void CB2_WipeSave(void)
@@ -270,7 +290,7 @@ static void CB2_WipeSave(void)
     // Restart so boot chooses the last independently verified global cohort.
     sClockInfo[CLOCK_RUNNING] = FALSE;
     FillWindowPixelBuffer(sWindowIds[TEXT_WIN_ID], PIXEL_FILL(1));
-    SaveFailedScreenTextPrint(sText_A2SaveFailed, 1, 0);
+    SaveFailedScreenTextPrint(sA2UnsupportedLink ? sText_A2UnsupportedLink : sText_A2SaveFailed, 1, 0);
     gGameContinueCallback = NULL;
     SetMainCallback2(CB2_FadeAndReturnToTitleScreen);
 #else
