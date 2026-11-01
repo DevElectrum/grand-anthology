@@ -32,6 +32,10 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+
+concurrency:
+  group: anthology-a2-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   storage-format:
     runs-on: ubuntu-24.04
