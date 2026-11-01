@@ -6,6 +6,8 @@ on:
     paths:
       - '.github/workflows/A2-XGBA-Collection.yml'
       - 'tools/xgba_a2_storage.py'
+      - 'tools/xgba_a2_rom.py'
+      - 'test/overworld/test_xgba_a2_rom.py'
       - 'src/xgba_a2_journal.c'
       - 'src/xgba_a2_guest_bus.c'
       - 'src/xgba_a2_pager.c'
@@ -127,5 +129,22 @@ jobs:
           }
           test -s xgba-anthology-a1-native-release.elf
           echo "A2 guarded save.c compiled and linked successfully; no A2 ROM published."
+      - name: Verify separate E6 development cartridge header (never publish)
+        shell: bash
+        run: |
+          set -e
+          # Inputs come from the macro-enabled shadow ELF just compiled.
+          # Reuse A1's tested high-ROM geometry layout, but opt in to E6.
+          python3 tools/xgba_a1_assets.py pack \
+            --native xgba-anthology-a1-native-release.gba \
+            --manifest build/xgba-a1-release/a1-manifest.json \
+            --output /tmp/xgba-a2-shadow-layout.gba
+          python3 tools/xgba_a2_rom.py tag \
+            /tmp/xgba-a2-shadow-layout.gba /tmp/xgba-a2-dev-e6.gba
+          python3 tools/xgba_a2_rom.py verify /tmp/xgba-a2-dev-e6.gba
+          test "$(stat -c%s /tmp/xgba-a2-dev-e6.gba)" -eq 268435456
+          rm -f /tmp/xgba-a2-shadow-layout.gba /tmp/xgba-a2-dev-e6.gba
+          echo "E6 developer header/geometry verified. No A2 ROM published."
+
 
       # No ROM binaries or user saves are uploaded.

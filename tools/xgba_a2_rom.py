@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Developer-only: retag a separately compiled 256 MiB A2 shadow ROM E6.
+
+Never converts saves, never modifies a source ROM, and refuses overwrites.
+The input MUST originate from a separately compiled XGBA_A2=1 native build;
+this tool validates the cartridge wrapper, not the game's save behavior.
+"""
+import argparse
+import os
+from pathlib import Path
+import sys
+
+from xgba_a1_assets import MAGIC, ROM_BYTES, PROBE_OFFSET, probe_bytes, checksum_header
+
+
+class A2RomError(ValueError):
+    pass
+
+
+def stamp_header(header):
+    if len(header) != 0xC0:
+        raise A2RomError("GBA header must contain exactly 0xC0 bytes")
+    if header[0xB5:0xBC] != MAGIC or header[0xBC] != 0:
+        raise A2RomError("Input is not an original XGBA256 revision-zero ROM")
+    if header[0xBD] != checksum_header(header):
+        raise A2RomError("Input GBA header checksum invalid")
+    tagged = bytearray(header)
+    tagged[0xBC] = 0xE6
+    tagged[0xBD] = checksum_header(tagged)
+    return bytes(tagged)
+
+
+def verify(path):
+    path = Path(path)
+    if not path.is_file() or path.is_symlink() or path.stat().st_size != ROM_BYTES:
+        raise A2RomError("E6 ROM must be a regular 256 MiB file")
+    with path.open("rb") as stream:
+        head = stream.read(0xC0)
+        if head[0xB5:0xBC] != MAGIC or head[0xBC] != 0xE6:
+            raise A2RomError("Not an XGBA256 E6 revision cartridge")
+        if head[0xBD] != checksum_header(head):
+            raise A2RomError("Invalid E6 GBA header checksum")
+        stream.seek(PROBE_OFFSET)
+        if stream.read(len(probe_bytes())) != probe_bytes():
+            raise A2RomError("Missing final A1 high-ROM probe marker")
+    return {"bytes": ROM_BYTES, "revision": "E6", "header": "valid",
+            "high_rom_probe": "valid"}
+
+
+def tag(source, destination):
+    source = Path(source).expanduser()
+    destination = Path(destination).expanduser()
+    if not source.is_file() or source.is_symlink() or source.stat().st_size != ROM_BYTES:
+        raise A2RomError("Source must be a regular 256 MiB A1-layout ROM")
+    if source.resolve() == destination.resolve() or os.path.lexists(destination):
+        raise A2RomError("Refusing to modify or overwrite a ROM")
+    if not destination.parent.is_dir():
+        raise A2RomError("Output directory does not exist")
+    with source.open("rb") as origin:
+        stamped = stamp_header(origin.read(0xC0))
+        origin.seek(PROBE_OFFSET)
+        if origin.read(len(probe_bytes())) != probe_bytes():
+            raise A2RomError("Source has no final extended ROM probe")
+        origin.seek(0xC0)
+        try:
+            with destination.open("xb") as out:
+                out.write(stamped)
+                while True:
+                    block = origin.read(0x100000)
+                    if not block:
+                        break
+                    out.write(block)
+                out.flush()
+                os.fsync(out.fileno())
+            return verify(destination)
+        except BaseException:
+            destination.unlink(missing_ok=True)
+            raise
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("command", choices=("tag", "verify"))
+    parser.add_argument("path", help="Input ROM for tag, E6 ROM for verify")
+    parser.add_argument("destination", nargs="?", help="New output ROM for tag")
+    args = parser.parse_args()
+    try:
+        if args.command == "tag":
+            if not args.destination:
+                parser.error("tag requires a separate destination")
+            result = tag(args.path, args.destination)
+        else:
+            result = verify(args.path)
+        for key, value in result.items():
+            print(f"{key}: {value}")
+        return 0
+    except (OSError, A2RomError) as exc:
+        print(f"A2 developer ROM refused: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
