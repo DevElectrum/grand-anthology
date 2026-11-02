@@ -1,3 +1,13 @@
+# A2 Save-dialog bit trace milestone (Nov 2, 2026 UTC)
+
+- **Independent evidence:** disposable frozen XGBA run 41377704537 passed real ROM boot, E6 envelope, Hub new game and initial tour dismissal. It reached the exact Save icon and pressed up to nine spaced confirmations. Native save counter remained 0 after all prompts; output `A2_XGBA_SAVE_DIALOG_EXHAUSTED_WITHOUT_NATIVE_COMMIT`. A2 metadata was never audited because the test fails earlier. This leaves open two possibilities: save callback never reached, or it ran and reported error.
+- Experimental diagnostic only in `src/save_dialog.c`: `gXgbaA2SaveDialogTrace` (volatile EWRAM u32, **NOT** in persisted SaveBlock structures) records callback bits: 0 InitSave, 1 ConfirmSave, 2 YesNo, 3 ConfirmInput, 4 FileExists, 5 ConfirmOverwrite, 6 OverwriteInput, 7 SavingMessage, 8 DoSave/TrySavingData, 9 Success, 10 Error. A1/standard build macro compiles to no-op. Observed value is logged by `tools/xgba_a2_runtime_save.lua` as `A2_XGBA_DIAG_SAVE_DIALOG_TRACE=<decimal>`.
+- `tools/xgba_a2_symbol_env.py` now **requires** the ELF-linked `gXgbaA2SaveDialogTrace` symbol and verifies its RAM address. Source contract `test/overworld/test_xgba_a2_save_dialog_trace.py` verifies callback presence and A2 guard. The A2 CI workflow includes `src/save_dialog.c` and that test; original game saves remain untouched.
+- Newest runtime run when this note was created: 41378403283 in progress (after workflow commit `bafcd33c`); storage-format in contract run 41378398879 in progress. Inspect complete run logs; no save/restart acceptance claimed. On failure, decode bits before altering game logic: bit8 missing means missing SaveDoSave callback; bit8 present with bit10 means actual A2 save failure requiring bus/bootstrap investigation; bit9 means code showed success but E6 audit failed (critical).
+- **Do not** change game journal or native save ABI just to make test pass. The owner is sick, Nyx and all real saves remain untouched. Continue A2 from isolated branch and existing autonomous plan.
+
+---
+
 # A2 save-dialog sequence diagnosed (Nov 2, 2026 UTC)
 
 - Real disposable XGBA run 41377081254 successfully built the isolated A2 ROM, E6 image and frozen XGBA, booted the real Region Hub, then safely declined its automatic curator tour and reached the exact graphical `USM_ICO_SAVE` (else the test could not enter the confirm phase). However, it failed to commit: `A2_XGBA_DIAG_SAVE_COUNTER=0`, `A2 storage refused: No valid A2 metadata commit`. This failure **does not yet prove A2Save is broken**.
