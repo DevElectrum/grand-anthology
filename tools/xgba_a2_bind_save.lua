@@ -5,7 +5,12 @@ local path = assert(os.getenv("A2_E6_SAVE_PATH"), "Missing disposable E6 save pa
 local file = assert(io.open(path, "rb"), "Disposable E6 save image must already exist")
 local size = assert(file:seek("end"))
 file:close()
-assert(size == 16777216, "Refusing non-16MiB E6 image")
+-- The accepted XGBA emulator writes a separate 16-byte RTC trailer after
+-- its 16MiB E6 data area. The canonical Python auditor validates both
+-- permitted lengths and the trailer independently, so this is a strict
+-- transport size check, not a relaxed or lossy save format.
+assert(size == 16777216 or size == 16777232,
+       "Refusing E6 save with invalid data/trailer length")
 assert(emu:loadSaveFile(path, false), "Unable to load disposable E6 save")
 
 local header = {
