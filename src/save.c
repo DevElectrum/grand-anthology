@@ -1292,7 +1292,12 @@ static u8 A2Save(u8 saveType)
     // The metadata-pinned page groups are still committed by ordinary A2.
     if (sA2Committed.nativeCounter == 1
         && !XgbaR8CreateTestPokemon())
+    {
+        // Tell the headless Lua driver exactly which runtime assertion
+        // failed instead of spinning in a Save-dialog timeout.
+        A2_SAVE_TRACE(0xE9, gXgbaR8FixtureStage);
         goto failed;
+    }
 #endif
     A2_SAVE_TRACE(7, sA2Committed.nativeCounter);
     result = XgbaA2TransactionCommit(

@@ -5,6 +5,13 @@
 #include "xgba_r8_runtime_test.h"
 
 #if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+// Disposable CI-only failure locator. Never used by production builds.
+EWRAM_DATA volatile u32 gXgbaR8FixtureStage = 0;
+static int R8FixtureFail(u32 stage)
+{
+    gXgbaR8FixtureStage = stage;
+    return 0;
+}
 static int VerifyOne(struct BoxPokemon *mon, enum Species species,
                      u32 personality, enum Item held)
 {
@@ -53,7 +60,7 @@ int XgbaR8CreateTestPokemon(void)
     if (first == NULL || last == NULL
         || GetBoxMonData(first, MON_DATA_SPECIES) != SPECIES_NONE
         || GetBoxMonData(last, MON_DATA_SPECIES) != SPECIES_NONE)
-        return 0;
+        return R8FixtureFail(1);
 
     CreateMon(&mon, SPECIES_BULBASAUR, 25, 0x12345678U, OTID_STRUCT_PLAYER_ID);
     memcpy(first, &mon.box, sizeof(mon.box));
@@ -81,7 +88,7 @@ int XgbaR8CreateTestPokemon(void)
             || GetBoxMonData(old28, MON_DATA_SPECIES) != SPECIES_NONE
             || GetBoxMonData(XgbaA2GameGlobalBoxMon(14, 5), MON_DATA_SPECIES) != SPECIES_NONE
             || GetBoxMonData(XgbaA2GameGlobalBoxMon(28, 8), MON_DATA_SPECIES) != SPECIES_NONE)
-            return 0;
+            return R8FixtureFail(2);
 
         CreateMon(&mon, SPECIES_SQUIRTLE, 27, 0x3456789AU, OTID_STRUCT_PLAYER_ID);
         memcpy(old14, &mon.box, sizeof(mon.box));
@@ -102,7 +109,7 @@ int XgbaR8CreateTestPokemon(void)
             || XgbaA2GameMoveGlobalBoxMon(13, 4, 13, 4)
             || XgbaA2GameMoveGlobalBoxMon(0, 0, 111, 29)
             || XgbaA2GameSwapGlobalBoxMons(13, 4, 14, 5))
-            return 0;
+            return R8FixtureFail(3);
 
         // Swap two occupied distant boxes and then swap back. A complete
         // encrypted record comparison proves no changes to ancillary data.
@@ -112,7 +119,7 @@ int XgbaR8CreateTestPokemon(void)
             || !XgbaA2GameSwapGlobalBoxMons(0, 0, 111, 29)
             || memcmp(first, &firstBefore, sizeof(firstBefore)) != 0
             || memcmp(last, &lastBefore, sizeof(lastBefore)) != 0)
-            return 0;
+            return R8FixtureFail(4);
 
         if (!XgbaA2GameMoveGlobalBoxMon(13, 4, 14, 5)
             || !XgbaA2GameMoveGlobalBoxMon(27, 7, 28, 8)
@@ -124,7 +131,7 @@ int XgbaR8CreateTestPokemon(void)
                           0x3456789AU, ITEM_POTION)
             || !VerifyOne(XgbaA2GameGlobalBoxMon(28, 8), SPECIES_PIDGEY,
                           0x456789ABU, ITEM_SUPER_POTION))
-            return 0;
+            return R8FixtureFail(5);
     }
 
     // C3A party-to-remote-PC deposit. All invalid attempts must preserve
@@ -138,7 +145,7 @@ int XgbaR8CreateTestPokemon(void)
         struct BoxPokemon before;
         if (partyPosition > PARTY_SIZE - 2 || occupied == NULL || remote == NULL
             || GetBoxMonData(remote, MON_DATA_SPECIES) != SPECIES_NONE)
-            return 0;
+            return R8FixtureFail(6);
 
         CreateMon(&gParties[B_TRAINER_PLAYER][partyPosition],
                   SPECIES_ZIGZAGOON, 29, 0x6789ABCDU, OTID_STRUCT_PLAYER_ID);
@@ -154,16 +161,16 @@ int XgbaR8CreateTestPokemon(void)
             || XgbaA2GameDepositPartyMonGlobal(partyPosition + 1, 112, NULL)
             || GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_EEVEE
             || memcmp(&before, occupied, sizeof(before)) != 0)
-            return 0;
+            return R8FixtureFail(7);
 
         if (!XgbaA2GameDepositPartyMonGlobal(partyPosition + 1, 42, &chosen)
             || chosen != 0
             || GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_NONE
             || !VerifyTestPokemonRecords())
-            return 0;
+            return R8FixtureFail(8);
         if (GetMonData(&gParties[B_TRAINER_PLAYER][partyPosition], MON_DATA_SPECIES)
             != SPECIES_ZIGZAGOON)
-            return 0;
+            return R8FixtureFail(9);
     }
 
     // Traverse each of the 112 global box IDs, checking the selected
@@ -176,7 +183,7 @@ int XgbaR8CreateTestPokemon(void)
                 || XgbaA2GamePage() != box / TOTAL_BOXES_COUNT
                 || StorageGetCurrentBox() != box % TOTAL_BOXES_COUNT
                 || !VerifyTestPokemonRecords())
-                return 0;
+                return R8FixtureFail(10);
         }
     }
 
@@ -184,7 +191,7 @@ int XgbaR8CreateTestPokemon(void)
     if (!XgbaA2GameSelectGlobalBox(0)
         || !VerifyTestPokemonRecords()
         || !XgbaA2GameSelectGlobalBox(29))
-        return 0;
+        return R8FixtureFail(11);
     return XgbaR8VerifyTestPokemon();
 }
 
