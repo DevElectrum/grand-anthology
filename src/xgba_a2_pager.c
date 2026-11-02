@@ -3,6 +3,15 @@
 #include <stddef.h>
 #include <string.h>
 
+#if defined(XGBA_A2) && XGBA_A2
+// A2-only volatile diagnostics, owned by src/save.c; never persisted.
+extern volatile uint32_t gXgbaA2PagerTrace;
+#define PAGER_TRACE(stage, result) \
+    (gXgbaA2PagerTrace = ((uint32_t)(stage) << 24) | ((uint32_t)(result) & 0xFFFFFFU))
+#else
+#define PAGER_TRACE(stage, result) ((void)0)
+#endif
+
 static int Ready(const struct XgbaA2Pager *pager)
 {
     return pager != NULL && pager->ready && !pager->fatal
@@ -18,10 +27,14 @@ static int FlushCurrent(struct XgbaA2Pager *pager)
     uint32_t sourceGeneration = pager->staged[page] != 0
         ? pager->staged[page] : pager->committed[page];
     struct XgbaA2JournalInfo info;
-    int status = XgbaA2JournalEqualsPageGeneration(
+    int status;
+
+    PAGER_TRACE(1, ((uint32_t)page << 16) | (sourceGeneration & 0xFFFFU));
+    status = XgbaA2JournalEqualsPageGeneration(
         &pager->io, page, sourceGeneration,
         pager->resident, XGBA_A2_PC_BYTES);
 
+    PAGER_TRACE(2, status);
     if (status == XGBA_A2_JOURNAL_OK)
         return XGBA_A2_JOURNAL_OK;
     if (status != XGBA_A2_JOURNAL_DIFFERENT)
@@ -29,9 +42,11 @@ static int FlushCurrent(struct XgbaA2Pager *pager)
 
     // Even if a prior attempt partially staged a newer record, ALWAYS
     // overwrite the slot opposite the committed generation.
+    PAGER_TRACE(3, page);
     status = XgbaA2JournalStagePage(
         &pager->io, page, pager->committed[page], pager->resident,
         XGBA_A2_PC_BYTES, &info);
+    PAGER_TRACE(4, status);
     if (status == XGBA_A2_JOURNAL_OK)
     {
         pager->staged[page] = info.generation;
@@ -122,9 +137,14 @@ int XgbaA2PagerPrepareSave(struct XgbaA2Pager *pager,
     if (!Ready(pager) || pageGenerations == NULL)
         return XGBA_A2_JOURNAL_INVALID_ARG;
 
+    PAGER_TRACE(5, pager->activePage);
     status = FlushCurrent(pager);
     if (status != XGBA_A2_JOURNAL_OK)
+    {
+        PAGER_TRACE(6, status);
         return status;
+    }
+    PAGER_TRACE(7, pager->activePage);
 
     for (i = 0; i < XGBA_A2_PC_PAGES; i++)
         pageGenerations[i] = pager->staged[i] != 0
