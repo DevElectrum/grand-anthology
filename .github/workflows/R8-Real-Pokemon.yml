@@ -101,7 +101,10 @@ jobs:
           grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/r8-second.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-second-audit.txt
           grep -q '^counter: 2$' /tmp/r8-second-audit.txt
-          grep -Fq 'page_generations: [3, 2, 2, 2, 2, 2, 2, 3]' /tmp/r8-second-audit.txt
+          # The Box 14/15 and 28/29 navigation test also changes group 1's
+          # native currentBox field (Box 28 = local 13), so its whole record
+          # legitimately advances to generation 3 even without a new Pokémon.
+          grep -Fq 'page_generations: [3, 3, 2, 2, 2, 2, 2, 3]' /tmp/r8-second-audit.txt
       - name: Cold Continue verifies both game-generated Pokémon exactly
         env:
           A2_ACTION: resume
