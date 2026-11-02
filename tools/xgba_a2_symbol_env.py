@@ -14,6 +14,7 @@ SYMBOLS = {
     "gXgbaA2UsmTrace": "A2_USM_TRACE",
     "gXgbaA2GameSaveTrace": "A2_GAME_SAVE_TRACE",
     "gXgbaA2PagerTrace": "A2_PAGER_TRACE",
+    "gXgbaA2TransactionTrace": "A2_TRANSACTION_TRACE",
 }
 
 # These may be hidden by release LTO. Do not guess if unavailable.
@@ -71,6 +72,9 @@ def main():
     pager_trace = found["gXgbaA2PagerTrace"]
     if not ((0x02000000 <= pager_trace < 0x02040000) or (0x03000000 <= pager_trace < 0x03008000)):
         parser.error("A2 PC pager trace outside GBA RAM")
+    transaction_trace = found["gXgbaA2TransactionTrace"]
+    if not ((0x02000000 <= transaction_trace < 0x02040000) or (0x03000000 <= transaction_trace < 0x03008000)):
+        parser.error("A2 transaction trace outside GBA RAM")
 
     output = Path(args.github_env)
     with output.open("a") as handle:
