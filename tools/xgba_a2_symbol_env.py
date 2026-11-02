@@ -10,6 +10,15 @@ SYMBOLS = {
     "gSaveBlock1Ptr": "A2_SB1_PTR",
 }
 
+# These may be hidden by release LTO. Do not guess if unavailable.
+OPTIONAL_SYMBOLS = {
+    "sUsmState": "A2_USM_STATE_PTR",
+    "sUsmMemory": "A2_USM_MEMORY_PTR",
+    "gFlashMemoryPresent": "A2_FLASH_PRESENT",
+    "gSaveCounter": "A2_SAVE_COUNTER",
+    "gSaveAttemptStatus": "A2_SAVE_ATTEMPT_STATUS",
+}
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -26,7 +35,7 @@ def main():
         if len(parts) != 3:
             continue
         address, kind, name = parts
-        if name not in SYMBOLS or kind.upper() == "U":
+        if name not in SYMBOLS and name not in OPTIONAL_SYMBOLS or kind.upper() == "U":
             continue
         value = int(address, 16)
         if name in found and found[name] != value:
@@ -47,6 +56,13 @@ def main():
     output = Path(args.github_env)
     with output.open("a") as handle:
         for name, variable in SYMBOLS.items():
+            value = hex(found[name])
+            handle.write(f"{variable}={value}\n")
+            print(f"{variable}={value}")
+        for name, variable in OPTIONAL_SYMBOLS.items():
+            if name not in found:
+                print("Optional A2 runtime symbol unavailable: " + name)
+                continue
             value = hex(found[name])
             handle.write(f"{variable}={value}\n")
             print(f"{variable}={value}")
