@@ -1050,8 +1050,9 @@ bool8 XgbaA2GameDepositPartyMonGlobal(u8 partyPosition, u16 globalBox,
         HealPokemon(&deposited);
     memcpy(target, &deposited.box, sizeof(*target));
     TryBoxMonFormChange(target, FORM_CHANGE_DEPOSIT);
-    if (party == GetFirstLiveMon())
-        gFollowerSteps = 0;
+    // Party compaction can change the follower's lead; reset its stride
+    // counter even when the deposited Pokémon was not at party slot zero.
+    gFollowerSteps = 0;
     ZeroMonData(party);
     if (placedPosition != NULL)
         *placedPosition = position;
