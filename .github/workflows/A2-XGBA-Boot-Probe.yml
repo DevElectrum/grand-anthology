@@ -7,6 +7,8 @@ on:
     paths:
       - '.github/workflows/A2-XGBA-Boot-Probe.yml'
       - 'src/save.c'
+      - 'src/load_save.c'
+      - 'include/xgba_a2_game.h'
       - 'src/unbound_start_menu.c'
       - 'src/save_dialog.c'
       - 'src/save_failed_screen.c'
