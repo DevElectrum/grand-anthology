@@ -1,3 +1,17 @@
+# A2 SECOND SAVE + SECOND COLD CONTINUE CONFIRMED GREEN (Nov 2, 2026 UTC)
+
+**Major completed gate:** [Real XGBA runtime CI 41409715346](https://github.com/DevElectrum/grand-anthology/actions/runs/41409715346) is **SUCCESS** on the frozen XGBA E7. The A2 build, E6 packaging, New Game Hub, first Save/cold Continue, second Save/second cold Continue, and the independent E6 auditor all passed. Read exact results: first Save counter=1, native_slot=1, metadata_generation=1; first cold Continue counter1; second Save counter=2, native_slot=0, metadata_generation=2, transaction stage11 complete; second cold Continue from a NEW XGBA process counter2; eight independent PC page generations remain [2,2,2,2,2,2,2,2] (unchanged pages), recovery_required=False. Both physical Flash slots are now exercised and journal metadata alternation actually works.
+
+**Fixed root cause:** `MoveSaveBlocks_ResetHeap` re-randomizes and copies PokemonStorage while the A2 pager held a stale resident pointer. Previous run 41408700495 trace native stage0xE3 prevented second Save safely before any Flash writes. Current `src/load_save.c` invokes A2-only `XgbaA2GameRebindRelocatedPc()` AFTER full PokemonStorage copy and BEFORE heap reset; `src/save.c` guard rebinds only healthy initialized pager, does not change staged/committed pages, and retains strict native pointer guard. Exact source regression: `test/overworld/test_xgba_a2_pc_rebase.py`.
+
+**Source/compatibility CI:** `storage-format` in [run 41409710343](https://github.com/DevElectrum/grand-anthology/actions/runs/41409710343) passed. A1+ARM `native-a1-regression` was still running at the latest check. Inspect before declaring full regression green.
+
+**Next gates, not yet accepted:** real switch from PC page0->7->0 and persistence of a nonempty/staged Pokémon on more than one page across Save/reload; crash injection during next metadata generation; global counts, unique held key item scan, bag/collection workflow. A2 first/second saves are green but 112-box page-switch runtime behavior and feature completeness remain open. Avoid saying A2 is complete or merging main.
+
+All changes only in `xgba/a2-collection-lab`. No user saves/Nyx, stable Mosaic, accepted E7 emulator source, or published artifacts touched. Owner is ill: maintain self-contained automated CI and handoff; no babysitting.
+
+---
+
 # A2 verified gameplay boot and save journal runtime gate (Nov 2 UTC)
 
 Confirmed green: A2 Collection Storage Contract run 41370773033 completed successfully, including storage/rollback tests, A1 native-Flash and 256 MiB format regression, and isolated A2 ARM compilation/E6 cartridge validation.
