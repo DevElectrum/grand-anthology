@@ -280,6 +280,14 @@ static const struct SpritePalette sSpritePalette_Icons = {.data = sIconPal, .tag
 static EWRAM_DATA bool32 (*sUsmMenuCallback)(u32) = NULL;
 static EWRAM_DATA struct Usm_Memory* sUsmMemory = NULL;
 static EWRAM_DATA struct Usm_State* sUsmState = NULL;
+
+#if defined(XGBA_A2) && XGBA_A2
+// Read-only external visibility for disposable XGBA runtime tests. The
+// source's static sUsmState can disappear from the release/LTO symbol table.
+// This pointer is written only on menu lifecycle changes and never used to
+// alter menu state. Standard/A1 builds have no additional data or behavior.
+EWRAM_DATA struct Usm_State * volatile gXgbaA2UsmStateProbe = NULL;
+#endif
 static EWRAM_DATA u8 sUsmSavedIcon = 0;
 static EWRAM_DATA u8 sUsmSavedOffset = 0;
 
@@ -691,6 +699,9 @@ void Usm_InitStartMenu(void)
     }
 
     sUsmState = &sUsmMemory->state;
+#if defined(XGBA_A2) && XGBA_A2
+    gXgbaA2UsmStateProbe = sUsmState;
+#endif
 
     sUsmState->itemOffset = sUsmSavedOffset;
     sUsmState->selectedVisibleIdx = sUsmSavedIcon;
@@ -1379,6 +1390,9 @@ bool8 FieldCB_UsmReturnToField(void)
 
 static void Usm_ExitStartMenu(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    gXgbaA2UsmStateProbe = NULL;
+#endif
     Usm_SaveItems();
     u8* buf = GetBgTilemapBuffer(0);
 
