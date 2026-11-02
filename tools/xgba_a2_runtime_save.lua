@@ -19,6 +19,11 @@ local saveStatusAddr = addr("A2_SAVE_ATTEMPT_STATUS")
 local flashPresentAddr = addr("A2_FLASH_PRESENT")
 local mode = os.getenv("A2_ACTION") or "save"
 assert(mode == "save" or mode == "resume")
+local expectedCounter = tonumber(os.getenv("A2_EXPECTED_SAVE_COUNTER") or "")
+if mode == "resume" then
+    assert(saveCounterAddr and expectedCounter and expectedCounter > 0,
+           "Cold resume requires linked native counter and audited generation")
+end
 
 local A = 1 << C.GBA_KEY.A
 local B = 1 << C.GBA_KEY.B
@@ -109,7 +114,15 @@ callbacks:add("frame", function()
     if phase == "boot" then
         if frame % 30 == 0 and hubReady() then
             if mode == "resume" then
-                finish("A2_XGBA_COLD_RESUME_HUB_PASS", 0)
+                -- A fresh New Game also reaches this map. A cold reload is
+                -- accepted only if the actual native counter equals the
+                -- generation obtained by auditing the committed E6 image.
+                local got = emu:read32(saveCounterAddr)
+                if got ~= expectedCounter then
+                    finish("A2_XGBA_COLD_RESUME_COUNTER_MISMATCH expected="
+                           .. tostring(expectedCounter) .. " got=" .. tostring(got), 3)
+                end
+                finish("A2_XGBA_COLD_RESUME_HUB_PASS counter=" .. tostring(got), 0)
             end
             -- RegionHub first-visit ON_FRAME automatically locks controls
             -- while the curator offers a guided tour. A fixed 180-frame
