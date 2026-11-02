@@ -1,3 +1,9 @@
+# R8.4 LIVE SOURCE CHECKPOINT (Nov 2 UTC)
+
+R8 headless real-game test https://github.com/DevElectrum/grand-anthology/actions/runs/41442637854 PASS: New Game, Save1/cold Continue, Save2/cold Continue, counter1/2, metadata1/2, no recovery; this tested the R8 RAM core, NOT populated cross-box gameplay. Native A1/A2 compatibility CI https://github.com/DevElectrum/grand-anthology/actions/runs/41442865341 passed both jobs. Current experimental branch includes global 112-box scan APIs, cross-boundary box navigation in both UIs, direct off-group capture, held-item uniqueness, and all-or-nothing per-box bulk-release item returns. These newer UI/operation changes remain unverified by a completed R8 headless run. DO NOT MERGE. Remaining: populated cross-group cold persistence, UI emulator proof, full global search/transfer, crash matrix, cross-region acceptance. See R8.4 plan. Existing E7, Mosaic and live saves untouched.
+
+---
+
 # R8.4 planned: unified 112-box R8 RAM, no runtime disk pager (Nov 2, 2026 UTC)
 
 **Current plan only, no R8.4 implementation code:** read `docs/ANTHOLOGY_R8_4_RAM_INTEGRATION_PLAN.md` and top of `docs/NEXT_ASTRA_HANDOFF.md`. XGBA R8 branch `xgba/r8-4mib-ram` green 16/16 https://github.com/DevElectrum/xgba/actions/runs/41439796163; Anthology A2 two-save/restart green on frozen E7 https://github.com/DevElectrum/grand-anthology/actions/runs/41409715346. R8.4 must preserve 14-box native ABI, active mirror/ASLR binding, the E6 dual-cohort journal and protect old saves; add 112-box continuous UI/global operations and populated headless cold-restart tests. Keep A2.5 expanded-bag schema separate. Experimental branches only.
