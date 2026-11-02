@@ -1,3 +1,13 @@
+# A2 graphical Start-menu trace checkpoint (Nov 2, 2026 UTC)
+
+- Run 41378403283 failed with `A2_XGBA_DIAG_SAVE_DIALOG_TRACE=0` and `A2_XGBA_DIAG_SAVE_COUNTER=0` after successfully booting the real game and navigating initial Hub tour. **SaveDialog_InitSave was never called**; prior attempts to add more confirmation presses were not exercising the native save system. Do not modify A2 journal until menu action dispatch is proven.
+- Temporary A2-only volatile EWRAM `gXgbaA2UsmTrace` added in `src/unbound_start_menu.c`, never inside save blocks: bit0 init, bit1 Task_UsmMain, bit2 JOY_NEW(A_BUTTON), bit3 recognized Save icon A, bit4 HandleSelection, bit5 RunMenuCallbackAndExit, bit6 UsmMenuCB_Save, bit7 Usm_ExitStartMenu. `tools/xgba_a2_symbol_env.py` requires the real ELF symbol and `tools/xgba_a2_runtime_save.lua` logs `A2_XGBA_DIAG_USM_TRACE=` as decimal along with the existing callback trace. Source test `test_xgba_a2_menu_probe.py` checks these flags.
+- New active CI: [A2 real XGBA probe run 41379112250](https://github.com/DevElectrum/grand-anthology/actions/runs/41379112250) (at last check in isolated ARM build). [Collection regression 41379129852](https://github.com/DevElectrum/grand-anthology/actions/runs/41379129852) pending. Inspect actual conclusions. Do not claim in-game Save or cold restart pass.
+- Interpreting next result: `USM bit0 present but bit1 absent` means menu allocation but task not running. `bit1 present but bit2 absent` means A presses not received by normal menu input. `bit2/3 present but bit6 absent` means selection/dispatch or callback wrong. `bit6 present and SaveDialog bit0 absent` means SaveDialog_InitSave unexpectedly not reached. `SaveDialog bit8 present and bit10 present` finally proves a genuine A2 save/Flash error. The trace is diagnostic only, not a game feature.
+- Original real user save, Nyx, Mosaic, main, frozen E7 emulator and A1 cartridge stay untouched. Continue safe autonomous testing without questions.
+
+---
+
 # A2 Save-dialog bit trace milestone (Nov 2, 2026 UTC)
 
 - **Independent evidence:** disposable frozen XGBA run 41377704537 passed real ROM boot, E6 envelope, Hub new game and initial tour dismissal. It reached the exact Save icon and pressed up to nine spaced confirmations. Native save counter remained 0 after all prompts; output `A2_XGBA_SAVE_DIALOG_EXHAUSTED_WITHOUT_NATIVE_COMMIT`. A2 metadata was never audited because the test fails earlier. This leaves open two possibilities: save callback never reached, or it ran and reported error.
