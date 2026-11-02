@@ -1,5 +1,8 @@
 # R8.4 ACTIVE INTEGRATION CHECKPOINT (Nov 2, 2026 UTC)
 
+**C3A adversarial fix:** Classic global chooser returns 0..111; when selecting a target on the *current* page, normalize to 0..13 before calling legacy TryStorePartyMonInBox. Without this, a same-page deposit on group>0 could index outside native boxes. Regression assertion added. CI pending.
+
+
 **C3A autonomous implementation, pending CI:** Added checked in-RAM party-to-global-box deposit with explicit validation of party slot, remaining usable party Pokémon, mail, collection readiness and full destination. Classic Deposit enables 112-box chooser for an unheld party mon; remote selection commits without changing current PC group. SwSh Deposit chooses global destination before grabbing party mon, then removes its icon only on successful commit. Both retain old local carrying logic; no cross-group hand-carry or multi-move enabled. Disposable ARM fixture creates Zigzagoon/Eevee in party, rejects invalid deposits, puts Eevee into global Box43, slot13 and checks cold restart. Graphical controller validation still REQUIRED. No live save, ROM, main or Mosaic touched. CI verdict must be checked before acceptance.
 
 

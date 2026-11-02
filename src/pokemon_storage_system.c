@@ -3077,6 +3077,12 @@ static void Task_DepositMenu(u8 taskId)
                 break;
             }
 #endif
+#if defined(XGBA_R8) && XGBA_R8
+            // Global chooser returns 0..111 even for the *active* page.
+            // The native 14-box API must never see a global index.
+            if (XgbaA2GameCollectionReady() && !sIsMonBeingMoved)
+                boxId %= TOTAL_BOXES_COUNT;
+#endif
             if (TryStorePartyMonInBox(boxId))
             {
                 sDepositBoxId = boxId;

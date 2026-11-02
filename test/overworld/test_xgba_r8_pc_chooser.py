@@ -51,6 +51,7 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertLess(body.index("if (position == IN_BOX_COUNT)"),
                         body.index("memcpy(target, &deposited.box"))
         self.assertIn("XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, &slot)", CLASSIC)
+        self.assertIn("boxId %= TOTAL_BOXES_COUNT;", CLASSIC)
         self.assertIn("XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, NULL)", SWSH)
         self.assertIn("sStorage->state = 18;", SWSH)
 
