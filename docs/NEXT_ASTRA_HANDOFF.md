@@ -1,3 +1,14 @@
+# A2 Region Hub tour lock diagnosed and scripted (Nov 2, 2026 UTC)
+
+- Real XGBA run 41376119630 failed after probe symbol resolved correctly (A2_USM_STATE_PTR at 0x0203c988). At frame 4653, Lua reported `A2_XGBA_MENU_UNVERIFIED Menu state pointer not active`; native counter 0, Flash present. No Save was initiated.
+- **Root cause found in source:** `data/maps/RegionHub/scripts.inc` runs `RegionHub_OnTransition`, sets VAR_TEMP_C, then `RegionHub_OnFrame` runs `RegionHub_EventScript_IntroTourOnArrival` when fresh player arrives at crest (16,4). That script does `lockall`, curator approaches, MSGBOX_YESNO offer, and only `releaseall` after completing/declining tour. Therefore `CB2_Overworld` and map group 100 at frame 4410 do NOT mean the player accepts Start input.
+- `tools/xgba_a2_runtime_save.lua` now runs a bounded B-button dismissal sequence to decline the tour and dismiss dialogue, then presses Start. If the USM state pointer remains inactive, it retries only B/Start, never A, for up to 18 attempts, logging each failure. Once the real graphical selected icon ID equals `USM_ICO_SAVE=7`, it presses A and the strict E6 journal audit makes the verdict. This is a disposable testing convenience, no game logic altered for the tour.
+- **False-positive fixed before acceptance:** cold resume now requires a positive `A2_EXPECTED_SAVE_COUNTER` from the E6 audit and `emu:read32(A2_SAVE_COUNTER) == expected` when Hub is reached. A fresh New Game also reaches Hub, so the earlier Hub-only check was insufficient. `.github/workflows/A2-XGBA-Boot-Probe.yml` extracts `counter: N` and passes it to the new emulator process. Focused source contract test updated.
+- Current runs: A2 collection contract 41376116328 completed success, including full native A1/A2 ARM regressions. New A2 contract run 41377110495 is in progress; disposable XGBA run 41377081254 is pending (prior attempts superseded/cancelled by workflow concurrency). **No save or cold resume passed yet**. Inspect exact logs after completion.
+- Do not turn this into a game save architecture change until Save menu really opened and save callback invoked. Protect live saves and frozen E7; owner is sick and does not need to test manually.
+
+---
+
 # A2 menu telemetry and real-save CI continuation (Nov 2, 2026 UTC)
 
 - Most recent known green: storage/format and A1 ARM regressions from run 41370773033, plus real XGBA New Game -> shared Hub run 41371173547 at frame 4410. New save/rollback integration remains NOT accepted.
