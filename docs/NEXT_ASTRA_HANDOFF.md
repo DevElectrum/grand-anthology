@@ -1,3 +1,13 @@
+# A2 verified gameplay boot and save journal runtime gate (Nov 2 UTC)
+
+Confirmed green: A2 Collection Storage Contract run 41370773033 completed successfully, including storage/rollback tests, A1 native-Flash and 256 MiB format regression, and isolated A2 ARM compilation/E6 cartridge validation.
+Real XGBA E7 run 41371173547 completed successfully with frozen E7 9aa5e11e: actual New Game entered shared Region Hub (map group 100) at 4410 emulated frames using linked ELF symbols. This was gameplay boot, NOT in-game save/restart; its 16 MiB E6 template remained blank.
+Now running: workflow commit 63f3205f added tools/xgba_a2_runtime_save.lua. It drives in-game Save, then strictly audits the disposable E6 file for a committed native+extended PC cohort, before launching a new emulator process for cold Continue. Run 41371769872 job 125043550020 was in Build isolated A2 ARM game at the last poll. Do not claim persistence pass until the actual journal audit and cold resume pass.
+If runtime audit fails, distinguish: Save menu navigation, file flush, actual A2 commit, or selection/recovery. Do not mistake the Lua input-sequence sentinel for verified save.
+Additional read-only future bug: src/item.c IsItemHeldByPlayerMon checks party and only 14 resident boxes; off-page held key item may bypass uniqueness. See docs/ANTHOLOGY_A2_BAG_ABI_AUDIT.md. Defer mutation until core persistence test is green.
+Preserve experimental branch only; no Nyx requests, live-save edits, Mosaic changes, original E7 changes, release or main merge while owner is ill.
+
+---
 # A2 runtime verification checkpoint (Nov 1 local, Nov 2 UTC)
 
 **Source-safe milestone:** `data/maps.s` / `map_data_rules.mk` variant-specific preprocessor fix works: A2 ARM linked (run `41370660428`), E6 256 MiB packaging and disposable 16 MiB E6 seed checked, and frozen E7 XGBA headless compiled. [Run 41370660428](https://github.com/DevElectrum/grand-anthology/actions/runs/41370660428) ended **failure** only because the shell's `-e` treated GNU `timeout` expected 124 as fatal before explicit status classification; XGBA survived the intended 20-second bounded run and did not show an early error. Do not claim actual New Game/save success from that passive probe.
