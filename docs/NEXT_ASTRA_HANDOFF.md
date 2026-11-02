@@ -1,5 +1,8 @@
 # R8.4 ACTIVE INTEGRATION CHECKPOINT (Nov 2, 2026 UTC)
 
+**R8.4C2 selector usability:** Classic global Jump popup now accepts L/R to jump 14 boxes at a time (8 groups), rather than requiring 111 individual presses. No native group switch during preview. Source assertion updated. Test/compile pending; cannot claim controller acceptance.
+
+
 **R8.4C2.1 GUI source safety:** Classic reopen-on-OOM null dereference repaired; both source and real R8 workflow now run a chooser invariant preflight. These are source/compile checks only, not simulated controller input. Wait for exact CI verdict. No user saves touched.
 
 

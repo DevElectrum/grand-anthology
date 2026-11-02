@@ -1858,6 +1858,24 @@ static u8 HandleChooseBoxMenuInput(void)
         PlaySE(SE_SELECT);
         return sChooseBoxMenu->curBox;
     }
+#if defined(XGBA_R8) && XGBA_R8
+    // Jump by a whole 14-box group without altering resident storage.
+    // The D-pad remains a one-box control; L/R reaches Box 112 quickly.
+    if (sChooseBoxMenu->globalMode && JOY_NEW(L_BUTTON | R_BUTTON))
+    {
+        u16 next = sChooseBoxMenu->curBox;
+        if (JOY_NEW(R_BUTTON))
+            next = (next + TOTAL_BOXES_COUNT)
+                % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+        else
+            next = (next + (XGBA_A2_PC_PAGES - 1) * TOTAL_BOXES_COUNT)
+                % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+        sChooseBoxMenu->curBox = next;
+        PlaySE(SE_SELECT);
+        ChooseBoxMenu_PrintInfo();
+        return BOXID_NONE_CHOSEN;
+    }
+#endif
     if (JOY_NEW(DPAD_LEFT))
     {
         PlaySE(SE_SELECT);

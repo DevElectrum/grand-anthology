@@ -33,6 +33,7 @@ class R8PcChooserSourceTests(unittest.TestCase):
 
     def test_classic_global_jump_keeps_carried_mon_guard(self):
         self.assertIn("limit = XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT", CLASSIC)
+        self.assertIn("sChooseBoxMenu->globalMode && JOY_NEW(L_BUTTON | R_BUTTON)", CLASSIC)
         self.assertIn("sChooseBoxMenu->globalMode = XgbaA2GameCollectionReady()", CLASSIC)
         self.assertIn("!IsMonBeingMoved() && !IsMovingItem()", CLASSIC)
         self.assertIn("XgbaA2GameSelectGlobalBox(globalBox)", CLASSIC)
