@@ -17,6 +17,7 @@ local usmMemoryAddr = addr("A2_USM_MEMORY_PTR")
 local saveCounterAddr = addr("A2_SAVE_COUNTER")
 local saveDialogTraceAddr = assert(addr("A2_SAVE_DIALOG_TRACE"), "Linked A2 Save-dialog trace is required")
 local usmTraceAddr = assert(addr("A2_USM_TRACE"), "Linked graphical Start-menu trace is required")
+local gameSaveTraceAddr = assert(addr("A2_GAME_SAVE_TRACE"), "Linked A2 save journal trace is required")
 local saveStatusAddr = addr("A2_SAVE_ATTEMPT_STATUS")
 local flashPresentAddr = addr("A2_FLASH_PRESENT")
 local mode = os.getenv("A2_ACTION") or "save"
@@ -46,6 +47,8 @@ local tourAdvanceUsed = false
 local lastMenuTrace = nil
 local lastDialogTrace = nil
 local lastNativeCounter = nil
+local lastGameSaveTrace = nil
+local lastActiveGameSaveTrace = nil
 local sawActualSaveDialog = false
 
 local function report(s)
@@ -55,6 +58,8 @@ end
 
 local function finish(message, code)
     emu:setKeys(0)
+    report("A2_XGBA_DIAG_GAME_SAVE_TRACE=" .. tostring(emu:read32(gameSaveTraceAddr)))
+    report("A2_XGBA_DIAG_LAST_NONZERO_SAVE_TRACE=" .. tostring(lastActiveGameSaveTrace))
     report("A2_XGBA_DIAG_USM_TRACE=" .. tostring(emu:read32(usmTraceAddr)))
     report("A2_XGBA_DIAG_SAVE_DIALOG_TRACE=" .. tostring(emu:read32(saveDialogTraceAddr)))
     if saveCounterAddr then
@@ -129,10 +134,20 @@ callbacks:add("frame", function()
     -- Lua host state survives any in-game soft reset; the EWRAM debug trace
     -- does not. Record transitions every frame BEFORE any scripts or input
     -- changes, so a Save-failure reset cannot erase its own evidence.
+    local gameSaveTrace = emu:read32(gameSaveTraceAddr)
     local menuTrace = emu:read32(usmTraceAddr)
     local dialogTrace = emu:read32(saveDialogTraceAddr)
     local counter = saveCounterAddr and emu:read32(saveCounterAddr) or 0
+    if gameSaveTrace ~= 0 then
+        lastActiveGameSaveTrace = gameSaveTrace
+    end
     if phase ~= "boot" then
+        if gameSaveTrace ~= lastGameSaveTrace then
+            report("A2_XGBA_GAME_SAVE_TRACE_CHANGE old=" .. tostring(lastGameSaveTrace)
+                   .. " new=" .. tostring(gameSaveTrace)
+                   .. " stage=" .. tostring(gameSaveTrace >> 24)
+                   .. " detail=" .. tostring(gameSaveTrace & 0xFFFFFF))
+        end
         if menuTrace ~= lastMenuTrace then
             report("A2_XGBA_MENU_TRACE_CHANGE old=" .. tostring(lastMenuTrace)
                    .. " new=" .. tostring(menuTrace))
@@ -153,6 +168,7 @@ callbacks:add("frame", function()
             finish("A2_XGBA_SAVE_DIALOG_DISAPPEARED_POSSIBLE_SOFT_RESET", 3)
         end
     end
+    lastGameSaveTrace = gameSaveTrace
     lastMenuTrace = menuTrace
     lastDialogTrace = dialogTrace
     lastNativeCounter = counter
