@@ -1,5 +1,8 @@
 # R8.4 ACTIVE INTEGRATION CHECKPOINT (Nov 2, 2026 UTC)
 
+**C2.1 unverified:** guard classic UI reopen NULL allocator and add chooser-source CI; still require real controller tests before full UI acceptance.
+
+
 **R8.4C2 global Jump preview (NOT yet controller-verified):** Classic Jump popup previews global boxes 1..112; SwSh's 14-cell grid uses L/R to preview one of eight groups without switching native storage. Both show global box counts/names and guard cross-group selection against carried mons/items and multi-move. A successful different-group Jump tears down and reopens the UI; cancel leaves active storage unchanged. Deposit, cross-group carry, item movement and multi-move remain unimplemented. C1 exact-record backend now passed run 41452277340; full C2 GUI compile and controller acceptance are still pending. See docs/ANTHOLOGY_R8_4_PC_GAMEPLAY_PLAN.md. No merge/release.
 
 
