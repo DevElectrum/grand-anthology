@@ -11,23 +11,7 @@
 
 	.section .rodata
 
-#if XGBA_A1
-#if XGBA_A2
-#if defined(RELEASE)
-	.include "build/xgba-a2-release/xgba-a1-layouts.inc"
-#else
-	.include "build/xgba-a2/xgba-a1-layouts.inc"
-#endif
-#else
-#if defined(RELEASE)
-	.include "build/xgba-a1-release/xgba-a1-layouts.inc"
-#else
-	.include "build/xgba-a1/xgba-a1-layouts.inc"
-#endif
-#endif
-#else
 	.include "data/layouts/layouts.inc"
-#endif
 	.include "data/layouts/layouts_table.inc"
 	.include "data/maps/headers.inc"
 	.include "data/maps/groups.inc"
