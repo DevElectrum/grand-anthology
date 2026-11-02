@@ -50,6 +50,7 @@ local lastNativeCounter = nil
 local lastGameSaveTrace = nil
 local lastActiveGameSaveTrace = nil
 local sawActualSaveDialog = false
+local awaitStarted = nil
 
 local function report(s)
     print(s .. " frame=" .. tostring(frame))
@@ -163,7 +164,8 @@ callbacks:add("frame", function()
         if dialogTrace ~= 0 then
             sawActualSaveDialog = true
         end
-        if phase == "confirm" and sawActualSaveDialog and dialogTrace == 0
+        if (phase == "confirm" or phase == "await-commit")
+           and sawActualSaveDialog and dialogTrace == 0
            and lastDialogTrace and lastDialogTrace ~= 0 then
             finish("A2_XGBA_SAVE_DIALOG_DISAPPEARED_POSSIBLE_SOFT_RESET", 3)
         end
@@ -329,8 +331,38 @@ callbacks:add("frame", function()
             setActions({{0, 240}})
             return
         end
+        -- SaveDoSaveCallback has been entered: A2 may be seeding all eight
+        -- external PC pages. Do not send another A (and do not assume a
+        -- normal click-based UI timeout while one synchronous save runs).
+        if (emu:read32(saveDialogTraceAddr) & 256) ~= 0 then
+            phase = "await-commit"
+            awaitStarted = frame
+            emu:setKeys(0)
+            report("A2_XGBA_AWAITING_INITIAL_E6_BOOTSTRAP")
+            return
+        end
         if driveActions() then
-            finish("A2_XGBA_SAVE_DIALOG_EXHAUSTED_WITHOUT_NATIVE_COMMIT", 3)
+            finish("A2_XGBA_SAVE_DIALOG_NEVER_ENTERED_TRANSACTION", 3)
+        end
+        return
+    end
+
+    if phase == "await-commit" then
+        emu:setKeys(0)
+        local counter = emu:read32(saveCounterAddr)
+        if counter > 0 then
+            report("A2_XGBA_GAME_NATIVE_COUNTER_ADVANCED=" .. tostring(counter))
+            phase = "commit-settle"
+            setActions({{0, 240}})
+            return
+        end
+        local elapsed = frame - awaitStarted
+        if elapsed > 0 and elapsed % 600 == 0 then
+            report("A2_XGBA_BOOTSTRAP_IN_PROGRESS frames=" .. tostring(elapsed)
+                   .. " stage=" .. tostring(emu:read32(gameSaveTraceAddr) >> 24))
+        end
+        if elapsed >= 12000 then
+            finish("A2_XGBA_INITIAL_SAVE_BOOTSTRAP_TIMEOUT", 3)
         end
         return
     end
