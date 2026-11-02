@@ -325,7 +325,11 @@ callbacks:add("frame", function()
 
     if phase == "confirm" then
         local counter = emu:read32(saveCounterAddr)
-        if counter > 0 then
+        local saveStage = emu:read32(gameSaveTraceAddr) >> 24
+        -- The native counter increments BEFORE the metadata commit. Only
+        -- stage 6 (verified first bootstrap) or stage 8 (verified next
+        -- transaction) means the complete native+PC cohort is committed.
+        if counter > 0 and (saveStage == 6 or saveStage == 8) then
             report("A2_XGBA_GAME_NATIVE_COUNTER_ADVANCED=" .. tostring(counter))
             phase = "commit-settle"
             setActions({{0, 240}})
@@ -350,7 +354,11 @@ callbacks:add("frame", function()
     if phase == "await-commit" then
         emu:setKeys(0)
         local counter = emu:read32(saveCounterAddr)
-        if counter > 0 then
+        local saveStage = emu:read32(gameSaveTraceAddr) >> 24
+        -- The native counter increments BEFORE the metadata commit. Only
+        -- stage 6 (verified first bootstrap) or stage 8 (verified next
+        -- transaction) means the complete native+PC cohort is committed.
+        if counter > 0 and (saveStage == 6 or saveStage == 8) then
             report("A2_XGBA_GAME_NATIVE_COUNTER_ADVANCED=" .. tostring(counter))
             phase = "commit-settle"
             setActions({{0, 240}})
