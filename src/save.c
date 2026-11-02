@@ -123,6 +123,10 @@ EWRAM_DATA static struct XgbaA2Cohort sA2Committed;
 EWRAM_DATA static struct XgbaA2Pager sA2Pager;
 EWRAM_DATA static bool8 sA2Ready = FALSE;
 EWRAM_DATA static bool8 sA2FreshSaveArmed = FALSE;
+// Read-only disposable E6 runtime diagnostics, never part of any saved block.
+// Upper byte is the stage; low 24 bits hold the stage-specific result/flags.
+EWRAM_DATA volatile u32 gXgbaA2GameSaveTrace = 0;
+#define A2_SAVE_TRACE(stage, detail) (gXgbaA2GameSaveTrace = ((u32)(stage) << 24) | ((u32)(detail) & 0xFFFFFF))
 #endif
 
 void ClearSaveData(void)
@@ -818,7 +822,9 @@ static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
         || slot != (counter % NUM_SAVE_SLOTS))
         return 0;
 
+    A2_SAVE_TRACE(0x10, (slot << 16) | (counter & 0xFFFF));
     result = WriteSaveSectorOrSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);
+    A2_SAVE_TRACE(0x11, ((u32)result << 16) | (gSaveCounter & 0xFFFF));
     return result == SAVE_STATUS_OK && !gDamagedSaveSectors
         && gSaveCounter == counter;
 }
@@ -876,6 +882,7 @@ bool8 XgbaA2GameFindFreePage(u8 *foundPage)
 // Only called when the player explicitly starts a new game.
 void XgbaA2GameArmFreshSave(void)
 {
+    A2_SAVE_TRACE(1, 1);
     sA2FreshSaveArmed = TRUE;
     sA2Ready = FALSE;
 }
@@ -909,19 +916,33 @@ static u8 A2Save(u8 saveType)
     u32 *backupVar;
     int result;
 
+    A2_SAVE_TRACE(2, (saveType & 0xFF) | (sA2Ready ? 0x100 : 0) | (sA2FreshSaveArmed ? 0x200 : 0));
+
     // All full-game save requests share the same native+PC transaction.
     // The Hall of Fame archive lives in separate native sectors 28/29;
     // write it only AFTER the game's global commit is independently valid.
     if (saveType != SAVE_NORMAL && saveType != SAVE_LINK
         && saveType != SAVE_EREADER && saveType != SAVE_HALL_OF_FAME
         && saveType != SAVE_OVERWRITE_DIFFERENT_FILE)
+    {
+        A2_SAVE_TRACE(0xE1, saveType);
         return SAVE_STATUS_ERROR;
+    }
     if (saveType == SAVE_OVERWRITE_DIFFERENT_FILE && !sA2FreshSaveArmed)
+    {
+        A2_SAVE_TRACE(0xE2, saveType);
         return SAVE_STATUS_ERROR;
+    }
     if (!sA2Ready && !sA2FreshSaveArmed)
+    {
+        A2_SAVE_TRACE(0xE3, saveType);
         return SAVE_STATUS_ERROR;
+    }
     if (saveType == SAVE_HALL_OF_FAME && gHoFSaveBuffer == NULL)
+    {
+        A2_SAVE_TRACE(0xE4, saveType);
         return SAVE_STATUS_ERROR;
+    }
 
     backupVar = gTrainerHillVBlankCounter;
     gTrainerHillVBlankCounter = NULL;
@@ -939,29 +960,46 @@ static u8 A2Save(u8 saveType)
         // One-shot authorization: even an interrupted initial save cannot
         // be retried in the same session without explicit new-game setup.
         sA2FreshSaveArmed = FALSE;
+        A2_SAVE_TRACE(3, 1);
         if (!XgbaA2GuestBusBind(&sA2Bus, (volatile uint8_t *)0x0F000000))
+        {
+            A2_SAVE_TRACE(0xE5, 0);
             goto failed;
+        }
+        A2_SAVE_TRACE(4, 1);
         XgbaA2GuestBusCreateIo(&sA2Bus, &sA2Io);
         result = XgbaA2BootstrapCommit(
             &sA2Io, A2NativeRead, A2NativeWrite, NULL,
             (uint8_t *)&gSaveDataBuffer, gPokemonStoragePtr, &newCohort);
         if (result != XGBA_A2_JOURNAL_OK)
+        {
+            A2_SAVE_TRACE(0xE6, result);
             goto failed;
+        }
+        A2_SAVE_TRACE(5, 1);
         if (XgbaA2PagerInit(&sA2Pager, &sA2Io, gPokemonStoragePtr,
                              newCohort.activePage, newCohort.pages)
             != XGBA_A2_JOURNAL_OK)
+        {
+            A2_SAVE_TRACE(0xE7, 0);
             goto failed;
+        }
+        A2_SAVE_TRACE(6, newCohort.nativeCounter);
         sA2Committed = newCohort;
         sA2Ready = TRUE;
         gTrainerHillVBlankCounter = backupVar;
         return SAVE_STATUS_OK;
     }
 
+    A2_SAVE_TRACE(7, sA2Committed.nativeCounter);
     result = XgbaA2TransactionCommit(
         &sA2Pager, &sA2Committed, A2NativeRead, A2NativeWrite,
         NULL, (uint8_t *)&gSaveDataBuffer, &newCohort);
+    if (result != XGBA_A2_JOURNAL_OK)
+        A2_SAVE_TRACE(0xE8, result);
     if (result == XGBA_A2_JOURNAL_OK)
     {
+        A2_SAVE_TRACE(8, newCohort.nativeCounter);
         sA2Committed = newCohort;
 
         if (saveType == SAVE_HALL_OF_FAME)
