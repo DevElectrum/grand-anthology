@@ -37,6 +37,13 @@ class TestA2MenuProbe(unittest.TestCase):
         self.assertIn('A2_XGBA_COLD_RESUME_COUNTER_MISMATCH', runner)
         self.assertIn('A2_EXPECTED_SAVE_COUNTER', runner)
         self.assertIn('A2_XGBA_GAME_NATIVE_COUNTER_ADVANCED=', runner)
+        self.assertIn('A2_XGBA_DIAG_USM_TRACE=', runner)
+        self.assertIn('A2_USM_TRACE', (ROOT / "tools/xgba_a2_symbol_env.py").read_text())
+        menu = (ROOT / "src/unbound_start_menu.c").read_text()
+        self.assertIn("EWRAM_DATA volatile u32 gXgbaA2UsmTrace = 0;", menu)
+        self.assertIn("#define A2_USM_TRACE(n) ((void)0)", menu)
+        for bit in (1, 2, 3, 4, 5, 6, 7):
+            self.assertIn("A2_USM_TRACE(" + str(bit) + ")", menu)
         self.assertIn('A2_XGBA_SAVE_DIALOG_EXHAUSTED_WITHOUT_NATIVE_COMMIT', runner)
         self.assertIn('if counter > 0 then', runner)
 
