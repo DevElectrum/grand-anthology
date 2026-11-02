@@ -15,6 +15,7 @@ on:
       - 'include/xgba_a2_*.h'
       - 'tools/xgba_a2_storage.py'
       - 'tools/xgba_a2_runtime_boot.lua'
+      - 'tools/xgba_a2_runtime_save.lua'
       - 'tools/xgba_a2_symbol_env.py'
       - 'tools/xgba_a2_rom.py'
       - 'tools/xgba_a1_assets.py'
@@ -156,6 +157,45 @@ jobs:
           tail -n 80 /tmp/a2-xgba-game.log
           grep -q 'A2_XGBA_REAL_NEW_GAME_HUB_PASS' /tmp/a2-xgba-game.log
           python3 tools/xgba_a2_storage.py audit-blank build/a2-ci-runtime/a2-boot.sav
+
+      - name: Save from Hub and audit actual committed native plus PC cohort
+        shell: bash
+        env:
+          A2_ACTION: save
+        run: |
+          set -euo pipefail
+          # This uses only the disposable E6 seed created by the prior step.
+          # The Lua sequence sentinel is NOT save evidence; the journal audit
+          # is the acceptance check for a real committed native+PC cohort.
+          timeout --signal=INT --kill-after=5s 360s \
+            build/a2-ci-xgba-runner/mgba-headless \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-save.log 2>&1 || {
+              tail -n 100 /tmp/a2-xgba-save.log
+              exit 1
+            }
+          tail -n 50 /tmp/a2-xgba-save.log
+          grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/a2-xgba-save.log
+          python3 tools/xgba_a2_storage.py audit build/a2-ci-runtime/a2-boot.sav | tee /tmp/a2-xgba-audit.txt
+          grep -q 'counter:' /tmp/a2-xgba-audit.txt
+          grep -q 'page_generations:' /tmp/a2-xgba-audit.txt
+
+      - name: Cold-restart frozen XGBA and resume saved shared Hub
+        shell: bash
+        env:
+          A2_ACTION: resume
+        run: |
+          set -euo pipefail
+          timeout --signal=INT --kill-after=5s 360s \
+            build/a2-ci-xgba-runner/mgba-headless \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-resume.log 2>&1 || {
+              tail -n 100 /tmp/a2-xgba-resume.log
+              exit 1
+            }
+          tail -n 50 /tmp/a2-xgba-resume.log
+          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS' /tmp/a2-xgba-resume.log
+          python3 tools/xgba_a2_storage.py audit build/a2-ci-runtime/a2-boot.sav
 
       - name: Delete temporary developer ROM and save regardless of outcome
         if: always()
