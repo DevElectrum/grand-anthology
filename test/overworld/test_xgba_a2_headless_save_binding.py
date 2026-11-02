@@ -19,7 +19,7 @@ class TestA2HeadlessSaveBinding(unittest.TestCase):
     def test_every_scripted_game_process_binds_save_first(self):
         workflow = (ROOT / ".github/workflows/A2-XGBA-Boot-Probe.yml").read_text()
         self.assertIn('A2_E6_SAVE_PATH: build/a2-ci-runtime/a2-boot.sav', workflow)
-        self.assertEqual(workflow.count('--script tools/xgba_a2_bind_save.lua'), 3)
+        self.assertEqual(workflow.count('--script tools/xgba_a2_bind_save.lua'), 5)
         self.assertIn(
             '--script tools/xgba_a2_bind_save.lua \\\n'
             '            --script tools/xgba_a2_runtime_boot.lua', workflow,
@@ -28,7 +28,7 @@ class TestA2HeadlessSaveBinding(unittest.TestCase):
             workflow.count(
                 '--script tools/xgba_a2_bind_save.lua \\\n'
                 '            --script tools/xgba_a2_runtime_save.lua'
-            ), 2
+            ), 4
         )
 
 
