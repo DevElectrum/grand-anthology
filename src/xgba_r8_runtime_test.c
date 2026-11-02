@@ -38,7 +38,7 @@ static int VerifyTestPokemonRecords(void)
         && XgbaA2GameCountGlobalBoxMons(111) == 1
         && XgbaA2GameCountGlobalBoxMons(112) == -1
         && XgbaA2GameGlobalBoxName(14) != NULL
-        && VerifyOne(XgbaA2GameGlobalBoxMon(42, 12), SPECIES_EEVEE,
+        && VerifyOne(XgbaA2GameGlobalBoxMon(42, 0), SPECIES_EEVEE,
                      0x56789ABCU, ITEM_POTION);
 }
 
@@ -134,7 +134,7 @@ int XgbaR8CreateTestPokemon(void)
         u8 chosen = 255;
         struct Pokemon *partyMon;
         struct BoxPokemon *occupied = XgbaA2GameGlobalBoxMon(0, 0);
-        struct BoxPokemon *remote = XgbaA2GameGlobalBoxMon(42, 12);
+        struct BoxPokemon *remote = XgbaA2GameGlobalBoxMon(42, 0);
         struct BoxPokemon before;
         if (partyPosition > PARTY_SIZE - 2 || occupied == NULL || remote == NULL
             || GetBoxMonData(remote, MON_DATA_SPECIES) != SPECIES_NONE)
@@ -157,7 +157,7 @@ int XgbaR8CreateTestPokemon(void)
             return 0;
 
         if (!XgbaA2GameDepositPartyMonGlobal(partyPosition + 1, 42, &chosen)
-            || chosen != 12
+            || chosen != 0
             || GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_NONE
             || !VerifyTestPokemonRecords())
             return 0;
