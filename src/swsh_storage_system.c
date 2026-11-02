@@ -2811,6 +2811,22 @@ static void Task_DepositMon(u8 taskId)
     switch (sStorage->state)
     {
     case 0:
+#if defined(XGBA_R8) && XGBA_R8
+        if (XgbaA2GameCollectionReady() && !sIsMonBeingMoved
+            && sCursorArea == CURSOR_AREA_IN_PARTY)
+        {
+            // Preview the global destination BEFORE grabbing the source.
+            // B cancels with no changes to the party or storage.
+            sStorage->inMenuInteraction = TRUE;
+            UpdateMonInfoTilemap();
+            LoadChooseBoxGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_GRID_HOVER, PALTAG_MISC_3, FALSE);
+            sChooseBoxMenu->globalMode = TRUE;
+            sChooseBoxMenu->previewPage = XgbaA2GamePage();
+            ChooseBox_CreateSprites(StorageGetCurrentBox());
+            sStorage->state = 18;
+            break;
+        }
+#endif
         if (!sIsMonBeingMoved)
         {
             InitMonPlaceChange(CHANGE_GRAB);
@@ -2992,6 +3008,72 @@ static void Task_DepositMon(u8 taskId)
         if (!DoMonPlaceChange())
             SetPokeStorageTask(Task_PokeStorageMain);
         break;
+#if defined(XGBA_R8) && XGBA_R8
+    case 18:
+        boxId = HandleChooseBoxInput();
+        if (boxId == BOXID_NONE_CHOSEN)
+            break;
+        if (boxId == BOXID_CANCELED)
+        {
+            ClearBottomWindow();
+            ChooseBox_DestroySprites();
+            FreeChooseBox();
+            SetPokeStorageTask(Task_PokeStorageMain);
+            break;
+        }
+        if (!XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, NULL))
+        {
+            PlaySE(SE_FAILURE);
+            PrintMessage(MSG_BOX_IS_FULL);
+            sStorage->state = 23;
+            break;
+        }
+        PlaySE(SE_SELECT);
+        ClearBottomWindow();
+        ChooseBox_DestroySprites();
+        FreeChooseBox();
+        if (sStorage->partySprites[sCursorPosition] != NULL)
+        {
+            DestroyBoxMonIcon(sStorage->partySprites[sCursorPosition]);
+            sStorage->partySprites[sCursorPosition] = NULL;
+        }
+        sStorage->state = 19;
+        break;
+    case 19:
+        CompactPartySlots();
+        CompactPartySprites();
+        sStorage->state++;
+        break;
+    case 20:
+        if (GetNumPartySpritesCompacting() == 0)
+        {
+            u8 partyCount = CalculatePlayerPartyCount();
+            u8 returnPos = sCursorPosition;
+            if (partyCount != 0 && returnPos >= partyCount)
+                returnPos = partyCount - 1;
+            SetCursorPosition(CURSOR_AREA_IN_PARTY, returnPos);
+            sStorage->state++;
+        }
+        break;
+    case 21:
+        if (!UpdateCursorPos())
+        {
+            TryRefreshDisplayMon();
+            RefreshDisplayMonData();
+            sStorage->state++;
+        }
+        break;
+    case 22:
+        SetPokeStorageTask(Task_PokeStorageMain);
+        break;
+    case 23:
+        if (JOY_NEW(A_BUTTON | B_BUTTON | DPAD_ANY))
+        {
+            ClearBottomWindow();
+            sStorage->state = 18;
+        }
+        break;
+#endif
     }
 }
 

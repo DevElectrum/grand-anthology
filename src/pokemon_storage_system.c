@@ -3030,6 +3030,11 @@ static void Task_DepositMenu(u8 taskId)
     case 0:
         PrintMessage(MSG_DEPOSIT_IN_WHICH_BOX);
         LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_MENU, PALTAG_MISC_1, 3, FALSE);
+#if defined(XGBA_R8) && XGBA_R8
+        // Keep the in-hand Pokémon on the existing 14-box path until the
+        // complete carry/undo state can survive cross-page UI rebuilding.
+        sChooseBoxMenu->globalMode = XgbaA2GameCollectionReady() && !sIsMonBeingMoved;
+#endif
         CreateChooseBoxMenuSprites(sDepositBoxId);
         sStorage->state++;
         break;
@@ -3046,6 +3051,32 @@ static void Task_DepositMenu(u8 taskId)
             SetPokeStorageTask(Task_PokeStorageMain);
             break;
         default:
+#if defined(XGBA_R8) && XGBA_R8
+            if (XgbaA2GameCollectionReady() && !sIsMonBeingMoved
+                && boxId / TOTAL_BOXES_COUNT != XgbaA2GamePage())
+            {
+                u8 slot;
+                if (XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, &slot))
+                {
+                    // The party-to-storage move has already committed.
+                    // No native-page switch and no borrowed UI pointer.
+                    sDepositBoxId = boxId % TOTAL_BOXES_COUNT;
+                    DestroyPartyMonIcon(sCursorPosition);
+                    StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_STILL);
+                    ClearBottomWindow();
+                    DestroyChooseBoxMenuSprites();
+                    FreeChooseBoxMenu();
+                    sStorage->state = 2;
+                }
+                else
+                {
+                    PlaySE(SE_FAILURE);
+                    PrintMessage(MSG_BOX_IS_FULL);
+                    sStorage->state = 4;
+                }
+                break;
+            }
+#endif
             if (TryStorePartyMonInBox(boxId))
             {
                 sDepositBoxId = boxId;

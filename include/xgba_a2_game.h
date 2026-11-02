@@ -35,6 +35,10 @@ bool8 XgbaA2GameMoveGlobalBoxMon(u16 sourceBox, u8 sourcePos,
                                  u16 destinationBox, u8 destinationPos);
 bool8 XgbaA2GameSwapGlobalBoxMons(u16 firstBox, u8 firstPos,
                                   u16 secondBox, u8 secondPos);
+// Checked party-to-global deposit. Returns FALSE without mutation for
+// invalid/full destination, mail, empty slot or last usable party Pokémon.
+bool8 XgbaA2GameDepositPartyMonGlobal(u8 partyPosition, u16 globalBox,
+                                     u8 *placedPosition);
 #endif
 #endif
 

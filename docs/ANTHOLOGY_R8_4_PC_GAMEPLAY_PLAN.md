@@ -15,3 +15,10 @@
 
 ## Non-negotiable stop gates
 Do not merge or issue a playable build until graphical tests, destructive-operation safety, cross-region and crash cases pass. A backend C-call success is not proof that users can safely carry Pokémon in the GUI. Do not disable carry safety guards as a shortcut.
+
+## C3A: no-user-input integration slice (2026-11-02)
+- Direct party to first empty slot of any global box. Validate all destination/source constraints before writing complete BoxPokemon and clearing source. Keep current selected native group unchanged.
+- Both PC frontends offer a remote party deposit chooser. Classic reuses its global popup; SwSh uses the existing 14-tile grid and L/R preview. Invalid/occupied/full target or B must leave party intact.
+- Explicitly do **not** enable cross-group movement of a Pokémon already being carried, multi-selection, mail or item-in-hand transfers. These demand a separate rollback-aware carry-state protocol.
+- Disposable real-ARM fixture attempts invalid party/global IDs and deposits a genuine game Pokémon into distant global Box 43 with exact record verification after cold restart. CI source assertions prevent accidental relaxation of the guards.
+- This is source + game-function testing. No claim of visual-controller input test or C3 acceptance until independent GUI scripts execute.

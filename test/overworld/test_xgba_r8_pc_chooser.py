@@ -39,6 +39,21 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("XgbaA2GameSelectGlobalBox(globalBox)", CLASSIC)
         self.assertIn("SetPokeStorageTask(Task_R8ReopenBox)", CLASSIC)
 
+    def test_global_deposit_source_guards_and_both_pc_engines(self):
+        start = SAVE.index("bool8 XgbaA2GameDepositPartyMonGlobal(")
+        end = SAVE.index("// Swap is likewise preflighted", start)
+        body = SAVE[start:end]
+        self.assertIn("CountPartyAliveNonEggMonsExcept(partyPosition)", body)
+        self.assertIn("ItemIsMail(", body)
+        self.assertIn("position == IN_BOX_COUNT", body)
+        self.assertIn("memcpy(target, &deposited.box", body)
+        self.assertIn("ZeroMonData(party)", body)
+        self.assertLess(body.index("if (position == IN_BOX_COUNT)"),
+                        body.index("memcpy(target, &deposited.box"))
+        self.assertIn("XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, &slot)", CLASSIC)
+        self.assertIn("XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, NULL)", SWSH)
+        self.assertIn("sStorage->state = 18;", SWSH)
+
     def test_swsh_uses_paged_14_cell_preview_without_switching_on_hover(self):
         self.assertIn("sChooseBoxMenu->previewPage", SWSH)
         self.assertIn("if (sChooseBoxMenu->globalMode && JOY_NEW(L_BUTTON | R_BUTTON))", SWSH)

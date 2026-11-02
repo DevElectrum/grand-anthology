@@ -25,6 +25,8 @@
 #endif
 #endif
 #include "pokemon.h"
+#include "mail.h"
+#include "constants/form_change_types.h"
 #endif
 
 static u16 CalculateChecksum(void *, u16);
@@ -1009,6 +1011,50 @@ bool8 XgbaA2GameMoveGlobalBoxMon(u16 sourceBox, u8 sourcePos,
     // Any uncommitted operation is still recoverable from the old cohort.
     memcpy(destination, source, sizeof(*destination));
     memset(source, 0, sizeof(*source));
+    return TRUE;
+}
+
+// Direct party deposit: destination and party constraints are validated
+// before either source or destination changes. No Flash, journal or page
+// switching occurs while depositing. The UI compacts party icons afterward.
+bool8 XgbaA2GameDepositPartyMonGlobal(u8 partyPosition, u16 globalBox,
+                                     u8 *placedPosition)
+{
+    struct Pokemon *party;
+    struct Pokemon deposited;
+    struct BoxPokemon *target = NULL;
+    u8 position;
+
+    if (!XgbaA2GameCollectionReady() || partyPosition >= PARTY_SIZE
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT)
+        return FALSE;
+    party = &gParties[B_TRAINER_PLAYER][partyPosition];
+    if (GetMonData(party, MON_DATA_SPECIES) == SPECIES_NONE
+        || CountPartyAliveNonEggMonsExcept(partyPosition) == 0
+        || ItemIsMail(GetMonData(party, MON_DATA_HELD_ITEM)))
+        return FALSE;
+
+    for (position = 0; position < IN_BOX_COUNT; position++)
+    {
+        target = XgbaA2GameGlobalBoxMon(globalBox, position);
+        if (target == NULL)
+            return FALSE;
+        if (GetBoxMonData(target, MON_DATA_SPECIES) == SPECIES_NONE)
+            break;
+    }
+    if (position == IN_BOX_COUNT)
+        return FALSE;
+
+    deposited = *party;
+    if (OW_PC_HEAL <= GEN_7)
+        HealPokemon(&deposited);
+    memcpy(target, &deposited.box, sizeof(*target));
+    TryBoxMonFormChange(target, FORM_CHANGE_DEPOSIT);
+    if (party == GetFirstLiveMon())
+        gFollowerSteps = 0;
+    ZeroMonData(party);
+    if (placedPosition != NULL)
+        *placedPosition = position;
     return TRUE;
 }
 

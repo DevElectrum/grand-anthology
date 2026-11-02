@@ -37,7 +37,9 @@ static int VerifyTestPokemonRecords(void)
         && XgbaA2GameCountGlobalBoxMons(28) == 1
         && XgbaA2GameCountGlobalBoxMons(111) == 1
         && XgbaA2GameCountGlobalBoxMons(112) == -1
-        && XgbaA2GameGlobalBoxName(14) != NULL;
+        && XgbaA2GameGlobalBoxName(14) != NULL
+        && VerifyOne(XgbaA2GameGlobalBoxMon(42, 12), SPECIES_EEVEE,
+                     0x56789ABCU, ITEM_POTION);
 }
 
 int XgbaR8CreateTestPokemon(void)
@@ -115,6 +117,45 @@ int XgbaR8CreateTestPokemon(void)
         if (!XgbaA2GameMoveGlobalBoxMon(13, 4, 14, 5)
             || !XgbaA2GameMoveGlobalBoxMon(27, 7, 28, 8)
             || !VerifyTestPokemonRecords())
+            return 0;
+    }
+
+    // C3A party-to-remote-PC deposit. All invalid attempts must preserve
+    // the actual party and the already-occupied box exactly.
+    {
+        u8 partyPosition = CalculatePlayerPartyCount();
+        u8 chosen = 255;
+        struct Pokemon *partyMon;
+        struct BoxPokemon *occupied = XgbaA2GameGlobalBoxMon(0, 0);
+        struct BoxPokemon *remote = XgbaA2GameGlobalBoxMon(42, 12);
+        struct BoxPokemon before;
+        if (partyPosition > PARTY_SIZE - 2 || occupied == NULL || remote == NULL
+            || GetBoxMonData(remote, MON_DATA_SPECIES) != SPECIES_NONE)
+            return 0;
+
+        CreateMon(&gParties[B_TRAINER_PLAYER][partyPosition],
+                  SPECIES_ZIGZAGOON, 29, 0x6789ABCDU, OTID_STRUCT_PLAYER_ID);
+        CreateMon(&gParties[B_TRAINER_PLAYER][partyPosition + 1],
+                  SPECIES_EEVEE, 30, 0x56789ABCU, OTID_STRUCT_PLAYER_ID);
+        partyMon = &gParties[B_TRAINER_PLAYER][partyPosition + 1];
+        item = ITEM_POTION;
+        SetMonData(partyMon, MON_DATA_HELD_ITEM, &item);
+        SetMonData(partyMon, MON_DATA_MARKINGS, &favorite);
+
+        memcpy(&before, occupied, sizeof(before));
+        if (XgbaA2GameDepositPartyMonGlobal(PARTY_SIZE, 42, NULL)
+            || XgbaA2GameDepositPartyMonGlobal(partyPosition + 1, 112, NULL)
+            || GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_EEVEE
+            || memcmp(&before, occupied, sizeof(before)) != 0)
+            return 0;
+
+        if (!XgbaA2GameDepositPartyMonGlobal(partyPosition + 1, 42, &chosen)
+            || chosen != 12
+            || GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_NONE
+            || !VerifyTestPokemonRecords())
+            return 0;
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][partyPosition], MON_DATA_SPECIES)
+            != SPECIES_ZIGZAGOON)
             return 0;
     }
 
