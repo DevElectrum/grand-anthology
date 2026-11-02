@@ -34,6 +34,14 @@ class TestA2SaveDialogTrace(unittest.TestCase):
         self.assertIn('"gXgbaA2SaveDialogTrace": "A2_SAVE_DIALOG_TRACE"', elf)
         self.assertIn('addr("A2_SAVE_DIALOG_TRACE")', lua)
         self.assertIn("A2_XGBA_DIAG_SAVE_DIALOG_TRACE", lua)
+        game_save = (ROOT / "src/save.c").read_text()
+        self.assertIn("EWRAM_DATA volatile u32 gXgbaA2GameSaveTrace = 0;", game_save)
+        self.assertIn("A2_SAVE_TRACE(0xE6, result)", game_save)
+        self.assertIn("A2_SAVE_TRACE(0xE8, result)", game_save)
+        self.assertIn("A2_SAVE_TRACE(0xE5, 0)", game_save)
+        self.assertIn("A2_XGBA_GAME_SAVE_TRACE_CHANGE", lua)
+        self.assertIn("A2_XGBA_DIAG_LAST_NONZERO_SAVE_TRACE", lua)
+        self.assertIn('"gXgbaA2GameSaveTrace": "A2_GAME_SAVE_TRACE"', elf)
 
 
 if __name__ == "__main__":
