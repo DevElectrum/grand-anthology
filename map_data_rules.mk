@@ -21,7 +21,12 @@ MAP_HEADERS := $(patsubst $(MAPS_DIR)/%/,$(MAPS_DIR)/%/header.inc,$(MAP_DIRS))
 MAP_JSONS := $(patsubst $(MAPS_DIR)/%/,$(MAPS_DIR)/%/map.json,$(MAP_DIRS))
 
 $(DATA_ASM_BUILDDIR)/maps.o: $(DATA_ASM_SUBDIR)/maps.s $(LAYOUTS_DIR)/layouts.inc $(LAYOUTS_DIR)/layouts_table.inc $(MAPS_DIR)/headers.inc $(MAPS_DIR)/groups.inc $(MAPS_DIR)/connections.inc $(MAP_CONNECTIONS) $(MAP_HEADERS)
+ifeq ($(XGBA_A1),1)
+	python3 tools/xgba_select_map_layout.py $< $(OBJ_DIR)/xgba-a1-layouts.inc $(DATA_ASM_BUILDDIR)/maps_selected.s
+	$(PREPROC) -s $(DATA_ASM_BUILDDIR)/maps_selected.s charmap.txt | $(CPP) $(CPPFLAGS) -I include - | $(PREPROC) -ie $(DATA_ASM_BUILDDIR)/maps_selected.s charmap.txt | $(AS) $(ASFLAGS) -o $@
+else
 	$(PREPROC) -s $< charmap.txt | $(CPP) $(CPPFLAGS) -I include - | $(PREPROC) -ie $< charmap.txt | $(AS) $(ASFLAGS) -o $@
+endif
 $(DATA_ASM_BUILDDIR)/map_events.o: $(DATA_ASM_SUBDIR)/map_events.s $(MAPS_DIR)/events.inc $(MAP_EVENTS)
 	$(PREPROC) -s $< charmap.txt | $(CPP) $(CPPFLAGS) -I include - | $(PREPROC) -ie $< charmap.txt | $(AS) $(ASFLAGS) -o $@
 
