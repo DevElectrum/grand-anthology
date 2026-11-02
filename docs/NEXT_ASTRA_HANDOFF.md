@@ -1,3 +1,14 @@
+# A2 save-dialog sequence diagnosed (Nov 2, 2026 UTC)
+
+- Real disposable XGBA run 41377081254 successfully built the isolated A2 ROM, E6 image and frozen XGBA, booted the real Region Hub, then safely declined its automatic curator tour and reached the exact graphical `USM_ICO_SAVE` (else the test could not enter the confirm phase). However, it failed to commit: `A2_XGBA_DIAG_SAVE_COUNTER=0`, `A2 storage refused: No valid A2 metadata commit`. This failure **does not yet prove A2Save is broken**.
+- Source trace `src/save_dialog.c`: `SKIP_SAVE_CONFIRMATION=FALSE` and `gDifferentSaveFile=FALSE`; the Save flow may display ConfirmSave -> AlreadySavedFile -> ConfirmOverwrite before `SaveDoSaveCallback`. The old Lua script sent only three spaced A presses counting icon activation, then exited even if `gSaveCounter` stayed zero. It therefore often never reached `TrySavingData`.
+- New script commit `89819e84` sends up to nine spaced A confirmations but stops the moment `emu:read32(A2_SAVE_COUNTER)>0`, releases inputs for 240 frames, and THEN lets the host `tools/xgba_a2_storage.py audit` inspect true native+extended journal state. If counter stays zero after nine prompts, it fails explicitly with `A2_XGBA_SAVE_DIALOG_EXHAUSTED_WITHOUT_NATIVE_COMMIT`. Source contract test updated. No actual game save logic changed; only disposable test automation.
+- If the next CI still fails, do not blindly add another click. Inspect menu/dialog trace and whether `SaveDoSaveCallback` executes; add A2-only read-only save callback telemetry if necessary. Only after proven execution audit A2 bootstrap/bus/commit. The cold-resume check was strengthened earlier to require `A2_EXPECTED_SAVE_COUNTER` from the audited E6 file; plain Hub arrival isn't accepted.
+- New A2 run launched by script/test changes (inspect latest A2 XGBA disposable boot probe workflow). Do not claim green without actual conclusion. A1 regression and storage cohort tests remain independent and previously passed.
+- Remain on `xgba/a2-collection-lab`; no Nyx, player save, Mosaic, original E7 emulator source, or main changes.
+
+---
+
 # A2 Region Hub tour lock diagnosed and scripted (Nov 2, 2026 UTC)
 
 - Real XGBA run 41376119630 failed after probe symbol resolved correctly (A2_USM_STATE_PTR at 0x0203c988). At frame 4653, Lua reported `A2_XGBA_MENU_UNVERIFIED Menu state pointer not active`; native counter 0, Flash present. No Save was initiated.
