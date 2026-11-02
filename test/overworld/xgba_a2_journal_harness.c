@@ -306,6 +306,61 @@ int main(void)
         free(original);
     }
 
+    // R8: eight resident RAM groups, no E6 reads or writes on navigation.
+    {
+        struct XgbaA2Pager pager;
+        uint32_t committed[XGBA_A2_PC_PAGES];
+        uint32_t planned[XGBA_A2_PC_PAGES];
+        uint8_t *ram = malloc(XGBA_A2_PC_BYTES * XGBA_A2_PC_PAGES);
+        unsigned page;
+        int priorReads;
+        int priorWrites;
+        assert(ram != NULL);
+        memset(disk.bytes, 0xFF, MEMORY_SIZE);
+        for (page = 0; page < XGBA_A2_PC_PAGES; page++)
+        {
+            Fill(newPage, (uint8_t)(31 + page));
+            Fixture(&disk, page, 0, 1, newPage, PAGE_BYTES);
+            Fixture(&disk, page, 1, 2, newPage, PAGE_BYTES);
+            committed[page] = 2;
+        }
+        Fill(old, 31);
+        assert(XgbaA2PagerInit(&pager, &io, old, 0, committed) == 0);
+        assert(XgbaA2PagerEnableRam(&pager, ram,
+               XGBA_A2_PC_BYTES * XGBA_A2_PC_PAGES) == 0);
+        priorReads = disk.reads;
+        priorWrites = disk.writes;
+        old[44] ^= 0x51;
+        assert(XgbaA2PagerSwitch(&pager, 7) == 0);
+        Fill(newPage, 38);
+        assert(memcmp(old, newPage, PAGE_BYTES) == 0);
+        old[81] ^= 0xA3;
+        assert(XgbaA2PagerSwitch(&pager, 0) == 0);
+        assert(disk.reads == priorReads && disk.writes == priorWrites);
+        Fill(newPage, 31);
+        newPage[44] ^= 0x51;
+        assert(memcmp(old, newPage, PAGE_BYTES) == 0);
+        assert(XgbaA2PagerPrepareSave(&pager, planned) == 0);
+        assert(planned[0] == 3 && planned[7] == 3);
+        for (page = 1; page < 7; page++)
+            assert(planned[page] == 2);
+        Fill(newPage, 38);
+        assert(XgbaA2JournalReadPageGeneration(&io, 7, 2,
+               readback, PAGE_BYTES, NULL) == 0);
+        assert(memcmp(readback, newPage, PAGE_BYTES) == 0);
+        assert(XgbaA2PagerCommit(&pager, planned) == 0);
+        assert(XgbaA2PagerSwitch(&pager, 7) == 0);
+        assert(old[81] == (uint8_t)(newPage[81] ^ 0xA3));
+        priorWrites = disk.writes;
+        assert(XgbaA2PagerPrepareSave(&pager, planned) == 0);
+        assert(disk.writes == priorWrites);
+        // A damaged selected off-page record must make RAM initialization fail.
+        ram[0] = 0;
+        assert(XgbaA2PagerEnableRam(&pager, ram,
+               XGBA_A2_PC_BYTES * XGBA_A2_PC_PAGES) == XGBA_A2_JOURNAL_INVALID_ARG);
+        free(ram);
+    }
+
     printf("A2 C journal: A/B writes, no-op, corruption recovery, page bounds, metadata,");
     printf(" and %u interrupted-write boundaries PASS\n",
            (unsigned)(sizeof(failPoints) / sizeof(failPoints[0])));
