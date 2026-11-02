@@ -17,6 +17,8 @@ on:
       - 'tools/xgba_a2_rom.py'
       - 'tools/xgba_a1_assets.py'
       - 'Makefile'
+      - 'tools/xgba_select_map_layout.py'
+      - 'map_data_rules.mk'
       - 'data/maps.s'
   workflow_dispatch:
 
