@@ -19,6 +19,8 @@ local saveDialogTraceAddr = assert(addr("A2_SAVE_DIALOG_TRACE"), "Linked A2 Save
 local usmTraceAddr = assert(addr("A2_USM_TRACE"), "Linked graphical Start-menu trace is required")
 local gameSaveTraceAddr = assert(addr("A2_GAME_SAVE_TRACE"), "Linked A2 save journal trace is required")
 local pagerTraceAddr = assert(addr("A2_PAGER_TRACE"), "Linked A2 pager trace is required")
+local nativeWriteTraceAddr = assert(addr("A2_NATIVE_WRITE_TRACE"), "Linked A2 native write trace is required")
+local flashWriteTraceAddr = assert(addr("A2_FLASH_WRITE_TRACE"), "Linked physical Flash trace is required")
 local transactionTraceAddr = assert(addr("A2_TRANSACTION_TRACE"), "Linked A2 transaction trace is required")
 local saveStatusAddr = addr("A2_SAVE_ATTEMPT_STATUS")
 local flashPresentAddr = addr("A2_FLASH_PRESENT")
@@ -51,6 +53,8 @@ local lastDialogTrace = nil
 local lastNativeCounter = nil
 local lastGameSaveTrace = nil
 local lastPagerTrace = nil
+local lastNativeWriteTrace = nil
+local lastFlashWriteTrace = nil
 local lastTransactionTrace = nil
 local lastActiveGameSaveTrace = nil
 local sawActualSaveDialog = false
@@ -64,6 +68,8 @@ end
 local function finish(message, code)
     emu:setKeys(0)
     report("A2_XGBA_DIAG_TRANSACTION_TRACE=" .. tostring(emu:read32(transactionTraceAddr)))
+    report("A2_XGBA_DIAG_NATIVE_WRITE_TRACE=" .. tostring(emu:read32(nativeWriteTraceAddr)))
+    report("A2_XGBA_DIAG_FLASH_WRITE_TRACE=" .. tostring(emu:read32(flashWriteTraceAddr)))
     report("A2_XGBA_DIAG_PAGER_TRACE=" .. tostring(emu:read32(pagerTraceAddr)))
     report("A2_XGBA_DIAG_GAME_SAVE_TRACE=" .. tostring(emu:read32(gameSaveTraceAddr)))
     report("A2_XGBA_DIAG_LAST_NONZERO_SAVE_TRACE=" .. tostring(lastActiveGameSaveTrace))
@@ -142,6 +148,8 @@ callbacks:add("frame", function()
     -- does not. Record transitions every frame BEFORE any scripts or input
     -- changes, so a Save-failure reset cannot erase its own evidence.
     local transactionTrace = emu:read32(transactionTraceAddr)
+    local nativeWriteTrace = emu:read32(nativeWriteTraceAddr)
+    local flashWriteTrace = emu:read32(flashWriteTraceAddr)
     local pagerTrace = emu:read32(pagerTraceAddr)
     local gameSaveTrace = emu:read32(gameSaveTraceAddr)
     local menuTrace = emu:read32(usmTraceAddr)
@@ -156,6 +164,18 @@ callbacks:add("frame", function()
                    .. " new=" .. tostring(transactionTrace)
                    .. " stage=" .. tostring(transactionTrace >> 24)
                    .. " detail=" .. tostring(transactionTrace & 0xFFFFFF))
+        end
+        if nativeWriteTrace ~= lastNativeWriteTrace then
+            report("A2_XGBA_NATIVE_WRITE_TRACE_CHANGE old=" .. tostring(lastNativeWriteTrace)
+                   .. " new=" .. tostring(nativeWriteTrace)
+                   .. " stage=" .. tostring(nativeWriteTrace >> 24)
+                   .. " detail=" .. tostring(nativeWriteTrace & 0xFFFFFF))
+        end
+        if flashWriteTrace ~= lastFlashWriteTrace then
+            report("A2_XGBA_FLASH_WRITE_TRACE_CHANGE old=" .. tostring(lastFlashWriteTrace)
+                   .. " new=" .. tostring(flashWriteTrace)
+                   .. " stage=" .. tostring(flashWriteTrace >> 24)
+                   .. " detail=" .. tostring(flashWriteTrace & 0xFFFFFF))
         end
         if pagerTrace ~= lastPagerTrace then
             report("A2_XGBA_PAGER_TRACE_CHANGE old=" .. tostring(lastPagerTrace)
@@ -191,6 +211,8 @@ callbacks:add("frame", function()
         end
     end
     lastTransactionTrace = transactionTrace
+    lastNativeWriteTrace = nativeWriteTrace
+    lastFlashWriteTrace = flashWriteTrace
     lastPagerTrace = pagerTrace
     lastGameSaveTrace = gameSaveTrace
     lastMenuTrace = menuTrace
