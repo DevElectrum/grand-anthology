@@ -1,3 +1,12 @@
+# A2 full event log pending: disambiguate menu versus reset (Nov 2, 2026 UTC)
+
+- Last A2 source regression `41379996922` completed SUCCESS (host storage, A1 full ARM regression, isolated A2 shadow build). Real XGBA passive boot and New Game -> shared Hub already independently green; **real in-game Save and cold Continue still NOT accepted**.
+- Real XGBA run `41379926773` failed the save step at frame 7187 with `A2_XGBA_DIAG_USM_TRACE=0`, `A2_XGBA_DIAG_SAVE_DIALOG_TRACE=0`, `A2_XGBA_DIAG_SAVE_COUNTER=0`, Flash present. The revised `tools/xgba_a2_runtime_save.lua` only permits selecting Save after observing actual menu init and task trace (bits0/1); this final zero might represent a later reset or overwritten telemetry, not necessarily failure to open the menu. Do NOT infer callback reachability from terminal-only values.
+- `.github/workflows/A2-XGBA-Boot-Probe.yml` commit `7f4da45b421c5d2fdbbba1edca81e699a1a773ca` now prints **ALL `Scripting: A2_XGBA_` events** captured during the Save sequence, both on success and on script failure, rather than the last hundred BIOS/DMA lines. [Run 41380668921](https://github.com/DevElectrum/grand-anthology/actions/runs/41380668921) was still building isolated A2 ROM when last checked. Read events such as `A2_XGBA_TOUR_UNLOCK_REQUIRED`, `A2_XGBA_TOUR_CLEARED_AND_REAL_MENU_STARTED`, `A2_XGBA_MENU_SELECTED_SAVE`, and final diagnostics. If `MENU_SELECTED_SAVE` precedes final trace=0, suspect game soft reset from failed journal write (or RAM corruption) and capture per-frame bit changes BEFORE reset, preferably in the Lua runner without altering persisted game data. Only if `SaveDoSaveCallback` is proven reached should the native/extended transaction itself be modified.
+- No real saves, Nyx, main/Mosaic, release or frozen E7 changes. Save acceptance remains strict on E6 audit with positive native counter and cold restart counter match. Keep A2 isolated.
+
+---
+
 # A2 graphical Start-menu trace checkpoint (Nov 2, 2026 UTC)
 
 - Run 41378403283 failed with `A2_XGBA_DIAG_SAVE_DIALOG_TRACE=0` and `A2_XGBA_DIAG_SAVE_COUNTER=0` after successfully booting the real game and navigating initial Hub tour. **SaveDialog_InitSave was never called**; prior attempts to add more confirmation presses were not exercising the native save system. Do not modify A2 journal until menu action dispatch is proven.
