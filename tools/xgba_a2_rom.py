@@ -10,10 +10,10 @@ import os
 from pathlib import Path
 import sys
 
+from xgba_a1_assets import MAGIC, ROM_BYTES, PROBE_OFFSET, probe_bytes, checksum_header
+
 R8_OFFSET = ROM_BYTES - 0x100
 R8_DESCRIPTOR = b"XGBARAM8" + (1).to_bytes(4, "little") + (0x400000).to_bytes(4, "little")
-
-from xgba_a1_assets import MAGIC, ROM_BYTES, PROBE_OFFSET, probe_bytes, checksum_header
 
 
 class A2RomError(ValueError):
