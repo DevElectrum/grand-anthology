@@ -60,7 +60,7 @@ class TestA2MenuProbe(unittest.TestCase):
         self.assertIn('The native counter increments BEFORE the metadata commit', runner)
         self.assertIn('if phase == "await-commit" then', runner)
         self.assertIn('(emu:read32(saveDialogTraceAddr) & 256) ~= 0', runner)
-        self.assertIn('if counter > 0 then', runner)
+        self.assertIn('if counter > 0 and (saveStage == 6 or saveStage == 8) then', runner)
 
 
 if __name__ == "__main__":
