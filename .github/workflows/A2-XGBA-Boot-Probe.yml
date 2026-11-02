@@ -18,6 +18,7 @@ on:
       - 'tools/xgba_a2_storage.py'
       - 'tools/xgba_a2_runtime_boot.lua'
       - 'tools/xgba_a2_runtime_save.lua'
+      - 'tools/xgba_a2_bind_save.lua'
       - 'tools/xgba_a2_symbol_env.py'
       - 'tools/xgba_a2_rom.py'
       - 'tools/xgba_a1_assets.py'
@@ -37,6 +38,8 @@ concurrency:
 jobs:
   disposable-xgba-boot:
     runs-on: ubuntu-24.04
+    env:
+      A2_E6_SAVE_PATH: build/a2-ci-runtime/a2-boot.sav
     timeout-minutes: 90
     steps:
       - name: Check out only experimental Anthology source
@@ -150,6 +153,7 @@ jobs:
           # not yet a successful in-game save or recovery validation.
           timeout --signal=INT --kill-after=5s 360s \
             build/a2-ci-xgba-runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
             --script tools/xgba_a2_runtime_boot.lua \
             build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-game.log 2>&1 || {
               tail -n 120 /tmp/a2-xgba-game.log
@@ -157,6 +161,7 @@ jobs:
               exit 1
             }
           tail -n 80 /tmp/a2-xgba-game.log
+          grep -q 'A2_XGBA_E6_SAVE_BOUND' /tmp/a2-xgba-game.log
           grep -q 'A2_XGBA_REAL_NEW_GAME_HUB_PASS' /tmp/a2-xgba-game.log
           python3 tools/xgba_a2_storage.py audit-blank build/a2-ci-runtime/a2-boot.sav
 
@@ -171,6 +176,7 @@ jobs:
           # is the acceptance check for a real committed native+PC cohort.
           timeout --signal=INT --kill-after=5s 360s \
             build/a2-ci-xgba-runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
             --script tools/xgba_a2_runtime_save.lua \
             build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-save.log 2>&1 || {
               echo "=== ALL A2 gameplay probe events, without BIOS/DMA noise ==="
@@ -180,6 +186,7 @@ jobs:
             }
           echo "=== ALL A2 gameplay probe events, without BIOS/DMA noise ==="
           grep -E 'Scripting: A2_XGBA_' /tmp/a2-xgba-save.log | tail -n 150 || true
+          grep -q 'A2_XGBA_E6_SAVE_BOUND' /tmp/a2-xgba-save.log
           grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/a2-xgba-save.log
           python3 tools/xgba_a2_storage.py audit build/a2-ci-runtime/a2-boot.sav | tee /tmp/a2-xgba-audit.txt
           grep -q 'counter:' /tmp/a2-xgba-audit.txt
@@ -201,12 +208,14 @@ jobs:
           set -euo pipefail
           timeout --signal=INT --kill-after=5s 360s \
             build/a2-ci-xgba-runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
             --script tools/xgba_a2_runtime_save.lua \
             build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-resume.log 2>&1 || {
               tail -n 100 /tmp/a2-xgba-resume.log
               exit 1
             }
           tail -n 50 /tmp/a2-xgba-resume.log
+          grep -q 'A2_XGBA_E6_SAVE_BOUND' /tmp/a2-xgba-resume.log
           grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS' /tmp/a2-xgba-resume.log
           python3 tools/xgba_a2_storage.py audit build/a2-ci-runtime/a2-boot.sav
 
