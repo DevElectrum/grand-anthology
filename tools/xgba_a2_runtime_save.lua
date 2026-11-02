@@ -19,6 +19,7 @@ local saveDialogTraceAddr = assert(addr("A2_SAVE_DIALOG_TRACE"), "Linked A2 Save
 local usmTraceAddr = assert(addr("A2_USM_TRACE"), "Linked graphical Start-menu trace is required")
 local gameSaveTraceAddr = assert(addr("A2_GAME_SAVE_TRACE"), "Linked A2 save journal trace is required")
 local pagerTraceAddr = assert(addr("A2_PAGER_TRACE"), "Linked A2 pager trace is required")
+local transactionTraceAddr = assert(addr("A2_TRANSACTION_TRACE"), "Linked A2 transaction trace is required")
 local saveStatusAddr = addr("A2_SAVE_ATTEMPT_STATUS")
 local flashPresentAddr = addr("A2_FLASH_PRESENT")
 local mode = os.getenv("A2_ACTION") or "save"
@@ -50,6 +51,7 @@ local lastDialogTrace = nil
 local lastNativeCounter = nil
 local lastGameSaveTrace = nil
 local lastPagerTrace = nil
+local lastTransactionTrace = nil
 local lastActiveGameSaveTrace = nil
 local sawActualSaveDialog = false
 local awaitStarted = nil
@@ -61,6 +63,7 @@ end
 
 local function finish(message, code)
     emu:setKeys(0)
+    report("A2_XGBA_DIAG_TRANSACTION_TRACE=" .. tostring(emu:read32(transactionTraceAddr)))
     report("A2_XGBA_DIAG_PAGER_TRACE=" .. tostring(emu:read32(pagerTraceAddr)))
     report("A2_XGBA_DIAG_GAME_SAVE_TRACE=" .. tostring(emu:read32(gameSaveTraceAddr)))
     report("A2_XGBA_DIAG_LAST_NONZERO_SAVE_TRACE=" .. tostring(lastActiveGameSaveTrace))
@@ -138,6 +141,7 @@ callbacks:add("frame", function()
     -- Lua host state survives any in-game soft reset; the EWRAM debug trace
     -- does not. Record transitions every frame BEFORE any scripts or input
     -- changes, so a Save-failure reset cannot erase its own evidence.
+    local transactionTrace = emu:read32(transactionTraceAddr)
     local pagerTrace = emu:read32(pagerTraceAddr)
     local gameSaveTrace = emu:read32(gameSaveTraceAddr)
     local menuTrace = emu:read32(usmTraceAddr)
@@ -147,6 +151,12 @@ callbacks:add("frame", function()
         lastActiveGameSaveTrace = gameSaveTrace
     end
     if phase ~= "boot" then
+        if transactionTrace ~= lastTransactionTrace then
+            report("A2_XGBA_TRANSACTION_TRACE_CHANGE old=" .. tostring(lastTransactionTrace)
+                   .. " new=" .. tostring(transactionTrace)
+                   .. " stage=" .. tostring(transactionTrace >> 24)
+                   .. " detail=" .. tostring(transactionTrace & 0xFFFFFF))
+        end
         if pagerTrace ~= lastPagerTrace then
             report("A2_XGBA_PAGER_TRACE_CHANGE old=" .. tostring(lastPagerTrace)
                    .. " new=" .. tostring(pagerTrace)
@@ -180,6 +190,7 @@ callbacks:add("frame", function()
             finish("A2_XGBA_SAVE_DIALOG_DISAPPEARED_POSSIBLE_SOFT_RESET", 3)
         end
     end
+    lastTransactionTrace = transactionTrace
     lastPagerTrace = pagerTrace
     lastGameSaveTrace = gameSaveTrace
     lastMenuTrace = menuTrace
