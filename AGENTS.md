@@ -1,3 +1,17 @@
+# R8.4 ACTIVE INTEGRATION CHECKPOINT (Nov 2, 2026 UTC)
+
+**Current branch is experimental; do not release or merge.** Source head through `ecb6e3de` has an opt-in 4 MiB R8 RAM-backed eight-group collection (112 boxes), zero-E6 group navigation, save-journal staging of changed RAM groups, global counts/unique held items, both PC interfaces' continuous L/R box navigation, direct off-group capture routing, and per-box all-or-nothing held-item returns on bulk release.
+
+**Verified:** Real R8 New Game → Save1/cold Continue → Save2/cold Continue, E6 native counters 1/2, metadata generations 1/2, native slots 1/0, no recovery, in [run 41442637854](https://github.com/DevElectrum/grand-anthology/actions/runs/41442637854). The more recent ordinary R8 run [41445406035](https://github.com/DevElectrum/grand-anthology/actions/runs/41445406035) passed after a box-name charmap fix. A2 storage/ARM regression [41444519268](https://github.com/DevElectrum/grand-anthology/actions/runs/41444519268) passed both jobs. R8 RAM journal host C regression [41446226352](https://github.com/DevElectrum/grand-anthology/actions/runs/41446226352) passed, including two cross-group edited cohorts and independent cold rehydration.
+
+**NEW verification in progress:** [R8 real game-generated Pokémon workflow 41446467455](https://github.com/DevElectrum/grand-anthology/actions/runs/41446467455), source `XGBA_R8_TEST=1` only, builds separately named disposable cartridge and injects valid Bulbasaur and Charmander in global Boxes 1 and 112 before second Save; requires 2 updated page generations and independently cold reloads verifying species/PID/held items/favorites via game C. This is not accepted until full CI concludes. The R8 test fixture code is `src/xgba_r8_runtime_test.c`; build flag requires `BUILD_NAME=xgba-r8-test`, and is NOT linked into a standard R8 ROM. Do not confuse source-only test run with emulator gameplay.
+
+**Known OPEN:** full populated real-emulator result pending; GUI operation through 112 boxes unproven; global choose-box menus, cross-group carrying/multi-move, collection-wide search/sort/bulk actions, exhaustive crash injection and cross-region gameplay acceptance remain unverified. Expanded bag *capacity* remains separate A2.5. Keep frozen E7, Mosaic, main, real saves, and Nyx untouched. Owner is unwell; no routine manual requests.
+
+**Read:** [docs/ANTHOLOGY_R8_4_RAM_INTEGRATION_PLAN.md](docs/ANTHOLOGY_R8_4_RAM_INTEGRATION_PLAN.md) and [docs/NEXT_ASTRA_HANDOFF.md](docs/NEXT_ASTRA_HANDOFF.md). Preserve every committed on-disk A2 generation, ABI and fail-closed behaviors.
+
+---
+
 # R8.4 LIVE SOURCE CHECKPOINT (Nov 2 UTC)
 
 R8 headless real-game test https://github.com/DevElectrum/grand-anthology/actions/runs/41442637854 PASS: New Game, Save1/cold Continue, Save2/cold Continue, counter1/2, metadata1/2, no recovery; this tested the R8 RAM core, NOT populated cross-box gameplay. Native A1/A2 compatibility CI https://github.com/DevElectrum/grand-anthology/actions/runs/41442865341 passed both jobs. Current experimental branch includes global 112-box scan APIs, cross-boundary box navigation in both UIs, direct off-group capture, held-item uniqueness, and all-or-nothing per-box bulk-release item returns. These newer UI/operation changes remain unverified by a completed R8 headless run. DO NOT MERGE. Remaining: populated cross-group cold persistence, UI emulator proof, full global search/transfer, crash matrix, cross-region acceptance. See R8.4 plan. Existing E7, Mosaic and live saves untouched.
