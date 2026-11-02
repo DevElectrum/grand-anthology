@@ -38,6 +38,19 @@ int XgbaR8CreateTestPokemon(void)
     item = ITEM_SUPER_POTION;
     SetBoxMonData(last, MON_DATA_HELD_ITEM, &item);
     SetBoxMonData(last, MON_DATA_MARKINGS, &favorite);
+
+    // Exercise real ARM game selection across 14-box group boundaries.
+    // Old BoxPokemon pointers must not be reused after the native window moves.
+    {
+        const u16 sequence[] = {13, 14, 27, 28, 111, 0};
+        u8 i;
+        for (i = 0; i < ARRAY_COUNT(sequence); i++)
+        {
+            if (!XgbaA2GameSelectGlobalBox(sequence[i])
+                || !XgbaR8VerifyTestPokemon())
+                return 0;
+        }
+    }
     return XgbaR8VerifyTestPokemon();
 }
 
