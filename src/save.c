@@ -126,6 +126,7 @@ EWRAM_DATA static bool8 sA2FreshSaveArmed = FALSE;
 // Read-only disposable E6 runtime diagnostics, never part of any saved block.
 // Upper byte is the stage; low 24 bits hold the stage-specific result/flags.
 EWRAM_DATA volatile u32 gXgbaA2GameSaveTrace = 0;
+EWRAM_DATA volatile u32 gXgbaA2PagerTrace = 0;
 #define A2_SAVE_TRACE(stage, detail) (gXgbaA2GameSaveTrace = ((u32)(stage) << 24) | ((u32)(detail) & 0xFFFFFF))
 #endif
 
