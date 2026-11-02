@@ -21,14 +21,14 @@ local gameSaveTraceAddr = assert(addr("A2_GAME_SAVE_TRACE"), "Linked A2 save jou
 local saveStatusAddr = addr("A2_SAVE_ATTEMPT_STATUS")
 local flashPresentAddr = addr("A2_FLASH_PRESENT")
 local mode = os.getenv("A2_ACTION") or "save"
-if mode == "save" then
-    assert(saveCounterAddr, "Game's native save counter is required for Save dialogue test")
+if mode == "save" or mode == "save-again" then
+    assert(saveCounterAddr, "Game\'s native save counter is required for Save dialogue test")
 end
-assert(mode == "save" or mode == "resume")
+assert(mode == "save" or mode == "resume" or mode == "save-again")
 local expectedCounter = tonumber(os.getenv("A2_EXPECTED_SAVE_COUNTER") or "")
-if mode == "resume" then
+if mode == "resume" or mode == "save-again" then
     assert(saveCounterAddr and expectedCounter and expectedCounter > 0,
-           "Cold resume requires linked native counter and audited generation")
+           "Cold resume or second save requires audited native counter")
 end
 
 local A = 1 << C.GBA_KEY.A
@@ -180,16 +180,18 @@ callbacks:add("frame", function()
 
     if phase == "boot" then
         if frame % 30 == 0 and hubReady() then
-            if mode == "resume" then
-                -- A fresh New Game also reaches this map. A cold reload is
-                -- accepted only if the actual native counter equals the
-                -- generation obtained by auditing the committed E6 image.
+            if mode == "resume" or mode == "save-again" then
+                -- A fresh New Game can also reach this map. The linked
+                -- counter must agree with the generation audited on disk.
                 local got = emu:read32(saveCounterAddr)
                 if got ~= expectedCounter then
                     finish("A2_XGBA_COLD_RESUME_COUNTER_MISMATCH expected="
                            .. tostring(expectedCounter) .. " got=" .. tostring(got), 3)
                 end
-                finish("A2_XGBA_COLD_RESUME_HUB_PASS counter=" .. tostring(got), 0)
+                if mode == "resume" then
+                    finish("A2_XGBA_COLD_RESUME_HUB_PASS counter=" .. tostring(got), 0)
+                end
+                report("A2_XGBA_SECOND_SAVE_COLD_LOAD_VERIFIED counter=" .. tostring(got))
             end
             -- RegionHub first-visit ON_FRAME automatically locks controls
             -- while the curator offers a guided tour. A fixed 180-frame
@@ -330,6 +332,14 @@ callbacks:add("frame", function()
         -- stage 6 (verified first bootstrap) or stage 8 (verified next
         -- transaction) means the complete native+PC cohort is committed.
         if counter > 0 and (saveStage == 6 or saveStage == 8) then
+            if mode == "save-again" and (counter ~= expectedCounter + 1 or saveStage ~= 8) then
+                finish("A2_XGBA_SECOND_SAVE_GENERATION_MISMATCH expected="
+                       .. tostring(expectedCounter + 1) .. " got=" .. tostring(counter)
+                       .. " stage=" .. tostring(saveStage), 3)
+            end
+            if mode == "save" and saveStage ~= 6 then
+                finish("A2_XGBA_INITIAL_SAVE_WRONG_STAGE", 3)
+            end
             report("A2_XGBA_GAME_NATIVE_COUNTER_ADVANCED=" .. tostring(counter))
             phase = "commit-settle"
             setActions({{0, 240}})
@@ -359,6 +369,14 @@ callbacks:add("frame", function()
         -- stage 6 (verified first bootstrap) or stage 8 (verified next
         -- transaction) means the complete native+PC cohort is committed.
         if counter > 0 and (saveStage == 6 or saveStage == 8) then
+            if mode == "save-again" and (counter ~= expectedCounter + 1 or saveStage ~= 8) then
+                finish("A2_XGBA_SECOND_SAVE_GENERATION_MISMATCH expected="
+                       .. tostring(expectedCounter + 1) .. " got=" .. tostring(counter)
+                       .. " stage=" .. tostring(saveStage), 3)
+            end
+            if mode == "save" and saveStage ~= 6 then
+                finish("A2_XGBA_INITIAL_SAVE_WRONG_STAGE", 3)
+            end
             report("A2_XGBA_GAME_NATIVE_COUNTER_ADVANCED=" .. tostring(counter))
             phase = "commit-settle"
             setActions({{0, 240}})
