@@ -41,6 +41,8 @@ local current = 1
 local remaining = 0
 local attempts = 0
 local menuOpenAttempts = 0
+local tourAdvanceFrames = 0
+local tourAdvanceUsed = false
 
 local function report(s)
     print(s .. " frame=" .. tostring(frame))
@@ -94,6 +96,12 @@ local function driveActions()
 end
 
 local function readSelectedIcon()
+    -- A plausible EWRAM pointer and arbitrary bytes can imitate an icon.
+    -- Require BOTH the actual Usm_InitStartMenu and Task_UsmMain probes
+    -- before trusting any selected icon or pressing its A action.
+    if (emu:read32(usmTraceAddr) & 3) ~= 3 then
+        return nil, "Real Start-menu init/task has not run"
+    end
     local location = usmStateAddr or usmMemoryAddr
     if not location then
         return nil, "No linked graphical menu state symbol"
@@ -172,6 +180,42 @@ callbacks:add("frame", function()
         return
     end
 
+    if phase == "tour-advance" then
+        -- The Hub's mandatory first-visit curator tour may still be holding
+        -- script controls. B alone is insufficient in some dialogue states.
+        -- Advance dialogue with spaced A presses and retry Start until the
+        -- real menu's init+task trace confirms full field control.
+        local trace = emu:read32(usmTraceAddr)
+        local p = usmStateAddr and emu:read32(usmStateAddr) or 0
+        if (trace & 3) == 3 and p >= 0x02000000 and p < 0x02040000 then
+            report("A2_XGBA_TOUR_CLEARED_AND_REAL_MENU_STARTED")
+            phase = "tour-menu-settle"
+            emu:setKeys(0)
+            setActions({{0, 90}})
+            return
+        end
+        tourAdvanceFrames = tourAdvanceFrames + 1
+        if tourAdvanceFrames > 30000 then
+            finish("A2_XGBA_HUB_INTRO_NEVER_RELEASED_FIELD_INPUT", 3)
+        end
+        local tick = (tourAdvanceFrames - 1) % 150
+        if tick < 3 then
+            emu:setKeys(A)
+        elseif tick >= 75 and tick < 78 then
+            emu:setKeys(START)
+        else
+            emu:setKeys(0)
+        end
+        return
+    end
+
+    if phase == "tour-menu-settle" then
+        if driveActions() then
+            phase = "seek"
+        end
+        return
+    end
+
     if phase == "advance" then
         if driveActions() then
             phase = "seek"
@@ -182,6 +226,13 @@ callbacks:add("frame", function()
     if phase == "seek" then
         local icon, info = readSelectedIcon()
         if not icon then
+            if not tourAdvanceUsed then
+                tourAdvanceUsed = true
+                phase = "tour-advance"
+                report("A2_XGBA_TOUR_UNLOCK_REQUIRED " .. tostring(info))
+                emu:setKeys(0)
+                return
+            end
             menuOpenAttempts = menuOpenAttempts + 1
             report("A2_XGBA_MENU_NOT_OPEN attempt=" .. tostring(menuOpenAttempts)
                    .. " reason=" .. tostring(info))
