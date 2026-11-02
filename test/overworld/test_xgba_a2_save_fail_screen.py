@@ -23,7 +23,7 @@ class TestA2SaveFailureScreen(unittest.TestCase):
 
     def test_custom_charmap_newlines_are_not_double_escaped(self):
         source = (Path(__file__).resolve().parents[2] / "src" / "save_failed_screen.c").read_text()
-        text = source[source.index("static const u8 sText_A2SaveFailed"):source.index("static void CB2_WipeSave(void)")]
+        text = source[source.index("static const u8 sText_A2SaveFailed"):source.index("static void CB2_WipeSave(void)" + chr(10) + "{")]
         self.assertIn(chr(92) + "n", text)
         self.assertNotIn(chr(92) * 2 + "n", text)
 
