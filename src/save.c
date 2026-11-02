@@ -943,6 +943,19 @@ u8 XgbaA2GamePage(void)
     return sA2Ready ? sA2Pager.activePage : 0;
 }
 
+void XgbaA2GameRebindRelocatedPc(void)
+{
+    // MoveSaveBlocks_ResetHeap copies the live PC, then changes its ASLR
+    // address. A2's journal pager cannot keep using the previous address:
+    // it would compare and save stale memory or reject every later save.
+    // Rebind only after the new PokemonStorage has been fully restored.
+    // Preserve all staged generations and fatal/ready state unchanged.
+    if (!sA2Ready || !sA2Pager.ready || sA2Pager.fatal
+        || gPokemonStoragePtr == NULL || sA2Pager.resident == NULL)
+        return;
+    sA2Pager.resident = gPokemonStoragePtr;
+}
+
 bool8 XgbaA2GameSwitchPage(u8 page)
 {
     if (!sA2Ready || sA2Pager.fatal || page >= XGBA_A2_PC_PAGES)
