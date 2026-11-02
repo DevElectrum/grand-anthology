@@ -32,6 +32,11 @@ on:
       - 'include/xgba_r8_memory.h'
       - 'tools/xgba_a2_rom.py'
       - 'test/overworld/xgba_a2_journal_harness.c'
+      - 'src/swsh_storage_system.c'
+      - 'src/pokemon_storage_system.c'
+      - 'src/pokemon.c'
+      - 'src/item.c'
+      - 'test/overworld/xgba_a2_cohort_harness.c'
   workflow_dispatch:
 
 permissions:

@@ -9842,11 +9842,13 @@ bool32 CheckBoxMonSanityAt(u32 boxId, u32 boxPosition)
 u32 CountStorageNonEggMons(void)
 {
 #if defined(XGBA_R8) && XGBA_R8
+    {
+
     u32 count = 0;
     u16 globalBox;
     u8 pos;
-    if (!XgbaA2GameCollectionReady())
-        return 0;
+    if (XgbaA2GameCollectionReady())
+    {
     for (globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
         for (pos = 0; pos < IN_BOX_COUNT; pos++)
         {
@@ -9855,7 +9857,12 @@ u32 CountStorageNonEggMons(void)
                 count++;
         }
     return count;
-#else
+    }
+    if (!XgbaA2GameFreshUncommitted())
+        return 0;
+    }
+#endif
+
     s32 i, j;
     u32 count = 0;
 
@@ -9870,17 +9877,19 @@ u32 CountStorageNonEggMons(void)
     }
 
     return count;
-#endif
+
 }
 
 u32 CountAllStorageMons(void)
 {
 #if defined(XGBA_R8) && XGBA_R8
+    {
+
     u32 count = 0;
     u16 globalBox;
     u8 pos;
-    if (!XgbaA2GameCollectionReady())
-        return 0;
+    if (XgbaA2GameCollectionReady())
+    {
     for (globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
         for (pos = 0; pos < IN_BOX_COUNT; pos++)
         {
@@ -9889,7 +9898,12 @@ u32 CountAllStorageMons(void)
                 count++;
         }
     return count;
-#else
+    }
+    if (!XgbaA2GameFreshUncommitted())
+        return 0;
+    }
+#endif
+
     s32 i, j;
     u32 count = 0;
 
@@ -9904,17 +9918,19 @@ u32 CountAllStorageMons(void)
     }
 
     return count;
-#endif
+
 }
 
 bool32 AnyStorageMonWithMove(enum Move move)
 {
 #if defined(XGBA_R8) && XGBA_R8
+    {
+
     enum Move moves[] = {move, MOVES_COUNT};
     u16 globalBox;
     u8 pos;
-    if (!XgbaA2GameCollectionReady())
-        return FALSE;
+    if (XgbaA2GameCollectionReady())
+    {
     for (globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
         for (pos = 0; pos < IN_BOX_COUNT; pos++)
         {
@@ -9923,7 +9939,12 @@ bool32 AnyStorageMonWithMove(enum Move move)
                 return TRUE;
         }
     return FALSE;
-#else
+    }
+    if (!XgbaA2GameFreshUncommitted())
+        return FALSE;
+    }
+#endif
+
     enum Move moves[] = {move, MOVES_COUNT};
     s32 i, j;
 
@@ -9939,7 +9960,7 @@ bool32 AnyStorageMonWithMove(enum Move move)
     }
 
     return FALSE;
-#endif
+
 }
 
 

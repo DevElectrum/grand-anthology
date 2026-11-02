@@ -245,13 +245,24 @@ static bool32 IsItemHeldByPlayerMon(enum Item itemId)
     }
 
 #if defined(XGBA_R8) && XGBA_R8
-    // Fail closed if the global collection is unavailable.
-    if (!XgbaA2GameCollectionReady())
-        return TRUE;
-    for (u16 globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
-        for (u8 pos = 0; pos < IN_BOX_COUNT; pos++)
-            if (GetBoxMonData(XgbaA2GameGlobalBoxMon(globalBox, pos), MON_DATA_HELD_ITEM) == itemId)
-                return TRUE;
+    if (XgbaA2GameCollectionReady())
+    {
+        for (u16 globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
+            for (u8 pos = 0; pos < IN_BOX_COUNT; pos++)
+                if (GetBoxMonData(XgbaA2GameGlobalBoxMon(globalBox, pos), MON_DATA_HELD_ITEM) == itemId)
+                    return TRUE;
+    }
+    else
+    {
+        // Fail closed after a failed load or save, but allow native storage
+        // searches during the pristine pre-first-save New Game period.
+        if (!XgbaA2GameFreshUncommitted())
+            return TRUE;
+        for (u8 box = 0; box < TOTAL_BOXES_COUNT; box++)
+            for (u8 pos = 0; pos < IN_BOX_COUNT; pos++)
+                if (GetBoxMonDataAt(box, pos, MON_DATA_HELD_ITEM) == itemId)
+                    return TRUE;
+    }
 #else
     for (u32 boxId = 0; boxId < TOTAL_BOXES_COUNT; boxId++)
     {

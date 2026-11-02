@@ -458,6 +458,68 @@ int main(void)
         assert(old[47] == 0xA5);
     }
 
+    // R8 RAM: mutate two distant groups and complete two native+E6 transactions.
+    // This tests metadata-selected cold rehydration, not just staging.
+    {
+        struct XgbaA2Pager live, coldPager, secondCold;
+        struct XgbaA2Cohort initial, saved, savedAgain, selected;
+        uint8_t *ram = malloc(XGBA_A2_PC_PAGES * XGBA_A2_PC_BYTES);
+        uint8_t *cold = malloc(XGBA_A2_PC_PAGES * XGBA_A2_PC_BYTES);
+        uint8_t *cold2 = malloc(XGBA_A2_PC_PAGES * XGBA_A2_PC_BYTES);
+        uint32_t i;
+        assert(ram != NULL && cold != NULL && cold2 != NULL);
+        for (i = 0; i < XGBA_A2_PC_BYTES; i++)
+            old[i] = (uint8_t)((i * 7U + 3U) & 255U);
+        BlankSeed();
+        sWriterSectors = 14;
+        sWriteBudget = -1;
+        assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter, NULL,
+                                    scratch, old, &initial) == XGBA_A2_JOURNAL_OK);
+        assert(XgbaA2PagerInit(&live, &io, old, 0, initial.pages) == 0);
+        assert(XgbaA2PagerEnableRam(&live, ram, 8 * XGBA_A2_PC_BYTES) == 0);
+
+        old[47] = 0x91;
+        assert(XgbaA2PagerSwitch(&live, 7) == 0);
+        old[49] = 0xA2;
+        assert(XgbaA2PagerSwitch(&live, 0) == 0);
+        assert(old[47] == 0x91);
+        assert(XgbaA2TransactionCommit(&live, &initial, NativeRead, NativeWriter,
+                                       NULL, scratch, &saved) == 0);
+        assert(saved.pages[0] == 3 && saved.pages[7] == 3);
+        assert(saved.nativeCounter == 2 && saved.metadataGeneration == 2);
+        assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
+        assert(selected.nativeCounter == 2 && selected.activePage == 0);
+
+        memset(old, 0, XGBA_A2_PC_BYTES);
+        assert(XgbaA2JournalReadPageGeneration(&io, 0, selected.pages[0], old,
+                                               XGBA_A2_PC_BYTES, NULL) == 0);
+        assert(XgbaA2PagerInit(&coldPager, &io, old, 0, selected.pages) == 0);
+        assert(XgbaA2PagerEnableRam(&coldPager, cold, 8 * XGBA_A2_PC_BYTES) == 0);
+        assert(old[47] == 0x91);
+        assert(XgbaA2PagerSwitch(&coldPager, 7) == 0);
+        assert(old[49] == 0xA2);
+        old[53] = 0xB3;
+        assert(XgbaA2PagerSwitch(&coldPager, 0) == 0);
+        old[51] = 0xC4;
+        assert(XgbaA2TransactionCommit(&coldPager, &saved, NativeRead, NativeWriter,
+                                       NULL, scratch, &savedAgain) == 0);
+        assert(savedAgain.pages[0] == 4 && savedAgain.pages[7] == 4);
+        assert(savedAgain.nativeCounter == 3 && savedAgain.metadataGeneration == 3);
+        assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected) == 0);
+        assert(selected.nativeCounter == 3 && selected.activePage == 0);
+        memset(old, 0, XGBA_A2_PC_BYTES);
+        assert(XgbaA2JournalReadPageGeneration(&io, 0, selected.pages[0], old,
+                                               XGBA_A2_PC_BYTES, NULL) == 0);
+        assert(XgbaA2PagerInit(&secondCold, &io, old, 0, selected.pages) == 0);
+        assert(XgbaA2PagerEnableRam(&secondCold, cold2, 8 * XGBA_A2_PC_BYTES) == 0);
+        assert(old[47] == 0x91 && old[51] == 0xC4);
+        assert(XgbaA2PagerSwitch(&secondCold, 7) == 0);
+        assert(old[49] == 0xA2 && old[53] == 0xB3);
+        free(cold2);
+        free(cold);
+        free(ram);
+    }
+
     puts("A2 cohort: native sector/checksum/SHA, page 7 staged/cold reload, global commit and rollback PASS");
     free(next);
     free(old);

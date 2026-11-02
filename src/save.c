@@ -894,6 +894,11 @@ static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
 }
 
 #if defined(XGBA_R8) && XGBA_R8
+bool8 XgbaA2GameFreshUncommitted(void)
+{
+    return sA2FreshSaveArmed && !sA2Ready;
+}
+
 bool8 XgbaA2GameCollectionReady(void)
 {
     return sA2Ready && sA2Pager.ready && !sA2Pager.fatal

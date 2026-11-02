@@ -20,6 +20,8 @@ bool8 XgbaA2GameFindFreePage(u8 *page);
 #if defined(XGBA_R8) && XGBA_R8
 // 0..111 global boxes; local box 14 remains the legacy party sentinel.
 bool8 XgbaA2GameCollectionReady(void);
+// Before the first Save only the native 14-box structure is initialized.
+bool8 XgbaA2GameFreshUncommitted(void);
 bool8 XgbaA2GameSelectGlobalBox(u16 globalBox);
 struct BoxPokemon *XgbaA2GameGlobalBoxMon(u16 globalBox, u8 position);
 #endif
