@@ -12,6 +12,9 @@
 void XgbaA2GameArmFreshSave(void);
 u8 XgbaA2GamePage(void);
 bool8 XgbaA2GameSwitchPage(u8 page);
+// Rebinds the resident 14-box page ONLY after the game's ASLR move has
+// copied PokemonStorage into its new address. No journal writes or resets.
+void XgbaA2GameRebindRelocatedPc(void);
 // Reports another page with free slots without changing the live PC.
 bool8 XgbaA2GameFindFreePage(u8 *page);
 #endif
