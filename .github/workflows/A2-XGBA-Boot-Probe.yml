@@ -14,6 +14,8 @@ on:
       - 'src/xgba_a2_*.c'
       - 'include/xgba_a2_*.h'
       - 'tools/xgba_a2_storage.py'
+      - 'tools/xgba_a2_runtime_boot.lua'
+      - 'tools/xgba_a2_symbol_env.py'
       - 'tools/xgba_a2_rom.py'
       - 'tools/xgba_a1_assets.py'
       - 'Makefile'
@@ -60,7 +62,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
             binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
             libpng-dev libelf1 python3 build-essential cmake ninja-build \
-            pkg-config zlib1g-dev libcmocka-dev libsdl2-dev
+            pkg-config zlib1g-dev libcmocka-dev libsdl2-dev liblua5.4-dev
 
       - name: Build isolated A2 ARM game
         shell: bash
@@ -102,7 +104,7 @@ jobs:
             -DM_CORE_GBA=ON -DM_CORE_GB=OFF \
             -DBUILD_QT=OFF -DBUILD_SDL=OFF \
             -DBUILD_HEADLESS=ON -DBUILD_SUITE=OFF \
-            -DENABLE_SCRIPTING=OFF -DUSE_FFMPEG=OFF \
+            -DENABLE_SCRIPTING=ON -DUSE_LUA=5.4 -DUSE_JSON_C=OFF -DUSE_FFMPEG=OFF \
             -DUSE_EDITLINE=OFF -DUSE_DISCORD_RPC=OFF
           cmake --build build/a2-ci-xgba-runner --target mgba-headless --parallel 2
           test -x build/a2-ci-xgba-runner/mgba-headless
@@ -115,16 +117,44 @@ jobs:
           # that New Game was navigated or an in-game save was verified.
           # -S 255 prevents the normal software shutdown SWI from ending
           # the test before the deliberate timer interrupt.
+          # GNU timeout returns 124 upon its deliberate timer expiration.
+          # GitHub's shell is -e by default, so temporarily allow that status
+          # long enough to classify it instead of incorrectly failing the job.
+          set +e
           timeout --signal=INT --kill-after=5s 20s \
             build/a2-ci-xgba-runner/mgba-headless -S 255 \
             build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-boot.log 2>&1
           result=$?
+          set -e
           tail -n 100 /tmp/a2-xgba-boot.log
           if [ "$result" -ne 124 ]; then
             echo "XGBA exited early or did not survive the bounded runtime. Exit: $result"
             exit 1
           fi
           echo "Real XGBA headless process survived 20 seconds of execution."
+          python3 tools/xgba_a2_storage.py audit-blank build/a2-ci-runtime/a2-boot.sav
+
+      - name: Bind real linked A2 game symbols for Lua
+        run: |
+          python3 tools/xgba_a2_symbol_env.py \
+            xgba-anthology-a2-native-release.elf --github-env "$GITHUB_ENV"
+
+      - name: Drive a fresh New Game into the Hub in actual XGBA
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Fresh E6 image only. This is a gameplay boot integration gate,
+          # not yet a successful in-game save or recovery validation.
+          timeout --signal=INT --kill-after=5s 360s \
+            build/a2-ci-xgba-runner/mgba-headless \
+            --script tools/xgba_a2_runtime_boot.lua \
+            build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-game.log 2>&1 || {
+              tail -n 120 /tmp/a2-xgba-game.log
+              echo "Real game New Game/Hub automation failed."
+              exit 1
+            }
+          tail -n 80 /tmp/a2-xgba-game.log
+          grep -q 'A2_XGBA_REAL_NEW_GAME_HUB_PASS' /tmp/a2-xgba-game.log
           python3 tools/xgba_a2_storage.py audit-blank build/a2-ci-runtime/a2-boot.sav
 
       - name: Delete temporary developer ROM and save regardless of outcome
