@@ -25,6 +25,9 @@ on:
       - 'src/pokemon_storage_system.c'
       - 'include/xgba_a2_game.h'
       - 'Makefile'
+      - 'tools/xgba_select_map_layout.py'
+      - 'data/maps.s'
+      - 'map_data_rules.mk'
       - 'include/xgba_a2_transaction.h'
       - 'include/xgba_a2_cohort.h'
       - 'test/overworld/xgba_a2_cohort_harness.c'
@@ -36,6 +39,7 @@ on:
       - 'test/overworld/xgba_a2_journal_harness.c'
       - 'include/xgba_a2_storage_format.h'
       - 'test/overworld/test_xgba_a2_storage.py'
+      - 'test/overworld/test_xgba_map_source.py'
       - 'test/overworld/test_xgba_a2_save_fail_screen.py'
       - 'test/overworld/test_xgba_a2_legacy_link.py'
       - 'test/overworld/test_xgba_a2_transactions.py'
@@ -61,6 +65,8 @@ jobs:
         run: python3 test/overworld/SavePatch.py --check
       - name: Validate A2 E6 layout and fail-closed migration
         run: python3 -m unittest discover -s test/overworld -p 'test_xgba_a2_*.py' -v
+      - name: Verify preprocessor-safe XGBA map source selection
+        run: python3 -m unittest discover -s test/overworld -p 'test_xgba_map_*.py' -v
       - name: Compile and execute standalone A2 C journal corruption tests
         run: |
           cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_journal.c src/xgba_a2_guest_bus.c src/xgba_a2_pager.c test/overworld/xgba_a2_journal_harness.c -o /tmp/xgba-a2-journal-test
