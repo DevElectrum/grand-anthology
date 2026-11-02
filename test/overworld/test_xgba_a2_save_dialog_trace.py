@@ -49,6 +49,14 @@ class TestA2SaveDialogTrace(unittest.TestCase):
         self.assertIn("A2_XGBA_DIAG_PAGER_TRACE", lua)
         self.assertIn("A2_XGBA_JOURNAL_COMMIT_ERROR_STAGE_", lua)
         self.assertIn('"gXgbaA2PagerTrace": "A2_PAGER_TRACE"', elf)
+        tx = (ROOT / "src/xgba_a2_transaction.c").read_text()
+        self.assertIn("extern volatile uint32_t gXgbaA2TransactionTrace;", tx)
+        self.assertIn("TX_TRACE(0xE3, prepareStatus);", tx)
+        self.assertIn("TX_TRACE(0xE4, nextCounter);", tx)
+        self.assertIn("TX_TRACE(0xE7, selectStatus);", tx)
+        self.assertIn('A2_XGBA_TRANSACTION_TRACE_CHANGE', lua)
+        self.assertIn('A2_XGBA_DIAG_TRANSACTION_TRACE', lua)
+        self.assertIn('"gXgbaA2TransactionTrace": "A2_TRANSACTION_TRACE"', elf)
         self.assertIn('"gXgbaA2GameSaveTrace": "A2_GAME_SAVE_TRACE"', elf)
 
 
