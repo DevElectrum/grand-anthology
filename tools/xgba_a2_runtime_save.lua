@@ -18,6 +18,9 @@ local saveCounterAddr = addr("A2_SAVE_COUNTER")
 local saveStatusAddr = addr("A2_SAVE_ATTEMPT_STATUS")
 local flashPresentAddr = addr("A2_FLASH_PRESENT")
 local mode = os.getenv("A2_ACTION") or "save"
+if mode == "save" then
+    assert(saveCounterAddr, "Game's native save counter is required for Save dialogue test")
+end
 assert(mode == "save" or mode == "resume")
 local expectedCounter = tonumber(os.getenv("A2_EXPECTED_SAVE_COUNTER") or "")
 if mode == "resume" then
@@ -190,10 +193,17 @@ callbacks:add("frame", function()
         if icon == 7 then -- USM_ICO_SAVE defined in constants/unbound_start_menu.h
             report("A2_XGBA_MENU_SELECTED_SAVE position=" .. info)
             phase = "confirm"
-            setActions({
-                {A, 2}, {0, 90}, {A, 2}, {0, 60},
-                {A, 2}, {0, 200}, {0, 300}
-            })
+            -- save_dialog.c may present Confirm -> Already Saved File ->
+            -- Confirm Overwrite (SKIP_SAVE_CONFIRMATION=FALSE) before the
+            -- actual journal transaction. We do not assume a fixed number
+            -- of prompts; stop pressing A immediately when native counter
+            -- advances, then let the host audit exact E6 metadata.
+            local confirmations = {}
+            for i = 1, 9 do
+                confirmations[#confirmations + 1] = {A, 2}
+                confirmations[#confirmations + 1] = {0, 120}
+            end
+            setActions(confirmations)
         else
             attempts = attempts + 1
             if attempts > 12 then
@@ -206,7 +216,24 @@ callbacks:add("frame", function()
     end
 
     if phase == "confirm" then
+        local counter = emu:read32(saveCounterAddr)
+        if counter > 0 then
+            report("A2_XGBA_GAME_NATIVE_COUNTER_ADVANCED=" .. tostring(counter))
+            phase = "commit-settle"
+            setActions({{0, 240}})
+            return
+        end
         if driveActions() then
+            finish("A2_XGBA_SAVE_DIALOG_EXHAUSTED_WITHOUT_NATIVE_COMMIT", 3)
+        end
+        return
+    end
+
+    if phase == "commit-settle" then
+        if driveActions() then
+            if emu:read32(saveCounterAddr) == 0 then
+                finish("A2_XGBA_SAVE_COUNTER_REVERTED", 3)
+            end
             finish("A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED", 0)
         end
         return
