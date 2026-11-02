@@ -18,6 +18,7 @@ local saveCounterAddr = addr("A2_SAVE_COUNTER")
 local saveDialogTraceAddr = assert(addr("A2_SAVE_DIALOG_TRACE"), "Linked A2 Save-dialog trace is required")
 local usmTraceAddr = assert(addr("A2_USM_TRACE"), "Linked graphical Start-menu trace is required")
 local gameSaveTraceAddr = assert(addr("A2_GAME_SAVE_TRACE"), "Linked A2 save journal trace is required")
+local pagerTraceAddr = assert(addr("A2_PAGER_TRACE"), "Linked A2 pager trace is required")
 local saveStatusAddr = addr("A2_SAVE_ATTEMPT_STATUS")
 local flashPresentAddr = addr("A2_FLASH_PRESENT")
 local mode = os.getenv("A2_ACTION") or "save"
@@ -48,6 +49,7 @@ local lastMenuTrace = nil
 local lastDialogTrace = nil
 local lastNativeCounter = nil
 local lastGameSaveTrace = nil
+local lastPagerTrace = nil
 local lastActiveGameSaveTrace = nil
 local sawActualSaveDialog = false
 local awaitStarted = nil
@@ -59,6 +61,7 @@ end
 
 local function finish(message, code)
     emu:setKeys(0)
+    report("A2_XGBA_DIAG_PAGER_TRACE=" .. tostring(emu:read32(pagerTraceAddr)))
     report("A2_XGBA_DIAG_GAME_SAVE_TRACE=" .. tostring(emu:read32(gameSaveTraceAddr)))
     report("A2_XGBA_DIAG_LAST_NONZERO_SAVE_TRACE=" .. tostring(lastActiveGameSaveTrace))
     report("A2_XGBA_DIAG_USM_TRACE=" .. tostring(emu:read32(usmTraceAddr)))
@@ -135,6 +138,7 @@ callbacks:add("frame", function()
     -- Lua host state survives any in-game soft reset; the EWRAM debug trace
     -- does not. Record transitions every frame BEFORE any scripts or input
     -- changes, so a Save-failure reset cannot erase its own evidence.
+    local pagerTrace = emu:read32(pagerTraceAddr)
     local gameSaveTrace = emu:read32(gameSaveTraceAddr)
     local menuTrace = emu:read32(usmTraceAddr)
     local dialogTrace = emu:read32(saveDialogTraceAddr)
@@ -143,6 +147,12 @@ callbacks:add("frame", function()
         lastActiveGameSaveTrace = gameSaveTrace
     end
     if phase ~= "boot" then
+        if pagerTrace ~= lastPagerTrace then
+            report("A2_XGBA_PAGER_TRACE_CHANGE old=" .. tostring(lastPagerTrace)
+                   .. " new=" .. tostring(pagerTrace)
+                   .. " stage=" .. tostring(pagerTrace >> 24)
+                   .. " detail=" .. tostring(pagerTrace & 0xFFFFFF))
+        end
         if gameSaveTrace ~= lastGameSaveTrace then
             report("A2_XGBA_GAME_SAVE_TRACE_CHANGE old=" .. tostring(lastGameSaveTrace)
                    .. " new=" .. tostring(gameSaveTrace)
@@ -170,6 +180,7 @@ callbacks:add("frame", function()
             finish("A2_XGBA_SAVE_DIALOG_DISAPPEARED_POSSIBLE_SOFT_RESET", 3)
         end
     end
+    lastPagerTrace = pagerTrace
     lastGameSaveTrace = gameSaveTrace
     lastMenuTrace = menuTrace
     lastDialogTrace = dialogTrace
@@ -363,6 +374,10 @@ callbacks:add("frame", function()
 
     if phase == "await-commit" then
         emu:setKeys(0)
+        local traceStage = emu:read32(gameSaveTraceAddr) >> 24
+        if traceStage >= 0xE0 then
+            finish("A2_XGBA_JOURNAL_COMMIT_ERROR_STAGE_" .. tostring(traceStage), 3)
+        end
         local counter = emu:read32(saveCounterAddr)
         local saveStage = emu:read32(gameSaveTraceAddr) >> 24
         -- The native counter increments BEFORE the metadata commit. Only
