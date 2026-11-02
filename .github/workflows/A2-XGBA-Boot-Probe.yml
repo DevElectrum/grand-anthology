@@ -219,6 +219,62 @@ jobs:
           grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS' /tmp/a2-xgba-resume.log
           python3 tools/xgba_a2_storage.py audit build/a2-ci-runtime/a2-boot.sav
 
+      - name: Save a second native slot and extended collection generation
+        shell: bash
+        env:
+          A2_ACTION: save-again
+        run: |
+          set -euo pipefail
+          previous_counter="$A2_EXPECTED_SAVE_COUNTER"
+          timeout --signal=INT --kill-after=5s 360s \
+            build/a2-ci-xgba-runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-second-save.log 2>&1 || {
+              echo "=== Second Save XGBA diagnostics ==="
+              grep -E 'Scripting: A2_XGBA_' /tmp/a2-xgba-second-save.log | tail -n 150 || true
+              tail -n 25 /tmp/a2-xgba-second-save.log
+              exit 1
+            }
+          grep -E 'Scripting: A2_XGBA_' /tmp/a2-xgba-second-save.log | tail -n 100 || true
+          grep -q 'A2_XGBA_E6_SAVE_BOUND' /tmp/a2-xgba-second-save.log
+          grep -q 'A2_XGBA_SECOND_SAVE_COLD_LOAD_VERIFIED' /tmp/a2-xgba-second-save.log
+          grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/a2-xgba-second-save.log
+          python3 tools/xgba_a2_storage.py audit build/a2-ci-runtime/a2-boot.sav | tee /tmp/a2-xgba-second-audit.txt
+          new_counter=$(sed -n 's/^counter: \([0-9][0-9]*\)$/\1/p' /tmp/a2-xgba-second-audit.txt)
+          new_meta=$(sed -n 's/^metadata_generation: \([0-9][0-9]*\)$/\1/p' /tmp/a2-xgba-second-audit.txt)
+          if [ -z "$new_counter" ] || [ "$new_counter" -ne "$((previous_counter + 1))" ] || [ "$new_meta" != "2" ]; then
+            echo "Second save must advance exact native counter and coherent metadata generation."
+            exit 1
+          fi
+          grep -q '^native_slot: 0
+        if: always()
+        run: |
+          rm -f build/a2-ci-runtime/a2-layout.gba
+          rm -f build/a2-ci-runtime/a2-boot.gba
+          rm -f build/a2-ci-runtime/a2-boot.sav
+          echo "No ROM or save uploaded. No user files touched."
+ /tmp/a2-xgba-second-audit.txt
+          echo "A2_EXPECTED_SAVE_COUNTER=$new_counter" >> "$GITHUB_ENV"
+
+      - name: Cold-restart after second save and validate native slot rotation
+        shell: bash
+        env:
+          A2_ACTION: resume
+        run: |
+          set -euo pipefail
+          timeout --signal=INT --kill-after=5s 360s \
+            build/a2-ci-xgba-runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-second-resume.log 2>&1 || {
+              grep -E 'Scripting: A2_XGBA_' /tmp/a2-xgba-second-resume.log | tail -n 100 || true
+              exit 1
+            }
+          grep -q 'A2_XGBA_E6_SAVE_BOUND' /tmp/a2-xgba-second-resume.log
+          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=2' /tmp/a2-xgba-second-resume.log
+          python3 tools/xgba_a2_storage.py audit build/a2-ci-runtime/a2-boot.sav
+
       - name: Delete temporary developer ROM and save regardless of outcome
         if: always()
         run: |
