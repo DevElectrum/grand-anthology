@@ -1,5 +1,8 @@
 # R8.4 ACTIVE INTEGRATION CHECKPOINT (Nov 2, 2026 UTC)
 
+**R8.4C2 global Jump preview (NOT yet controller-verified):** Classic Jump popup previews global boxes 1..112; SwSh's 14-cell grid uses L/R to preview one of eight groups without switching native storage. Both show global box counts/names and guard cross-group selection against carried mons/items and multi-move. A successful different-group Jump tears down and reopens the UI; cancel leaves active storage unchanged. Deposit, cross-group carry, item movement and multi-move remain unimplemented. C1 exact-record backend now passed run 41452277340; full C2 GUI compile and controller acceptance are still pending. See docs/ANTHOLOGY_R8_4_PC_GAMEPLAY_PLAN.md. No merge/release.
+
+
 **R8.4C1 global PC transfer backend (UNVERIFIED until CI):** Added game-side checked `XgbaA2GameMoveGlobalBoxMon` and `XgbaA2GameSwapGlobalBoxMons`, preflighted for invalid global ID/slot, missing source, occupied destination and self-alias. They move/swap complete 80-byte encrypted records in canonical resident/R8 RAM only, never navigate or write the E6 journal. Disposable real-ARM test injects Squirtle in Box 14 and Pidgey in Box 28, moves them across 14/15 and 28/29 seams, rejects bad operations, double-swaps occupied Boxes 1/112 and verifies exact bytes. It then traverses all 112 box IDs, saves, cold restarts and checks sources empty and destinations exact. **Backend only:** not yet driven from GUI. Both PC graphical chooser/carry paths still local-only; do not claim UI transfer completed or merge. No production save or live ROM touched.
 
 

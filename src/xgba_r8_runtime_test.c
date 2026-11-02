@@ -29,7 +29,15 @@ static int VerifyTestPokemonRecords(void)
                      0x456789ABU, ITEM_SUPER_POTION)
         && old14 != NULL && old28 != NULL
         && GetBoxMonData(old14, MON_DATA_SPECIES) == SPECIES_NONE
-        && GetBoxMonData(old28, MON_DATA_SPECIES) == SPECIES_NONE;
+        && GetBoxMonData(old28, MON_DATA_SPECIES) == SPECIES_NONE
+        && XgbaA2GameCountGlobalBoxMons(0) == 1
+        && XgbaA2GameCountGlobalBoxMons(13) == 0
+        && XgbaA2GameCountGlobalBoxMons(14) == 1
+        && XgbaA2GameCountGlobalBoxMons(27) == 0
+        && XgbaA2GameCountGlobalBoxMons(28) == 1
+        && XgbaA2GameCountGlobalBoxMons(111) == 1
+        && XgbaA2GameCountGlobalBoxMons(112) == -1
+        && XgbaA2GameGlobalBoxName(14) != NULL;
 }
 
 int XgbaR8CreateTestPokemon(void)

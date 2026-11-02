@@ -402,6 +402,10 @@ struct ChooseBoxMenu
     u16 tileTag;
     u16 paletteTag;
     u8 curBox;
+#if defined(XGBA_R8) && XGBA_R8
+    bool8 globalMode;
+    u8 previewPage;
+#endif
 };
 
 struct ItemIcon
@@ -1229,6 +1233,10 @@ static void LoadChooseBoxGfx(struct ChooseBoxMenu *menu, u16 tileTag, u16 palTag
 {
     LoadCompressedSpriteSheet(&sSpriteSheet_ChooseBoxGrid_Hover);
     sChooseBoxMenu = menu;
+#if defined(XGBA_R8) && XGBA_R8
+    menu->globalMode = FALSE;
+    menu->previewPage = 0;
+#endif
     menu->tileTag = tileTag;
     menu->paletteTag = palTag;
     menu->loadedPalette = loadPal;
@@ -1242,6 +1250,16 @@ static void ChooseBox_PrintInfo(void)
     u8 windowId;
     u8 numInBox = CountMonsInBox(sChooseBoxMenu->curBox);
     u32 winTileData;
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+    {
+        s16 count = XgbaA2GameCountGlobalBoxMons(
+            (u16)sChooseBoxMenu->previewPage * TOTAL_BOXES_COUNT + sChooseBoxMenu->curBox);
+        if (count < 0)
+            return;
+        numInBox = count;
+    }
+#endif
     s16 x;
     u8 spriteId;
     u8 col = sChooseBoxMenu->curBox % 5;
@@ -1480,7 +1498,32 @@ static u8 HandleChooseBoxInput(void)
         return BOXID_CANCELED;
     }
     if (JOY_NEW(A_BUTTON))
+    {
+#if defined(XGBA_R8) && XGBA_R8
+        if (sChooseBoxMenu->globalMode)
+            return (u8)(sChooseBoxMenu->previewPage * TOTAL_BOXES_COUNT
+                        + sChooseBoxMenu->curBox);
+#endif
         return sChooseBoxMenu->curBox;
+    }
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode && JOY_NEW(L_BUTTON | R_BUTTON))
+    {
+        if (JOY_NEW(R_BUTTON))
+            sChooseBoxMenu->previewPage =
+                (sChooseBoxMenu->previewPage + 1) % XGBA_A2_PC_PAGES;
+        else
+            sChooseBoxMenu->previewPage =
+                (sChooseBoxMenu->previewPage + XGBA_A2_PC_PAGES - 1) % XGBA_A2_PC_PAGES;
+        PlaySE(SE_SELECT);
+#if SWSH_STORAGE_CHOOSE_BOX_GRID
+        ChooseBoxGrid_UpdateHover();
+#else
+        ChooseBox_PrintInfo();
+#endif
+        return BOXID_NONE_CHOSEN;
+    }
+#endif
     if (JOY_REPEAT(DPAD_LEFT))
     {
         PlaySE(SE_SELECT);
@@ -1518,6 +1561,10 @@ static void FreeChooseBox(void)
 static void LoadChooseBoxGfx(struct ChooseBoxMenu *menu, u16 tileTag, u16 palTag, bool32 loadPal)
 {
     sChooseBoxMenu = menu;
+#if defined(XGBA_R8) && XGBA_R8
+    menu->globalMode = FALSE;
+    menu->previewPage = 0;
+#endif
     menu->tileTag = tileTag;
     menu->paletteTag = palTag;
     menu->loadedPalette = loadPal;
@@ -1531,6 +1578,18 @@ static void ChooseBox_PrintInfo(void)
     u8 windowId;
     u8 *boxName = GetBoxNamePtr(sChooseBoxMenu->curBox);
     u8 numInBox = CountMonsInBox(sChooseBoxMenu->curBox);
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+    {
+        u16 globalBox = (u16)sChooseBoxMenu->previewPage * TOTAL_BOXES_COUNT
+            + sChooseBoxMenu->curBox;
+        s16 count = XgbaA2GameCountGlobalBoxMons(globalBox);
+        boxName = XgbaA2GameGlobalBoxName(globalBox);
+        if (boxName == NULL || count < 0)
+            return;
+        numInBox = count;
+    }
+#endif
     u8 *tileData1;
     u8 *tileData2;
     s32 center;
@@ -1727,7 +1786,32 @@ static u8 HandleChooseBoxInput(void)
         return BOXID_CANCELED;
     }
     if (JOY_NEW(A_BUTTON))
+    {
+#if defined(XGBA_R8) && XGBA_R8
+        if (sChooseBoxMenu->globalMode)
+            return (u8)(sChooseBoxMenu->previewPage * TOTAL_BOXES_COUNT
+                        + sChooseBoxMenu->curBox);
+#endif
         return sChooseBoxMenu->curBox;
+    }
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode && JOY_NEW(L_BUTTON | R_BUTTON))
+    {
+        if (JOY_NEW(R_BUTTON))
+            sChooseBoxMenu->previewPage =
+                (sChooseBoxMenu->previewPage + 1) % XGBA_A2_PC_PAGES;
+        else
+            sChooseBoxMenu->previewPage =
+                (sChooseBoxMenu->previewPage + XGBA_A2_PC_PAGES - 1) % XGBA_A2_PC_PAGES;
+        PlaySE(SE_SELECT);
+#if SWSH_STORAGE_CHOOSE_BOX_GRID
+        ChooseBoxGrid_UpdateHover();
+#else
+        ChooseBox_PrintInfo();
+#endif
+        return BOXID_NONE_CHOSEN;
+    }
+#endif
     if (JOY_REPEAT(DPAD_LEFT))
     {
         PlaySE(SE_SELECT);
@@ -3799,6 +3883,10 @@ static void Task_JumpBox(u8 taskId)
             sStorage->inMenuInteraction = TRUE;
             UpdateMonInfoTilemap();
             LoadChooseBoxGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_GRID_HOVER, PALTAG_MISC_3, FALSE);
+#if defined(XGBA_R8) && XGBA_R8
+            sChooseBoxMenu->globalMode = XgbaA2GameCollectionReady();
+            sChooseBoxMenu->previewPage = XgbaA2GamePage();
+#endif
             ChooseBox_CreateSprites(curBox);
         }
         sStorage->state++;
@@ -3815,6 +3903,27 @@ static void Task_JumpBox(u8 taskId)
             ClearBottomWindow();
             ChooseBox_DestroySprites();
             FreeChooseBox();
+#if defined(XGBA_R8) && XGBA_R8
+            if (sStorage->newCurrBoxId != BOXID_CANCELED
+                && XgbaA2GameCollectionReady())
+            {
+                u16 globalBox = sStorage->newCurrBoxId;
+                if (globalBox / TOTAL_BOXES_COUNT != XgbaA2GamePage())
+                {
+                    if (!IsMonBeingMoved() && !IsMovingItem()
+                        && sCursorMode != CURSOR_MODE_MULTI_MOVE
+                        && XgbaA2GameSelectGlobalBox(globalBox))
+                        SetPokeStorageTask(Task_A2ReopenPage);
+                    else
+                    {
+                        PlaySE(SE_FAILURE);
+                        sStorage->state = 4;
+                    }
+                    break;
+                }
+                sStorage->newCurrBoxId = globalBox % TOTAL_BOXES_COUNT;
+            }
+#endif
             if (sStorage->newCurrBoxId == BOXID_CANCELED || sStorage->newCurrBoxId == StorageGetCurrentBox())
                 sStorage->state = 4;
             else
@@ -5956,10 +6065,20 @@ static void UpdateBoxTitle(u8 boxId)
     {
         static const u8 sGlobalSeparator[] = _(" ");
         u8 titledBox[BOX_NAME_LENGTH + 8];
-        u8 *end = StringCopy(titledBox, GetBoxNamePtr(boxId));
+        u16 globalBox = (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + boxId;
+        const u8 *name = GetBoxNamePtr(boxId);
+        if (sChooseBoxMenu != NULL && sChooseBoxMenu->globalMode
+            && sCursorArea == CURSOR_AREA_IN_CHOOSE_BOX)
+        {
+            const u8 *preview;
+            globalBox = (u16)sChooseBoxMenu->previewPage * TOTAL_BOXES_COUNT + boxId;
+            preview = XgbaA2GameGlobalBoxName(globalBox);
+            if (preview != NULL)
+                name = preview;
+        }
+        u8 *end = StringCopy(titledBox, name);
         end = StringCopy(end, sGlobalSeparator);
-        ConvertIntToDecimalStringN(end,
-            (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + boxId + 1,
+        ConvertIntToDecimalStringN(end, globalBox + 1,
             STR_CONV_MODE_LEFT_ALIGN, 3);
         RenderBoxTitleCentered(titledBox);
     }

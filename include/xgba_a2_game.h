@@ -24,6 +24,10 @@ bool8 XgbaA2GameCollectionReady(void);
 bool8 XgbaA2GameFreshUncommitted(void);
 bool8 XgbaA2GameSelectGlobalBox(u16 globalBox);
 struct BoxPokemon *XgbaA2GameGlobalBoxMon(u16 globalBox, u8 position);
+// Pointer is borrowed and valid until the next resident-group switch.
+// Counts return -1 on invalid/unavailable storage rather than false zero.
+u8 *XgbaA2GameGlobalBoxName(u16 globalBox);
+s16 XgbaA2GameCountGlobalBoxMons(u16 globalBox);
 // Checked, in-memory, exact-record transfers. Return FALSE without mutations
 // for invalid IDs, empty source, occupied move target or identical positions.
 // The caller must not retain pointers across a subsequent group switch.

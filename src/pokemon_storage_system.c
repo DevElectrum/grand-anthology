@@ -391,6 +391,9 @@ struct ChooseBoxMenu
     u16 paletteTag;
     u8 curBox;
     u8 subpriority;
+#if defined(XGBA_R8) && XGBA_R8
+    bool8 globalMode;
+#endif
 };
 
 struct ItemIcon
@@ -1815,6 +1818,9 @@ static void LoadChooseBoxMenuGfx(struct ChooseBoxMenu *menu, u16 tileTag, u16 pa
 
     LoadSpriteSheets(sheets);
     sChooseBoxMenu = menu;
+#if defined(XGBA_R8) && XGBA_R8
+    menu->globalMode = FALSE;
+#endif
     menu->tileTag = tileTag;
     menu->paletteTag = palTag;
     menu->subpriority = subpriority;
@@ -1878,6 +1884,10 @@ static void ChooseBoxMenu_CreateSprites(u8 curBox)
     };
 
     sChooseBoxMenu->curBox = curBox;
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+        sChooseBoxMenu->curBox = (u8)(XgbaA2GamePage() * TOTAL_BOXES_COUNT + curBox);
+#endif
     template.tileTag = sChooseBoxMenu->tileTag;
     template.paletteTag = sChooseBoxMenu->paletteTag;
 
@@ -1944,14 +1954,25 @@ static void ChooseBoxMenu_DestroySprites(void)
 
 static void ChooseBoxMenu_MoveRight(void)
 {
-    if (++sChooseBoxMenu->curBox >= TOTAL_BOXES_COUNT)
+    u8 limit = TOTAL_BOXES_COUNT;
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+        limit = XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT;
+#endif
+    if (++sChooseBoxMenu->curBox >= limit)
         sChooseBoxMenu->curBox = 0;
     ChooseBoxMenu_PrintInfo();
 }
 
 static void ChooseBoxMenu_MoveLeft(void)
 {
-    sChooseBoxMenu->curBox = (sChooseBoxMenu->curBox == 0 ? TOTAL_BOXES_COUNT - 1 : sChooseBoxMenu->curBox - 1);
+    u8 limit = TOTAL_BOXES_COUNT;
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+        limit = XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT;
+#endif
+    sChooseBoxMenu->curBox = sChooseBoxMenu->curBox == 0
+        ? limit - 1 : sChooseBoxMenu->curBox - 1;
     ChooseBoxMenu_PrintInfo();
 }
 
@@ -1960,9 +1981,19 @@ static void ChooseBoxMenu_PrintInfo(void)
     u8 numBoxMonsText[16];
     struct WindowTemplate template;
     u8 windowId;
-    u8 *boxName = GetBoxNamePtr(sChooseBoxMenu->curBox);
-    u8 numInBox = CountMonsInBox(sChooseBoxMenu->curBox);
+    u8 *boxName = GetBoxNamePtr(sChooseBoxMenu->curBox % TOTAL_BOXES_COUNT);
+    u8 numInBox = CountMonsInBox(sChooseBoxMenu->curBox % TOTAL_BOXES_COUNT);
     u32 winTileData;
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+    {
+        s16 count = XgbaA2GameCountGlobalBoxMons(sChooseBoxMenu->curBox);
+        boxName = XgbaA2GameGlobalBoxName(sChooseBoxMenu->curBox);
+        if (boxName == NULL || count < 0)
+            return;
+        numInBox = count;
+    }
+#endif
     s32 center;
 
     memset(&template, 0, sizeof(template));
@@ -1979,6 +2010,15 @@ static void ChooseBoxMenu_PrintInfo(void)
     // Print #/30 for number of Pokémon in the box
     ConvertIntToDecimalStringN(numBoxMonsText, numInBox, STR_CONV_MODE_RIGHT_ALIGN, 2);
     StringAppend(numBoxMonsText, sText_OutOf30);
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+    {
+        u8 *end = numBoxMonsText + StringLength(numBoxMonsText);
+        *end++ = CHAR_SPACE;
+        ConvertIntToDecimalStringN(end, sChooseBoxMenu->curBox + 1,
+                                   STR_CONV_MODE_LEFT_ALIGN, 3);
+    }
+#endif
     center = GetStringCenterAlignXOffset(FONT_NORMAL, numBoxMonsText, 64);
     AddTextPrinterParameterized3(windowId, FONT_NORMAL, center, 17, sChooseBoxMenu_TextColors, TEXT_SKIP_DRAW, numBoxMonsText);
 
@@ -3627,6 +3667,9 @@ static void Task_JumpBox(u8 taskId)
     case 0:
         PrintMessage(MSG_JUMP_TO_WHICH_BOX);
         LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_MENU, PALTAG_MISC_1, 3, FALSE);
+#if defined(XGBA_R8) && XGBA_R8
+        sChooseBoxMenu->globalMode = XgbaA2GameCollectionReady();
+#endif
         CreateChooseBoxMenuSprites(StorageGetCurrentBox());
         sStorage->state++;
         break;
@@ -3640,6 +3683,27 @@ static void Task_JumpBox(u8 taskId)
             ClearBottomWindow();
             DestroyChooseBoxMenuSprites();
             FreeChooseBoxMenu();
+#if defined(XGBA_R8) && XGBA_R8
+            if (sStorage->newCurrBoxId != BOXID_CANCELED
+                && XgbaA2GameCollectionReady())
+            {
+                u16 globalBox = sStorage->newCurrBoxId;
+                if (globalBox / TOTAL_BOXES_COUNT != XgbaA2GamePage())
+                {
+                    // Tear down old box icons before exposing the new group.
+                    if (!IsMonBeingMoved() && !IsMovingItem()
+                        && XgbaA2GameSelectGlobalBox(globalBox))
+                        SetPokeStorageTask(Task_R8ReopenBox);
+                    else
+                    {
+                        PlaySE(SE_FAILURE);
+                        SetPokeStorageTask(Task_PokeStorageMain);
+                    }
+                    break;
+                }
+                sStorage->newCurrBoxId = globalBox % TOTAL_BOXES_COUNT;
+            }
+#endif
             if (sStorage->newCurrBoxId == BOXID_CANCELED || sStorage->newCurrBoxId == StorageGetCurrentBox())
             {
                 AnimateBoxScrollArrows(TRUE);

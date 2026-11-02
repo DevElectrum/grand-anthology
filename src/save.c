@@ -952,6 +952,41 @@ bool8 XgbaA2GameSelectGlobalBox(u16 globalBox)
     return TRUE;
 }
 
+// Read-only, all-RAM box chooser preview. Invalid IDs fail closed.
+u8 *XgbaA2GameGlobalBoxName(u16 globalBox)
+{
+    struct PokemonStorage *storage;
+    u8 page;
+    if (!XgbaA2GameCollectionReady()
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT)
+        return NULL;
+    page = globalBox / TOTAL_BOXES_COUNT;
+    if (page == sA2Pager.activePage)
+        storage = gPokemonStoragePtr;
+    else
+        storage = (struct PokemonStorage *)(sA2Pager.ramPages
+            + (u32)page * XGBA_A2_PC_BYTES);
+    return storage->boxNames[globalBox % TOTAL_BOXES_COUNT];
+}
+
+s16 XgbaA2GameCountGlobalBoxMons(u16 globalBox)
+{
+    u8 position;
+    s16 count = 0;
+    if (!XgbaA2GameCollectionReady()
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT)
+        return -1;
+    for (position = 0; position < IN_BOX_COUNT; position++)
+    {
+        struct BoxPokemon *mon = XgbaA2GameGlobalBoxMon(globalBox, position);
+        if (mon == NULL)
+            return -1;
+        if (GetBoxMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE)
+            count++;
+    }
+    return count;
+}
+
 // The UI must only request a transfer after it has resolved both global
 // locations. Validation happens before the first write: a rejected move
 // leaves source, destination, held item and every save generation unchanged.
