@@ -32,6 +32,15 @@
 #include "unbound_start_menu.h"
 #include "window.h"
 
+#if defined(XGBA_A2) && XGBA_A2
+// Disposable XGBA integration tests read this bitset through the linked ELF.
+// It is intentionally outside SaveBlock1/2/3 and never persisted to Flash.
+EWRAM_DATA volatile u32 gXgbaA2SaveDialogTrace = 0;
+#define A2_TRACE_SAVE_DIALOG(n) (gXgbaA2SaveDialogTrace |= (1u << (n)))
+#else
+#define A2_TRACE_SAVE_DIALOG(n) ((void)0)
+#endif
+
 static void HideSaveInfoWindow(void);
 static u8 RunSaveCallback(void);
 static u8 SaveDoSaveCallback(void);
@@ -128,6 +137,7 @@ static u8 SaveReturnSuccessCallback(void)
 
 static u8 SaveSuccessCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(9);
     if (!IsTextPrinterActiveOnWindow(0)) {
         PlaySE(SE_SAVE);
         sSaveDialogCallback = SaveReturnSuccessCallback;
@@ -149,6 +159,7 @@ static u8 SaveReturnErrorCallback(void)
 
 static u8 SaveErrorCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(10);
     if (!IsTextPrinterActiveOnWindow(0)) {
         PlaySE(SE_BOO);
         sSaveDialogCallback = SaveReturnErrorCallback;
@@ -159,6 +170,7 @@ static u8 SaveErrorCallback(void)
 
 static u8 SaveDoSaveCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(8);
     u8 saveStatus;
 
     IncrementGameStat(GAME_STAT_SAVED_GAME);
@@ -197,6 +209,7 @@ static void HideSaveMessageWindow(void)
 
 static u8 SaveOverwriteInputCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(6);
     switch (Menu_ProcessInputNoWrapClearOnChoose()) {
         case 0:  // Yes
             sSaveDialogCallback = SaveSavingMessageCallback;
@@ -220,6 +233,7 @@ static u8 SaveConfirmOverwriteDefaultNoCallback(void)
 
 static u8 SaveConfirmOverwriteCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(5);
     DisplayYesNoMenuDefaultYes();  // Show Yes/No menu
     sSaveDialogCallback = SaveOverwriteInputCallback;
     return USM_SAVE_IN_PROGRESS;
@@ -235,6 +249,7 @@ static void ShowSaveMessage(const u8* message, u8 (*saveCallback)(void))
 
 static u8 SaveFileExistsCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(4);
     if (gDifferentSaveFile == TRUE) {
         ShowSaveMessage(gText_DifferentSaveFile, SaveConfirmOverwriteDefaultNoCallback);
     }
@@ -247,12 +262,14 @@ static u8 SaveFileExistsCallback(void)
 
 static u8 SaveSavingMessageCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(7);
     ShowSaveMessage(gText_SavingDontTurnOff, SaveDoSaveCallback);
     return USM_SAVE_IN_PROGRESS;
 }
 
 static u8 SaveConfirmInputCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(3);
     switch (Menu_ProcessInputNoWrapClearOnChoose()) {
         case 0:  // Yes
             switch (gSaveFileStatus) {
@@ -283,6 +300,7 @@ static u8 SaveConfirmInputCallback(void)
 
 static u8 SaveYesNoCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(2);
     DisplayYesNoMenuDefaultYes();  // Show Yes/No menu
     sSaveDialogCallback = SaveConfirmInputCallback;
     return USM_SAVE_IN_PROGRESS;
@@ -361,6 +379,7 @@ static u8 SaveCancelWhileFlyingCallback(void)
 
 static u8 SaveConfirmSaveCallback(void)
 {
+    A2_TRACE_SAVE_DIALOG(1);
     // F1 guardrail 6: saving mid-air could reload the player stranded over an
     // unlandable tile, so refuse politely (mirrors start_menu.c).
     if (IsPlayerFlying()) {
@@ -381,6 +400,9 @@ static u8 SaveConfirmSaveCallback(void)
 
 void SaveDialog_InitSave(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    gXgbaA2SaveDialogTrace = 1u;
+#endif
     SaveMapView();
     // Restore the field frame gfx the way the classic start menu does (start_menu.c
     // LoadMessageBoxAndBorderGfx before drawing std-frame windows). The USM never
