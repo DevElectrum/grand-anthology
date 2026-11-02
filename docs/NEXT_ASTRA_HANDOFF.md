@@ -1,3 +1,15 @@
+# A2 menu telemetry and real-save CI continuation (Nov 2, 2026 UTC)
+
+- Most recent known green: storage/format and A1 ARM regressions from run 41370773033, plus real XGBA New Game -> shared Hub run 41371173547 at frame 4410. New save/rollback integration remains NOT accepted.
+- Run 41372623986 **failed safely**: release LTO dropped static symbols `sUsmState`/`sUsmMemory`; XGBA script reported `A2_XGBA_MENU_UNVERIFIED No linked graphical menu state symbol`, with Flash present and native counter 0. It did not attempt Save, so this was a telemetry failure, not storage evidence.
+- A2-only solution: `src/unbound_start_menu.c` introduces `EWRAM_DATA struct Usm_State * volatile gXgbaA2UsmStateProbe`, assigned on menu initialization and cleared on exit. No changes to standard/A1 builds, no per-frame polling, no trainer save layout shifts. Lua reads it to determine exact USM icon ID 7 (Save), and refuses accidental other buttons.
+- `tools/xgba_a2_symbol_env.py` now **requires** that linked probe symbol for runtime A2 and checks its actual RAM address; existing `tools/xgba_a2_runtime_save.lua` uses env `A2_USM_STATE_PTR`. `test/overworld/test_xgba_a2_menu_probe.py` checks probe lifecycle and script pin; both CI workflows include the source and tests.
+- Active gated jobs: A2 storage-format **passed** in run 41376116328; its separate A1 regression still compiling at last check. Disposable real-XGBA boot/save run 41376119630 still building at last check. The previous run 41376057451 was superseded. Do not claim save success until E6 audit and separate cold-restart test green.
+- Existing runtime shell sends a sequence of Save confirmation A presses after verifying icon, then `tools/xgba_a2_storage.py audit` must find verified native counter and eight PC generations. If still blank, inspect save-dialog default/overwrite confirmation, `gSaveCounter`, Flash present, and A2 bootstrap. The ABI pins are unchanged; never touch actual Nyx save.
+- Other known 112-box issues are documented in `docs/ANTHOLOGY_A2_BAG_ABI_AUDIT.md` and `docs/ANTHOLOGY_A2_AUTONOMOUS_PLAN.md`, including off-page held unique items and resident-only counting/move search. Do not implement before save/restart gate.
+
+---
+
 # A2 save-input UI verification recovery checkpoint (Nov 2 UTC)
 
 New run 41371769872 was a legitimate FAIL: New Game/Hub passed, Lua Save input sequence finished, but strict tools/xgba_a2_storage.py audit refused with 'No valid A2 metadata commit'. Cold restart was skipped as designed. The generic SaveHarvest control sequence assumed Save at graphical menu wheel position 2. Current src/unbound_start_menu.c builds a dynamic 12-item list including Cheats, Bag, Quests, Save etc.; selecting position 2 may trigger an unrelated icon, so this is NOT yet evidence of a game journal bug.
