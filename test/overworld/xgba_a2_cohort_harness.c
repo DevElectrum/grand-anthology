@@ -411,7 +411,54 @@ int main(void)
     assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &selected)
            == XGBA_A2_JOURNAL_MISSING);
 
-    puts("A2 cohort: native sector/checksum/SHA, page generations, global commit, rollback and hard refusal PASS");
+    // Independent 112-box far-page save/restore scenario. Reinitialize the
+    // disposable disk, then stage a change on page 7 while page 0 stays
+    // committed. A true page switch must preserve that staged data; only the
+    // subsequent native+metadata transaction may publish it globally.
+    {
+        struct XgbaA2Pager pager, rebooted;
+        struct XgbaA2Cohort first, saved, reloaded;
+        uint32_t j;
+
+        for (j = 0; j < XGBA_A2_PC_BYTES; j++)
+            old[j] = (uint8_t)((j * 7U + 3U) & 255U);
+        BlankSeed();
+        sWriterSectors = 14;
+        assert(XgbaA2BootstrapCommit(&io, NativeRead, NativeWriter, NULL,
+                                      scratch, old, &first) == XGBA_A2_JOURNAL_OK);
+        assert(XgbaA2PagerInit(&pager, &io, old, 0, first.pages)
+               == XGBA_A2_JOURNAL_OK);
+        assert(XgbaA2PagerSwitch(&pager, 7) == XGBA_A2_JOURNAL_OK);
+        old[47] = 0xA5;
+        assert(XgbaA2PagerSwitch(&pager, 0) == XGBA_A2_JOURNAL_OK);
+        assert(pager.staged[7] == 3 && pager.committed[7] == 2);
+        assert(XgbaA2PagerSwitch(&pager, 7) == XGBA_A2_JOURNAL_OK);
+        assert(old[47] == 0xA5);
+        assert(XgbaA2TransactionCommit(&pager, &first, NativeRead,
+                                        NativeWriter, NULL, scratch, &saved)
+               == XGBA_A2_JOURNAL_OK);
+        assert(saved.nativeSlot == 0 && saved.nativeCounter == 2);
+        assert(saved.metadataGeneration == 2 && saved.activePage == 7);
+        assert(saved.pages[0] == 2 && saved.pages[7] == 3);
+        assert(XgbaA2CohortSelect(&io, NativeRead, NULL, scratch, &reloaded)
+               == XGBA_A2_JOURNAL_OK);
+        assert(reloaded.nativeCounter == 2 && reloaded.activePage == 7);
+        assert(reloaded.pages[0] == 2 && reloaded.pages[7] == 3);
+
+        // Simulate cold reloading the metadata-pinned far page into the PC.
+        memset(old, 0, XGBA_A2_PC_BYTES);
+        assert(XgbaA2JournalReadPageGeneration(&io, 7, reloaded.pages[7],
+                                               old, XGBA_A2_PC_BYTES, NULL)
+               == XGBA_A2_JOURNAL_OK);
+        assert(old[47] == 0xA5);
+        assert(XgbaA2PagerInit(&rebooted, &io, old, 7, reloaded.pages)
+               == XGBA_A2_JOURNAL_OK);
+        assert(XgbaA2PagerSwitch(&rebooted, 0) == XGBA_A2_JOURNAL_OK);
+        assert(XgbaA2PagerSwitch(&rebooted, 7) == XGBA_A2_JOURNAL_OK);
+        assert(old[47] == 0xA5);
+    }
+
+    puts("A2 cohort: native sector/checksum/SHA, page 7 staged/cold reload, global commit and rollback PASS");
     free(next);
     free(old);
     free(sDisk);
