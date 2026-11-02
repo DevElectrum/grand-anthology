@@ -247,14 +247,7 @@ jobs:
             echo "Second save must advance exact native counter and coherent metadata generation."
             exit 1
           fi
-          grep -q '^native_slot: 0
-        if: always()
-        run: |
-          rm -f build/a2-ci-runtime/a2-layout.gba
-          rm -f build/a2-ci-runtime/a2-boot.gba
-          rm -f build/a2-ci-runtime/a2-boot.sav
-          echo "No ROM or save uploaded. No user files touched."
- /tmp/a2-xgba-second-audit.txt
+          grep -q '^native_slot: 0$' /tmp/a2-xgba-second-audit.txt
           echo "A2_EXPECTED_SAVE_COUNTER=$new_counter" >> "$GITHUB_ENV"
 
       - name: Cold-restart after second save and validate native slot rotation
