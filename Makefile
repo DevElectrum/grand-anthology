@@ -173,12 +173,25 @@ CPPFLAGS := $(INCLUDE_CPP_ARGS) -Wno-trigraphs -DMODERN=1 -DTESTING=$(TEST) -D$(
 XGBA_A1 ?= 0
 XGBA_A2 ?= 0
 XGBA_R8 ?= 0
+XGBA_R8_TEST ?= 0
+ifeq ($(XGBA_R8_TEST),1)
+  ifneq ($(XGBA_R8),1)
+    $(error R8 test cartridge requires R8)
+  endif
+  CPPFLAGS += -DXGBA_R8_TEST=1
+endif
 ifeq ($(XGBA_R8),1)
   ifneq ($(XGBA_A2),1)
     $(error R8 requires XGBA_A2=1)
   endif
-  ifneq ($(BUILD_NAME),xgba-r8)
-    $(error R8 requires isolated BUILD_NAME=xgba-r8)
+  ifeq ($(XGBA_R8_TEST),1)
+    ifneq ($(BUILD_NAME),xgba-r8-test)
+      $(error R8 test cartridge requires isolated BUILD_NAME=xgba-r8-test)
+    endif
+  else
+    ifneq ($(BUILD_NAME),xgba-r8)
+      $(error R8 requires isolated BUILD_NAME=xgba-r8)
+    endif
   endif
   CPPFLAGS += -DXGBA_R8=1
 endif

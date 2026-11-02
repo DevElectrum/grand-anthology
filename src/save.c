@@ -20,6 +20,9 @@
 #include "xgba_a2_game.h"
 #if defined(XGBA_R8) && XGBA_R8
 #include "xgba_r8_memory.h"
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+#include "xgba_r8_runtime_test.h"
+#endif
 #endif
 #include "pokemon.h"
 #endif
@@ -834,6 +837,14 @@ static bool8 A2FinishLoad(void)
         return FALSE;
 #endif
     sA2Ready = TRUE;
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    // Real game records must survive a full R8 save and cold restart.
+    if (sA2Committed.nativeCounter >= 2 && !XgbaR8VerifyTestPokemon())
+    {
+        sA2Ready = FALSE;
+        return FALSE;
+    }
+#endif
     return TRUE;
 }
 
@@ -1149,6 +1160,13 @@ static u8 A2Save(u8 saveType)
         return SAVE_STATUS_OK;
     }
 
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    // Only the disposable CI cartridge inserts genuine BoxPokemon records.
+    // The metadata-pinned page groups are still committed by ordinary A2.
+    if (sA2Committed.nativeCounter == 1
+        && !XgbaR8CreateTestPokemon())
+        goto failed;
+#endif
     A2_SAVE_TRACE(7, sA2Committed.nativeCounter);
     result = XgbaA2TransactionCommit(
         &sA2Pager, &sA2Committed, A2NativeRead, A2NativeWrite,

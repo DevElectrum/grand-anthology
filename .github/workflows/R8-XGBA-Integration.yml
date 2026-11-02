@@ -36,6 +36,8 @@ on:
       - 'src/pokemon_storage_system.c'
       - 'src/pokemon.c'
       - 'src/item.c'
+      - 'src/xgba_r8_runtime_test.c'
+      - 'include/xgba_r8_runtime_test.h'
       - 'test/overworld/xgba_a2_cohort_harness.c'
   workflow_dispatch:
 
@@ -85,14 +87,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          make release -j4 XGBA_A1=1 XGBA_A2=1 XGBA_R8=1 BUILD_NAME=xgba-r8 \
-            FILE_NAME=xgba-anthology-r8-native-release > /tmp/a2-boot-build.log 2>&1 || {
+          make release -j4 XGBA_A1=1 XGBA_A2=1 XGBA_R8=1 XGBA_R8_TEST=1 BUILD_NAME=xgba-r8-test \
+            FILE_NAME=xgba-anthology-r8-test-native-release > /tmp/a2-boot-build.log 2>&1 || {
             grep -n -E 'error:|undefined reference|overflowed|Error:|collect2:' /tmp/a2-boot-build.log | tail -n 80 || true
             tail -n 90 /tmp/a2-boot-build.log
             exit 1
           }
-          test -s xgba-anthology-r8-native-release.elf
-          test -s build/xgba-r8-release/a1-manifest.json
+          test -s xgba-anthology-r8-test-native-release.elf
+          test -s build/xgba-r8-test-release/a1-manifest.json
           tail -n 20 /tmp/a2-boot-build.log
 
       - name: Create temporary E6 ROM and empty disposable E6 save
@@ -101,8 +103,8 @@ jobs:
           set -euo pipefail
           mkdir -p build/a2-ci-runtime
           python3 tools/xgba_a1_assets.py pack \
-            --native xgba-anthology-r8-native-release.gba \
-            --manifest build/xgba-r8-release/a1-manifest.json \
+            --native xgba-anthology-r8-test-native-release.gba \
+            --manifest build/xgba-r8-test-release/a1-manifest.json \
             --output build/a2-ci-runtime/a2-layout.gba
           python3 tools/xgba_a2_rom.py tag --r8 \
             build/a2-ci-runtime/a2-layout.gba build/a2-ci-runtime/a2-boot.gba
@@ -154,7 +156,7 @@ jobs:
       - name: Bind real linked A2 game symbols for Lua
         run: |
           python3 tools/xgba_a2_symbol_env.py \
-            xgba-anthology-r8-native-release.elf --github-env "$GITHUB_ENV"
+            xgba-anthology-r8-test-native-release.elf --github-env "$GITHUB_ENV"
 
       - name: Drive a fresh New Game into the Hub in actual XGBA
         shell: bash
@@ -258,7 +260,36 @@ jobs:
             echo "Second save must advance exact native counter and coherent metadata generation."
             exit 1
           fi
-          grep -q '^native_slot: 0$' /tmp/a2-xgba-second-audit.txt
+          grep -q '^native_slot: 0
+          echo "A2_EXPECTED_SAVE_COUNTER=$new_counter" >> "$GITHUB_ENV"
+
+      - name: Cold-restart after second save and validate native slot rotation
+        shell: bash
+        env:
+          A2_ACTION: resume
+        run: |
+          set -euo pipefail
+          timeout --signal=INT --kill-after=5s 360s \
+            build/a2-ci-xgba-runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/a2-ci-runtime/a2-boot.gba > /tmp/a2-xgba-second-resume.log 2>&1 || {
+              grep -E 'Scripting: A2_XGBA_' /tmp/a2-xgba-second-resume.log | tail -n 100 || true
+              exit 1
+            }
+          grep -q 'A2_XGBA_E6_SAVE_BOUND' /tmp/a2-xgba-second-resume.log
+          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=2' /tmp/a2-xgba-second-resume.log
+          python3 tools/xgba_a2_storage.py audit build/a2-ci-runtime/a2-boot.sav
+
+      - name: Delete temporary developer ROM and save regardless of outcome
+        if: always()
+        run: |
+          rm -f build/a2-ci-runtime/a2-layout.gba
+          rm -f build/a2-ci-runtime/a2-boot.gba
+          rm -f build/a2-ci-runtime/a2-boot.sav
+          echo "No ROM or save uploaded. No user files touched."
+ /tmp/a2-xgba-second-audit.txt
+          grep -Fq 'page_generations: [3, 2, 2, 2, 2, 2, 2, 3]' /tmp/a2-xgba-second-audit.txt
           echo "A2_EXPECTED_SAVE_COUNTER=$new_counter" >> "$GITHUB_ENV"
 
       - name: Cold-restart after second save and validate native slot rotation
