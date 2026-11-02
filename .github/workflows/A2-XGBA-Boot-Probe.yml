@@ -180,6 +180,14 @@ jobs:
           python3 tools/xgba_a2_storage.py audit build/a2-ci-runtime/a2-boot.sav | tee /tmp/a2-xgba-audit.txt
           grep -q 'counter:' /tmp/a2-xgba-audit.txt
           grep -q 'page_generations:' /tmp/a2-xgba-audit.txt
+          # An independent New Game reaches the same Hub: only the actual
+          # audited native generation distinguishes Continue from New Game.
+          saved_counter=$(sed -n 's/^counter: \([0-9][0-9]*\)$/\1/p' /tmp/a2-xgba-audit.txt)
+          if [ -z "$saved_counter" ] || [ "$saved_counter" -eq 0 ]; then
+            echo "No positive native save counter to verify on cold restart."
+            exit 1
+          fi
+          echo "A2_EXPECTED_SAVE_COUNTER=$saved_counter" >> "$GITHUB_ENV"
 
       - name: Cold-restart frozen XGBA and resume saved shared Hub
         shell: bash
