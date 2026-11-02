@@ -271,12 +271,12 @@ static void CB2_SaveFailedScreen(void)
 
 #if defined(XGBA_A2) && XGBA_A2
 static const u8 sText_A2SaveFailed[] = _(
-    "XGBA save verification failed.\\n"
-    "No repair was attempted.\\n"
+    "XGBA save verification failed.\n"
+    "No repair was attempted.\n"
     "Press A to restart.");
 static const u8 sText_A2UnsupportedLink[] = _(
-    "XGBA A2 link saving is not\\n"
-    "available yet. No data saved.\\n"
+    "XGBA A2 link saving is not\n"
+    "available yet. No data saved.\n"
     "Press A to restart.");
 #endif
 
