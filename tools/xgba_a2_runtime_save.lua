@@ -21,6 +21,7 @@ local mode = os.getenv("A2_ACTION") or "save"
 assert(mode == "save" or mode == "resume")
 
 local A = 1 << C.GBA_KEY.A
+local B = 1 << C.GBA_KEY.B
 local START = 1 << C.GBA_KEY.START
 local RIGHT = 1 << C.GBA_KEY.RIGHT
 local phase = "boot"
@@ -29,6 +30,7 @@ local queue = {}
 local current = 1
 local remaining = 0
 local attempts = 0
+local menuOpenAttempts = 0
 
 local function report(s)
     print(s .. " frame=" .. tostring(frame))
@@ -109,9 +111,19 @@ callbacks:add("frame", function()
             if mode == "resume" then
                 finish("A2_XGBA_COLD_RESUME_HUB_PASS", 0)
             end
-            phase = "open"
-            report("A2_XGBA_HUB_READY")
-            setActions({{0, 180}, {START, 2}, {0, 60}})
+            -- RegionHub first-visit ON_FRAME automatically locks controls
+            -- while the curator offers a guided tour. A fixed 180-frame
+            -- delay is not enough: the old test pressed Start into lockall.
+            -- On disposable saves B declines the offer, dismisses dialogue,
+            -- then the player regains field control.
+            phase = "intro"
+            report("A2_XGBA_HUB_READY_TOUR_MAY_BE_LOCKED")
+            local actions = {{0, 240}}
+            for i = 1, 18 do
+                actions[#actions + 1] = {B, 2}
+                actions[#actions + 1] = {0, 52}
+            end
+            setActions(actions)
         else
             local tick = (frame - 1) % 30
             if tick < 3 then
@@ -123,6 +135,14 @@ callbacks:add("frame", function()
             end
             return
         end
+    end
+
+    if phase == "intro" then
+        if driveActions() then
+            phase = "open"
+            setActions({{START, 2}, {0, 75}})
+        end
+        return
     end
 
     if phase == "open" then
@@ -142,7 +162,17 @@ callbacks:add("frame", function()
     if phase == "seek" then
         local icon, info = readSelectedIcon()
         if not icon then
-            finish("A2_XGBA_MENU_UNVERIFIED " .. tostring(info), 3)
+            menuOpenAttempts = menuOpenAttempts + 1
+            report("A2_XGBA_MENU_NOT_OPEN attempt=" .. tostring(menuOpenAttempts)
+                   .. " reason=" .. tostring(info))
+            if menuOpenAttempts > 18 then
+                finish("A2_XGBA_MENU_UNVERIFIED_TOUR_LOCK_OR_START_REJECTED", 3)
+            end
+            -- Only B/Start retries while the USM pointer is NULL.
+            -- Never press A unless the actual USM icon equals Save.
+            phase = "open"
+            setActions({{B, 2}, {0, 105}, {START, 2}, {0, 75}})
+            return
         end
         if icon == 7 then -- USM_ICO_SAVE defined in constants/unbound_start_menu.h
             report("A2_XGBA_MENU_SELECTED_SAVE position=" .. info)
