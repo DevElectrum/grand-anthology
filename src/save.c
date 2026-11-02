@@ -893,6 +893,50 @@ static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
     return 1;
 }
 
+#if defined(XGBA_R8) && XGBA_R8
+bool8 XgbaA2GameCollectionReady(void)
+{
+    return sA2Ready && sA2Pager.ready && !sA2Pager.fatal
+        && sA2Pager.ramPages != NULL;
+}
+
+struct BoxPokemon *XgbaA2GameGlobalBoxMon(u16 globalBox, u8 position)
+{
+    struct PokemonStorage *storage;
+    u8 page;
+    u8 box;
+
+    if (!XgbaA2GameCollectionReady()
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT
+        || position >= IN_BOX_COUNT)
+        return NULL;
+    page = globalBox / TOTAL_BOXES_COUNT;
+    box = globalBox % TOTAL_BOXES_COUNT;
+    if (page == sA2Pager.activePage)
+        storage = gPokemonStoragePtr;
+    else
+        storage = (struct PokemonStorage *)(sA2Pager.ramPages
+            + (u32)page * XGBA_A2_PC_BYTES);
+    return &storage->boxes[box][position];
+}
+
+bool8 XgbaA2GameSelectGlobalBox(u16 globalBox)
+{
+    u8 page;
+    u8 box;
+
+    if (!XgbaA2GameCollectionReady()
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT)
+        return FALSE;
+    page = globalBox / TOTAL_BOXES_COUNT;
+    box = globalBox % TOTAL_BOXES_COUNT;
+    if (!XgbaA2GameSwitchPage(page))
+        return FALSE;
+    gPokemonStoragePtr->currentBox = box;
+    return TRUE;
+}
+#endif
+
 bool8 XgbaA2GameFindFreePage(u8 *foundPage)
 {
     struct XgbaA2JournalInfo pageInfo;
@@ -901,6 +945,28 @@ bool8 XgbaA2GameFindFreePage(u8 *foundPage)
     if (!sA2Ready || sA2Pager.fatal || foundPage == NULL)
         return FALSE;
 
+#if defined(XGBA_R8) && XGBA_R8
+    if (!XgbaA2GameCollectionReady())
+        return FALSE;
+    for (offset = 1; offset < XGBA_A2_PC_PAGES; offset++)
+    {
+        u8 page = (sA2Pager.activePage + offset) % XGBA_A2_PC_PAGES;
+        struct PokemonStorage *group = (struct PokemonStorage *)
+            (sA2Pager.ramPages + (u32)page * XGBA_A2_PC_BYTES);
+        u8 box;
+        for (box = 0; box < TOTAL_BOXES_COUNT; box++)
+        {
+            u8 pos;
+            for (pos = 0; pos < IN_BOX_COUNT; pos++)
+                if (GetBoxMonData(&group->boxes[box][pos], MON_DATA_SPECIES) == SPECIES_NONE)
+                {
+                    *foundPage = page;
+                    return TRUE;
+                }
+        }
+    }
+    return FALSE;
+#else
     // Only called when all 420 slots on the resident page are full.
     // Pages are CRC-checked ONCE before inspecting their box data.
     // No 34 KiB temporary page, no 3,360-mon memory allocation.
@@ -941,6 +1007,7 @@ bool8 XgbaA2GameFindFreePage(u8 *foundPage)
         }
     }
     return FALSE;
+#endif
 }
 
 // Only called when the player explicitly starts a new game.

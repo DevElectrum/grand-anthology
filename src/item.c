@@ -11,6 +11,9 @@
 #include "party_menu.h"
 #include "pokemon.h"
 #include "pokemon_storage_system.h"
+#if defined(XGBA_R8) && XGBA_R8
+#include "xgba_a2_game.h"
+#endif
 #include "strings.h"
 #include "load_save.h"
 #include "item_use.h"
@@ -241,6 +244,15 @@ static bool32 IsItemHeldByPlayerMon(enum Item itemId)
             return TRUE;
     }
 
+#if defined(XGBA_R8) && XGBA_R8
+    // Fail closed if the global collection is unavailable.
+    if (!XgbaA2GameCollectionReady())
+        return TRUE;
+    for (u16 globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
+        for (u8 pos = 0; pos < IN_BOX_COUNT; pos++)
+            if (GetBoxMonData(XgbaA2GameGlobalBoxMon(globalBox, pos), MON_DATA_HELD_ITEM) == itemId)
+                return TRUE;
+#else
     for (u32 boxId = 0; boxId < TOTAL_BOXES_COUNT; boxId++)
     {
         for (u32 boxPosition = 0; boxPosition < IN_BOX_COUNT; boxPosition++)
@@ -249,6 +261,7 @@ static bool32 IsItemHeldByPlayerMon(enum Item itemId)
                 return TRUE;
         }
     }
+#endif
 
     return FALSE;
 }

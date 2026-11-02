@@ -17,6 +17,12 @@ bool8 XgbaA2GameSwitchPage(u8 page);
 void XgbaA2GameRebindRelocatedPc(void);
 // Reports another page with free slots without changing the live PC.
 bool8 XgbaA2GameFindFreePage(u8 *page);
+#if defined(XGBA_R8) && XGBA_R8
+// 0..111 global boxes; local box 14 remains the legacy party sentinel.
+bool8 XgbaA2GameCollectionReady(void);
+bool8 XgbaA2GameSelectGlobalBox(u16 globalBox);
+struct BoxPokemon *XgbaA2GameGlobalBoxMon(u16 globalBox, u8 position);
+#endif
 #endif
 
 #endif

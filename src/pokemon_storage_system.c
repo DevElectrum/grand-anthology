@@ -9784,6 +9784,21 @@ bool32 CheckBoxMonSanityAt(u32 boxId, u32 boxPosition)
 
 u32 CountStorageNonEggMons(void)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    u32 count = 0;
+    u16 globalBox;
+    u8 pos;
+    if (!XgbaA2GameCollectionReady())
+        return 0;
+    for (globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
+        for (pos = 0; pos < IN_BOX_COUNT; pos++)
+        {
+            struct BoxPokemon *mon = XgbaA2GameGlobalBoxMon(globalBox, pos);
+            if (GetBoxMonData(mon, MON_DATA_SANITY_HAS_SPECIES) && !GetBoxMonData(mon, MON_DATA_SANITY_IS_EGG))
+                count++;
+        }
+    return count;
+#else
     s32 i, j;
     u32 count = 0;
 
@@ -9798,10 +9813,26 @@ u32 CountStorageNonEggMons(void)
     }
 
     return count;
+#endif
 }
 
 u32 CountAllStorageMons(void)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    u32 count = 0;
+    u16 globalBox;
+    u8 pos;
+    if (!XgbaA2GameCollectionReady())
+        return 0;
+    for (globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
+        for (pos = 0; pos < IN_BOX_COUNT; pos++)
+        {
+            struct BoxPokemon *mon = XgbaA2GameGlobalBoxMon(globalBox, pos);
+            if (GetBoxMonData(mon, MON_DATA_SANITY_HAS_SPECIES) || GetBoxMonData(mon, MON_DATA_SANITY_IS_EGG))
+                count++;
+        }
+    return count;
+#else
     s32 i, j;
     u32 count = 0;
 
@@ -9816,10 +9847,26 @@ u32 CountAllStorageMons(void)
     }
 
     return count;
+#endif
 }
 
 bool32 AnyStorageMonWithMove(enum Move move)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    enum Move moves[] = {move, MOVES_COUNT};
+    u16 globalBox;
+    u8 pos;
+    if (!XgbaA2GameCollectionReady())
+        return FALSE;
+    for (globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
+        for (pos = 0; pos < IN_BOX_COUNT; pos++)
+        {
+            struct BoxPokemon *mon = XgbaA2GameGlobalBoxMon(globalBox, pos);
+            if (GetBoxMonData(mon, MON_DATA_SANITY_HAS_SPECIES) && !GetBoxMonData(mon, MON_DATA_SANITY_IS_EGG) && GetBoxMonData(mon, MON_DATA_KNOWN_MOVES, (u8 *)moves))
+                return TRUE;
+        }
+    return FALSE;
+#else
     enum Move moves[] = {move, MOVES_COUNT};
     s32 i, j;
 
@@ -9835,6 +9882,7 @@ bool32 AnyStorageMonWithMove(enum Move move)
     }
 
     return FALSE;
+#endif
 }
 
 
