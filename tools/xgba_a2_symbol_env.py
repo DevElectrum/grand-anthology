@@ -8,12 +8,12 @@ SYMBOLS = {
     "gMain": "A2_GMAIN",
     "CB2_Overworld": "A2_CB_OVERWORLD",
     "gSaveBlock1Ptr": "A2_SB1_PTR",
+    # A2-only volatile pointer, stored by the live menu initialization.
+    "gXgbaA2UsmStateProbe": "A2_USM_STATE_PTR",
 }
 
 # These may be hidden by release LTO. Do not guess if unavailable.
 OPTIONAL_SYMBOLS = {
-    "sUsmState": "A2_USM_STATE_PTR",
-    "sUsmMemory": "A2_USM_MEMORY_PTR",
     "gFlashMemoryPresent": "A2_FLASH_PRESENT",
     "gSaveCounter": "A2_SAVE_COUNTER",
     "gSaveAttemptStatus": "A2_SAVE_ATTEMPT_STATUS",
@@ -52,6 +52,9 @@ def main():
         parser.error("save-block pointer is outside GBA IWRAM")
     if not 0x08000000 <= found["CB2_Overworld"] < 0x0A000000:
         parser.error("overworld code is outside native GBA ROM")
+    usm = found["gXgbaA2UsmStateProbe"]
+    if not ((0x02000000 <= usm < 0x02040000) or (0x03000000 <= usm < 0x03008000)):
+        parser.error("live USM pointer symbol outside GBA RAM")
 
     output = Path(args.github_env)
     with output.open("a") as handle:
