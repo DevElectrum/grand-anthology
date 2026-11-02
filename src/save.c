@@ -128,6 +128,10 @@ EWRAM_DATA static bool8 sA2FreshSaveArmed = FALSE;
 EWRAM_DATA volatile u32 gXgbaA2GameSaveTrace = 0;
 EWRAM_DATA volatile u32 gXgbaA2PagerTrace = 0;
 EWRAM_DATA volatile u32 gXgbaA2TransactionTrace = 0;
+EWRAM_DATA volatile u32 gXgbaA2NativeWriteTrace = 0;
+EWRAM_DATA volatile u32 gXgbaA2FlashWriteTrace = 0;
+#define A2_NATIVE_TRACE(stage, detail) (gXgbaA2NativeWriteTrace = ((u32)(stage) << 24) | ((u32)(detail) & 0xFFFFFF))
+#define A2_FLASH_TRACE(stage, detail) (gXgbaA2FlashWriteTrace = ((u32)(stage) << 24) | ((u32)(detail) & 0xFFFFFF))
 #define A2_SAVE_TRACE(stage, detail) (gXgbaA2GameSaveTrace = ((u32)(stage) << 24) | ((u32)(detail) & 0xFFFFFF))
 #endif
 
@@ -276,7 +280,14 @@ static u8 HandleWriteSectorNBytes(u8 sectorId, u8 *data, u16 size)
 
 static u8 TryWriteSector(u8 sector, u8 *data)
 {
-    if (ProgramFlashSectorAndVerify(sector, data)) // is damaged?
+    u32 flashStatus = ProgramFlashSectorAndVerify(sector, data);
+
+#if defined(XGBA_A2) && XGBA_A2
+    if (flashStatus)
+        A2_FLASH_TRACE(0xE0 | (sector / NUM_SECTORS_PER_SLOT),
+                       ((u32)sector << 16) | (flashStatus & 0xFFFF));
+#endif
+    if (flashStatus) // is damaged?
     {
         // Failed
         SetDamagedSectorBits(ENABLE, sector);
@@ -819,16 +830,54 @@ static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
     u8 result;
     (void)context;
 
-    if (slot >= NUM_SAVE_SLOTS || bytes != sizeof(struct PokemonStorage)
-        || pc != gPokemonStoragePtr || counter != gSaveCounter + 1
-        || slot != (counter % NUM_SAVE_SLOTS))
+    A2_NATIVE_TRACE(1, ((u32)slot << 16) | (counter & 0xFFFF));
+    if (slot >= NUM_SAVE_SLOTS)
+    {
+        A2_NATIVE_TRACE(0xE1, slot);
         return 0;
+    }
+    if (bytes != sizeof(struct PokemonStorage))
+    {
+        A2_NATIVE_TRACE(0xE2, bytes);
+        return 0;
+    }
+    if (pc != gPokemonStoragePtr)
+    {
+        A2_NATIVE_TRACE(0xE3, 0);
+        return 0;
+    }
+    if (counter != gSaveCounter + 1)
+    {
+        A2_NATIVE_TRACE(0xE4, gSaveCounter);
+        return 0;
+    }
+    if (slot != (counter % NUM_SAVE_SLOTS))
+    {
+        A2_NATIVE_TRACE(0xE5, slot);
+        return 0;
+    }
 
+    A2_NATIVE_TRACE(2, gSaveCounter);
     A2_SAVE_TRACE(0x10, (slot << 16) | (counter & 0xFFFF));
     result = WriteSaveSectorOrSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);
     A2_SAVE_TRACE(0x11, ((u32)result << 16) | (gSaveCounter & 0xFFFF));
-    return result == SAVE_STATUS_OK && !gDamagedSaveSectors
-        && gSaveCounter == counter;
+    if (result != SAVE_STATUS_OK)
+    {
+        A2_NATIVE_TRACE(0xE6, result);
+        return 0;
+    }
+    if (gDamagedSaveSectors)
+    {
+        A2_NATIVE_TRACE(0xE7, gDamagedSaveSectors);
+        return 0;
+    }
+    if (gSaveCounter != counter)
+    {
+        A2_NATIVE_TRACE(0xE8, gSaveCounter);
+        return 0;
+    }
+    A2_NATIVE_TRACE(3, counter);
+    return 1;
 }
 
 bool8 XgbaA2GameFindFreePage(u8 *foundPage)
