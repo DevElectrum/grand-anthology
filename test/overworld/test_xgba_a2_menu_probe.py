@@ -36,6 +36,9 @@ class TestA2MenuProbe(unittest.TestCase):
         self.assertIn('A2_XGBA_MENU_NOT_OPEN', runner)
         self.assertIn('A2_XGBA_COLD_RESUME_COUNTER_MISMATCH', runner)
         self.assertIn('A2_EXPECTED_SAVE_COUNTER', runner)
+        self.assertIn('A2_XGBA_GAME_NATIVE_COUNTER_ADVANCED=', runner)
+        self.assertIn('A2_XGBA_SAVE_DIALOG_EXHAUSTED_WITHOUT_NATIVE_COMMIT', runner)
+        self.assertIn('if counter > 0 then', runner)
 
 
 if __name__ == "__main__":
