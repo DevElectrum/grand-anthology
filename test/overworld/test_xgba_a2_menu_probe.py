@@ -32,6 +32,10 @@ class TestA2MenuProbe(unittest.TestCase):
         self.assertIn('addr("A2_USM_STATE_PTR")', runner)
         self.assertIn("emu:read32(location)", runner)
         self.assertIn("if icon == 7 then", runner)
+        self.assertIn('phase = "intro"', runner)
+        self.assertIn('A2_XGBA_MENU_NOT_OPEN', runner)
+        self.assertIn('A2_XGBA_COLD_RESUME_COUNTER_MISMATCH', runner)
+        self.assertIn('A2_EXPECTED_SAVE_COUNTER', runner)
 
 
 if __name__ == "__main__":
