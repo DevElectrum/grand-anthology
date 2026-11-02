@@ -5954,7 +5954,7 @@ static void UpdateBoxTitle(u8 boxId)
     FreeSpriteTilesByTag(GFXTAG_BOX_TITLE);
 #if defined(XGBA_R8) && XGBA_R8
     {
-        static const u8 sGlobalSeparator[] = _(" #");
+        static const u8 sGlobalSeparator[] = _(" ");
         u8 titledBox[BOX_NAME_LENGTH + 8];
         u8 *end = StringCopy(titledBox, GetBoxNamePtr(boxId));
         end = StringCopy(end, sGlobalSeparator);
