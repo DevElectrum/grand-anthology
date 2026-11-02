@@ -1,4 +1,7 @@
-# A2 SECOND SAVE + SECOND COLD CONTINUE CONFIRMED GREEN (Nov 2, 2026 UTC)
+# R8.4 planned: unified 112-box R8 RAM, no runtime disk pager (Nov 2, 2026 UTC)
+
+**Current plan only, no R8.4 implementation code:** read `docs/ANTHOLOGY_R8_4_RAM_INTEGRATION_PLAN.md` and top of `docs/NEXT_ASTRA_HANDOFF.md`. XGBA R8 branch `xgba/r8-4mib-ram` green 16/16 https://github.com/DevElectrum/xgba/actions/runs/41439796163; Anthology A2 two-save/restart green on frozen E7 https://github.com/DevElectrum/grand-anthology/actions/runs/41409715346. R8.4 must preserve 14-box native ABI, active mirror/ASLR binding, the E6 dual-cohort journal and protect old saves; add 112-box continuous UI/global operations and populated headless cold-restart tests. Keep A2.5 expanded-bag schema separate. Experimental branches only.
+
 
 **Major completed gate:** [Real XGBA runtime CI 41409715346](https://github.com/DevElectrum/grand-anthology/actions/runs/41409715346) is **SUCCESS** on the frozen XGBA E7. The A2 build, E6 packaging, New Game Hub, first Save/cold Continue, second Save/second cold Continue, and the independent E6 auditor all passed. Read exact results: first Save counter=1, native_slot=1, metadata_generation=1; first cold Continue counter1; second Save counter=2, native_slot=0, metadata_generation=2, transaction stage11 complete; second cold Continue from a NEW XGBA process counter2; eight independent PC page generations remain [2,2,2,2,2,2,2,2] (unchanged pages), recovery_required=False. Both physical Flash slots are now exercised and journal metadata alternation actually works.
 
