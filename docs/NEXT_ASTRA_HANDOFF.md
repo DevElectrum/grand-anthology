@@ -1,3 +1,17 @@
+# A2 runtime verification checkpoint (Nov 1 local, Nov 2 UTC)
+
+**Source-safe milestone:** `data/maps.s` / `map_data_rules.mk` variant-specific preprocessor fix works: A2 ARM linked (run `41370660428`), E6 256 MiB packaging and disposable 16 MiB E6 seed checked, and frozen E7 XGBA headless compiled. [Run 41370660428](https://github.com/DevElectrum/grand-anthology/actions/runs/41370660428) ended **failure** only because the shell's `-e` treated GNU `timeout` expected 124 as fatal before explicit status classification; XGBA survived the intended 20-second bounded run and did not show an early error. Do not claim actual New Game/save success from that passive probe.
+
+**Follow-on workflow `b63e9386`**: `.github/workflows/A2-XGBA-Boot-Probe.yml` now deliberately captures timeout 124; enables Lua 5.4 scripting in pinned XGBA core; obtains exact game symbols from the built ELF with `tools/xgba_a2_symbol_env.py`; then runs `tools/xgba_a2_runtime_boot.lua` to assert real New Game in shared Region Hub. On this note's creation, new [run 41371173547](https://github.com/DevElectrum/grand-anthology/actions/runs/41371173547) is in progress; fetch step logs and **do not call it green** until all checks pass.
+
+**Next scripted phase staged but NOT executed yet:** `tools/xgba_a2_runtime_save.lua` accepts `A2_ACTION=save` or `resume`. Save mode drives the known SaveHarvest title-wheel sequence, prints an INPUT-SEQUENCE sentinel, and does **not** claim the save succeeded. The CI workflow must then call `python3 tools/xgba_a2_storage.py audit disposable.sav`, and only if that passes run a separate fresh headless process in resume mode. Verify no duplicate/missing PC records; later add crash-injection and alternating generation tests. Do not run Lua script on actual user saves.
+
+**Completed fast checks:** storage-format [run 41370773033](https://github.com/DevElectrum/grand-anthology/actions/runs/41370773033) is green. Its A1 regression job had passed native A1 ROM geometry and 128 KiB revision checks and was compiling isolated A2 shadow at last observation; inspect final status. The new A2 messages in `src/save_failed_screen.c` now use single-backslash custom charmap newlines (commit `47310598`); escape guard fixed in test commit `5b3ef2b9`.
+
+**No merge/release or local Nyx activity authorized.** A2 link trading remains explicitly blocked until its synchronized journal handshake can be proven.
+
+---
+
 # A2 autonomous continuation checkpoint (2026-11-01 local / 2026-11-02 UTC)
 
 **Authorization:** owner is ill; continue safe independent GitHub/CI work without Nyx. Never overwrite player saves, Mosaic, main or frozen XGBA E7. Complete A2 plan: `docs/ANTHOLOGY_A2_AUTONOMOUS_PLAN.md`.
