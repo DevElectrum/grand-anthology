@@ -1,3 +1,13 @@
+# A2 verified gameplay boot and save journal runtime gate (Nov 2 UTC)
+
+Confirmed green: A2 Collection Storage Contract run 41370773033 completed successfully, including storage/rollback tests, A1 native-Flash and 256 MiB format regression, and isolated A2 ARM compilation/E6 cartridge validation.
+Real XGBA E7 run 41371173547 completed successfully with frozen E7 9aa5e11e: actual New Game entered shared Region Hub (map group 100) at 4410 emulated frames using linked ELF symbols. This was gameplay boot, NOT in-game save/restart; its 16 MiB E6 template remained blank.
+Now running: workflow commit 63f3205f added tools/xgba_a2_runtime_save.lua. It drives in-game Save, then strictly audits the disposable E6 file for a committed native+extended PC cohort, before launching a new emulator process for cold Continue. Run 41371769872 job 125043550020 was in Build isolated A2 ARM game at the last poll. Do not claim persistence pass until the actual journal audit and cold resume pass.
+If runtime audit fails, distinguish: Save menu navigation, file flush, actual A2 commit, or selection/recovery. Do not mistake the Lua input-sequence sentinel for verified save.
+Additional read-only future bug: src/item.c IsItemHeldByPlayerMon checks party and only 14 resident boxes; off-page held key item may bypass uniqueness. See docs/ANTHOLOGY_A2_BAG_ABI_AUDIT.md. Defer mutation until core persistence test is green.
+Preserve experimental branch only; no Nyx requests, live-save edits, Mosaic changes, original E7 changes, release or main merge while owner is ill.
+
+---
 # A2 autonomous continuation checkpoint (2026-11-01 local / 2026-11-02 UTC)
 
 **Authorization:** owner is ill; continue safe independent GitHub/CI work without Nyx. Never overwrite player saves, Mosaic, main or frozen XGBA E7. Complete A2 plan: `docs/ANTHOLOGY_A2_AUTONOMOUS_PLAN.md`.
