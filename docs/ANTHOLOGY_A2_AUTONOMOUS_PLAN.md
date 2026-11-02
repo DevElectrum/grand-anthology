@@ -87,3 +87,10 @@
 - Remote GitHub access does not provide access to Nyx's process, files or UI. Don't claim local test execution or operate against the player's real data. Work proceeds only during active assistant/tool execution, not silently in the background after a turn ends.
 
 **Guiding rule:** big steps, better mistakes, even better solutions. Protect the collection first.
+
+
+## A2.3 additional cross-page source audit (Nov 2, 2026 UTC)
+
+- `src/pokemon_storage_system.c` `CountStorageNonEggMons` and `CountAllStorageMons` iterate only `TOTAL_BOXES_COUNT` (14 resident boxes), not the additional seven external PC pages. `src/egg_hatch.c` consumes the former for non-egg ownership; `src/swsh_storage_system.c BulkReleasePrepare` uses it to protect the last three Pokémon. This resident-only count is NOT a global ownership count in A2. Test 0 resident, 1 or more remote mons, full remote pages, and a corrupt remote page. Choose a bounded, verified global-count API with separate resident count where performance matters. Do not change `TOTAL_BOXES_COUNT` to 112 because the resident storage arrays stay 14.
+- `AnyStorageMonWithMove` in the same file also scans only resident boxes. Audit callers for field-move possession/restriction checks and make the global query correct or intentionally named resident-only, with error propagation for unreadable off-page data.
+- These are identified integration gaps, not yet fixed. Keep release gate closed pending actual 112-box runtime behavior.
