@@ -43,6 +43,10 @@ local attempts = 0
 local menuOpenAttempts = 0
 local tourAdvanceFrames = 0
 local tourAdvanceUsed = false
+local lastMenuTrace = nil
+local lastDialogTrace = nil
+local lastNativeCounter = nil
+local sawActualSaveDialog = false
 
 local function report(s)
     print(s .. " frame=" .. tostring(frame))
@@ -122,6 +126,36 @@ end
 
 callbacks:add("frame", function()
     frame = frame + 1
+    -- Lua host state survives any in-game soft reset; the EWRAM debug trace
+    -- does not. Record transitions every frame BEFORE any scripts or input
+    -- changes, so a Save-failure reset cannot erase its own evidence.
+    local menuTrace = emu:read32(usmTraceAddr)
+    local dialogTrace = emu:read32(saveDialogTraceAddr)
+    local counter = saveCounterAddr and emu:read32(saveCounterAddr) or 0
+    if phase ~= "boot" then
+        if menuTrace ~= lastMenuTrace then
+            report("A2_XGBA_MENU_TRACE_CHANGE old=" .. tostring(lastMenuTrace)
+                   .. " new=" .. tostring(menuTrace))
+        end
+        if dialogTrace ~= lastDialogTrace then
+            report("A2_XGBA_DIALOG_TRACE_CHANGE old=" .. tostring(lastDialogTrace)
+                   .. " new=" .. tostring(dialogTrace))
+        end
+        if counter ~= lastNativeCounter then
+            report("A2_XGBA_NATIVE_COUNTER_CHANGE old=" .. tostring(lastNativeCounter)
+                   .. " new=" .. tostring(counter))
+        end
+        if dialogTrace ~= 0 then
+            sawActualSaveDialog = true
+        end
+        if phase == "confirm" and sawActualSaveDialog and dialogTrace == 0
+           and lastDialogTrace and lastDialogTrace ~= 0 then
+            finish("A2_XGBA_SAVE_DIALOG_DISAPPEARED_POSSIBLE_SOFT_RESET", 3)
+        end
+    end
+    lastMenuTrace = menuTrace
+    lastDialogTrace = dialogTrace
+    lastNativeCounter = counter
     if frame > 150000 then
         finish("A2_XGBA_SEQUENCE_TIMEOUT", 3)
     end
@@ -246,7 +280,8 @@ callbacks:add("frame", function()
             return
         end
         if icon == 7 then -- USM_ICO_SAVE defined in constants/unbound_start_menu.h
-            report("A2_XGBA_MENU_SELECTED_SAVE position=" .. info)
+            report("A2_XGBA_MENU_SELECTED_SAVE position=" .. info
+                   .. " menu_trace=" .. tostring(emu:read32(usmTraceAddr)))
             phase = "confirm"
             -- save_dialog.c may present Confirm -> Already Saved File ->
             -- Confirm Overwrite (SKIP_SAVE_CONFIRMATION=FALSE) before the
