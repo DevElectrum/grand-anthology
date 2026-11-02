@@ -53,7 +53,11 @@ class TestA2MenuProbe(unittest.TestCase):
         self.assertIn("#define A2_USM_TRACE(n) ((void)0)", menu)
         for bit in (1, 2, 3, 4, 5, 6, 7):
             self.assertIn("A2_USM_TRACE(" + str(bit) + ")", menu)
-        self.assertIn('A2_XGBA_SAVE_DIALOG_EXHAUSTED_WITHOUT_NATIVE_COMMIT', runner)
+        self.assertIn('A2_XGBA_AWAITING_INITIAL_E6_BOOTSTRAP', runner)
+        self.assertIn('A2_XGBA_INITIAL_SAVE_BOOTSTRAP_TIMEOUT', runner)
+        self.assertIn('A2_XGBA_BOOTSTRAP_IN_PROGRESS', runner)
+        self.assertIn('if phase == "await-commit" then', runner)
+        self.assertIn('(emu:read32(saveDialogTraceAddr) & 256) ~= 0', runner)
         self.assertIn('if counter > 0 then', runner)
 
 
