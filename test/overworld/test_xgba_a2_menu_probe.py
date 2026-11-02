@@ -20,6 +20,7 @@ class TestA2MenuProbe(unittest.TestCase):
         )
         self.assertIn(
             "static void Usm_ExitStartMenu(void)\n{\n"
+            "    A2_USM_TRACE(7);\n"
             "#if defined(XGBA_A2) && XGBA_A2\n"
             "    gXgbaA2UsmStateProbe = NULL;\n"
             "#endif", code
