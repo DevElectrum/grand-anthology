@@ -15,6 +15,8 @@ SYMBOLS = {
     "gXgbaA2GameSaveTrace": "A2_GAME_SAVE_TRACE",
     "gXgbaA2PagerTrace": "A2_PAGER_TRACE",
     "gXgbaA2TransactionTrace": "A2_TRANSACTION_TRACE",
+    "gXgbaA2NativeWriteTrace": "A2_NATIVE_WRITE_TRACE",
+    "gXgbaA2FlashWriteTrace": "A2_FLASH_WRITE_TRACE",
 }
 
 # These may be hidden by release LTO. Do not guess if unavailable.
@@ -75,6 +77,10 @@ def main():
     transaction_trace = found["gXgbaA2TransactionTrace"]
     if not ((0x02000000 <= transaction_trace < 0x02040000) or (0x03000000 <= transaction_trace < 0x03008000)):
         parser.error("A2 transaction trace outside GBA RAM")
+    for diagnostic in ("gXgbaA2NativeWriteTrace", "gXgbaA2FlashWriteTrace"):
+        value = found[diagnostic]
+        if not ((0x02000000 <= value < 0x02040000) or (0x03000000 <= value < 0x03008000)):
+            parser.error(diagnostic + " outside GBA RAM")
 
     output = Path(args.github_env)
     with output.open("a") as handle:
