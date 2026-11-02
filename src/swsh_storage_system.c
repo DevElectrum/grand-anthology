@@ -2113,7 +2113,7 @@ static void Task_PokeStorageMain(u8 taskId)
         case INPUT_IN_MENU:
             SetPokeStorageTask(Task_OnSelectedMon);
             break;
-#if defined(XGBA_A2) && XGBA_A2
+#if defined(XGBA_A2) && XGBA_A2 && !(defined(XGBA_R8) && XGBA_R8)
         case INPUT_A2_PAGE_NEXT:
         case INPUT_A2_PAGE_PREVIOUS:
             if (sStorage->boxOption != OPTION_SELECT_MON
@@ -2146,6 +2146,23 @@ static void Task_PokeStorageMain(u8 taskId)
             break;
 #endif
         case INPUT_SCROLL_RIGHT:
+#if defined(XGBA_R8) && XGBA_R8
+            if (StorageGetCurrentBox() == TOTAL_BOXES_COUNT - 1)
+            {
+                u16 next = ((u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT
+                    + TOTAL_BOXES_COUNT) % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+                if (sStorage->boxOption != OPTION_SELECT_MON && !IsMonBeingMoved()
+                    && !IsMovingItem() && sCursorMode != CURSOR_MODE_MULTI_MOVE
+                    && XgbaA2GameSelectGlobalBox(next))
+                {
+                    PlaySE(SE_SELECT);
+                    SetPokeStorageTask(Task_A2ReopenPage);
+                }
+                else
+                    PlaySE(SE_FAILURE);
+                break;
+            }
+#endif
             PlaySE(SE_SELECT);
             sStorage->newCurrBoxId = StorageGetCurrentBox() + 1;
             if (sStorage->newCurrBoxId >= TOTAL_BOXES_COUNT)
@@ -2162,6 +2179,24 @@ static void Task_PokeStorageMain(u8 taskId)
             }
             break;
         case INPUT_SCROLL_LEFT:
+#if defined(XGBA_R8) && XGBA_R8
+            if (StorageGetCurrentBox() == 0)
+            {
+                u16 next = ((u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT
+                    + XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT - 1)
+                    % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+                if (sStorage->boxOption != OPTION_SELECT_MON && !IsMonBeingMoved()
+                    && !IsMovingItem() && sCursorMode != CURSOR_MODE_MULTI_MOVE
+                    && XgbaA2GameSelectGlobalBox(next))
+                {
+                    PlaySE(SE_SELECT);
+                    SetPokeStorageTask(Task_A2ReopenPage);
+                }
+                else
+                    PlaySE(SE_FAILURE);
+                break;
+            }
+#endif
             PlaySE(SE_SELECT);
             sStorage->newCurrBoxId = StorageGetCurrentBox() - 1;
             if (sStorage->newCurrBoxId < 0)
@@ -5868,7 +5903,18 @@ static void UpdateBoxTitle(u8 boxId)
     }
 
     FreeSpriteTilesByTag(GFXTAG_BOX_TITLE);
-#if defined(XGBA_A2) && XGBA_A2
+#if defined(XGBA_R8) && XGBA_R8
+    {
+        static const u8 sGlobalSeparator[] = _(" #");
+        u8 titledBox[BOX_NAME_LENGTH + 8];
+        u8 *end = StringCopy(titledBox, GetBoxNamePtr(boxId));
+        end = StringCopy(end, sGlobalSeparator);
+        ConvertIntToDecimalStringN(end,
+            (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + boxId + 1,
+            STR_CONV_MODE_LEFT_ALIGN, 3);
+        RenderBoxTitleCentered(titledBox);
+    }
+#elif defined(XGBA_A2) && XGBA_A2
     {
         static const u8 sPageSeparator[] = _("/");
         u8 titledBox[BOX_NAME_LENGTH + 4];
@@ -8099,7 +8145,7 @@ static u8 HandleInput_OnBox(void)
             break;
         }
 
-#if defined(XGBA_A2) && XGBA_A2
+#if defined(XGBA_A2) && XGBA_A2 && !(defined(XGBA_R8) && XGBA_R8)
         // Select+L/R pages the entire 14-box collection. Plain L/R
         // continues moving between boxes within the active page.
         if (JOY_HELD(SELECT_BUTTON) && JOY_NEW(L_BUTTON))

@@ -2292,6 +2292,28 @@ static void Task_ReshowPokeStorage(u8 taskId)
     }
 }
 
+#if defined(XGBA_R8) && XGBA_R8
+static void Task_R8ReopenBox(u8 taskId)
+{
+    (void)taskId;
+    switch (sStorage->state)
+    {
+    case 0:
+        BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
+        sStorage->state++;
+        break;
+    case 1:
+        if (!UpdatePaletteFade())
+        {
+            sWhichToReshow = 0xFF;
+            FreePokeStorageData();
+            CB2_ReturnToPokeStorage();
+        }
+        break;
+    }
+}
+#endif
+
 // States for the outer switch in Task_PokeStorageMain
 enum {
     MSTATE_HANDLE_INPUT,
@@ -2358,6 +2380,23 @@ static void Task_PokeStorageMain(u8 taskId)
             SetPokeStorageTask(Task_OnSelectedMon);
             break;
         case INPUT_SCROLL_RIGHT:
+#if defined(XGBA_R8) && XGBA_R8
+            if (StorageGetCurrentBox() == TOTAL_BOXES_COUNT - 1)
+            {
+                u16 next = ((u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT
+                    + TOTAL_BOXES_COUNT) % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+                if (sStorage->boxOption != OPTION_SELECT_MON && !IsMonBeingMoved()
+                    && !IsMovingItem() && XgbaA2GameSelectGlobalBox(next))
+                {
+                    PlaySE(SE_SELECT);
+                    SetPokeStorageTask(Task_R8ReopenBox);
+                }
+                else
+                    PlaySE(SE_FAILURE);
+                break;
+            }
+#endif
+
             PlaySE(SE_SELECT);
             sStorage->newCurrBoxId = StorageGetCurrentBox() + 1;
             if (sStorage->newCurrBoxId >= TOTAL_BOXES_COUNT)
@@ -2374,6 +2413,24 @@ static void Task_PokeStorageMain(u8 taskId)
             }
             break;
         case INPUT_SCROLL_LEFT:
+#if defined(XGBA_R8) && XGBA_R8
+            if (StorageGetCurrentBox() == 0)
+            {
+                u16 next = ((u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT
+                    + XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT - 1)
+                    % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+                if (sStorage->boxOption != OPTION_SELECT_MON && !IsMonBeingMoved()
+                    && !IsMovingItem() && XgbaA2GameSelectGlobalBox(next))
+                {
+                    PlaySE(SE_SELECT);
+                    SetPokeStorageTask(Task_R8ReopenBox);
+                }
+                else
+                    PlaySE(SE_FAILURE);
+                break;
+            }
+#endif
+
             PlaySE(SE_SELECT);
             sStorage->newCurrBoxId = StorageGetCurrentBox() - 1;
             if (sStorage->newCurrBoxId < 0)
