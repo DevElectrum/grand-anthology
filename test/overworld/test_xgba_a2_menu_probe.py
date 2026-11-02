@@ -56,6 +56,25 @@ class TestA2MenuProbe(unittest.TestCase):
         self.assertIn('A2_XGBA_AWAITING_INITIAL_E6_BOOTSTRAP', runner)
         self.assertIn('A2_XGBA_INITIAL_SAVE_BOOTSTRAP_TIMEOUT', runner)
         self.assertIn('A2_XGBA_BOOTSTRAP_IN_PROGRESS', runner)
+        self.assertIn('mode == "save-again"', runner)
+        self.assertIn('A2_XGBA_SECOND_SAVE_COLD_LOAD_VERIFIED', runner)
+        self.assertEqual(runner.count('A2_XGBA_SECOND_SAVE_GENERATION_MISMATCH'), 2)
+        self.assertIn('saveStage ~= 8', runner)
+        workflow = (ROOT / ".github/workflows/A2-XGBA-Boot-Probe.yml").read_text()
+        self.assertIn('A2_ACTION: save-again', workflow)
+        self.assertIn('metadata_generation:', workflow)
+        self.assertIn("grep -q '^native_slot: 0
+        self.assertEqual(runner.count('saveStage == 6 or saveStage == 8'), 2)
+        self.assertIn('The native counter increments BEFORE the metadata commit', runner)
+        self.assertIn('if phase == "await-commit" then', runner)
+        self.assertIn('(emu:read32(saveDialogTraceAddr) & 256) ~= 0', runner)
+        self.assertIn('if counter > 0 and (saveStage == 6 or saveStage == 8) then', runner)
+
+
+if __name__ == "__main__":
+    unittest.main()
+", workflow)
+        self.assertIn('A2_XGBA_COLD_RESUME_HUB_PASS counter=2', workflow)
         self.assertEqual(runner.count('saveStage == 6 or saveStage == 8'), 2)
         self.assertIn('The native counter increments BEFORE the metadata commit', runner)
         self.assertIn('if phase == "await-commit" then', runner)
