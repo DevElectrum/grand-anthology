@@ -12,6 +12,7 @@ SYMBOLS = {
     "gXgbaA2UsmStateProbe": "A2_USM_STATE_PTR",
     "gXgbaA2SaveDialogTrace": "A2_SAVE_DIALOG_TRACE",
     "gXgbaA2UsmTrace": "A2_USM_TRACE",
+    "gXgbaA2GameSaveTrace": "A2_GAME_SAVE_TRACE",
 }
 
 # These may be hidden by release LTO. Do not guess if unavailable.
@@ -63,6 +64,9 @@ def main():
     usm_trace = found["gXgbaA2UsmTrace"]
     if not ((0x02000000 <= usm_trace < 0x02040000) or (0x03000000 <= usm_trace < 0x03008000)):
         parser.error("A2 graphical menu trace outside GBA RAM")
+    game_trace = found["gXgbaA2GameSaveTrace"]
+    if not ((0x02000000 <= game_trace < 0x02040000) or (0x03000000 <= game_trace < 0x03008000)):
+        parser.error("A2 save transaction trace outside GBA RAM")
 
     output = Path(args.github_env)
     with output.open("a") as handle:
