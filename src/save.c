@@ -18,6 +18,9 @@
 #include "xgba_a2_transaction.h"
 #include "xgba_a2_bootstrap.h"
 #include "xgba_a2_game.h"
+#if defined(XGBA_R8) && XGBA_R8
+#include "xgba_r8_memory.h"
+#endif
 #include "pokemon.h"
 #endif
 
@@ -799,6 +802,11 @@ static bool8 A2ChooseLoad(void)
 {
     struct XgbaA2Cohort selection;
 
+#if defined(XGBA_R8) && XGBA_R8
+    // Probe before touching any native/E6 save. Old E7 cannot run R8 games.
+    if (!XgbaR8MemoryReady())
+        return FALSE;
+#endif
     sA2Ready = FALSE;
     sA2FreshSaveArmed = FALSE;
     if (!XgbaA2GuestBusBind(&sA2Bus, (volatile uint8_t *)0x0F000000))
@@ -820,6 +828,11 @@ static bool8 A2FinishLoad(void)
                          gPokemonStoragePtr, sA2Committed.activePage,
                          sA2Committed.pages) != XGBA_A2_JOURNAL_OK)
         return FALSE;
+#if defined(XGBA_R8) && XGBA_R8
+    if (XgbaA2PagerEnableRam(&sA2Pager, (void *)XGBA_R8_RAM_BASE,
+            XGBA_A2_PC_BYTES * XGBA_A2_PC_PAGES) != XGBA_A2_JOURNAL_OK)
+        return FALSE;
+#endif
     sA2Ready = TRUE;
     return TRUE;
 }
@@ -1021,6 +1034,10 @@ static u8 A2Save(u8 saveType)
 
     if (sA2FreshSaveArmed)
     {
+#if defined(XGBA_R8) && XGBA_R8
+        if (!XgbaR8MemoryReady())
+            goto failed;
+#endif
         // One-shot authorization: even an interrupted initial save cannot
         // be retried in the same session without explicit new-game setup.
         sA2FreshSaveArmed = FALSE;
@@ -1048,6 +1065,11 @@ static u8 A2Save(u8 saveType)
             A2_SAVE_TRACE(0xE7, 0);
             goto failed;
         }
+#if defined(XGBA_R8) && XGBA_R8
+        if (XgbaA2PagerEnableRam(&sA2Pager, (void *)XGBA_R8_RAM_BASE,
+                XGBA_A2_PC_BYTES * XGBA_A2_PC_PAGES) != XGBA_A2_JOURNAL_OK)
+            goto failed;
+#endif
         A2_SAVE_TRACE(6, newCohort.nativeCounter);
         sA2Committed = newCohort;
         sA2Ready = TRUE;

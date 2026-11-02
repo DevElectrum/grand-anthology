@@ -10,6 +10,9 @@ import os
 from pathlib import Path
 import sys
 
+R8_OFFSET = ROM_BYTES - 0x100
+R8_DESCRIPTOR = b"XGBARAM8" + (1).to_bytes(4, "little") + (0x400000).to_bytes(4, "little")
+
 from xgba_a1_assets import MAGIC, ROM_BYTES, PROBE_OFFSET, probe_bytes, checksum_header
 
 
@@ -30,7 +33,7 @@ def stamp_header(header):
     return bytes(tagged)
 
 
-def verify(path):
+def verify(path, r8=False):
     path = Path(path)
     if not path.is_file() or path.is_symlink() or path.stat().st_size != ROM_BYTES:
         raise A2RomError("E6 ROM must be a regular 256 MiB file")
@@ -43,11 +46,18 @@ def verify(path):
         stream.seek(PROBE_OFFSET)
         if stream.read(len(probe_bytes())) != probe_bytes():
             raise A2RomError("Missing final A1 high-ROM probe marker")
+        stream.seek(R8_OFFSET)
+        present = stream.read(len(R8_DESCRIPTOR))
+        if r8 and present != R8_DESCRIPTOR:
+            raise A2RomError("Missing or incompatible R8 4 MiB descriptor")
+        if not r8 and present == R8_DESCRIPTOR:
+            raise A2RomError("R8 cartridge must be verified explicitly with --r8")
     return {"bytes": ROM_BYTES, "revision": "E6", "header": "valid",
+            "r8_ram": "4 MiB" if r8 else "disabled",
             "high_rom_probe": "valid"}
 
 
-def tag(source, destination):
+def tag(source, destination, r8=False):
     source = Path(source).expanduser()
     destination = Path(destination).expanduser()
     if not source.is_file() or source.is_symlink() or source.stat().st_size != ROM_BYTES:
@@ -70,9 +80,12 @@ def tag(source, destination):
                     if not block:
                         break
                     out.write(block)
+                if r8:
+                    out.seek(R8_OFFSET)
+                    out.write(R8_DESCRIPTOR)
                 out.flush()
                 os.fsync(out.fileno())
-            return verify(destination)
+            return verify(destination, r8=r8)
         except BaseException:
             destination.unlink(missing_ok=True)
             raise
@@ -83,14 +96,15 @@ def main():
     parser.add_argument("command", choices=("tag", "verify"))
     parser.add_argument("path", help="Input ROM for tag, E6 ROM for verify")
     parser.add_argument("destination", nargs="?", help="New output ROM for tag")
+    parser.add_argument("--r8", action="store_true", help="Require and stamp separate 4 MiB R8 hardware capability")
     args = parser.parse_args()
     try:
         if args.command == "tag":
             if not args.destination:
                 parser.error("tag requires a separate destination")
-            result = tag(args.path, args.destination)
+            result = tag(args.path, args.destination, r8=args.r8)
         else:
-            result = verify(args.path)
+            result = verify(args.path, r8=args.r8)
         for key, value in result.items():
             print(f"{key}: {value}")
         return 0

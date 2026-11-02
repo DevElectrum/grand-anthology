@@ -97,6 +97,37 @@ int XgbaA2PagerInit(struct XgbaA2Pager *pager,
     return XGBA_A2_JOURNAL_OK;
 }
 
+int XgbaA2PagerEnableRam(struct XgbaA2Pager *pager, void *ram, uint32_t bytes)
+{
+    uint32_t i;
+    uint8_t *cached = ram;
+
+    if (!Ready(pager) || cached == NULL
+        || bytes != XGBA_A2_PC_BYTES * XGBA_A2_PC_PAGES
+        || pager->ramPages != NULL)
+        return XGBA_A2_JOURNAL_INVALID_ARG;
+
+    for (i = 0; i < XGBA_A2_PC_PAGES; i++)
+    {
+        int status = XgbaA2JournalReadPageGeneration(
+            &pager->io, i, pager->committed[i],
+            cached + i * XGBA_A2_PC_BYTES, XGBA_A2_PC_BYTES, NULL);
+        if (status != XGBA_A2_JOURNAL_OK)
+        {
+            pager->fatal = 1;
+            return status;
+        }
+    }
+    if (memcmp(cached + pager->activePage * XGBA_A2_PC_BYTES,
+               pager->resident, XGBA_A2_PC_BYTES) != 0)
+    {
+        pager->fatal = 1;
+        return XGBA_A2_JOURNAL_MISSING;
+    }
+    pager->ramPages = cached;
+    return XGBA_A2_JOURNAL_OK;
+}
+
 int XgbaA2PagerSwitch(struct XgbaA2Pager *pager, uint8_t destination)
 {
     uint32_t generation;
@@ -106,6 +137,18 @@ int XgbaA2PagerSwitch(struct XgbaA2Pager *pager, uint8_t destination)
         return XGBA_A2_JOURNAL_INVALID_ARG;
     if (destination == pager->activePage)
         return XGBA_A2_JOURNAL_OK;
+
+    if (pager->ramPages != NULL)
+    {
+        // Pure RAM switching: neither read nor write E6 while browsing.
+        memcpy(pager->ramPages + pager->activePage * XGBA_A2_PC_BYTES,
+               pager->resident, XGBA_A2_PC_BYTES);
+        memcpy(pager->resident,
+               pager->ramPages + destination * XGBA_A2_PC_BYTES,
+               XGBA_A2_PC_BYTES);
+        pager->activePage = destination;
+        return XGBA_A2_JOURNAL_OK;
+    }
 
     status = FlushCurrent(pager);
     if (status != XGBA_A2_JOURNAL_OK)
@@ -136,6 +179,46 @@ int XgbaA2PagerPrepareSave(struct XgbaA2Pager *pager,
 
     if (!Ready(pager) || pageGenerations == NULL)
         return XGBA_A2_JOURNAL_INVALID_ARG;
+
+    if (pager->ramPages != NULL)
+    {
+        // Direct legacy native writes are invisible to dirty-bit schemes.
+        // Reconcile before comparing and staging EVERY cached group.
+        memcpy(pager->ramPages + pager->activePage * XGBA_A2_PC_BYTES,
+               pager->resident, XGBA_A2_PC_BYTES);
+        for (i = 0; i < XGBA_A2_PC_PAGES; i++)
+        {
+            struct XgbaA2JournalInfo info;
+            uint8_t *pageData = pager->ramPages + i * XGBA_A2_PC_BYTES;
+            uint32_t generation = pager->staged[i] != 0
+                ? pager->staged[i] : pager->committed[i];
+            status = XgbaA2JournalEqualsPageGeneration(
+                &pager->io, i, generation, pageData, XGBA_A2_PC_BYTES);
+            if (status == XGBA_A2_JOURNAL_DIFFERENT)
+            {
+                status = XgbaA2JournalStagePage(&pager->io, i,
+                    pager->committed[i], pageData, XGBA_A2_PC_BYTES, &info);
+                if (status == XGBA_A2_JOURNAL_OK)
+                    pager->staged[i] = info.generation;
+                else if (status == XGBA_A2_JOURNAL_UNCHANGED)
+                    pager->staged[i] = 0;
+                else
+                {
+                    pager->fatal = 1;
+                    return status;
+                }
+            }
+            else if (status != XGBA_A2_JOURNAL_OK)
+            {
+                pager->fatal = 1;
+                return status;
+            }
+        }
+        for (i = 0; i < XGBA_A2_PC_PAGES; i++)
+            pageGenerations[i] = pager->staged[i] != 0
+                ? pager->staged[i] : pager->committed[i];
+        return XGBA_A2_JOURNAL_OK;
+    }
 
     PAGER_TRACE(5, pager->activePage);
     status = FlushCurrent(pager);

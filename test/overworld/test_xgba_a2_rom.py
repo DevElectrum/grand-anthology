@@ -12,6 +12,15 @@ import xgba_a2_rom as a2
 
 
 class A2HeaderTests(unittest.TestCase):
+    def test_r8_descriptor_does_not_overlap_e7_probe(self):
+        self.assertEqual(len(a2.R8_DESCRIPTOR), 16)
+        self.assertEqual(a2.R8_DESCRIPTOR[:8], b"XGBARAM8")
+        self.assertEqual(int.from_bytes(a2.R8_DESCRIPTOR[8:12], "little"), 1)
+        self.assertEqual(int.from_bytes(a2.R8_DESCRIPTOR[12:16], "little"), 0x400000)
+        self.assertEqual(a2.R8_OFFSET, 0x0FFFFF00)
+        self.assertLess(a2.R8_OFFSET + 16, a1.PROBE_OFFSET)
+
+
     def test_only_e6_revision_and_checksum_change(self):
         header = bytearray((i * 17 + 13) & 255 for i in range(0xC0))
         header[0xB5:0xBC] = a1.MAGIC

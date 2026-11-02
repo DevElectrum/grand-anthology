@@ -13,6 +13,8 @@ struct XgbaA2Pager
     uint32_t committed[XGBA_A2_PC_PAGES];
     uint32_t staged[XGBA_A2_PC_PAGES];
     uint8_t activePage;
+    // Optional R8 RAM cache; never serialized and never owned by E6.
+    uint8_t *ramPages;
     uint8_t ready;
     uint8_t fatal;
 };
@@ -24,6 +26,10 @@ int XgbaA2PagerInit(struct XgbaA2Pager *pager,
 int XgbaA2PagerSwitch(struct XgbaA2Pager *pager, uint8_t destination);
 int XgbaA2PagerPrepareSave(struct XgbaA2Pager *pager,
                            uint32_t pageGenerations[XGBA_A2_PC_PAGES]);
+// Enables all 112 cached boxes only after eight exact-generation reads.
+// The active native PC must byte-match the selected committed page.
+int XgbaA2PagerEnableRam(struct XgbaA2Pager *pager, void *ram, uint32_t bytes);
+
 int XgbaA2PagerCommit(struct XgbaA2Pager *pager,
                       const uint32_t committedGenerations[XGBA_A2_PC_PAGES]);
 
