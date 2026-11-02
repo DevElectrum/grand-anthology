@@ -116,7 +116,14 @@ int XgbaR8CreateTestPokemon(void)
 
         if (!XgbaA2GameMoveGlobalBoxMon(13, 4, 14, 5)
             || !XgbaA2GameMoveGlobalBoxMon(27, 7, 28, 8)
-            || !VerifyTestPokemonRecords())
+            || !VerifyOne(XgbaA2GameGlobalBoxMon(0, 0), SPECIES_BULBASAUR,
+                          0x12345678U, ITEM_POTION)
+            || !VerifyOne(XgbaA2GameGlobalBoxMon(111, 29), SPECIES_CHARMANDER,
+                          0x23456789U, ITEM_SUPER_POTION)
+            || !VerifyOne(XgbaA2GameGlobalBoxMon(14, 5), SPECIES_SQUIRTLE,
+                          0x3456789AU, ITEM_POTION)
+            || !VerifyOne(XgbaA2GameGlobalBoxMon(28, 8), SPECIES_PIDGEY,
+                          0x456789ABU, ITEM_SUPER_POTION))
             return 0;
     }
 
