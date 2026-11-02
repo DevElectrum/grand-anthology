@@ -1,3 +1,17 @@
+# A2 native second-save pointer root cause and ASLR fix (Nov 2, 2026 UTC)
+
+**Verified failing root cause:** XGBA real second-save run 41408700495, after clean first Save/cold Continue, reported `A2_TRANSACTION_TRACE` stage 0xE4, `A2_NATIVE_WRITE_TRACE` stage **0xE3** (resident `pc != gPokemonStoragePtr`), and **zero** `A2_FLASH_WRITE_TRACE`. No Flash programming was attempted. The previous committed cohort counter1 remained intact, and no new metadata was published. The earlier description “Flash slot0 failed” was too broad. This is an address/lifecycle bug, not a Flash bank or journal CRC defect.
+
+**Actual path:** `src/load_save.c MoveSaveBlocks_ResetHeap` copies SaveBlock1/2 and PokemonStorage to heap, calls `SetSaveBlocksPointers` which randomizes all addresses (including `gPokemonStoragePtr`), then restores copies at their new location. `src/xgba_a2_pager.c XgbaA2PagerInit` held `pager->resident` captured from an earlier address and did not track later ASLR moves. This is invoked by overworld/map/battle transitions, including between cold Continue and Save. The native-writer strict guard correctly prevented a stale PC from being saved.
+
+**Corrective patch (experimental branch only):** `include/xgba_a2_game.h` declares `XgbaA2GameRebindRelocatedPc`. `src/save.c` implements it with guards `sA2Ready && sA2Pager.ready && !sA2Pager.fatal`; only updates `sA2Pager.resident = gPokemonStoragePtr`, preserving activePage, committed/staged generations, error state and journal layout. `src/load_save.c` calls it A2-only **AFTER** `*gPokemonStoragePtr = *pokemonStorageCopy` and BEFORE heap reset. Standard and A1 builds unchanged. The original native guard `pc != gPokemonStoragePtr` is retained. Test `test/overworld/test_xgba_a2_pc_rebase.py` checks ordering, ABI-neutral behavior and guard presence. Both A2 CI workflows trigger on these files.
+
+**Running acceptance:** [real-XGBA second-save CI 41409715346](https://github.com/DevElectrum/grand-anthology/actions/runs/41409715346), [storage + A1 native regression 41409710343](https://github.com/DevElectrum/grand-anthology/actions/runs/41409710343). The fast `storage-format` portion passed. These jobs were still compiling during the last check; **do not yet claim second save fixed**. Verify end-to-end exact sequence: first commit counter1/meta1 native slot1; cold Continue; second commit counter2/meta2 native slot0; cold Continue counter2, auditor remains coherent 112 boxes, recovery false.
+
+**Next after green:** real PC page-switch persistence/corruption tests; then global stored-Pokemon counts and held unique item scans, bag/collection features. No Nyx, user saves, Mosaic, main, accepted E7 emulator source, or release touched while owner is ill.
+
+---
+
 # A2 second-save native writer diagnostics (Nov 2, 2026 UTC)
 
 **Stable green gate:** The frozen E7 XGBA real New Game, first 112-box E6 journal Save, independent on-disk audit, and independent cold Continue with matching counter=1 all passed in run 41386117673. A1 regression and ordinary host storage tests also pass. Never regress or alter this committed cohort.
