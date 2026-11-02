@@ -10,6 +10,7 @@ SYMBOLS = {
     "gSaveBlock1Ptr": "A2_SB1_PTR",
     # A2-only volatile pointer, stored by the live menu initialization.
     "gXgbaA2UsmStateProbe": "A2_USM_STATE_PTR",
+    "gXgbaA2SaveDialogTrace": "A2_SAVE_DIALOG_TRACE",
 }
 
 # These may be hidden by release LTO. Do not guess if unavailable.
@@ -55,6 +56,9 @@ def main():
     usm = found["gXgbaA2UsmStateProbe"]
     if not ((0x02000000 <= usm < 0x02040000) or (0x03000000 <= usm < 0x03008000)):
         parser.error("live USM pointer symbol outside GBA RAM")
+    trace = found["gXgbaA2SaveDialogTrace"]
+    if not ((0x02000000 <= trace < 0x02040000) or (0x03000000 <= trace < 0x03008000)):
+        parser.error("A2 Save callback trace outside GBA RAM")
 
     output = Path(args.github_env)
     with output.open("a") as handle:
