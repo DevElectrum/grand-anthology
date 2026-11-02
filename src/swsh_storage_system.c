@@ -51,6 +51,9 @@
 #include "swsh_storage_system.h"
 #if defined(XGBA_A2) && XGBA_A2
 #include "xgba_a2_game.h"
+#if defined(XGBA_R8) && XGBA_R8
+#include "xgba_r8_memory.h"
+#endif
 #endif
 
 /*
@@ -3031,6 +3034,51 @@ static void Task_BulkRelease(u8 taskId)
         case 0:
             ClearBottomWindow();
             sBulkReleaseCount = 0;
+#if defined(XGBA_R8) && XGBA_R8
+            {
+                // R8-owned scratch. SaveBlock1 bag is fixed ABI and must never
+                // be enlarged or partially updated by a failed bulk return.
+                struct Bag *snapshot = (struct Bag *)(XGBA_R8_RAM_BASE + 0x50000U);
+                bool8 allItemsReturned = TRUE;
+
+                if (!XgbaA2GameCollectionReady())
+                    allItemsReturned = FALSE;
+                else
+                {
+                    *snapshot = gSaveBlock1Ptr->bag;
+                    for (i = 0; i < IN_BOX_COUNT; i++)
+                    {
+                        if (sBulkReleaseMask & (1u << i))
+                        {
+                            enum Item held = GetBoxMonDataAt(StorageGetCurrentBox(), i, MON_DATA_HELD_ITEM);
+                            if (held != ITEM_NONE && !AddBagItem(held, 1))
+                            {
+                                allItemsReturned = FALSE;
+                                break;
+                            }
+                        }
+                    }
+                    if (!allItemsReturned)
+                        gSaveBlock1Ptr->bag = *snapshot;
+                }
+                if (!allItemsReturned)
+                {
+                    PrintMessage(MSG_BAG_FULL);
+                    sStorage->state = 6;
+                    break;
+                }
+                // Every item transfer succeeded. Only now delete Pokémon.
+                for (i = 0; i < IN_BOX_COUNT; i++)
+                {
+                    if (sBulkReleaseMask & (1u << i))
+                    {
+                        DestroyBoxMonIconAtPosition(i);
+                        ZeroBoxMonAt(StorageGetCurrentBox(), i);
+                        sBulkReleaseCount++;
+                    }
+                }
+            }
+#else
             for (i = 0; i < IN_BOX_COUNT; i++)
             {
                 if (sBulkReleaseMask & (1u << i))
@@ -3044,6 +3092,7 @@ static void Task_BulkRelease(u8 taskId)
                     sBulkReleaseCount++;
                 }
             }
+#endif
             sBulkKeptCount = CountMonsInBox(StorageGetCurrentBox());
             sBulkReleaseMask = 0;
             BulkReleaseUpdateIcons();
