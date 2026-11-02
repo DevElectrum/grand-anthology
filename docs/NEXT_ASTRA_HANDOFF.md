@@ -1,3 +1,14 @@
+# A2 save-input UI verification recovery checkpoint (Nov 2 UTC)
+
+New run 41371769872 was a legitimate FAIL: New Game/Hub passed, Lua Save input sequence finished, but strict tools/xgba_a2_storage.py audit refused with 'No valid A2 metadata commit'. Cold restart was skipped as designed. The generic SaveHarvest control sequence assumed Save at graphical menu wheel position 2. Current src/unbound_start_menu.c builds a dynamic 12-item list including Cheats, Bag, Quests, Save etc.; selecting position 2 may trigger an unrelated icon, so this is NOT yet evidence of a game journal bug.
+
+Now testing: commit 9be5fc64 adds OPTIONAL linked symbols sUsmState, sUsmMemory, gSaveAttemptStatus, gSaveCounter, gFlashMemoryPresent to tools/xgba_a2_symbol_env.py; never invent addresses. Commit 01a229dd rewrites tools/xgba_a2_runtime_save.lua to read actual graphical menu pointer and item list at well-established Usm_State offsets: selectedVisibleIdx +5, itemOffset +10, items +11, count +23. It moves right until exact USM_ICO_SAVE enum value 7, then and only then presses A to trigger save dialog; logs A2_XGBA_MENU_SELECTED_SAVE and save status/counters. If menu symbols unavailable it FAILS without pressing A. Follow-on run 41372623986 is in progress; inspect symbol resolver messages and the actual save audit result. No Nyx or player saves touched.
+
+If new run reaches selected Save but still fails audit, inspect gSaveAttemptStatus, gSaveCounter, flash-present readouts and whether save_dialog.c SaveConfirmInputCallback triggers one or more overwrite confirmation prompts on a blank save. Save screen uses sSaveDialogCallback and may require extra A; don't patch A2Save without proving it was invoked. If status shows error, investigate XgbaA2BootstrapCommit and guest E6 bus. Only classify save as good after valid E6 cohort audit and separate cold XGBA resume.
+
+All prior A1/ARM and real XGBA Hub tests remain green. Global 112-box count/held-item queries still have resident-only gaps documented in docs/ANTHOLOGY_A2_AUTONOMOUS_PLAN.md and docs/ANTHOLOGY_A2_BAG_ABI_AUDIT.md.
+
+---
 # A2 verified gameplay boot and save journal runtime gate (Nov 2 UTC)
 
 Confirmed green: A2 Collection Storage Contract run 41370773033 completed successfully, including storage/rollback tests, A1 native-Flash and 256 MiB format regression, and isolated A2 ARM compilation/E6 cartridge validation.
