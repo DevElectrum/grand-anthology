@@ -951,6 +951,51 @@ bool8 XgbaA2GameSelectGlobalBox(u16 globalBox)
     gPokemonStoragePtr->currentBox = box;
     return TRUE;
 }
+
+// The UI must only request a transfer after it has resolved both global
+// locations. Validation happens before the first write: a rejected move
+// leaves source, destination, held item and every save generation unchanged.
+// This operation never touches E6, changes the selected box or stores a
+// pointer into the resident native window.
+bool8 XgbaA2GameMoveGlobalBoxMon(u16 sourceBox, u8 sourcePos,
+                                 u16 destinationBox, u8 destinationPos)
+{
+    struct BoxPokemon *source = XgbaA2GameGlobalBoxMon(sourceBox, sourcePos);
+    struct BoxPokemon *destination =
+        XgbaA2GameGlobalBoxMon(destinationBox, destinationPos);
+
+    if (source == NULL || destination == NULL || source == destination)
+        return FALSE;
+    if (GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE
+        || GetBoxMonData(destination, MON_DATA_SPECIES) != SPECIES_NONE)
+        return FALSE;
+
+    // Exactly one complete 80-byte encrypted record is transferred.
+    // Any uncommitted operation is still recoverable from the old cohort.
+    memcpy(destination, source, sizeof(*destination));
+    memset(source, 0, sizeof(*source));
+    return TRUE;
+}
+
+// Swap is likewise preflighted and all-RAM, even across distinct groups.
+bool8 XgbaA2GameSwapGlobalBoxMons(u16 firstBox, u8 firstPos,
+                                  u16 secondBox, u8 secondPos)
+{
+    struct BoxPokemon *first = XgbaA2GameGlobalBoxMon(firstBox, firstPos);
+    struct BoxPokemon *second = XgbaA2GameGlobalBoxMon(secondBox, secondPos);
+    struct BoxPokemon temporary;
+
+    if (first == NULL || second == NULL || first == second)
+        return FALSE;
+    if (GetBoxMonData(first, MON_DATA_SPECIES) == SPECIES_NONE
+        || GetBoxMonData(second, MON_DATA_SPECIES) == SPECIES_NONE)
+        return FALSE;
+
+    memcpy(&temporary, first, sizeof(temporary));
+    memcpy(first, second, sizeof(temporary));
+    memcpy(second, &temporary, sizeof(temporary));
+    return TRUE;
+}
 #endif
 
 bool8 XgbaA2GameFindFreePage(u8 *foundPage)

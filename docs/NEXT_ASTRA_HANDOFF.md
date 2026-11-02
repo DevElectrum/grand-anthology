@@ -1,5 +1,8 @@
 # R8.4 ACTIVE INTEGRATION CHECKPOINT (Nov 2, 2026 UTC)
 
+**R8.4C1 global PC transfer backend (UNVERIFIED until CI):** Added game-side checked `XgbaA2GameMoveGlobalBoxMon` and `XgbaA2GameSwapGlobalBoxMons`, preflighted for invalid global ID/slot, missing source, occupied destination and self-alias. They move/swap complete 80-byte encrypted records in canonical resident/R8 RAM only, never navigate or write the E6 journal. Disposable real-ARM test injects Squirtle in Box 14 and Pidgey in Box 28, moves them across 14/15 and 28/29 seams, rejects bad operations, double-swaps occupied Boxes 1/112 and verifies exact bytes. It then traverses all 112 box IDs, saves, cold restarts and checks sources empty and destinations exact. **Backend only:** not yet driven from GUI. Both PC graphical chooser/carry paths still local-only; do not claim UI transfer completed or merge. No production save or live ROM touched.
+
+
 **R8.4 full ARM traversal gate (UNVERIFIED):** Source test now visits all 112 box IDs, checking every group/local selection and verifying the genuine Box 1 and Box 112 Pokémon after each transition. It explicitly wraps 112->1, then saves with global Box 30 selected; cold Continue must confirm that selection plus both Pokémon. All eight group generations are expected to advance once. Wait for the triggered real-emulator CI and independent auditor before accepting. **Known remaining graphical blockers** in both PC engines: carrying a Pokémon prevents cross-group navigation; classic Choose Box remains restricted to 14 local boxes. This test does NOT simulate graphical PC operations or resolve those gaps. Keep the experimental branch isolated; no main, Mosaic, frozen E7 or player saves touched.
 
 

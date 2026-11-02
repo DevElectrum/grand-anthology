@@ -85,7 +85,7 @@ jobs:
           grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/r8-first.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-first-audit.txt
           grep -q '^counter: 1$' /tmp/r8-first-audit.txt
-      - name: Second Save creates real Pokémon in boxes 1 and 112
+      - name: Second Save exercises real global moves, swaps and 112 boxes
         env:
           A2_ACTION: save-again
           A2_EXPECTED_SAVE_COUNTER: 1
@@ -104,7 +104,7 @@ jobs:
           # Full 112-box navigation changes each group's native currentBox.
           # All eight page generations advance exactly once on Save2.
           grep -Fq 'page_generations: [3, 3, 3, 3, 3, 3, 3, 3]' /tmp/r8-second-audit.txt
-      - name: Cold Continue verifies both game-generated Pokémon exactly
+      - name: Cold Continue verifies game-generated Pokémon and global transfers
         env:
           A2_ACTION: resume
           A2_EXPECTED_SAVE_COUNTER: 2

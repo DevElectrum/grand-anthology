@@ -24,6 +24,13 @@ bool8 XgbaA2GameCollectionReady(void);
 bool8 XgbaA2GameFreshUncommitted(void);
 bool8 XgbaA2GameSelectGlobalBox(u16 globalBox);
 struct BoxPokemon *XgbaA2GameGlobalBoxMon(u16 globalBox, u8 position);
+// Checked, in-memory, exact-record transfers. Return FALSE without mutations
+// for invalid IDs, empty source, occupied move target or identical positions.
+// The caller must not retain pointers across a subsequent group switch.
+bool8 XgbaA2GameMoveGlobalBoxMon(u16 sourceBox, u8 sourcePos,
+                                 u16 destinationBox, u8 destinationPos);
+bool8 XgbaA2GameSwapGlobalBoxMons(u16 firstBox, u8 firstPos,
+                                  u16 secondBox, u8 secondPos);
 #endif
 #endif
 
