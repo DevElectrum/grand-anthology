@@ -56,6 +56,8 @@ class TestA2MenuProbe(unittest.TestCase):
         self.assertIn('A2_XGBA_AWAITING_INITIAL_E6_BOOTSTRAP', runner)
         self.assertIn('A2_XGBA_INITIAL_SAVE_BOOTSTRAP_TIMEOUT', runner)
         self.assertIn('A2_XGBA_BOOTSTRAP_IN_PROGRESS', runner)
+        self.assertEqual(runner.count('saveStage == 6 or saveStage == 8'), 2)
+        self.assertIn('The native counter increments BEFORE the metadata commit', runner)
         self.assertIn('if phase == "await-commit" then', runner)
         self.assertIn('(emu:read32(saveDialogTraceAddr) & 256) ~= 0', runner)
         self.assertIn('if counter > 0 then', runner)
