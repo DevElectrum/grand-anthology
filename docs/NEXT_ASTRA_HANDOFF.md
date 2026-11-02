@@ -1,3 +1,13 @@
+# A2 E6 save bank bound; bootstrap in progress beyond old test window (Nov 2 UTC)
+
+- [Real E7 run 41384567010](https://github.com/DevElectrum/grand-anthology/actions/runs/41384567010): newly added `tools/xgba_a2_bind_save.lua` SUCCESSFULLY bound the existing 16MiB E6 image and verified **all 24 guest E6 header bytes** at 0x0F000000. Real New Game reached Hub, actual graphical Save and SaveDoSaveCallback executed. Unlike earlier `0xE5` failure, game save trace reached **stage 4** (`A2_SAVE_TRACE(4, 1)` = 0x04000001), proving `XgbaA2GuestBusBind` succeeded and `XgbaA2BootstrapCommit` started. No error result observed. Lua's old nine-confirmation sequence then quit at frame 7187 with `SAVE_DIALOG_EXHAUSTED_WITHOUT_NATIVE_COMMIT` while the bootstrap was STILL in progress. This was **another test-script premature timeout**, not evidence of failed guest E6 writing.
+- `tools/xgba_a2_runtime_save.lua` commit `9e64049c8da78a037298c287cf5eee460f46f062`: after `SaveDoSaveCallback` bit8 appears, stops all A presses, enters `await-commit`, logs progress every 600 frames with current stage, waits up to 12,000 emulated frames with no input; existing outer process timeout is 360 seconds. Only native counter advancement leads to E6 on-disk auditor, followed by cold XGBA resume with exact audited counter. If an actual error resets the game, the Lua trace fails and records last nonzero journal stage.
+- Source test `test/overworld/test_xgba_a2_menu_probe.py` now protects that input-free wait. Current runtime CI will be the latest `A2 XGBA disposable boot probe` run after commit `9e64049c`. Contract CI source test triggered after commit `5007b010`. Inspect conclusions before claiming success.
+- The code currently creates 8 PC pages each with 2 A/B generations (16 x 34,144-byte writes and CRC readbacks), and must perform 8-bit guest bus I/O. Initial bootstrap may take many emulator frames despite a fast menu. **Do not conclude a hang from stage4 alone until the new bounded wait and state trace show it.**
+- No changes to game save ABI, native Flash integrity rules, actual user saves, frozen E7 or Mosaic.
+
+---
+
 # A2 E6 binding root cause and headless test fix (Nov 2, 2026 UTC)
 
 - **Confirmed root cause of first save failure:** disposable [XGBA run 41383785345](https://github.com/DevElectrum/grand-anthology/actions/runs/41383785345) logged A2 save trace `0xE5000000` (stage 0xE5: `XgbaA2GuestBusBind` failed to see 24-byte E6 signature at 0x0F000000). It occurred after the real graphical Save callback, BEFORE journal initialization, native Flash write, or metadata commit.
