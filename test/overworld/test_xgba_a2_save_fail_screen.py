@@ -21,6 +21,12 @@ class TestA2SaveFailureScreen(unittest.TestCase):
         self.assertIn("SetMainCallback2(CB2_FadeAndReturnToTitleScreen);", branch)
         self.assertIn("SaveFailedScreenTextPrint(sA2UnsupportedLink ?", branch)
 
+    def test_custom_charmap_newlines_are_not_double_escaped(self):
+        source = (Path(__file__).resolve().parents[2] / "src" / "save_failed_screen.c").read_text()
+        text = source[source.index("static const u8 sText_A2SaveFailed"):source.index("static void CB2_WipeSave(void)\\n{")]
+        self.assertIn(r"\\n", text)
+        self.assertNotIn(r"\\\\n", text)
+
     def test_original_legacy_failure_code_remains_separate(self):
         source = (Path(__file__).resolve().parents[2] / "src" / "save_failed_screen.c").read_text()
         start = source.index("static void CB2_WipeSave(void)\n{")
