@@ -15,8 +15,8 @@ local expectedStage = engine == "classic" and 4 or 5
 local expectedOptionsStage = engine == "classic" and 7 or 8
 local expectedChooserStage = engine == "classic" and 9 or 10
 local action = os.getenv("R8_PC_ACTION") or "entry"
-assert(action == "entry" or action == "preview-cancel")
-local chooserTraceAddr = action == "preview-cancel" and address("A2_R8_PC_CHOOSER_TRACE") or nil
+assert(action == "entry" or action == "preview-cancel" or action == "jump-commit")
+local chooserTraceAddr = action ~= "entry" and address("A2_R8_PC_CHOOSER_TRACE") or nil
 local A, B = 1 << C.GBA_KEY.A, 1 << C.GBA_KEY.B
 local START = 1 << C.GBA_KEY.START
 local UP, DOWN = 1 << C.GBA_KEY.UP, 1 << C.GBA_KEY.DOWN
@@ -26,6 +26,7 @@ local frame, stage = 0, "boot"
 local queue, index, remaining = {}, 1, 0
 local moveX, moveY, retries, clicks = 0, 0, 0, 0
 local lastUiTrace = nil
+local commitStarted = 0
 -- Actual Region Hub collision map: y=8 is a wall east of x=8,
 -- and y=9 is a counter east of x=6. Go around the west end,
 -- then approach the PC from the southern public aisle.
@@ -221,7 +222,11 @@ callbacks:add("frame", function()
     if stage == "preview-open-jump" then
         if drive() then
             verifyChooser(0)
-            stage = "preview-right"
+            if action == "jump-commit" then
+                stage = "commit-right"
+            else
+                stage = "preview-right"
+            end
             schedule({{R, 2}, {0, 75}})
         end
         return
@@ -253,6 +258,41 @@ callbacks:add("frame", function()
             report("R8_PC_CONTROLLER_PREVIEW_CANCEL_PASS active_page=0 box=0")
             emu:setKeys(0)
             os.exit(0)
+        end
+        return
+    end
+    if stage == "commit-right" then
+        if drive() then
+            verifyChooser(14)
+            stage = "commit-select"
+            schedule({{A, 2}, {0, 140}})
+        end
+        return
+    end
+    if stage == "commit-select" then
+        if drive() then
+            commitStarted = frame
+            stage = "commit-await"
+            emu:setKeys(0)
+        end
+        return
+    end
+    if stage == "commit-await" then
+        emu:setKeys(0)
+        local witness = emu:read32(uiTrace)
+        local marker = emu:read32(chooserTraceAddr)
+        if witness == expectedStage and (marker & 0x40000000) ~= 0 then
+            local page = (marker >> 16) & 0xFF
+            local localBox = marker & 0xFFFF
+            if page ~= 1 or localBox ~= 0 then
+                fail("jump_committed_wrong_resident_box page=" .. page
+                     .. " local_box=" .. localBox)
+            end
+            report("R8_PC_CONTROLLER_JUMP_COMMIT_PASS global_box=15 resident_page=1 local_box=0")
+            os.exit(0)
+        end
+        if frame - commitStarted >= 2500 then
+            fail("jump_commit_never_reopened_storage")
         end
         return
     end

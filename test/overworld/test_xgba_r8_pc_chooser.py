@@ -133,6 +133,12 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("verifyChooser(0)", controller)
         self.assertIn("R8_PC_CONTROLLER_PREVIEW_CANCEL_PASS", controller)
         self.assertIn("R8_PC_ACTION: preview-cancel", workflow)
+        self.assertIn('action == "jump-commit"', controller)
+        self.assertIn("verifyChooser(14)", controller)
+        self.assertIn("R8_PC_CONTROLLER_JUMP_COMMIT_PASS", controller)
+        self.assertIn("jump_committed_wrong_resident_box", controller)
+        self.assertIn("R8_PC_ACTION: jump-commit", workflow)
+        self.assertIn("diff -u /tmp/r8-pc-before.txt /tmp/r8-pc-jump-audit.txt", workflow)
         self.assertIn("diff -u /tmp/r8-pc-before.txt /tmp/r8-pc-preview-audit.txt", workflow)
 
     def test_swsh_uses_paged_14_cell_preview_without_switching_on_hover(self):

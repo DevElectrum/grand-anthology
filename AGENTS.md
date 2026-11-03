@@ -1,3 +1,6 @@
+# Nov 3 C3C next controller gate: global Jump commit
+A separate jump-commit controller run now selects remote Box 15 using actual R/A in the verified graphical chooser, waits for PC teardown/reopen, and asserts resident page=1 local box=0 without E6 save changes. This is an in-session UI assertion only; Save2/cold Continue after Jump remains a separate required gate. Latest branch source and Actions must pass before acceptance, no player saves or main touched.
+
 # Nov 3 C3C Jump preview/cancel test slice
 Real controller entry passed both PC frontends in run 41607139661 (commit 1a2f78b7). New test-only cursor/chooser witnesses and second controller script mode now check actual box-title Jump, R/L preview Box 15 and return Box 1, B cancel, resident page unchanged and independent E6 save audit. Must inspect new CI before acceptance. This is not yet global Jump commit, deposit/withdraw UI or release. No changes to main, Mosaic or emulator.
 
