@@ -1,3 +1,6 @@
+# R8.4 C3C exact whole-collection proof (2026-11-03)
+A follow-up to Save3 controller matrix adds a canonical SHA-256 digest over all 3,360 encrypted BoxPokemon slots from the independently audited eight-page E6 cohort. Demand bit-identical Save2 vs Save3 regardless of selected current box. Save3 already requires a fresh real XGBA cold Continue and record identity checks. This remains experimental; check latest CI before declaring accepted.
+
 # R8.4 C3C Save3 CI wiring correction
 The first Save3 commit e1e9c532 did NOT get a controller workflow test: malformed YAML due an interpolation error while injecting shell regexes, and source regression 41613068417 checked the fixture declaration in the wrong header. The corrected workflow was rebuilt from prior dcc19fa2, retaining every established GUI check and adding Save2/Jump-Save3/Cold Continue. Do not claim new persistence acceptance until the replacement matrix passes.
 

@@ -222,6 +222,14 @@ def audit(path):
             "active_page": selected + 1,
             "pc_boxes": PC_PAGES * BOXES_PER_PAGE,
             "slots": PC_PAGES * BOXES_PER_PAGE * BOX_SLOTS,
+            # Exact 80-byte BoxPokemon bytes for all 3,360 slots across
+            # all eight cohort-resolved pages. Selected-box metadata,
+            # wallpapers and currentBox are intentionally excluded so a
+            # GUI-only Jump cannot legitimately change this digest.
+            "collection_boxes_sha256": hashlib.sha256(
+                b"".join(page[BOX_REGION_START:BOX_REGION_END]
+                         for page in pages)
+            ).hexdigest(),
             "healthy_page_copies": counts,
             "healthy_metadata_copies": len(metadata),
             "metadata_generation": meta_generation,

@@ -78,3 +78,8 @@ Do not merge or issue a playable build until graphical tests, destructive-operat
 - All internal traces and the counter-sensitive verifier live under XGBA_R8_TEST, never a player build. Existing Save2 requirement page 2/local 1 remains independently strict. No emulator, Mosaic, native save format or production storage change.
 - A controller callback is not an independent snapshot of every record's 80 bytes; full byte-for-byte disk provenance across Save2 and Save3 remains an additional hardening opportunity. A green run proves selected box plus record identity/count and E6 consistency, not complete graphical transfer support.
 - Do not label gate passed until **both frontend matrix jobs**, real XGBA Save3, cold Continue, and source regression are green.
+
+## C3C offline exact-record digest hardening (staged after Save3 acceptance)
+- The independent E6 cohort auditor now computes SHA-256 over the concatenated 80-byte encrypted BoxPokemon records in all 8 selected, CRC-validated native/page generations: exactly 3,360 slots (268,800 bytes). It intentionally excludes mutable box index/name/wallpaper fields.
+- The Save3 matrix extracts the canonical digest after populated Save2 and again after controller Jump+Save3 and demands an exact match, before cold Continue. This is an independent byte-for-byte proof that GUI navigation did not silently rewrite or lose any Pokémon, stronger than the test-only game fixture's species/personality/item/marking checks.
+- Only offline auditing and CI assertions change; no production storage, A2 format, emulator, or user saves change. Require both matrix branches green again before full C3C acceptance.

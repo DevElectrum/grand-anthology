@@ -192,6 +192,13 @@ jobs:
           grep -q 'R8_PC_CONTROLLER_REAL_SAVE3_COMMITTED counter=3 stage=8' /tmp/r8-pc-save3.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-save3-audit.txt
           grep -q '^counter: 3$' /tmp/r8-pc-save3-audit.txt
+          # Audit resolves the entire committed eight-page cohort, not a
+          # guessed active-page buffer. No 80-byte BoxPokemon may change.
+          grep '^collection_boxes_sha256:' /tmp/r8-pc-save2-audit.txt > /tmp/r8-pc-boxes-save2.txt
+          grep '^collection_boxes_sha256:' /tmp/r8-pc-save3-audit.txt > /tmp/r8-pc-boxes-save3.txt
+          test -s /tmp/r8-pc-boxes-save2.txt
+          test -s /tmp/r8-pc-boxes-save3.txt
+          diff -u /tmp/r8-pc-boxes-save2.txt /tmp/r8-pc-boxes-save3.txt
       - name: Cold Continue rejects missing records and wrong Box15 selection
         env:
           A2_ACTION: resume

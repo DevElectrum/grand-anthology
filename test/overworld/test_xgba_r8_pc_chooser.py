@@ -105,6 +105,13 @@ class R8PcChooserSourceTests(unittest.TestCase):
         script = (ROOT / "tools" / "xgba_r8_pc_controller.lua").read_text()
         self.assertIn("local waypoints = {{16, 6}, {6, 6}, {6, 13}, {17, 13}, {17, 10}}", script)
 
+    def test_c3c_disk_auditor_hashes_exact_3360_box_pokemon(self):
+        auditor = (ROOT / "tools" / "xgba_a2_storage.py").read_text()
+        self.assertIn('"collection_boxes_sha256"', auditor)
+        self.assertIn("page[BOX_REGION_START:BOX_REGION_END]", auditor)
+        self.assertIn("for page in pages", auditor)
+        self.assertIn("PC_PAGES * BOXES_PER_PAGE * BOX_SLOTS == 3360", auditor)
+
     def test_c3c_jump_save3_cold_verifies_page_and_records(self):
         # Production validation must not be relaxed to accept a page mismatch.
         self.assertIn("XgbaR8VerifyTestPokemonAtCounter(sA2Committed.nativeCounter)", SAVE)
