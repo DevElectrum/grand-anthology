@@ -24,6 +24,7 @@ OPTIONAL_SYMBOLS = {
     "gFlashMemoryPresent": "A2_FLASH_PRESENT",
     "gSaveCounter": "A2_SAVE_COUNTER",
     "gSaveAttemptStatus": "A2_SAVE_ATTEMPT_STATUS",
+    "gXgbaR8PcUiTrace": "A2_R8_PC_UI_TRACE",
 }
 
 

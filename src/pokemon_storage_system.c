@@ -1,4 +1,7 @@
 #include "global.h"
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+#include "xgba_r8_runtime_test.h"
+#endif
 #include "malloc.h"
 #include "bg.h"
 #include "data.h"
@@ -1632,6 +1635,10 @@ static void Task_PCMainMenu(u8 taskId)
 
 void ShowPokemonStorageSystemPC(void)
 {
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    // The live field event is the only trigger for this probe.
+    gXgbaR8PcUiTrace = 1;
+#endif
     if (SWSH_STORAGE_SYSTEM)
     {
         ShowPokemonStorageSystemPC_SwSh();
@@ -2114,6 +2121,9 @@ static void EnterPokeStorage(u8 boxOption)
         sStorage->taskId = CreateTask(Task_InitPokeStorage, 3);
         sLastUsedBox = StorageGetCurrentBox();
         SetMainCallback2(CB2_PokeStorage);
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 2;
+#endif
     }
 }
 
@@ -2392,6 +2402,10 @@ enum {
 
 static void Task_PokeStorageMain(u8 taskId)
 {
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    if (sStorage->state == MSTATE_HANDLE_INPUT)
+        gXgbaR8PcUiTrace = 4;
+#endif
     switch (sStorage->state)
     {
     case MSTATE_HANDLE_INPUT:

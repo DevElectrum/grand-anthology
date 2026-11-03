@@ -73,6 +73,15 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertLess(body.index("BoxMonToMon(&snapshot"), body.index("ZeroBoxMonData(source)"))
         self.assertIn("XgbaA2GameWithdrawGlobalBoxMon", HEADER)
 
+    def test_c3c_graphical_probe_is_test_only(self):
+        self.assertIn("gXgbaR8PcUiTrace = 1;", CLASSIC)
+        self.assertIn("gXgbaR8PcUiTrace = 2;", CLASSIC)
+        self.assertIn("gXgbaR8PcUiTrace = 3;", SWSH)
+        self.assertIn("gXgbaR8PcUiTrace = 4;", CLASSIC)
+        self.assertIn("gXgbaR8PcUiTrace = 5;", SWSH)
+        self.assertIn("#if defined(XGBA_R8_TEST) && XGBA_R8_TEST", CLASSIC)
+        self.assertIn("#if defined(XGBA_R8_TEST) && XGBA_R8_TEST", SWSH)
+
     def test_swsh_uses_paged_14_cell_preview_without_switching_on_hover(self):
         self.assertIn("sChooseBoxMenu->previewPage", SWSH)
         self.assertIn("if (sChooseBoxMenu->globalMode && JOY_NEW(L_BUTTON | R_BUTTON))", SWSH)

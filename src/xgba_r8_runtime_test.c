@@ -7,6 +7,8 @@
 #if defined(XGBA_R8_TEST) && XGBA_R8_TEST
 // Disposable CI-only failure locator. Never used by production builds.
 EWRAM_DATA volatile u32 gXgbaR8FixtureStage = 0;
+// Instrumentation for genuine graphical PC callbacks, disposable ROM only.
+EWRAM_DATA volatile u32 gXgbaR8PcUiTrace = 0;
 static int R8FixtureFail(u32 stage)
 {
     gXgbaR8FixtureStage = stage;

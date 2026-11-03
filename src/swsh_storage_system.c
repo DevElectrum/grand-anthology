@@ -1,4 +1,7 @@
 #include "global.h"
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+#include "xgba_r8_runtime_test.h"
+#endif
 #include "malloc.h"
 #include "battle.h"
 #include "bg.h"
@@ -1890,6 +1893,9 @@ static void EnterPokeStorage(u8 boxOption)
         sStorage->taskId = CreateTask(Task_InitPokeStorage, 3);
         sLastUsedBox = StorageGetCurrentBox();
         SetMainCallback2(CB2_PokeStorage);
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 3;
+#endif
     }
 }
 
@@ -2162,6 +2168,10 @@ static void Task_A2ReopenPage(u8 taskId)
 
 static void Task_PokeStorageMain(u8 taskId)
 {
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    if (sStorage->state == MSTATE_HANDLE_INPUT)
+        gXgbaR8PcUiTrace = 5;
+#endif
     switch (sStorage->state)
     {
     case MSTATE_HANDLE_INPUT:

@@ -1,0 +1,122 @@
+name: R8.4 C3C genuine controller entry into both PC frontends
+on:
+  push:
+    branches:
+      - xgba/a2-collection-lab
+    paths:
+      - '.github/workflows/R8-PC-Controller.yml'
+      - 'tools/xgba_r8_pc_controller.lua'
+      - 'tools/xgba_a2_symbol_env.py'
+      - 'src/pokemon_storage_system.c'
+      - 'src/swsh_storage_system.c'
+      - 'src/xgba_r8_runtime_test.c'
+      - 'include/xgba_r8_runtime_test.h'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-controller-pc-entry:
+    strategy:
+      fail-fast: false
+      matrix:
+        pc: [swsh, classic]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      A2_E6_SAVE_PATH: build/r8-ci/test.sav
+      R8_PC_ENGINE: ${{ matrix.pc }}
+      A2_ACTION: save
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: DevElectrum/xgba
+          ref: 4e0f59185e2c7d7ed5333d8adc20e8d3ad94d05c
+          path: build/r8-ci/xgba
+          persist-credentials: false
+      - name: Select frontend in disposable CI checkout only
+        run: |
+          if [ "${{ matrix.pc }}" = "classic" ]; then
+            grep -qx '#define SWSH_STORAGE_SYSTEM TRUE' include/swsh_storage_system.h
+            sed -i 's/^#define SWSH_STORAGE_SYSTEM TRUE$/#define SWSH_STORAGE_SYSTEM FALSE/' include/swsh_storage_system.h
+            grep -qx '#define SWSH_STORAGE_SYSTEM FALSE' include/swsh_storage_system.h
+          else
+            grep -qx '#define SWSH_STORAGE_SYSTEM TRUE' include/swsh_storage_system.h
+          fi
+      - name: Install ARM and pinned XGBA headless toolchains
+        run: |
+          set -e
+          for source in /etc/apt/sources.list.d/*; do
+            if [ -f "$source" ] && grep -q packages.microsoft.com "$source"; then
+              sudo mv "$source" "$source.disabled"
+            fi
+          done
+          sudo apt-get update -o Acquire::Retries=5
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev libelf1 python3 build-essential cmake ninja-build \
+            pkg-config zlib1g-dev libcmocka-dev libsdl2-dev liblua5.4-dev
+      - name: C3 source guards
+        run: python3 test/overworld/test_xgba_r8_pc_chooser.py
+      - name: Build disposable instrumented game
+        run: |
+          set -e
+          make release -j4 XGBA_A1=1 XGBA_A2=1 XGBA_R8=1 XGBA_R8_TEST=1 \
+            BUILD_NAME=xgba-r8-test FILE_NAME=xgba-anthology-r8-test-native-release
+          python3 tools/xgba_a2_symbol_env.py xgba-anthology-r8-test-native-release.elf --github-env "$GITHUB_ENV"
+      - name: Build disposable R8 ROM and blank E6 sidecar
+        run: |
+          set -e
+          mkdir -p build/r8-ci
+          python3 tools/xgba_a1_assets.py pack \
+            --native xgba-anthology-r8-test-native-release.gba \
+            --manifest build/xgba-r8-test-release/a1-manifest.json \
+            --output build/r8-ci/layout.gba
+          python3 tools/xgba_a2_rom.py tag --r8 build/r8-ci/layout.gba build/r8-ci/test.gba
+          python3 tools/xgba_a2_rom.py verify --r8 build/r8-ci/test.gba
+          python3 tools/xgba_a2_storage.py blank build/r8-ci/test.sav
+          python3 tools/xgba_a2_storage.py audit-blank build/r8-ci/test.sav
+      - name: Build pinned XGBA real headless emulator
+        run: |
+          cmake -S build/r8-ci/xgba -B build/r8-ci/runner -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DM_CORE_GBA=ON -DM_CORE_GB=OFF \
+            -DBUILD_QT=OFF -DBUILD_SDL=OFF -DBUILD_HEADLESS=ON \
+            -DBUILD_SUITE=OFF -DENABLE_SCRIPTING=ON -DUSE_LUA=5.4 \
+            -DUSE_JSON_C=OFF -DUSE_FFMPEG=OFF -DUSE_EDITLINE=OFF
+          cmake --build build/r8-ci/runner --target mgba-headless --parallel 2
+      - name: Perform audited actual Save1
+        run: |
+          set -e
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/test.gba > /tmp/r8-pc-save1.log 2>&1 || {
+              tail -n 110 /tmp/r8-pc-save1.log
+              exit 1
+            }
+          grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/r8-pc-save1.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-before.txt
+          grep -q '^counter: 1$' /tmp/r8-pc-before.txt
+      - name: Walk to real Region Hub PC and enter graphical storage with controller
+        run: |
+          set -e
+          test -n "$A2_R8_PC_UI_TRACE"
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_r8_pc_controller.lua \
+            build/r8-ci/test.gba > /tmp/r8-pc-controller.log 2>&1 || {
+              tail -n 130 /tmp/r8-pc-controller.log
+              exit 1
+            }
+          grep -q 'R8_PC_CONTROLLER_SMOKE_PASS genuine_pc_ui_active=1' /tmp/r8-pc-controller.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-after.txt
+          diff -u /tmp/r8-pc-before.txt /tmp/r8-pc-after.txt
+      - name: Delete disposable ROM and save on success or failure
+        if: always()
+        run: |
+          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav
+          echo 'No gameplay ROM or save published.'

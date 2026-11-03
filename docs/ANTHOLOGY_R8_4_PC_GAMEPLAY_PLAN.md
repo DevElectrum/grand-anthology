@@ -40,3 +40,10 @@ Do not merge or issue a playable build until graphical tests, destructive-operat
 - **C4 safety:** preflight bulk held-item bag capacity atomically, protect favorite/legendary, test no-op/full/eggs/mail. Include targeted crash/power-loss and stale-cache recovery matrices before release.
 - **C5:** two graphical PC engines, real controller transitions, all boundary boxes, cross-region persistence, two saves/two cold restarts and emulated-frame performance evidence; freeze the pinned emulator separately. No migration or published playable ROM until every gate passes.
 - Worst-case normal C3B work: 80-byte copy, at most six party-slot checks, one BoxMonToMon conversion. No E6 I/O, 34 KiB group copy, or whole-collection scan while navigating.
+
+## C3C pilot: real controller-driven PC entry, both frontends (2026-11-03)
+- Separate matrix workflow R8-PC-Controller.yml builds disposable SwSh and Classic variants. Classic mode changes only a throwaway CI checkout, never the actual user/default game configuration.
+- Test-only volatile UI witness marks true game-field PC event (1), successful Classic/SwSh storage callback setup (2/3), and actual running graphical storage main-input loop (4/5). The linked ARM ELF exports its address; no guessed memory offsets.
+- Lua starts from audited E6 Save1, checks real RegionHub map ID, reads the player's current coordinates from SaveBlock1, moves with emulated D-pad to (17,10), faces the PC at (17,9), then sends bounded A input until the matching frontend's live UI witness appears. The script never directly invokes game routines or declares success on a rendered animation.
+- It independently audits the E6 storage again afterward, checking no unintended persisted changes. It emits exact failed coordinates/stage if movement or menu activation fails, rather than faking success.
+- **Pilot is PC-entry only.** It does not by itself certify deposit, withdraw, Jump, cancel, carrying or cross-page selection. Next, extend this same real-input harness for those paths with exact record and full Save2/cold restart verification. Never remove the cross-group carry guard to make a test pass.

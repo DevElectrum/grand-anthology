@@ -3,6 +3,7 @@
 
 // Non-distributed, test-only cartridge code.
 extern volatile u32 gXgbaR8FixtureStage;
+extern volatile u32 gXgbaR8PcUiTrace;
 int XgbaR8CreateTestPokemon(void);
 int XgbaR8VerifyTestPokemon(void);
 
