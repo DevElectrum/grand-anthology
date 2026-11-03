@@ -151,6 +151,14 @@ int XgbaR8CreateTestPokemon(void)
                   SPECIES_ZIGZAGOON, 29, 0x6789ABCDU, OTID_STRUCT_PLAYER_ID);
         CreateMon(&gParties[B_TRAINER_PLAYER][partyPosition + 1],
                   SPECIES_EEVEE, 30, 0x56789ABCU, OTID_STRUCT_PLAYER_ID);
+        // CreateMon initializes the record, but not its battle stats or HP.
+        // Without these calls, Zigzagoon is counted as fainted and the
+        // legitimate last-usable-party-mon deposit guard rejects Eevee.
+        CalculateMonStats(&gParties[B_TRAINER_PLAYER][partyPosition]);
+        CalculateMonStats(&gParties[B_TRAINER_PLAYER][partyPosition + 1]);
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][partyPosition], MON_DATA_HP) == 0
+            || GetMonData(&gParties[B_TRAINER_PLAYER][partyPosition + 1], MON_DATA_HP) == 0)
+            return R8FixtureFail(61);
         partyMon = &gParties[B_TRAINER_PLAYER][partyPosition + 1];
         item = ITEM_POTION;
         SetMonData(partyMon, MON_DATA_HELD_ITEM, &item);
