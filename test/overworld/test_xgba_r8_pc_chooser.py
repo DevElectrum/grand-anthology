@@ -6,6 +6,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 CLASSIC = (ROOT / "src" / "pokemon_storage_system.c").read_text()
 SWSH = (ROOT / "src" / "swsh_storage_system.c").read_text()
+FIELD_SPECIALS = (ROOT / "src" / "field_specials.c").read_text()
 SAVE = (ROOT / "src" / "save.c").read_text()
 HEADER = (ROOT / "include" / "xgba_a2_game.h").read_text()
 
@@ -110,6 +111,7 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("gXgbaR8PcUiTrace = 3;", SWSH)
         self.assertIn("gXgbaR8PcUiTrace = 4;", CLASSIC)
         self.assertIn("gXgbaR8PcUiTrace = 5;", SWSH)
+        self.assertIn("gXgbaR8PcUiTrace = 6;", FIELD_SPECIALS)
         self.assertIn("#if defined(XGBA_R8_TEST) && XGBA_R8_TEST", CLASSIC)
         self.assertIn("#if defined(XGBA_R8_TEST) && XGBA_R8_TEST", SWSH)
 

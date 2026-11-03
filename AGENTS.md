@@ -1,3 +1,6 @@
+# Nov 3 C3C second diagnostic
+Run 41606152856 reached the Hub PC but both controller pilots stopped after five A presses with no final storage witness. PC field script involves multiple prompts. New test-only DoPCTurnOnEffect witness stage=6 distinguishes physical PC entry from later storage-menu progress; controller logs each trace change and permits bounded multi-prompt progression. Inspect new CI before acceptance.
+
 # Nov 3 C3C navigation correction
 First C3C matrix run 41595855941 failed in BOTH UI variants before PC entry because the controller attempted to walk through Region Hub wall (16,8). The new route is derived from real layout binary, with tile-by-tile regression and waypoints via west passage and south aisle. Check CI at new branch head. Backend/journal stays untouched.
 

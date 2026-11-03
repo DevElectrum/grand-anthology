@@ -52,3 +52,8 @@ Do not merge or issue a playable build until graphical tests, destructive-operat
 - Run 41595855941 built both game variants, real Save1, and pinned emulator successfully, then failed *before PC entry* at player (16,7): input attempted (16,8), which the actual Region Hub 25x18 map.bin marks impassable.
 - Corrected the controller-only route: (16,7) → (16,6) → (6,6) → (6,13) → (17,13) → (17,10), then face north to PC (17,9). This avoids impassable wall row 8 and counter row 9. Actual collision map is validated by a new source regression for every intermediate tile.
 - No storage backend, journal, or accepted emulator changes. Controller failure was route planning, not evidence of a failing PC engine. Check the successor C3C run before claiming UI success.
+
+## C3C second controller diagnosis and safe prompt progression
+- On a7a0f225, both matrix jobs reached Region Hub PC tile, but the pilot rejected at *A press 5* with trace=0. The same game has a multi-stage PC script: boot text → Choose PC multichoice → login text → storage opened text → ShowPokemonStorageSystemPC → actual storage screen. Five presses were not enough evidence of a failure.
+- A test-only witness at DoPCTurnOnEffect now records stage 6, independently proving the physical PC trigger accepted A. The Lua script logs witness changes and allows the bounded multi-prompt sequence to finish, while rejecting a genuinely inert PC after 3 attempts and a script that never reaches storage after 14 attempts.
+- Workflow failure output filters actual controller diagnostics before noisy BIOS logs. No production PC behavior, RAM-backend, or journal change. C3C remains nonaccepted until both actual UI variants pass.

@@ -1,4 +1,7 @@
 #include "global.h"
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+#include "xgba_r8_runtime_test.h"
+#endif
 #include "debug.h"
 #include "malloc.h"
 #include "battle.h"
@@ -1082,6 +1085,11 @@ void DoPCTurnOnEffect(void)
 {
     if (FuncIsActiveTask(Task_PCTurnOnEffect) != TRUE && IsPlayerInFrontOfPC() == TRUE)
     {
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        // Independent evidence that A actually activated the physical PC.
+        // The later storage menu must still be reached through field scripts.
+        gXgbaR8PcUiTrace = 6;
+#endif
         u8 taskId = CreateTask(Task_PCTurnOnEffect, 8);
         gTasks[taskId].tPaused = FALSE;
         gTasks[taskId].tTaskId = taskId;

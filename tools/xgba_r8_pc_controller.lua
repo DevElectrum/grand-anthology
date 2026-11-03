@@ -19,6 +19,7 @@ local LEFT, RIGHT = 1 << C.GBA_KEY.LEFT, 1 << C.GBA_KEY.RIGHT
 local frame, stage = 0, "boot"
 local queue, index, remaining = {}, 1, 0
 local moveX, moveY, retries, clicks = 0, 0, 0, 0
+local lastUiTrace = nil
 -- Actual Region Hub collision map: y=8 is a wall east of x=8,
 -- and y=9 is a counter east of x=6. Go around the west end,
 -- then approach the PC from the southern public aisle.
@@ -150,12 +151,25 @@ callbacks:add("frame", function()
         return
     end
     if stage == "clicks" then
+        local witness = emu:read32(uiTrace)
+        if witness ~= lastUiTrace then
+            report("R8_PC_CONTROLLER_UI_TRACE old=" .. tostring(lastUiTrace)
+                   .. " new=" .. witness)
+            lastUiTrace = witness
+        end
         if drive() then
             clicks = clicks + 1
-            local witness = emu:read32(uiTrace)
             report("R8_PC_CONTROLLER_MENU_PROGRESS click=" .. clicks .. " trace=" .. witness)
-            if witness == 0 and clicks >= 5 then fail("pc_field_callback_not_entered") end
-            if clicks >= 9 then fail("pc_storage_screen_never_active") end
+            -- pc.inc has a startup text, a multichoice, login text and a
+            -- storage-open text before ShowPokemonStorageSystemPC is called.
+            -- Never expect that callback after only a few A presses.
+            if witness == 0 and clicks >= 3 then
+                fail("pc_turn_on_special_not_observed")
+            end
+            if witness == 6 and clicks >= 14 then
+                fail("pc_script_prompts_never_reached_storage")
+            end
+            if clicks >= 18 then fail("pc_storage_screen_never_active") end
             schedule({{A, 2}, {0, 115}})
         end
         return
