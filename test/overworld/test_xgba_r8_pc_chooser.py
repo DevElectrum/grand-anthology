@@ -114,7 +114,8 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("VerifyTestPokemonRecords()", runtime)
         self.assertIn("XgbaA2GamePage() == 1", runtime)
         self.assertIn("StorageGetCurrentBox() == 0", runtime)
-        self.assertIn("XgbaR8VerifyTestPokemonAtCounter(u32 counter)", HEADER)
+        fixture_header = (ROOT / "include" / "xgba_r8_runtime_test.h").read_text()
+        self.assertIn("XgbaR8VerifyTestPokemonAtCounter(u32 counter)", fixture_header)
         classic = CLASSIC.split("static void Task_PCMainMenu(u8 taskId)")[1]
         swsh = SWSH.split("static void Task_PCMainMenu(u8 taskId)")[1]
         self.assertIn("gXgbaR8PcUiTrace = 11;", classic)

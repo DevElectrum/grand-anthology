@@ -1,3 +1,6 @@
+# R8.4 C3C Save3 CI wiring correction
+The first Save3 commit e1e9c532 did NOT get a controller workflow test: malformed YAML due an interpolation error while injecting shell regexes, and source regression 41613068417 checked the fixture declaration in the wrong header. The corrected workflow was rebuilt from prior dcc19fa2, retaining every established GUI check and adding Save2/Jump-Save3/Cold Continue. Do not claim new persistence acceptance until the replacement matrix passes.
+
 # R8.4 C3C Save3 persistence gate (Nov 3, experimental)
 Controller Jump to Box 15 worked in both UIs at dcc19fa2 (run 41609705834), but prior test only checked resident RAM and unchanged Save1. Next commit introduces a real populated Save2 → graphical Jump → actual Save3 → full cold Continue matrix. Test-only A2 verifier now checks Box 30 after Save2 and Box 15 after Save3, while preserving five seeded Pokémon. Never describe this new gate as green until Actions verifies both Classic and SwSh jobs. No main, frozen emulator, Mosaic, real save, or release changes. Refer to docs/ANTHOLOGY_R8_4_PC_GAMEPLAY_PLAN.md.
 
