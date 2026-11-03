@@ -163,11 +163,19 @@ int XgbaR8CreateTestPokemon(void)
             || memcmp(&before, occupied, sizeof(before)) != 0)
             return R8FixtureFail(7);
 
-        if (!XgbaA2GameDepositPartyMonGlobal(partyPosition + 1, 42, &chosen)
-            || chosen != 0
-            || GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_NONE
-            || !VerifyTestPokemonRecords())
-            return R8FixtureFail(8);
+        // Separate transaction failure from return-slot, source-zero and
+        // record checks. The E9 trace records the precise failing stage.
+        if (!XgbaA2GameDepositPartyMonGlobal(partyPosition + 1, 42, &chosen))
+            return R8FixtureFail(81);
+        if (chosen != 0)
+            return R8FixtureFail(82);
+        if (GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_NONE)
+            return R8FixtureFail(83);
+        if (!VerifyOne(XgbaA2GameGlobalBoxMon(42, 0), SPECIES_EEVEE,
+                       0x56789ABCU, ITEM_POTION))
+            return R8FixtureFail(84);
+        if (!VerifyTestPokemonRecords())
+            return R8FixtureFail(85);
         if (GetMonData(&gParties[B_TRAINER_PLAYER][partyPosition], MON_DATA_SPECIES)
             != SPECIES_ZIGZAGOON)
             return R8FixtureFail(9);
