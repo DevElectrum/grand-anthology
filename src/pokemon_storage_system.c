@@ -2404,7 +2404,11 @@ static void Task_PokeStorageMain(u8 taskId)
 {
 #if defined(XGBA_R8_TEST) && XGBA_R8_TEST
     if (sStorage->state == MSTATE_HANDLE_INPUT)
+    {
         gXgbaR8PcUiTrace = 4;
+        gXgbaR8PcChooserTrace = 0x40000000U
+            | ((u32)XgbaA2GamePage() << 16) | StorageGetCurrentBox();
+    }
 #endif
     switch (sStorage->state)
     {
@@ -3619,6 +3623,9 @@ static void Task_HandleBoxOptions(u8 taskId)
             return;
         sStorage->state++;
     case 2:
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 7;
+#endif
         switch (HandleMenuInput())
         {
         case MENU_B_PRESSED:
@@ -3745,6 +3752,14 @@ static void Task_JumpBox(u8 taskId)
         sStorage->state++;
         break;
     case 1:
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 9;
+        if (sChooseBoxMenu != NULL && sChooseBoxMenu->globalMode)
+            gXgbaR8PcChooserTrace = 0x80000000U
+                | ((u32)XgbaA2GamePage() << 16) | sChooseBoxMenu->curBox;
+        else
+            gXgbaR8PcChooserTrace = 0;
+#endif
         sStorage->newCurrBoxId = HandleChooseBoxMenuInput();
         switch (sStorage->newCurrBoxId)
         {

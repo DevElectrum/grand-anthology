@@ -9,6 +9,10 @@
 EWRAM_DATA volatile u32 gXgbaR8FixtureStage = 0;
 // Instrumentation for genuine graphical PC callbacks, disposable ROM only.
 EWRAM_DATA volatile u32 gXgbaR8PcUiTrace = 0;
+// Bit31: global chooser preview, bit30: resident graphical PC idle.
+// Low 16 bits: preview global box or resident local box.
+// Bits 16..23: resident page. Never read this instrumentation in production.
+EWRAM_DATA volatile u32 gXgbaR8PcChooserTrace = 0;
 static int R8FixtureFail(u32 stage)
 {
     gXgbaR8FixtureStage = stage;

@@ -115,6 +115,26 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("#if defined(XGBA_R8_TEST) && XGBA_R8_TEST", CLASSIC)
         self.assertIn("#if defined(XGBA_R8_TEST) && XGBA_R8_TEST", SWSH)
 
+    def test_c3c_jump_preview_has_independent_live_controller_witness(self):
+        controller = (ROOT / "tools" / "xgba_r8_pc_controller.lua").read_text()
+        workflow = (ROOT / ".github" / "workflows" / "R8-PC-Controller.yml").read_text()
+        symbols = (ROOT / "tools" / "xgba_a2_symbol_env.py").read_text()
+        fixture = (ROOT / "src" / "xgba_r8_runtime_test.c").read_text()
+        self.assertIn("gXgbaR8PcChooserTrace", fixture)
+        self.assertIn("A2_R8_PC_CHOOSER_TRACE", symbols)
+        self.assertIn("gXgbaR8PcUiTrace = 7;", CLASSIC)
+        self.assertIn("gXgbaR8PcUiTrace = 8;", SWSH)
+        self.assertIn("gXgbaR8PcUiTrace = 9;", CLASSIC)
+        self.assertIn("gXgbaR8PcUiTrace = 10;", SWSH)
+        for frontend in (CLASSIC, SWSH):
+            self.assertIn("gXgbaR8PcChooserTrace = 0x80000000U", frontend)
+            self.assertIn("gXgbaR8PcChooserTrace = 0x40000000U", frontend)
+        self.assertIn("verifyChooser(14)", controller)
+        self.assertIn("verifyChooser(0)", controller)
+        self.assertIn("R8_PC_CONTROLLER_PREVIEW_CANCEL_PASS", controller)
+        self.assertIn("R8_PC_ACTION: preview-cancel", workflow)
+        self.assertIn("diff -u /tmp/r8-pc-before.txt /tmp/r8-pc-preview-audit.txt", workflow)
+
     def test_swsh_uses_paged_14_cell_preview_without_switching_on_hover(self):
         self.assertIn("sChooseBoxMenu->previewPage", SWSH)
         self.assertIn("if (sChooseBoxMenu->globalMode && JOY_NEW(L_BUTTON | R_BUTTON))", SWSH)

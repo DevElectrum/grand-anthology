@@ -117,6 +117,24 @@ jobs:
           grep -q 'R8_PC_CONTROLLER_SMOKE_PASS genuine_pc_ui_active=1' /tmp/r8-pc-controller.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-after.txt
           diff -u /tmp/r8-pc-before.txt /tmp/r8-pc-after.txt
+      - name: Real Jump chooser preview R/L and cancel without persistence mutation
+        env:
+          R8_PC_ACTION: preview-cancel
+        run: |
+          set -e
+          test -n "$A2_R8_PC_CHOOSER_TRACE"
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_r8_pc_controller.lua \
+            build/r8-ci/test.gba > /tmp/r8-pc-preview.log 2>&1 || {
+              grep -E 'R8_PC_CONTROLLER_|A2_XGBA_E6_SAVE_BOUND' /tmp/r8-pc-preview.log | tail -n 100 || true
+              tail -n 30 /tmp/r8-pc-preview.log
+              exit 1
+            }
+          grep -q 'R8_PC_CONTROLLER_PREVIEW_CANCEL_PASS active_page=0 box=0' /tmp/r8-pc-preview.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-preview-audit.txt
+          diff -u /tmp/r8-pc-before.txt /tmp/r8-pc-preview-audit.txt
       - name: Delete disposable ROM and save on success or failure
         if: always()
         run: |

@@ -12,10 +12,16 @@ local uiTrace = address("A2_R8_PC_UI_TRACE")
 local engine = assert(os.getenv("R8_PC_ENGINE"), "Missing R8_PC_ENGINE")
 assert(engine == "classic" or engine == "swsh", "Unknown PC engine")
 local expectedStage = engine == "classic" and 4 or 5
+local expectedOptionsStage = engine == "classic" and 7 or 8
+local expectedChooserStage = engine == "classic" and 9 or 10
+local action = os.getenv("R8_PC_ACTION") or "entry"
+assert(action == "entry" or action == "preview-cancel")
+local chooserTraceAddr = action == "preview-cancel" and address("A2_R8_PC_CHOOSER_TRACE") or nil
 local A, B = 1 << C.GBA_KEY.A, 1 << C.GBA_KEY.B
 local START = 1 << C.GBA_KEY.START
 local UP, DOWN = 1 << C.GBA_KEY.UP, 1 << C.GBA_KEY.DOWN
 local LEFT, RIGHT = 1 << C.GBA_KEY.LEFT, 1 << C.GBA_KEY.RIGHT
+local L, R = 1 << C.GBA_KEY.L, 1 << C.GBA_KEY.R
 local frame, stage = 0, "boot"
 local queue, index, remaining = {}, 1, 0
 local moveX, moveY, retries, clicks = 0, 0, 0, 0
@@ -32,7 +38,8 @@ local function report(s)
 end
 local function fail(reason)
     emu:setKeys(0)
-    report("R8_PC_CONTROLLER_FAIL " .. reason .. " ui_trace=" .. emu:read32(uiTrace))
+    report("R8_PC_CONTROLLER_FAIL " .. reason .. " ui_trace=" .. emu:read32(uiTrace)
+           .. " chooser_trace=" .. (chooserTraceAddr and emu:read32(chooserTraceAddr) or "none"))
     os.exit(3)
 end
 local function schedule(a)
@@ -65,6 +72,20 @@ local function coords()
     if x >= 25 or y >= 18 then fail("bad_map_coords " .. x .. "," .. y) end
     return x, y
 end
+local function verifyChooser(expectedPreview)
+    local witness = emu:read32(uiTrace)
+    local snapshot = emu:read32(chooserTraceAddr)
+    local preview = snapshot & 0xFFFF
+    local active = (snapshot >> 16) & 0xFF
+    if witness ~= expectedChooserStage or (snapshot & 0x80000000) == 0
+       or active ~= 0 or preview ~= expectedPreview then
+        fail("chooser_mismatch expected_preview=" .. expectedPreview
+             .. " actual_preview=" .. preview .. " active=" .. active
+             .. " state=" .. witness)
+    end
+    report("R8_PC_CONTROLLER_CHOOSER_OK preview=" .. preview
+           .. " active_page=" .. active)
+end
 local function move(key, dx, dy)
     local x, y = coords()
     moveX, moveY = x + dx, y + dy
@@ -74,11 +95,17 @@ end
 callbacks:add("frame", function()
     frame = frame + 1
     if frame > 120000 then fail("global_timeout") end
-    if stage ~= "boot" and emu:read32(uiTrace) == expectedStage then
+    if stage == "clicks" and emu:read32(uiTrace) == expectedStage then
         emu:setKeys(0)
         local x, y = coords()
         report("R8_PC_CONTROLLER_SMOKE_PASS genuine_pc_ui_active=1 x=" .. x .. " y=" .. y)
-        os.exit(0)
+        if action == "entry" then
+            os.exit(0)
+        end
+        report("R8_PC_CONTROLLER_PREVIEW_BEGIN")
+        stage = "preview-to-title"
+        schedule({{0, 90}, {UP, 2}, {0, 90}})
+        return
     end
     if stage == "boot" then
         if frame % 30 == 0 and isHub() then
@@ -171,6 +198,61 @@ callbacks:add("frame", function()
             end
             if clicks >= 18 then fail("pc_storage_screen_never_active") end
             schedule({{A, 2}, {0, 115}})
+        end
+        return
+    end
+    if stage == "preview-to-title" then
+        if drive() then
+            stage = "preview-open-options"
+            schedule({{A, 2}, {0, 100}})
+        end
+        return
+    end
+    if stage == "preview-open-options" then
+        if drive() then
+            if emu:read32(uiTrace) ~= expectedOptionsStage then
+                fail("box_title_options_menu_not_entered")
+            end
+            stage = "preview-open-jump"
+            schedule({{A, 2}, {0, 115}})
+        end
+        return
+    end
+    if stage == "preview-open-jump" then
+        if drive() then
+            verifyChooser(0)
+            stage = "preview-right"
+            schedule({{R, 2}, {0, 75}})
+        end
+        return
+    end
+    if stage == "preview-right" then
+        if drive() then
+            verifyChooser(14)
+            stage = "preview-left"
+            schedule({{L, 2}, {0, 75}})
+        end
+        return
+    end
+    if stage == "preview-left" then
+        if drive() then
+            verifyChooser(0)
+            stage = "preview-cancel"
+            schedule({{B, 2}, {0, 120}})
+        end
+        return
+    end
+    if stage == "preview-cancel" then
+        if drive() then
+            local marker = emu:read32(chooserTraceAddr)
+            local seen = emu:read32(uiTrace)
+            if seen ~= expectedStage or (marker & 0x40000000) == 0
+               or ((marker >> 16) & 0xFF) ~= 0 or (marker & 0xFFFF) ~= 0 then
+                fail("cancel_changed_resident_box_or_failed_to_return")
+            end
+            report("R8_PC_CONTROLLER_PREVIEW_CANCEL_PASS active_page=0 box=0")
+            emu:setKeys(0)
+            os.exit(0)
         end
         return
     end

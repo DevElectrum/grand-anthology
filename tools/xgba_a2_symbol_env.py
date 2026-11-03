@@ -25,6 +25,7 @@ OPTIONAL_SYMBOLS = {
     "gSaveCounter": "A2_SAVE_COUNTER",
     "gSaveAttemptStatus": "A2_SAVE_ATTEMPT_STATUS",
     "gXgbaR8PcUiTrace": "A2_R8_PC_UI_TRACE",
+    "gXgbaR8PcChooserTrace": "A2_R8_PC_CHOOSER_TRACE",
 }
 
 

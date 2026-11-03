@@ -1,3 +1,6 @@
+# Nov 3 C3C Jump preview/cancel test slice
+Real controller entry passed both PC frontends in run 41607139661 (commit 1a2f78b7). New test-only cursor/chooser witnesses and second controller script mode now check actual box-title Jump, R/L preview Box 15 and return Box 1, B cancel, resident page unchanged and independent E6 save audit. Must inspect new CI before acceptance. This is not yet global Jump commit, deposit/withdraw UI or release. No changes to main, Mosaic or emulator.
+
 # Nov 3 C3C second diagnostic
 Run 41606152856 reached the Hub PC but both controller pilots stopped after five A presses with no final storage witness. PC field script involves multiple prompts. New test-only DoPCTurnOnEffect witness stage=6 distinguishes physical PC entry from later storage-menu progress; controller logs each trace change and permits bounded multi-prompt progression. Inspect new CI before acceptance.
 
