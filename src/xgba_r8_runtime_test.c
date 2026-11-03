@@ -187,6 +187,47 @@ int XgbaR8CreateTestPokemon(void)
         if (GetMonData(&gParties[B_TRAINER_PLAYER][partyPosition], MON_DATA_SPECIES)
             != SPECIES_ZIGZAGOON)
             return R8FixtureFail(9);
+
+        // C3B: a complete encrypted Eevee round trip from distant Box 43
+        // must preserve its identity, item and markings before Save2.
+        {
+            struct BoxPokemon boxedBefore;
+            struct Pokemon savedParty[PARTY_SIZE];
+            u8 insertedPosition = 255;
+            memcpy(&boxedBefore, remote, sizeof(boxedBefore));
+            if (XgbaA2GameWithdrawGlobalBoxMon(112, 0, NULL)
+                || XgbaA2GameWithdrawGlobalBoxMon(42, IN_BOX_COUNT, NULL)
+                || XgbaA2GameWithdrawGlobalBoxMon(42, 1, NULL)
+                || memcmp(remote, &boxedBefore, sizeof(boxedBefore)) != 0
+                || GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_NONE)
+                return R8FixtureFail(86);
+
+            // A synthetic full-party state must reject withdrawal without
+            // clearing the boxed source; the snapshot is restored verbatim.
+            memcpy(savedParty, gParties[B_TRAINER_PLAYER], sizeof(savedParty));
+            for (u8 pos = partyPosition + 1; pos < PARTY_SIZE; pos++)
+                gParties[B_TRAINER_PLAYER][pos] = gParties[B_TRAINER_PLAYER][partyPosition];
+            if (CalculatePlayerPartyCount() != PARTY_SIZE
+                || XgbaA2GameWithdrawGlobalBoxMon(42, 0, NULL)
+                || memcmp(remote, &boxedBefore, sizeof(boxedBefore)) != 0)
+                return R8FixtureFail(87);
+            memcpy(gParties[B_TRAINER_PLAYER], savedParty, sizeof(savedParty));
+            CalculatePlayerPartyCount();
+
+            if (!XgbaA2GameWithdrawGlobalBoxMon(42, 0, &insertedPosition)
+                || insertedPosition != partyPosition + 1
+                || memcmp(&partyMon->box, &boxedBefore, sizeof(boxedBefore)) != 0
+                || GetBoxMonData(remote, MON_DATA_SPECIES) != SPECIES_NONE
+                || GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_EEVEE)
+                return R8FixtureFail(88);
+            chosen = 255;
+            if (!XgbaA2GameDepositPartyMonGlobal(partyPosition + 1, 42, &chosen)
+                || chosen != 0
+                || GetMonData(partyMon, MON_DATA_SPECIES) != SPECIES_NONE
+                || memcmp(remote, &boxedBefore, sizeof(boxedBefore)) != 0
+                || !VerifyTestPokemonRecords())
+                return R8FixtureFail(89);
+        }
     }
 
     // Traverse each of the 112 global box IDs, checking the selected

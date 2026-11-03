@@ -22,3 +22,21 @@ Do not merge or issue a playable build until graphical tests, destructive-operat
 - Explicitly do **not** enable cross-group movement of a Pokémon already being carried, multi-selection, mail or item-in-hand transfers. These demand a separate rollback-aware carry-state protocol.
 - Disposable real-ARM fixture attempts invalid party/global IDs and deposits a genuine game Pokémon into distant global Box 43, first free slot with exact record verification after cold restart. CI source assertions prevent accidental relaxation of the guards.
 - This is source + game-function testing. No claim of visual-controller input test or C3 acceptance until independent GUI scripts execute.
+
+## C3A accepted backend checkpoint (2026-11-03)
+- The fixture used CreateMon without CalculateMonStats; the synthetic Zigzagoon had zero HP and correctly failed the last-usable-mon guard. The test-only fixture now initializes HP for Zigzagoon and Eevee, while keeping the production guard intact.
+- C3A real XGBA run 41590131391 is GREEN at 1b2e30f6: Save1, checked distant Eevee deposit, cross-group moves and swaps, all 112 box selections, Save2 and independent E6 audit, then cold Continue.
+- This certifies only real-ARM *function* calls, not a controller's box-screen workflow. Neither UI is accepted yet.
+
+## C3B: checked distant box-to-party withdrawal (2026-11-03)
+- The game backend reads a checked BoxPokemon from any global box ID 0..111 and local position 0..29; rejects empty source, boxed mail, unavailable collection, full party, and inconsistent party tail *before any source/destination record write*.
+- It copies the whole encrypted 80-byte record to an owned snapshot, converts that snapshot with BoxMonToMon, checks the result, writes a complete party struct, then clears the PC source and updates the party count. Active resident group and E6 journal are unchanged.
+- The disposable ARM fixture rejects bad global IDs, bad slots, empty sources, full party, then withdraws Eevee from remote Box 43 slot 1 and deposits it back. Compares all 80 encrypted bytes and verifies identity, held item and favorite marking across Save2/cold Continue.
+- Source checks are only static guards. The R8 real-emulator workflow is authoritative for game-level behavior. This backend is deliberately **not** wired to a new GUI selector yet; existing PC Jump to a distant box still uses normal local withdraw logic.
+
+## Next gates, adversarial and performance-first
+- **C3C UI acceptance harness:** safely enter the Region Hub PC at (17,9) using genuinely simulated controller input on a disposable save; verify live PC callbacks and mode selection before pressing A. Do not spoof controller acceptance via direct C calls. Test Classic and SwSh separately, cancel, full destination, full party, 14/15, 28/29, and 112/1. Assert exact record and no duplicate after restart, with independent E6 auditing.
+- **C3D GUI withdrawal and held-single movement:** only use checked backend for new remote operations after C3C; design an owned 80-byte carry snapshot plus rollback-before-page-switch. Keep global movement of a carried Pokémon blocked until its cancel and teardown paths are independently proven.
+- **C4 safety:** preflight bulk held-item bag capacity atomically, protect favorite/legendary, test no-op/full/eggs/mail. Include targeted crash/power-loss and stale-cache recovery matrices before release.
+- **C5:** two graphical PC engines, real controller transitions, all boundary boxes, cross-region persistence, two saves/two cold restarts and emulated-frame performance evidence; freeze the pinned emulator separately. No migration or published playable ROM until every gate passes.
+- Worst-case normal C3B work: 80-byte copy, at most six party-slot checks, one BoxMonToMon conversion. No E6 I/O, 34 KiB group copy, or whole-collection scan while navigating.

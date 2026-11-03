@@ -55,6 +55,24 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, NULL)", SWSH)
         self.assertIn("sStorage->state = 18;", SWSH)
 
+    def test_c3b_remote_withdraw_preflights_both_ends(self):
+        start = SAVE.index("bool8 XgbaA2GameWithdrawGlobalBoxMon(")
+        end = SAVE.index("// Swap is likewise preflighted", start)
+        body = SAVE[start:end]
+        self.assertIn("XgbaA2GameGlobalBoxMon(globalBox, sourcePosition)", body)
+        self.assertIn("GetBoxMonData(source, MON_DATA_SPECIES)", body)
+        self.assertIn("ItemIsMail(", body)
+        self.assertIn("CalculatePlayerPartyCount()", body)
+        self.assertIn("partyCount >= PARTY_SIZE", body)
+        self.assertIn("position < PARTY_SIZE", body)
+        self.assertIn("BoxMonToMon(&snapshot, &withdrawn)", body)
+        self.assertIn("memcmp(&withdrawn.box, &snapshot", body)
+        self.assertIn("ZeroBoxMonData(source)", body)
+        self.assertIn("gPartiesCount[B_TRAINER_PLAYER] = partyCount + 1", body)
+        self.assertLess(body.index("partyCount >= PARTY_SIZE"), body.index("ZeroBoxMonData(source)"))
+        self.assertLess(body.index("BoxMonToMon(&snapshot"), body.index("ZeroBoxMonData(source)"))
+        self.assertIn("XgbaA2GameWithdrawGlobalBoxMon", HEADER)
+
     def test_swsh_uses_paged_14_cell_preview_without_switching_on_hover(self):
         self.assertIn("sChooseBoxMenu->previewPage", SWSH)
         self.assertIn("if (sChooseBoxMenu->globalMode && JOY_NEW(L_BUTTON | R_BUTTON))", SWSH)

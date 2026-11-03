@@ -39,6 +39,11 @@ bool8 XgbaA2GameSwapGlobalBoxMons(u16 firstBox, u8 firstPos,
 // invalid/full destination, mail, empty slot or last usable party Pokémon.
 bool8 XgbaA2GameDepositPartyMonGlobal(u8 partyPosition, u16 globalBox,
                                      u8 *placedPosition);
+// C3B: checked global box-to-party withdrawal. Never changes active PC group.
+// Both ends remain unmodified when storage is unavailable, source invalid,
+// party full, or the party layout is inconsistent.
+bool8 XgbaA2GameWithdrawGlobalBoxMon(u16 globalBox, u8 sourcePosition,
+                                     u8 *placedPartyPosition);
 #endif
 #endif
 

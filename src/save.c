@@ -1059,6 +1059,45 @@ bool8 XgbaA2GameDepositPartyMonGlobal(u8 partyPosition, u16 globalBox,
     return TRUE;
 }
 
+// C3B: withdraw from any of 112 boxes without changing the resident page.
+// Convert a private copy so decoding cannot mutate a borrowed source pointer.
+// Check the entire destination tail before writing: unexpected party holes
+// must fail closed instead of silently overwriting a later occupied slot.
+bool8 XgbaA2GameWithdrawGlobalBoxMon(u16 globalBox, u8 sourcePosition,
+                                     u8 *placedPartyPosition)
+{
+    struct BoxPokemon *source = XgbaA2GameGlobalBoxMon(globalBox, sourcePosition);
+    struct BoxPokemon snapshot;
+    struct Pokemon withdrawn;
+    u8 partyCount;
+    u8 position;
+
+    if (source == NULL
+        || GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE
+        || ItemIsMail(GetBoxMonData(source, MON_DATA_HELD_ITEM)))
+        return FALSE;
+
+    partyCount = CalculatePlayerPartyCount();
+    if (partyCount >= PARTY_SIZE)
+        return FALSE;
+    for (position = partyCount; position < PARTY_SIZE; position++)
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][position], MON_DATA_SPECIES) != SPECIES_NONE)
+            return FALSE;
+
+    memcpy(&snapshot, source, sizeof(snapshot));
+    BoxMonToMon(&snapshot, &withdrawn);
+    if (GetMonData(&withdrawn, MON_DATA_SPECIES) == SPECIES_NONE
+        || memcmp(&withdrawn.box, &snapshot, sizeof(snapshot)) != 0)
+        return FALSE;
+
+    gParties[B_TRAINER_PLAYER][partyCount] = withdrawn;
+    ZeroBoxMonData(source);
+    gPartiesCount[B_TRAINER_PLAYER] = partyCount + 1;
+    if (placedPartyPosition != NULL)
+        *placedPartyPosition = partyCount;
+    return TRUE;
+}
+
 // Swap is likewise preflighted and all-RAM, even across distinct groups.
 bool8 XgbaA2GameSwapGlobalBoxMons(u16 firstBox, u8 firstPos,
                                   u16 secondBox, u8 secondPos)
