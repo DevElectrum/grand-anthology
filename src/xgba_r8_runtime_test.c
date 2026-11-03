@@ -264,4 +264,19 @@ int XgbaR8VerifyTestPokemon(void)
         && XgbaA2GamePage() == 2
         && StorageGetCurrentBox() == 1;
 }
+
+// Save2 is the established 112-box backend checkpoint (Box 30 selected).
+// Save3 is only reached by C3C's actual graphical Jump into Box 15.
+// The load-time verifier checks the full test-record set on both commits
+// and rejects missing/wrong selected groups rather than falling back.
+int XgbaR8VerifyTestPokemonAtCounter(u32 counter)
+{
+    if (counter == 2)
+        return XgbaR8VerifyTestPokemon();
+    if (counter == 3)
+        return VerifyTestPokemonRecords()
+            && XgbaA2GamePage() == 1
+            && StorageGetCurrentBox() == 0;
+    return FALSE;
+}
 #endif

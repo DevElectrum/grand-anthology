@@ -1,3 +1,6 @@
+# R8.4 C3C Save3 persistence gate (Nov 3, experimental)
+Controller Jump to Box 15 worked in both UIs at dcc19fa2 (run 41609705834), but prior test only checked resident RAM and unchanged Save1. Next commit introduces a real populated Save2 → graphical Jump → actual Save3 → full cold Continue matrix. Test-only A2 verifier now checks Box 30 after Save2 and Box 15 after Save3, while preserving five seeded Pokémon. Never describe this new gate as green until Actions verifies both Classic and SwSh jobs. No main, frozen emulator, Mosaic, real save, or release changes. Refer to docs/ANTHOLOGY_R8_4_PC_GAMEPLAY_PLAN.md.
+
 # Nov 3 C3C next controller gate: global Jump commit
 A separate jump-commit controller run now selects remote Box 15 using actual R/A in the verified graphical chooser, waits for PC teardown/reopen, and asserts resident page=1 local box=0 without E6 save changes. This is an in-session UI assertion only; Save2/cold Continue after Jump remains a separate required gate. Latest branch source and Actions must pass before acceptance, no player saves or main touched.
 

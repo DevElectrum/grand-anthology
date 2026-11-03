@@ -153,6 +153,73 @@ jobs:
           grep -q 'R8_PC_CONTROLLER_JUMP_COMMIT_PASS global_box=15 resident_page=1 local_box=0' /tmp/r8-pc-jump.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-jump-audit.txt
           diff -u /tmp/r8-pc-before.txt /tmp/r8-pc-jump-audit.txt
+      - name: Create populated real Save2 and audit
+        env:
+          A2_ACTION: save-again
+          A2_EXPECTED_SAVE_COUNTER: '1'
+        run: |
+          set -e
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/test.gba > /tmp/r8-save2.log 2>&1 || {
+              grep -E 'A2_XGBA_(DIAG|GAME_SAVE|JOURNAL)' /tmp/r8-save2.log | tail -n 100 || true
+              tail -n 25 /tmp/r8-save2.log
+              exit 1
+            }
+          grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/r8-save2.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-audit-save2.txt
+          grep -q '^counter: 2
+        if: always()
+        run: |
+          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav
+          echo 'No gameplay ROM or save published.'
+ /tmp/r8-audit-save2.txt
+      - name: Real PC Jump Box30 to Box15 and real Save3
+        env:
+          R8_PC_ACTION: jump-save
+        run: |
+          set -e
+          test -n "$A2_R8_PC_CHOOSER_TRACE"
+          test -n "$A2_SAVE_COUNTER"
+          test -n "$A2_USM_STATE_PTR"
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_r8_pc_controller.lua \
+            build/r8-ci/test.gba > /tmp/r8-save3.log 2>&1 || {
+              grep -E 'R8_PC_CONTROLLER_|A2_XGBA_E6_SAVE_BOUND' /tmp/r8-save3.log | tail -n 130 || true
+              tail -n 25 /tmp/r8-save3.log
+              exit 1
+            }
+          grep -q 'R8_PC_CONTROLLER_JUMP_SAVE3_PASS global_box=15 counter=3' /tmp/r8-save3.log
+          grep -q 'R8_PC_CONTROLLER_REAL_SAVE3_COMMITTED counter=3 stage=8' /tmp/r8-save3.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-audit-save3.txt
+          grep -q '^counter: 3
+        if: always()
+        run: |
+          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav
+          echo 'No gameplay ROM or save published.'
+ /tmp/r8-audit-save3.txt
+      - name: Cold Continue verifies selected Box15 and all five Pokémon
+        env:
+          A2_ACTION: resume
+          A2_EXPECTED_SAVE_COUNTER: '3'
+        run: |
+          set -e
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/test.gba > /tmp/r8-save3-cold.log 2>&1 || {
+              grep -E 'A2_XGBA_(COLD|DIAG|GAME_SAVE)' /tmp/r8-save3-cold.log | tail -n 100 || true
+              tail -n 25 /tmp/r8-save3-cold.log
+              exit 1
+            }
+          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=3' /tmp/r8-save3-cold.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-audit-cold.txt
+          diff -u /tmp/r8-audit-save3.txt /tmp/r8-audit-cold.txt
       - name: Delete disposable ROM and save on success or failure
         if: always()
         run: |

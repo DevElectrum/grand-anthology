@@ -1000,6 +1000,10 @@ static void Task_PCMainMenu(u8 taskId)
             task->tState++;
         break;
     case STATE_HANDLE_INPUT:
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        // This is the actual post-storage PC menu, not a guessed timeout.
+        gXgbaR8PcUiTrace = 12;
+#endif
         task->tInput = Menu_ProcessInput();
         switch (task->tInput)
         {

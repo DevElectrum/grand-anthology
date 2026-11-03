@@ -1,5 +1,6 @@
 -- C3C pilot: actual simulated controller input at the real Region Hub PC.
--- No direct game-function calls, no custom save writes, disposable Save1 only.
+-- No direct game-function calls or direct save writes. Every test uses
+-- disposable E6 sidecars; jump-save starts with real populated Save2.
 local function address(name)
     local value = os.getenv(name)
     assert(value and value:match("^0[xX][%da-fA-F]+$"), "Linked ELF symbol missing " .. name)
@@ -15,8 +16,16 @@ local expectedStage = engine == "classic" and 4 or 5
 local expectedOptionsStage = engine == "classic" and 7 or 8
 local expectedChooserStage = engine == "classic" and 9 or 10
 local action = os.getenv("R8_PC_ACTION") or "entry"
-assert(action == "entry" or action == "preview-cancel" or action == "jump-commit")
+assert(action == "entry" or action == "preview-cancel"
+       or action == "jump-commit" or action == "jump-save")
 local chooserTraceAddr = action ~= "entry" and address("A2_R8_PC_CHOOSER_TRACE") or nil
+local saveMode = action == "jump-save"
+local saveCounterAddr = saveMode and address("A2_SAVE_COUNTER") or nil
+local gameSaveTraceAddr = saveMode and address("A2_GAME_SAVE_TRACE") or nil
+local saveDialogTraceAddr = saveMode and address("A2_SAVE_DIALOG_TRACE") or nil
+local usmTraceAddr = saveMode and address("A2_USM_TRACE") or nil
+local usmStateAddr = saveMode and address("A2_USM_STATE_PTR") or nil
+local expectedPcMenuStage = engine == "classic" and 11 or 12
 local A, B = 1 << C.GBA_KEY.A, 1 << C.GBA_KEY.B
 local START = 1 << C.GBA_KEY.START
 local UP, DOWN = 1 << C.GBA_KEY.UP, 1 << C.GBA_KEY.DOWN
@@ -27,6 +36,7 @@ local queue, index, remaining = {}, 1, 0
 local moveX, moveY, retries, clicks = 0, 0, 0, 0
 local lastUiTrace = nil
 local commitStarted = 0
+local exitStarted, saveStarted, attempts, menuAttempts = 0, 0, 0, 0
 -- Actual Region Hub collision map: y=8 is a wall east of x=8,
 -- and y=9 is a counter east of x=6. Go around the west end,
 -- then approach the PC from the southern public aisle.
@@ -40,7 +50,9 @@ end
 local function fail(reason)
     emu:setKeys(0)
     report("R8_PC_CONTROLLER_FAIL " .. reason .. " ui_trace=" .. emu:read32(uiTrace)
-           .. " chooser_trace=" .. (chooserTraceAddr and emu:read32(chooserTraceAddr) or "none"))
+           .. " chooser_trace=" .. (chooserTraceAddr and emu:read32(chooserTraceAddr) or "none")
+           .. " native_counter=" .. (saveCounterAddr and emu:read32(saveCounterAddr) or "none")
+           .. " game_save_trace=" .. (gameSaveTraceAddr and emu:read32(gameSaveTraceAddr) or "none"))
     os.exit(3)
 end
 local function schedule(a)
@@ -73,19 +85,42 @@ local function coords()
     if x >= 25 or y >= 18 then fail("bad_map_coords " .. x .. "," .. y) end
     return x, y
 end
-local function verifyChooser(expectedPreview)
+local function verifyChooser(expectedPreview, expectedActive)
+    expectedActive = expectedActive or 0
     local witness = emu:read32(uiTrace)
     local snapshot = emu:read32(chooserTraceAddr)
     local preview = snapshot & 0xFFFF
     local active = (snapshot >> 16) & 0xFF
     if witness ~= expectedChooserStage or (snapshot & 0x80000000) == 0
-       or active ~= 0 or preview ~= expectedPreview then
+       or active ~= expectedActive or preview ~= expectedPreview then
         fail("chooser_mismatch expected_preview=" .. expectedPreview
              .. " actual_preview=" .. preview .. " active=" .. active
              .. " state=" .. witness)
     end
     report("R8_PC_CONTROLLER_CHOOSER_OK preview=" .. preview
            .. " active_page=" .. active)
+end
+-- This is the same real Usm_State layout validated by the existing
+-- xgba_a2_runtime_save.lua driver. An icon number alone is never trusted:
+-- both genuine graphical Start-menu callbacks and a plausible live pointer
+-- must be present before the driver sends A.
+local function readSelectedSaveIcon()
+    if not saveMode or (emu:read32(usmTraceAddr) & 3) ~= 3 then
+        return nil
+    end
+    local p = emu:read32(usmStateAddr)
+    if p < 0x02000000 or p >= 0x02040000 then return nil end
+    local count = emu:read8(p + 23)
+    local absolute = emu:read8(p + 5) + emu:read8(p + 10)
+    if count < 1 or count > 12 or absolute >= count then return nil end
+    return emu:read8(p + 11 + absolute)
+end
+local function checkSavedBox15()
+    local marker = emu:read32(chooserTraceAddr)
+    if (marker & 0x40000000) == 0 or ((marker >> 16) & 0xFF) ~= 1
+       or (marker & 0xFFFF) ~= 0 then
+        fail("post_jump_resident_page_or_box_changed")
+    end
 end
 local function move(key, dx, dy)
     local x, y = coords()
@@ -221,13 +256,21 @@ callbacks:add("frame", function()
     end
     if stage == "preview-open-jump" then
         if drive() then
-            verifyChooser(0)
-            if action == "jump-commit" then
-                stage = "commit-right"
+            if action ~= "jump-save" then verifyChooser(0) end
+            if action == "jump-save" then
+                -- Populated Save2 starts on global Box 30 (zero-index 29).
+                -- L switches to global Box 16, LEFT selects Box 15.
+                verifyChooser(29, 2)
+                stage = "save-jump-page-left"
+                schedule({{L, 2}, {0, 75}})
             else
-                stage = "preview-right"
+                if action == "jump-commit" then
+                    stage = "commit-right"
+                else
+                    stage = "preview-right"
+                end
+                schedule({{R, 2}, {0, 75}})
             end
-            schedule({{R, 2}, {0, 75}})
         end
         return
     end
@@ -261,6 +304,22 @@ callbacks:add("frame", function()
         end
         return
     end
+    if stage == "save-jump-page-left" then
+        if drive() then
+            verifyChooser(15, 2)
+            stage = "save-jump-local-left"
+            schedule({{LEFT, 2}, {0, 75}})
+        end
+        return
+    end
+    if stage == "save-jump-local-left" then
+        if drive() then
+            verifyChooser(14, 2)
+            stage = "commit-select"
+            schedule({{A, 2}, {0, 140}})
+        end
+        return
+    end
     if stage == "commit-right" then
         if drive() then
             verifyChooser(14)
@@ -277,6 +336,130 @@ callbacks:add("frame", function()
         end
         return
     end
+
+    -- Storage B opens Continue? (Yes/No); a second B selects No, which
+    -- closes the screen without picking up or modifying any Pokémon.
+    if stage == "exit-storage-prompt" then
+        if drive() then
+            checkSavedBox15()
+            stage = "exit-storage-confirm"
+            schedule({{B, 2}, {0, 165}})
+        end
+        return
+    end
+    if stage == "exit-storage-confirm" then
+        if drive() then
+            exitStarted = frame
+            stage = "await-pc-main"
+        end
+        return
+    end
+    if stage == "await-pc-main" then
+        emu:setKeys(0)
+        if emu:read32(uiTrace) == expectedPcMenuStage then
+            report("R8_PC_CONTROLLER_RETURNED_TO_REAL_PC_MENU")
+            checkSavedBox15()
+            stage = "close-pc-main"
+            schedule({{B, 2}, {0, 180}})
+        elseif frame - exitStarted > 2700 then
+            fail("storage_screen_did_not_return_to_pc_main_menu")
+        end
+        return
+    end
+    if stage == "close-pc-main" then
+        if drive() then
+            if not isHub() then fail("did_not_return_to_hub_field") end
+            checkSavedBox15()
+            stage = "open-start-menu"
+            schedule({{START, 2}, {0, 110}})
+        end
+        return
+    end
+    if stage == "open-start-menu" then
+        if drive() then
+            stage = "seek-real-save"
+        end
+        return
+    end
+    if stage == "retry-start-menu" then
+        if drive() then stage = "seek-real-save" end
+        return
+    end
+    if stage == "advance-start-menu" then
+        if drive() then stage = "seek-real-save" end
+        return
+    end
+    if stage == "seek-real-save" then
+        checkSavedBox15()
+        local icon = readSelectedSaveIcon()
+        if icon == nil then
+            menuAttempts = menuAttempts + 1
+            if menuAttempts > 8 then fail("graphical_start_menu_not_verified") end
+            stage = "retry-start-menu"
+            schedule({{B, 2}, {0, 90}, {START, 2}, {0, 110}})
+            return
+        end
+        if icon == 7 then  -- USM_ICO_SAVE
+            report("R8_PC_CONTROLLER_REAL_START_MENU_SAVE_SELECTED")
+            local a = {}
+            for i = 1, 9 do
+                a[#a + 1] = {A, 2}
+                a[#a + 1] = {0, 120}
+            end
+            stage = "confirm-real-save"
+            saveStarted = frame
+            schedule(a)
+        else
+            attempts = attempts + 1
+            if attempts > 12 then fail("start_menu_save_icon_not_found") end
+            stage = "advance-start-menu"
+            schedule({{RIGHT, 2}, {0, 15}})
+        end
+        return
+    end
+    if stage == "confirm-real-save" or stage == "await-real-save" then
+        local counter = emu:read32(saveCounterAddr)
+        local saveTrace = emu:read32(gameSaveTraceAddr)
+        local gameStage = saveTrace >> 24
+        if gameStage >= 0xE0 then
+            fail("real_save_journal_error stage=" .. gameStage
+                 .. " detail=" .. (saveTrace & 0xFFFFFF))
+        end
+        if gameStage == 8 and counter ~= 2 then
+            if counter ~= 3 then fail("third_save_counter_mismatch") end
+            report("R8_PC_CONTROLLER_REAL_SAVE3_COMMITTED counter=3 stage=8")
+            stage = "save3-settle"
+            schedule({{0, 240}})
+            return
+        end
+        if frame - saveStarted >= 12000 then
+            fail("third_save_transaction_timeout")
+        end
+        if stage == "await-real-save" then
+            emu:setKeys(0)
+            return
+        end
+        if (emu:read32(saveDialogTraceAddr) & 256) ~= 0 then
+            report("R8_PC_CONTROLLER_REAL_SAVE3_JOURNAL_ENTERED")
+            stage = "await-real-save"
+            emu:setKeys(0)
+            return
+        end
+        if drive() then fail("real_save_dialog_not_entered") end
+        return
+    end
+    if stage == "save3-settle" then
+        if drive() then
+            local counter = emu:read32(saveCounterAddr)
+            if counter ~= 3 or (emu:read32(gameSaveTraceAddr) >> 24) ~= 8 then
+                fail("third_save_not_settled")
+            end
+            checkSavedBox15()
+            report("R8_PC_CONTROLLER_JUMP_SAVE3_PASS global_box=15 counter=3")
+            os.exit(0)
+        end
+        return
+    end
     if stage == "commit-await" then
         emu:setKeys(0)
         local witness = emu:read32(uiTrace)
@@ -289,7 +472,15 @@ callbacks:add("frame", function()
                      .. " local_box=" .. localBox)
             end
             report("R8_PC_CONTROLLER_JUMP_COMMIT_PASS global_box=15 resident_page=1 local_box=0")
-            os.exit(0)
+            if not saveMode then
+                os.exit(0)
+            end
+            if emu:read32(saveCounterAddr) ~= 2 then
+                fail("jump_save_requires_previously_audited_save2")
+            end
+            stage = "exit-storage-prompt"
+            schedule({{B, 2}, {0, 125}})
+            return
         end
         if frame - commitStarted >= 2500 then
             fail("jump_commit_never_reopened_storage")

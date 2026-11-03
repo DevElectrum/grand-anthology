@@ -841,7 +841,8 @@ static bool8 A2FinishLoad(void)
     sA2Ready = TRUE;
 #if defined(XGBA_R8_TEST) && XGBA_R8_TEST
     // Real game records must survive a full R8 save and cold restart.
-    if (sA2Committed.nativeCounter >= 2 && !XgbaR8VerifyTestPokemon())
+    if (sA2Committed.nativeCounter >= 2
+        && !XgbaR8VerifyTestPokemonAtCounter(sA2Committed.nativeCounter))
     {
         sA2Ready = FALSE;
         return FALSE;

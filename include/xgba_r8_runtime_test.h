@@ -7,5 +7,6 @@ extern volatile u32 gXgbaR8PcUiTrace;
 extern volatile u32 gXgbaR8PcChooserTrace;
 int XgbaR8CreateTestPokemon(void);
 int XgbaR8VerifyTestPokemon(void);
+int XgbaR8VerifyTestPokemonAtCounter(u32 counter);
 
 #endif

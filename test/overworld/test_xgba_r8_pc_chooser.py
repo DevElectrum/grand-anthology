@@ -105,6 +105,26 @@ class R8PcChooserSourceTests(unittest.TestCase):
         script = (ROOT / "tools" / "xgba_r8_pc_controller.lua").read_text()
         self.assertIn("local waypoints = {{16, 6}, {6, 6}, {6, 13}, {17, 13}, {17, 10}}", script)
 
+    def test_c3c_jump_save3_cold_verifies_page_and_records(self):
+        # Production validation must not be relaxed to accept a page mismatch.
+        self.assertIn("XgbaR8VerifyTestPokemonAtCounter(sA2Committed.nativeCounter)", SAVE)
+        runtime = (ROOT / "src" / "xgba_r8_runtime_test.c").read_text()
+        self.assertIn("counter == 2", runtime)
+        self.assertIn("counter == 3", runtime)
+        self.assertIn("VerifyTestPokemonRecords()", runtime)
+        self.assertIn("XgbaA2GamePage() == 1", runtime)
+        self.assertIn("StorageGetCurrentBox() == 0", runtime)
+        self.assertIn("XgbaR8VerifyTestPokemonAtCounter(u32 counter)", HEADER)
+        classic = CLASSIC.split("static void Task_PCMainMenu(u8 taskId)")[1]
+        swsh = SWSH.split("static void Task_PCMainMenu(u8 taskId)")[1]
+        self.assertIn("gXgbaR8PcUiTrace = 11;", classic)
+        self.assertIn("gXgbaR8PcUiTrace = 12;", swsh)
+        controller = (ROOT / "tools" / "xgba_r8_pc_controller.lua").read_text()
+        self.assertIn('action == "jump-save"', controller)
+        self.assertIn("verifyChooser(29, 2)", controller)
+        self.assertIn("verifyChooser(14, 2)", controller)
+        self.assertIn("R8_PC_CONTROLLER_JUMP_SAVE3_PASS", controller)
+
     def test_c3c_graphical_probe_is_test_only(self):
         self.assertIn("gXgbaR8PcUiTrace = 1;", CLASSIC)
         self.assertIn("gXgbaR8PcUiTrace = 2;", CLASSIC)
