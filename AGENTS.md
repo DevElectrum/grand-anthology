@@ -1,3 +1,6 @@
+# Nov 3 C3C navigation correction
+First C3C matrix run 41595855941 failed in BOTH UI variants before PC entry because the controller attempted to walk through Region Hub wall (16,8). The new route is derived from real layout binary, with tile-by-tile regression and waypoints via west passage and south aisle. Check CI at new branch head. Backend/journal stays untouched.
+
 # R8.4 C3C controller pilot (Nov 3 UTC)
 Separate disposable SwSh/classic matrix workflow now checks real controller entry into the Region Hub PC using exact SaveBlock1 coordinates, a linked test-only UI witness and actual field/menu tasks. This is only the first GUI smoke, NOT deposit/withdraw controller acceptance. Check live Actions results before claiming pass. Backend C3B commit 7749ea1e has real XGBA Save2/cold persistence success. No main, frozen emulator, Mosaic, live saves or playable release touched. Read docs/ANTHOLOGY_R8_4_PC_GAMEPLAY_PLAN.md.
 

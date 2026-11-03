@@ -47,3 +47,8 @@ Do not merge or issue a playable build until graphical tests, destructive-operat
 - Lua starts from audited E6 Save1, checks real RegionHub map ID, reads the player's current coordinates from SaveBlock1, moves with emulated D-pad to (17,10), faces the PC at (17,9), then sends bounded A input until the matching frontend's live UI witness appears. The script never directly invokes game routines or declares success on a rendered animation.
 - It independently audits the E6 storage again afterward, checking no unintended persisted changes. It emits exact failed coordinates/stage if movement or menu activation fails, rather than faking success.
 - **Pilot is PC-entry only.** It does not by itself certify deposit, withdraw, Jump, cancel, carrying or cross-page selection. Next, extend this same real-input harness for those paths with exact record and full Save2/cold restart verification. Never remove the cross-group carry guard to make a test pass.
+
+## C3C first controller execution diagnosed (2026-11-03)
+- Run 41595855941 built both game variants, real Save1, and pinned emulator successfully, then failed *before PC entry* at player (16,7): input attempted (16,8), which the actual Region Hub 25x18 map.bin marks impassable.
+- Corrected the controller-only route: (16,7) → (16,6) → (6,6) → (6,13) → (17,13) → (17,10), then face north to PC (17,9). This avoids impassable wall row 8 and counter row 9. Actual collision map is validated by a new source regression for every intermediate tile.
+- No storage backend, journal, or accepted emulator changes. Controller failure was route planning, not evidence of a failing PC engine. Check the successor C3C run before claiming UI success.

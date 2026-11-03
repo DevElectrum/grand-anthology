@@ -19,6 +19,12 @@ local LEFT, RIGHT = 1 << C.GBA_KEY.LEFT, 1 << C.GBA_KEY.RIGHT
 local frame, stage = 0, "boot"
 local queue, index, remaining = {}, 1, 0
 local moveX, moveY, retries, clicks = 0, 0, 0, 0
+-- Actual Region Hub collision map: y=8 is a wall east of x=8,
+-- and y=9 is a counter east of x=6. Go around the west end,
+-- then approach the PC from the southern public aisle.
+-- Keep this in sync with test_c3c_controller_route_is_walkable.
+local waypoints = {{16, 6}, {6, 6}, {6, 13}, {17, 13}, {17, 10}}
+local waypoint = 1
 local function report(s)
     print(s .. " engine=" .. engine .. " frame=" .. frame)
     io.stdout:flush()
@@ -102,13 +108,20 @@ callbacks:add("frame", function()
     if stage == "navigate" then
         if not isHub() then fail("left_hub_while_navigating") end
         local x, y = coords()
-        if x == 17 and y == 10 then
+        local point = waypoints[waypoint]
+        if point and x == point[1] and y == point[2] then
+            report("R8_PC_CONTROLLER_WAYPOINT " .. waypoint .. " at=" .. x .. "," .. y)
+            waypoint = waypoint + 1
+            point = waypoints[waypoint]
+        end
+        if not point then
+            if x ~= 17 or y ~= 10 then fail("end_of_route_position_incorrect") end
             stage = "face"
             schedule({{UP, 2}, {0, 35}})
-        elseif y < 10 then move(DOWN, 0, 1)
-        elseif y > 10 then move(UP, 0, -1)
-        elseif x < 17 then move(RIGHT, 1, 0)
-        else move(LEFT, -1, 0) end
+        elseif x < point[1] then move(RIGHT, 1, 0)
+        elseif x > point[1] then move(LEFT, -1, 0)
+        elseif y < point[2] then move(DOWN, 0, 1)
+        else move(UP, 0, -1) end
         return
     end
     if stage == "moving" then

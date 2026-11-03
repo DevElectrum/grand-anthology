@@ -73,6 +73,37 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertLess(body.index("BoxMonToMon(&snapshot"), body.index("ZeroBoxMonData(source)"))
         self.assertIn("XgbaA2GameWithdrawGlobalBoxMon", HEADER)
 
+    def test_c3c_controller_route_is_walkable(self):
+        # The original direct walk crossed the impassable row at (16,8).
+        # Check every tile in the actual 25 x 18 Region Hub binary layout.
+        import struct
+
+        path = ROOT / "data" / "layouts" / "RegionHub" / "map.bin"
+        data = path.read_bytes()
+        self.assertEqual(len(data), 25 * 18 * 2)
+        waypoints = [(16, 6), (6, 6), (6, 13), (17, 13), (17, 10)]
+        points = [(16, 7)] + waypoints
+        for i in range(1, len(points)):
+            x1, y1 = points[i - 1]
+            x2, y2 = points[i]
+            self.assertTrue(x1 == x2 or y1 == y2)
+            x, y = x1, y1
+            while True:
+                tile = struct.unpack_from("<H", data, 2 * (25 * y + x))[0]
+                self.assertEqual((tile >> 10) & 3, 0, f"blocked at ({x},{y})")
+                if x == x2 and y == y2:
+                    break
+                if x < x2:
+                    x += 1
+                elif x > x2:
+                    x -= 1
+                elif y < y2:
+                    y += 1
+                else:
+                    y -= 1
+        script = (ROOT / "tools" / "xgba_r8_pc_controller.lua").read_text()
+        self.assertIn("local waypoints = {{16, 6}, {6, 6}, {6, 13}, {17, 13}, {17, 10}}", script)
+
     def test_c3c_graphical_probe_is_test_only(self):
         self.assertIn("gXgbaR8PcUiTrace = 1;", CLASSIC)
         self.assertIn("gXgbaR8PcUiTrace = 2;", CLASSIC)
