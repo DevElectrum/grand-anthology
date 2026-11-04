@@ -1330,13 +1330,21 @@ static u8 A2Save(u8 saveType)
 #if defined(XGBA_R8_TEST) && XGBA_R8_TEST
     // Only the disposable CI cartridge inserts genuine BoxPokemon records.
     // The metadata-pinned page groups are still committed by ordinary A2.
-    if (sA2Committed.nativeCounter == 1
-        && !XgbaR8CreateTestPokemon())
+    if (sA2Committed.nativeCounter == 1)
     {
-        // Tell the headless Lua driver exactly which runtime assertion
-        // failed instead of spinning in a Save-dialog timeout.
-        A2_SAVE_TRACE(0xE9, gXgbaR8FixtureStage);
-        goto failed;
+        if (!XgbaR8CreateTestPokemon())
+        {
+            // Tell the headless Lua driver exactly which runtime assertion
+            // failed instead of spinning in a Save-dialog timeout.
+            A2_SAVE_TRACE(0xE9, gXgbaR8FixtureStage);
+            goto failed;
+        }
+        // The fixture also creates a usable Zigzagoon in the party. The
+        // ordinary save already copied the player party above, BEFORE the
+        // CI fixture populated it. Copy again so a real cold Continue gets
+        // that party member, and never relax the last-usable-mon guard.
+        CalculatePlayerPartyCount();
+        CopyPartyAndObjectsToSave();
     }
 #endif
     A2_SAVE_TRACE(7, sA2Committed.nativeCounter);
