@@ -72,7 +72,7 @@ class R8PcChooserSourceTests(unittest.TestCase):
                         body.index("memcpy(target, &deposited.box"))
         self.assertIn("XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, &slot)", CLASSIC)
         self.assertIn("boxId %= TOTAL_BOXES_COUNT;", CLASSIC)
-        self.assertIn("XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, NULL)", SWSH)
+        self.assertIn("XgbaA2GameDepositPartyMonGlobal(partyPosition, boxId, NULL)", SWSH)
         self.assertIn("sStorage->state = 18;", SWSH)
 
     def test_c3b_remote_withdraw_preflights_both_ends(self):
@@ -240,6 +240,25 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("R8_PC_CONTROLLER_PARTY_EXIT_PASS", controller)
         self.assertIn("deposit_diag=", controller)
 
+
+    def test_swsh_remote_deposit_preserves_party_identity_across_grid_navigation(self):
+        # The box grid updates sCursorPosition to its 0..13 tile index.
+        # That index is NOT a party slot. The captured slot owns the
+        # source Pokemon and matching sprite throughout commit/rollback.
+        grid = SWSH.split("static void ChooseBox_CreateSprites(u8 curBox)\n{", 1)[1]
+        grid = grid.split("static void HandleChooseBoxInput", 1)[0] if "static void HandleChooseBoxInput" in grid else grid
+        self.assertIn("sChooseBoxMenu->savedCursorArea = sCursorArea;", grid)
+        self.assertIn("sChooseBoxMenu->savedCursorPosition = sCursorPosition;", grid)
+        self.assertIn("sCursorArea = CURSOR_AREA_IN_CHOOSE_BOX;", grid)
+        deposit = SWSH.split("static void Task_DepositMon(u8 taskId)\n{", 1)[1]
+        commit = deposit.split("    case 18:\n", 1)[1].split("    case 19:\n", 1)[0]
+        self.assertIn("sChooseBoxMenu->savedCursorArea != CURSOR_AREA_IN_PARTY", commit)
+        self.assertIn("sChooseBoxMenu->savedCursorPosition >= CalculatePlayerPartyCount()", commit)
+        self.assertIn("partyPosition = sChooseBoxMenu->savedCursorPosition;", commit)
+        self.assertIn("XgbaA2GameDepositPartyMonGlobal(partyPosition, boxId, NULL)", commit)
+        self.assertIn("sStorage->partySprites[partyPosition]", commit)
+        self.assertNotIn("XgbaA2GameDepositPartyMonGlobal(sCursorPosition", commit)
+        self.assertNotIn("sStorage->partySprites[sCursorPosition]", commit)
 
 if __name__ == "__main__":
     unittest.main()

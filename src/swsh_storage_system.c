@@ -2842,6 +2842,7 @@ static void Task_WithdrawMon(u8 taskId)
 static void Task_DepositMon(u8 taskId)
 {
     u8 boxId;
+    u8 partyPosition;
     s16 boxPosition;
 
     switch (sStorage->state)
@@ -3065,7 +3066,21 @@ static void Task_DepositMon(u8 taskId)
             SetPokeStorageTask(Task_PokeStorageMain);
             break;
         }
-        if (!XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, NULL))
+        // The grid uses sCursorPosition for its highlighted box tile.
+        // Preserve the party slot captured before opening the chooser;
+        // otherwise selecting Box 43 can deposit a different Pokemon.
+        if (sChooseBoxMenu->savedCursorArea != CURSOR_AREA_IN_PARTY
+            || sChooseBoxMenu->savedCursorPosition >= CalculatePlayerPartyCount())
+        {
+            PlaySE(SE_FAILURE);
+            ClearBottomWindow();
+            ChooseBox_DestroySprites();
+            FreeChooseBox();
+            SetPokeStorageTask(Task_PokeStorageMain);
+            break;
+        }
+        partyPosition = sChooseBoxMenu->savedCursorPosition;
+        if (!XgbaA2GameDepositPartyMonGlobal(partyPosition, boxId, NULL))
         {
             PlaySE(SE_FAILURE);
             PrintMessage(MSG_BOX_IS_FULL);
@@ -3076,10 +3091,10 @@ static void Task_DepositMon(u8 taskId)
         ClearBottomWindow();
         ChooseBox_DestroySprites();
         FreeChooseBox();
-        if (sStorage->partySprites[sCursorPosition] != NULL)
+        if (sStorage->partySprites[partyPosition] != NULL)
         {
-            DestroyBoxMonIcon(sStorage->partySprites[sCursorPosition]);
-            sStorage->partySprites[sCursorPosition] = NULL;
+            DestroyBoxMonIcon(sStorage->partySprites[partyPosition]);
+            sStorage->partySprites[partyPosition] = NULL;
         }
         sStorage->state = 19;
         break;

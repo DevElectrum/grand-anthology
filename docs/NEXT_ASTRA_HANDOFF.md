@@ -1,3 +1,11 @@
+# C3D1 SwSh production bug identified and corrected, acceptance pending (2026-11-04 UTC)
+
+- At experiment `e5ff77f5`, C3D1 Classic graphical roundtrip/Save3/cold audit passed. SwSh deposited Zigzagoon, not Squirtle; diagnostic `deposit_diag=97 (0x61)` showed source clear, Squirtle still in party and Zigzagoon in Box43. No evidence of E6 journal corruption.
+- Verified cause: SwSh ChooseBox grid overwrites shared `sCursorPosition` with the highlighted destination tile. Remote-deposit case 18 used it as the *source party slot*, despite having `sChooseBoxMenu->savedCursorPosition` from before chooser entry. Production fix now validates saved area/party count and uses the saved position for both backend transfer and sprite cleanup.
+- Run *one full* pinned two-frontend controller matrix and retain strict independent exact-record audit and cold Continue. Do not mark C3D1 accepted until both jobs pass. No main, XGBA, Mosaic, user saves or native ABI change. After C3D1, finish cross-group carry, transactional destructive-item safety, crash recovery and cross-region acceptance in grouped batches before Sinnoh.
+
+---
+
 # C3D1 two-engine evidence review and consolidated correction (2026-11-04 UTC; CI pending)
 
 - Source branch `xgba/a2-collection-lab`, prior candidate `e43d9699`. CI source regression, A2 storage contract, native A1, boot probe and real Pokémon cold persistence were GREEN. Controller run 41805373480 failed both frontends at later stages than previous runs.
