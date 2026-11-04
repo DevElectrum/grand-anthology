@@ -6,6 +6,8 @@ on:
     paths:
       - '.github/workflows/R8-PC-Controller.yml'
       - 'tools/xgba_r8_pc_controller.lua'
+      - 'test/overworld/test_xgba_r8_pc_chooser.py'
+      - 'src/data/swsh_storage_system.h'
       - 'tools/xgba_a2_symbol_env.py'
       - 'src/pokemon_storage_system.c'
       - 'src/swsh_storage_system.c'
