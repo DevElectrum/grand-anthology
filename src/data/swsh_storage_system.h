@@ -219,6 +219,7 @@ static const u8 *const sMenuTexts[] =
     [MENU_WITHDRAW]   = COMPOUND_STRING("Withdraw"),
     [MENU_MOVE]       = COMPOUND_STRING("Move"),
     [MENU_TRANSFER]   = COMPOUND_STRING("Transfer"),
+    [MENU_TRANSFER_ITEM] = COMPOUND_STRING("Transfer Item"),
     [MENU_R8_CLEAR_BOX]   = COMPOUND_STRING("Clear Box"),
     [MENU_R8_CLEAR_GROUP] = COMPOUND_STRING("Clear Group"),
     [MENU_R8_CLEAR_ALL]   = COMPOUND_STRING("Clear All"),
@@ -298,6 +299,7 @@ static const struct StorageMessage sMessages[] =
     [MSG_R8_CLEAR_NONE]       = {COMPOUND_STRING("No eligible Pokémon."), MSG_VAR_NONE},
     [MSG_R8_CLEAR_FAIL]       = {COMPOUND_STRING("Bag full or storage changed."), MSG_VAR_NONE},
     [MSG_R8_PROTECTED]        = {COMPOUND_STRING("This Pokémon is protected."), MSG_VAR_NONE},
+    [MSG_R8_ITEM_SWAP]        = {COMPOUND_STRING("Swap the held items?"), MSG_VAR_NONE},
 };
 
 // ============================================================================
