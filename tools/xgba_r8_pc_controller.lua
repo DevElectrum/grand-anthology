@@ -428,7 +428,7 @@ callbacks:add("frame", function()
     if stage == "roundtrip-to-party" then
         if drive() then
             local area, pos, partyCount = cursorState()
-            if area ~= 1 or partyCount < 2 or partyCount > 5 or pos >= partyCount then
+            if area ~= 1 or partyCount < 2 or partyCount > 5 or pos >= 6 then
                 fail("roundtrip_party_cursor_invalid area=" .. area .. " pos=" .. pos
                      .. " party=" .. partyCount)
             end
