@@ -414,9 +414,9 @@ callbacks:add("frame", function()
             if roundtripMode then
                 stage = "roundtrip-to-party"
                 if engine == "classic" then
-                    schedule({{UP, 2}, {0, 85}, {UP, 2}, {0, 85}, {A, 2}, {0, 180}})
+                    schedule({{UP, 2}, {0, 85}, {UP, 2}, {0, 85}, {UP, 2}, {0, 85}, {A, 2}, {0, 180}})
                 else
-                    schedule({{RIGHT, 2}, {0, 100}})
+                    schedule({{LEFT, 2}, {0, 100}})
                 end
                 return
             end
