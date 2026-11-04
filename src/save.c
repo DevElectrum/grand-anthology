@@ -1026,6 +1026,7 @@ EWRAM_DATA static struct
     u16 box;
     u8 slot;
     bool8 active;
+    bool8 itemMode;
 } sA2GlobalTransfer;
 
 bool8 XgbaA2GameBeginGlobalTransfer(u16 sourceBox, u8 sourcePosition)
@@ -1039,7 +1040,32 @@ bool8 XgbaA2GameBeginGlobalTransfer(u16 sourceBox, u8 sourcePosition)
     sA2GlobalTransfer.box = sourceBox;
     sA2GlobalTransfer.slot = sourcePosition;
     sA2GlobalTransfer.active = TRUE;
+    sA2GlobalTransfer.itemMode = FALSE;
     return TRUE;
+}
+
+bool8 XgbaA2GameBeginGlobalItemTransfer(u16 box, u8 slot)
+{
+    struct BoxPokemon *source = XgbaA2GameGlobalBoxMon(box, slot);
+    enum Item item;
+    if (sA2GlobalTransfer.active || source == NULL
+        || GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE)
+        return FALSE;
+    item = GetBoxMonData(source, MON_DATA_HELD_ITEM);
+    if (item == ITEM_NONE || ItemIsMail(item) || GetItemPocket(item) == POCKET_KEY_ITEMS
+        || (item >= ITEM_HM01 && item <= ITEM_HM08))
+        return FALSE;
+    memcpy(&sA2GlobalTransfer.identity, source, sizeof(*source));
+    sA2GlobalTransfer.box = box;
+    sA2GlobalTransfer.slot = slot;
+    sA2GlobalTransfer.active = TRUE;
+    sA2GlobalTransfer.itemMode = TRUE;
+    return TRUE;
+}
+
+bool8 XgbaA2GameGlobalItemTransferActive(void)
+{
+    return sA2GlobalTransfer.active && sA2GlobalTransfer.itemMode;
 }
 
 bool8 XgbaA2GameGlobalTransferActive(void)
@@ -1058,14 +1084,19 @@ bool8 XgbaA2GameGlobalTransferTargetOccupied(u16 destinationBox, u8 position)
     if (!sA2GlobalTransfer.active)
         return FALSE;
     dest = XgbaA2GameGlobalBoxMon(destinationBox, position);
-    return dest != NULL && GetBoxMonData(dest, MON_DATA_SPECIES) != SPECIES_NONE;
+    if (dest == NULL)
+        return FALSE;
+    if (sA2GlobalTransfer.itemMode)
+        return GetBoxMonData(dest, MON_DATA_HELD_ITEM) != ITEM_NONE;
+    return GetBoxMonData(dest, MON_DATA_SPECIES) != SPECIES_NONE;
 }
 
 bool8 XgbaA2GameCommitGlobalTransfer(u16 destinationBox, u8 position, bool8 allowSwap)
 {
     struct BoxPokemon *source, *dest;
     bool8 success;
-    if (!sA2GlobalTransfer.active || !XgbaA2GameCollectionReady())
+    if (!sA2GlobalTransfer.active || sA2GlobalTransfer.itemMode
+        || !XgbaA2GameCollectionReady())
         return FALSE;
     source = XgbaA2GameGlobalBoxMon(sA2GlobalTransfer.box, sA2GlobalTransfer.slot);
     dest = XgbaA2GameGlobalBoxMon(destinationBox, position);
@@ -1084,6 +1115,24 @@ bool8 XgbaA2GameCommitGlobalTransfer(u16 destinationBox, u8 position, bool8 allo
     if (success)
         XgbaA2GameCancelGlobalTransfer();
     return success;
+}
+
+bool8 XgbaA2GameCommitGlobalItemTransfer(u16 destBox, u8 destSlot, bool8 allowSwap)
+{
+    struct BoxPokemon *source, *dest;
+    if (!sA2GlobalTransfer.active || !sA2GlobalTransfer.itemMode
+        || !XgbaA2GameCollectionReady())
+        return FALSE;
+    source = XgbaA2GameGlobalBoxMon(sA2GlobalTransfer.box, sA2GlobalTransfer.slot);
+    dest = XgbaA2GameGlobalBoxMon(destBox, destSlot);
+    if (source == NULL || dest == NULL || source == dest
+        || memcmp(source, &sA2GlobalTransfer.identity, sizeof(*source)) != 0)
+        return FALSE;
+    if (!XgbaA2GameTransferGlobalHeldItem(sA2GlobalTransfer.box, sA2GlobalTransfer.slot,
+                                           destBox, destSlot, allowSwap))
+        return FALSE;
+    XgbaA2GameCancelGlobalTransfer();
+    return TRUE;
 }
 
 // C4 collection-level selection and all-or-nothing item/record deletion.
@@ -1274,6 +1323,15 @@ bool8 XgbaA2GameCanReleaseGlobalSingle(u16 globalBox, u8 slot)
                                          1U << slot) == 1;
 }
 
+bool8 XgbaA2GameCanReleasePartySingle(u8 slot)
+{
+    if (!XgbaA2GameCollectionReady() || slot >= PARTY_SIZE)
+        return FALSE;
+    return CountPartyNonEggMons() + CountStorageNonEggMons() >= 4
+        && CountPartyAliveNonEggMonsExcept(slot) != 0
+        && R8ReleaseEligible(&gParties[B_TRAINER_PLAYER][slot].box);
+}
+
 bool8 XgbaA2GameReleaseGlobalSingle(u16 globalBox, u8 slot)
 {
     if (!XgbaA2GameCanReleaseGlobalSingle(globalBox, slot))
@@ -1287,7 +1345,8 @@ bool8 XgbaA2GameTransferGlobalHeldItem(u16 fromBox, u8 fromPos,
     struct BoxPokemon *from = XgbaA2GameGlobalBoxMon(fromBox, fromPos);
     struct BoxPokemon *to = XgbaA2GameGlobalBoxMon(toBox, toPos);
     enum Item moving, replaced;
-    if (sA2GlobalTransfer.active || sR8ReleasePlanActive || from == NULL
+    if ((sA2GlobalTransfer.active && !sA2GlobalTransfer.itemMode)
+        || sR8ReleasePlanActive || from == NULL
         || to == NULL || from == to
         || GetBoxMonData(from, MON_DATA_SPECIES) == SPECIES_NONE
         || GetBoxMonData(to, MON_DATA_SPECIES) == SPECIES_NONE)
@@ -1304,6 +1363,8 @@ bool8 XgbaA2GameTransferGlobalHeldItem(u16 fromBox, u8 fromPos,
         return FALSE;
     SetBoxMonData(from, MON_DATA_HELD_ITEM, &replaced);
     SetBoxMonData(to, MON_DATA_HELD_ITEM, &moving);
+    TryBoxMonFormChange(from, FORM_CHANGE_ITEM_HOLD);
+    TryBoxMonFormChange(to, FORM_CHANGE_ITEM_HOLD);
     return TRUE;
 }
 

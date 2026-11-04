@@ -37,6 +37,9 @@ bool8 XgbaA2GameSwapGlobalBoxMons(u16 firstBox, u8 firstPos,
                                   u16 secondBox, u8 secondPos);
 // Non-destructive R8 cross-group move/swap, independent of box UI pointers.
 bool8 XgbaA2GameBeginGlobalTransfer(u16 sourceBox, u8 sourcePosition);
+bool8 XgbaA2GameBeginGlobalItemTransfer(u16 sourceBox, u8 sourcePosition);
+bool8 XgbaA2GameGlobalItemTransferActive(void);
+bool8 XgbaA2GameCommitGlobalItemTransfer(u16 destinationBox, u8 position, bool8 allowSwap);
 bool8 XgbaA2GameGlobalTransferActive(void);
 void XgbaA2GameCancelGlobalTransfer(void);
 bool8 XgbaA2GameGlobalTransferTargetOccupied(u16 destinationBox, u8 position);
@@ -53,6 +56,7 @@ u16 XgbaA2GamePlannedReleaseCount(void);
 void XgbaA2GameCancelGlobalRelease(void);
 bool8 XgbaA2GameCommitGlobalRelease(void);
 bool8 XgbaA2GameCanReleaseGlobalSingle(u16 globalBox, u8 slot);
+bool8 XgbaA2GameCanReleasePartySingle(u8 slot);
 bool8 XgbaA2GameReleaseGlobalSingle(u16 globalBox, u8 slot);
 // Move or swap the held items of two boxed Pokemon with no bag involvement.
 bool8 XgbaA2GameTransferGlobalHeldItem(u16 fromBox, u8 fromPos,
