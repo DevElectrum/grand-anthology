@@ -122,6 +122,7 @@ enum {
     MSG_R8_CLEAR_NONE,
     MSG_R8_CLEAR_FAIL,
     MSG_R8_PROTECTED,
+    MSG_R8_ITEM_SWAP,
 };
 
 // IDs for how to resolve variables in the above messages
@@ -144,6 +145,7 @@ enum {
     MENU_WITHDRAW,
     MENU_MOVE,
     MENU_TRANSFER,
+    MENU_TRANSFER_ITEM,
     MENU_R8_CLEAR_BOX,
     MENU_R8_CLEAR_GROUP,
     MENU_R8_CLEAR_ALL,
@@ -1119,6 +1121,7 @@ static const struct StorageMessage sMessages[] =
     [MSG_R8_CLEAR_NONE]       = {COMPOUND_STRING("No eligible POKéMON."), MSG_VAR_NONE},
     [MSG_R8_CLEAR_FAIL]       = {COMPOUND_STRING("BAG full or storage changed."), MSG_VAR_NONE},
     [MSG_R8_PROTECTED]        = {COMPOUND_STRING("This POKéMON is protected."), MSG_VAR_NONE},
+    [MSG_R8_ITEM_SWAP]        = {COMPOUND_STRING("Swap the held items?"), MSG_VAR_NONE},
 };
 
 static const struct WindowTemplate sYesNoWindowTemplate =
@@ -2480,7 +2483,9 @@ static void Task_PokeStorageMain(u8 taskId)
                 sR8TransferDestinationSlot = sCursorPosition;
                 SetPokeStorageTask(Task_R8ConfirmGlobalSwap);
             }
-            else if (XgbaA2GameCommitGlobalTransfer(destinationBox, sCursorPosition, FALSE))
+            else if ((XgbaA2GameGlobalItemTransferActive()
+                      ? XgbaA2GameCommitGlobalItemTransfer(destinationBox, sCursorPosition, FALSE)
+                      : XgbaA2GameCommitGlobalTransfer(destinationBox, sCursorPosition, FALSE)))
             {
                 PlaySE(SE_SELECT);
                 SetPokeStorageTask(Task_R8ReopenBox);
@@ -2869,6 +2874,24 @@ static void Task_OnSelectedMon(u8 taskId)
             SetPokeStorageTask(Task_PokeStorageMain);
             break;
 #if defined(XGBA_R8) && XGBA_R8
+        case MENU_TRANSFER_ITEM:
+            if (sStorage->boxOption == OPTION_MOVE_ITEMS && !IsMovingItem()
+                && sCursorArea == CURSOR_AREA_IN_BOX
+                && XgbaA2GameBeginGlobalItemTransfer(
+                    (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
+                    sCursorPosition))
+            {
+                PlaySE(SE_SELECT);
+                ClearBottomWindow();
+                SetPokeStorageTask(Task_JumpBox);
+            }
+            else
+            {
+                PlaySE(SE_FAILURE);
+                ClearBottomWindow();
+                SetPokeStorageTask(Task_PokeStorageMain);
+            }
+            break;
         case MENU_TRANSFER:
             if (sStorage->boxOption == OPTION_MOVE_MONS
                 && sCursorArea == CURSOR_AREA_IN_BOX && !sIsMonBeingMoved
@@ -2940,10 +2963,13 @@ static void Task_OnSelectedMon(u8 taskId)
             break;
         case MENU_RELEASE:
 #if defined(XGBA_R8) && XGBA_R8
-            if (sIsMonBeingMoved || (sCursorArea == CURSOR_AREA_IN_BOX
-                && !XgbaA2GameCanReleaseGlobalSingle(
-                    (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
-                    sCursorPosition)))
+            if (sIsMonBeingMoved
+                || (sCursorArea == CURSOR_AREA_IN_PARTY
+                    && !XgbaA2GameCanReleasePartySingle(sCursorPosition))
+                || (sCursorArea == CURSOR_AREA_IN_BOX
+                    && !XgbaA2GameCanReleaseGlobalSingle(
+                        (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
+                        sCursorPosition)))
             {
                 PlaySE(SE_FAILURE);
                 PrintMessage(MSG_R8_PROTECTED);
@@ -3970,7 +3996,8 @@ static void Task_R8ConfirmGlobalSwap(u8 taskId)
     switch (sStorage->state)
     {
     case 0:
-        PrintMessage(MSG_R8_SWAP_CONFIRM);
+        PrintMessage(XgbaA2GameGlobalItemTransferActive()
+                         ? MSG_R8_ITEM_SWAP : MSG_R8_SWAP_CONFIRM);
         ShowYesNoWindow(1);
         sStorage->state = 1;
         break;
@@ -3984,8 +4011,11 @@ static void Task_R8ConfirmGlobalSwap(u8 taskId)
             break;
         case 0:
             ClearBottomWindow();
-            if (XgbaA2GameCommitGlobalTransfer(sR8TransferDestinationBox,
-                                                sR8TransferDestinationSlot, TRUE))
+            if ((XgbaA2GameGlobalItemTransferActive()
+                 ? XgbaA2GameCommitGlobalItemTransfer(sR8TransferDestinationBox,
+                                                       sR8TransferDestinationSlot, TRUE)
+                 : XgbaA2GameCommitGlobalTransfer(sR8TransferDestinationBox,
+                                                   sR8TransferDestinationSlot, TRUE)))
             {
                 PlaySE(SE_SELECT);
                 SetPokeStorageTask(Task_R8ReopenBox);
@@ -7100,6 +7130,24 @@ static bool8 ReleaseMon(void)
 #if defined(XGBA_R8) && XGBA_R8
     // The old single-release path may discard held items when AddBagItem
     // rejects them. Shared C4 commit handles box releases atomically.
+    if (XgbaA2GameCollectionReady() && sIsMonBeingMoved)
+        return FALSE;
+    if (XgbaA2GameCollectionReady() && !sIsMonBeingMoved
+        && sCursorArea == CURSOR_AREA_IN_PARTY)
+    {
+        enum Item held;
+        if (!XgbaA2GameCanReleasePartySingle(sCursorPosition))
+            return FALSE;
+        held = (OW_PC_RELEASE_ITEM >= GEN_8)
+            ? GetMonData(&gParties[B_TRAINER_PLAYER][sCursorPosition], MON_DATA_HELD_ITEM)
+            : ITEM_NONE;
+        if (held != ITEM_NONE && !AddBagItem(held, 1))
+            return FALSE;
+        DestroyReleaseMonIcon();
+        PurgeMonOrBoxMon(TOTAL_BOXES_COUNT, sCursorPosition);
+        TryRefreshDisplayMon();
+        return TRUE;
+    }
     if (!sIsMonBeingMoved && sCursorArea == CURSOR_AREA_IN_BOX
         && XgbaA2GameCollectionReady())
     {
@@ -8423,6 +8471,10 @@ static bool8 SetMenuTexts_Item(void)
             {
                 SetMenuText(MENU_TAKE);
                 SetMenuText(MENU_BAG);
+#if defined(XGBA_R8) && XGBA_R8
+                if (sCursorArea == CURSOR_AREA_IN_BOX && XgbaA2GameCollectionReady())
+                    SetMenuText(MENU_TRANSFER_ITEM);
+#endif
             }
             SetMenuText(MENU_INFO);
         }
@@ -8664,6 +8716,7 @@ static const u8 *const sMenuTexts[] =
     [MENU_WITHDRAW]   = COMPOUND_STRING("Withdraw"),
     [MENU_MOVE]       = COMPOUND_STRING("Move"),
     [MENU_TRANSFER]   = COMPOUND_STRING("Transfer"),
+    [MENU_TRANSFER_ITEM] = COMPOUND_STRING("Transfer Item"),
     [MENU_R8_CLEAR_BOX]   = COMPOUND_STRING("Clear Box"),
     [MENU_R8_CLEAR_GROUP] = COMPOUND_STRING("Clear Group"),
     [MENU_R8_CLEAR_ALL]   = COMPOUND_STRING("Clear All"),
