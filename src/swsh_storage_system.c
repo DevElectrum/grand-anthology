@@ -115,6 +115,11 @@ enum {
     MSG_BULK_DONE,
     MSG_BULK_NONE,
     MSG_R8_SWAP_CONFIRM,
+    MSG_R8_CLEAR_CONFIRM,
+    MSG_R8_CLEAR_FINAL,
+    MSG_R8_CLEAR_NONE,
+    MSG_R8_CLEAR_FAIL,
+    MSG_R8_PROTECTED,
 };
 
 // IDs for how to resolve variables in the above messages
@@ -127,6 +132,7 @@ enum {
     MSG_VAR_RELEASE_MON_2, // Unused
     MSG_VAR_RELEASE_MON_3,
     MSG_VAR_ITEM_NAME,
+    MSG_VAR_R8_COUNT,
     MSG_VAR_BULK_COUNT,
     MSG_VAR_BULK_REVIEW,
 };
@@ -138,6 +144,9 @@ enum {
     MENU_WITHDRAW,
     MENU_MOVE,
     MENU_TRANSFER,
+    MENU_R8_CLEAR_BOX,
+    MENU_R8_CLEAR_GROUP,
+    MENU_R8_CLEAR_ALL,
     MENU_SHIFT,
     MENU_PLACE,
     MENU_SUMMARY,
@@ -610,6 +619,7 @@ EWRAM_DATA static bool8 sIsMonBeingMoved = 0;
 #if defined(XGBA_R8) && XGBA_R8
 EWRAM_DATA static u16 sR8TransferDestinationBox;
 EWRAM_DATA static u8 sR8TransferDestinationSlot;
+EWRAM_DATA static u8 sR8ClearScope;
 #endif
 EWRAM_DATA static u8 sMovingMonOrigBoxId = 0;
 EWRAM_DATA static u8 sMovingMonOrigBoxPos = 0;
@@ -658,6 +668,7 @@ static void Task_PokeStorageMain(u8);
 static void Task_JumpBox(u8);
 #if defined(XGBA_R8) && XGBA_R8
 static void Task_R8ConfirmGlobalSwap(u8);
+static void Task_R8GlobalClear(u8);
 #endif
 static void Task_MakeDefaultBox(u8);
 static void Task_HandleWallpapers(u8);
@@ -713,7 +724,7 @@ static void SetShiftedMonData(u8, u8);
 static void InitReleaseMon(void);
 static bool8 TryHideReleaseMon(void);
 static void InitCanReleaseMonVars(void);
-static void ReleaseMon(void);
+static bool8 ReleaseMon(void);
 static bool32 AtLeastThreeUsableMons(void);
 static s8 RunCanReleaseMon(void);
 static void SaveMovingMon(void);
@@ -2695,6 +2706,18 @@ static void Task_OnSelectedMon(u8 taskId)
             }
             break;
         case MENU_RELEASE:
+#if defined(XGBA_R8) && XGBA_R8
+            if (sIsMonBeingMoved || (sCursorArea == CURSOR_AREA_IN_BOX
+                && !XgbaA2GameCanReleaseGlobalSingle(
+                    (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
+                    sCursorPosition)))
+            {
+                PlaySE(SE_FAILURE);
+                PrintMessage(MSG_R8_PROTECTED);
+                sStorage->state = 6;
+                break;
+            }
+#endif
             if (IsRemovingLastPartyMon())
             {
                 sStorage->state = 3;
@@ -3444,7 +3467,13 @@ static void Task_ReleaseMon(u8 taskId)
         }
         break;
     case 3:
-        ReleaseMon();
+        if (!ReleaseMon())
+        {
+            PlaySE(SE_FAILURE);
+            PrintMessage(MSG_R8_CLEAR_FAIL);
+            sStorage->state = 7;
+            break;
+        }
         RefreshDisplayMonData();
         PrintMessage(MSG_WAS_RELEASED);
         sStorage->state++;
@@ -3986,6 +4015,20 @@ static void Task_HandleBoxOptions(u8 taskId)
             PlaySE(SE_SELECT);
             SetPokeStorageTask(Task_HandleWallpapers);
             break;
+#if defined(XGBA_R8) && XGBA_R8
+        case MENU_R8_CLEAR_BOX:
+            sR8ClearScope = XGBA_R8_RELEASE_BOX;
+            SetPokeStorageTask(Task_R8GlobalClear);
+            break;
+        case MENU_R8_CLEAR_GROUP:
+            sR8ClearScope = XGBA_R8_RELEASE_GROUP;
+            SetPokeStorageTask(Task_R8GlobalClear);
+            break;
+        case MENU_R8_CLEAR_ALL:
+            sR8ClearScope = XGBA_R8_RELEASE_ALL;
+            SetPokeStorageTask(Task_R8GlobalClear);
+            break;
+#endif
         case MENU_JUMP:
             PlaySE(SE_SELECT);
             SetPokeStorageTask(Task_JumpBox);
@@ -4081,6 +4124,89 @@ static void Task_WallpaperChange(u8 taskId)
         SetPokeStorageTask(Task_PokeStorageMain);
     }
 }
+
+#if defined(XGBA_R8) && XGBA_R8
+static void Task_R8GlobalClear(u8 taskId)
+{
+    u16 globalBox = (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox();
+    (void)taskId;
+    switch (sStorage->state)
+    {
+    case 0:
+        if (XgbaA2GamePlanGlobalRelease(sR8ClearScope, globalBox, 0) == 0)
+        {
+            PlaySE(SE_FAILURE);
+            PrintMessage(MSG_R8_CLEAR_NONE);
+            sStorage->state = 4;
+        }
+        else
+        {
+            PrintMessage(MSG_R8_CLEAR_CONFIRM);
+            ShowYesNoWindow(1);
+            sStorage->state = 1;
+        }
+        break;
+    case 1:
+        switch (Menu_ProcessInputNoWrapClearOnChoose())
+        {
+        case MENU_B_PRESSED:
+        case 1:
+            XgbaA2GameCancelGlobalRelease();
+            ClearBottomWindow();
+            SetPokeStorageTask(Task_PokeStorageMain);
+            break;
+        case 0:
+            ClearBottomWindow();
+            if (sR8ClearScope == XGBA_R8_RELEASE_BOX)
+                sStorage->state = 3;
+            else
+            {
+                PrintMessage(MSG_R8_CLEAR_FINAL);
+                ShowYesNoWindow(1);
+                sStorage->state = 2;
+            }
+            break;
+        }
+        break;
+    case 2:
+        switch (Menu_ProcessInputNoWrapClearOnChoose())
+        {
+        case MENU_B_PRESSED:
+        case 1:
+            XgbaA2GameCancelGlobalRelease();
+            ClearBottomWindow();
+            SetPokeStorageTask(Task_PokeStorageMain);
+            break;
+        case 0:
+            ClearBottomWindow();
+            sStorage->state = 3;
+            break;
+        }
+        break;
+    case 3:
+        if (XgbaA2GameCommitGlobalRelease())
+        {
+            PlaySE(SE_SELECT);
+            SetPokeStorageTask(Task_A2ReopenPage);
+        }
+        else
+        {
+            XgbaA2GameCancelGlobalRelease();
+            PlaySE(SE_FAILURE);
+            PrintMessage(MSG_R8_CLEAR_FAIL);
+            sStorage->state = 4;
+        }
+        break;
+    case 4:
+        if (JOY_NEW(A_BUTTON | B_BUTTON | START_BUTTON | DPAD_ANY))
+        {
+            ClearBottomWindow();
+            SetPokeStorageTask(Task_PokeStorageMain);
+        }
+        break;
+    }
+}
+#endif
 
 #if defined(XGBA_R8) && XGBA_R8
 static void Task_R8ConfirmGlobalSwap(u8 taskId)
@@ -5293,6 +5419,12 @@ static void PrintMessage(u8 id)
     switch (sMessages[id].format)
     {
     case MSG_VAR_NONE:
+        break;
+    case MSG_VAR_R8_COUNT:
+#if defined(XGBA_R8) && XGBA_R8
+        ConvertIntToDecimalStringN(gStringVar1, XgbaA2GamePlannedReleaseCount(), STR_CONV_MODE_LEFT_ALIGN, 4);
+        DynamicPlaceholderTextUtil_SetPlaceholderPtr(0, gStringVar1);
+#endif
         break;
     case MSG_VAR_MON_NAME_1:
     case MSG_VAR_MON_NAME_2:
@@ -7390,8 +7522,23 @@ static bool8 TryHideReleaseMon(void)
     }
 }
 
-static void ReleaseMon(void)
+static bool8 ReleaseMon(void)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    // The old single-release path may discard held items when AddBagItem
+    // rejects them. Shared C4 commit handles box releases atomically.
+    if (!sIsMonBeingMoved && sCursorArea == CURSOR_AREA_IN_BOX
+        && XgbaA2GameCollectionReady())
+    {
+        if (!XgbaA2GameReleaseGlobalSingle(
+            (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
+            sCursorPosition))
+            return FALSE;
+        DestroyReleaseMonIcon();
+        TryRefreshDisplayMon();
+        return TRUE;
+    }
+#endif
     u8 boxId;
     enum Item item = ITEM_NONE;
 
@@ -7420,6 +7567,7 @@ static void ReleaseMon(void)
             AddBagItem(item, 1);
     }
     TryRefreshDisplayMon();
+    return TRUE;
 }
 
 static void TrySetCursorFistAnim(void)
@@ -7516,6 +7664,13 @@ static void InitCanReleaseMonVars(void)
 
 static bool32 AtLeastThreeUsableMons(void)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    if (XgbaA2GameCollectionReady())
+        return CountPartyNonEggMons() + CountStorageNonEggMons()
+            + (sIsMonBeingMoved ? 1 : 0) >= 3;
+    if (!XgbaA2GameFreshUncommitted())
+        return FALSE;
+#endif
     s32 i, j;
     s32 count = (sIsMonBeingMoved != FALSE);
 
@@ -8666,7 +8821,16 @@ static void AddBoxOptionsMenu(void)
     if (sStorage->boxOption == OPTION_MOVE_MONS && !sIsMonBeingMoved)
     {
         SetMenuText(MENU_BULK_RELEASE);
+#if defined(XGBA_R8) && XGBA_R8
+        if (XgbaA2GameCollectionReady())
+        {
+            SetMenuText(MENU_R8_CLEAR_BOX);
+            SetMenuText(MENU_R8_CLEAR_GROUP);
+            SetMenuText(MENU_R8_CLEAR_ALL);
+        }
+#else
         SetMenuText(MENU_CLEAR_BOX);
+#endif
     }
 }
 

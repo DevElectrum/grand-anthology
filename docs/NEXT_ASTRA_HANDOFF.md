@@ -1,3 +1,10 @@
+# C4 scoped Clear Box/Group/All wired into both frontends (2026-11-04, CI acceptance pending)
+
+- Both Classic and SwSh now expose explicit Clear Box (30), Clear Group (420) and Clear All (3360) in Move Mons box-title options, backed by shared global mask. Both ask a first Yes/No and group/all also a second final confirmation. The confirmation prints a 4-digit selected count. Cancel never modifies bag or storage; commit performs one bag-atomic mutation and rebuilds the UI. Protected records and last-three fail closed.
+- R8 single boxed-mon release is routed through the same protected global transaction, including held-item rollback. Existing 14-box-only AtLeastThree scan replaced for healthy R8; native-only path unchanged. SwSh's existing manual 30-slot Bulk Release still needs redirect through shared commit. CI and real controller interaction for new UI must be added and tested; do NOT mark C4 accepted yet.
+
+---
+
 # C4 shared global release and held-item transaction backend staged (2026-11-04 UTC, unverified)
 
 - Shared R8-only 3360-slot bitset now plans Box/Group/All/explicit mask/Single selections. Blocks favorite mark bit3, eggs, legendary/sublegendary/mythical species and forms, mail/key-class holders and the four conservative field moves; preserves three non-egg owned Pokémon. Two-step UI confirmation still needs wiring. Commit rechecks all source records via fingerprint/eligibility, snapshots live bag, returns *all* held items or rolls bag back without deleting any Pokémon, then clears only selected records. Also exposes a checked global held-item Move/Swap backend.
