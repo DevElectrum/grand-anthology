@@ -20,6 +20,10 @@
 #include "xgba_a2_game.h"
 #if defined(XGBA_R8) && XGBA_R8
 #include "xgba_r8_memory.h"
+#include "data.h"
+#include "item.h"
+#include "constants/items.h"
+#include "constants/moves.h"
 #if defined(XGBA_R8_TEST) && XGBA_R8_TEST
 #include "xgba_r8_runtime_test.h"
 #endif
@@ -1080,6 +1084,227 @@ bool8 XgbaA2GameCommitGlobalTransfer(u16 destinationBox, u8 position, bool8 allo
     if (success)
         XgbaA2GameCancelGlobalTransfer();
     return success;
+}
+
+// C4 collection-level selection and all-or-nothing item/record deletion.
+// The 420-byte mask indexes all 3360 global box positions. Only the
+// existing A2 full-game Save persists these changes, never this scratch.
+#define R8_RELEASE_SLOTS (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT * IN_BOX_COUNT)
+#define R8_RELEASE_MASK_BYTES ((R8_RELEASE_SLOTS + 7) / 8)
+EWRAM_DATA static u8 sR8ReleaseMask[R8_RELEASE_MASK_BYTES];
+EWRAM_DATA static u16 sR8ReleaseCount;
+EWRAM_DATA static u32 sR8ReleaseFingerprint;
+EWRAM_DATA static bool8 sR8ReleasePlanActive;
+STATIC_ASSERT(0x50000U + sizeof(struct Bag) < XGBA_R8_RAM_BYTES, R8ReleaseBagRollbackFits);
+
+static bool8 R8ReleaseMaskHas(u32 index)
+{
+    return (sR8ReleaseMask[index / 8] & (1U << (index % 8))) != 0;
+}
+
+static void R8ReleaseMaskAdd(u32 index)
+{
+    sR8ReleaseMask[index / 8] |= (1U << (index % 8));
+}
+
+static bool8 R8ReleaseEligible(struct BoxPokemon *mon)
+{
+    enum Species species;
+    enum Species base;
+    enum Item held;
+    // Conservative during R8: these field moves are never removed in a
+    // collection-wide destructive operation, even when other users exist.
+    u16 protectedMoves[] = {MOVE_SURF, MOVE_DIVE, MOVE_STRENGTH,
+                            MOVE_ROCK_SMASH, MOVES_COUNT};
+
+    if (mon == NULL)
+        return FALSE;
+    species = GetBoxMonData(mon, MON_DATA_SPECIES);
+    if (species == SPECIES_NONE || GetBoxMonData(mon, MON_DATA_IS_EGG)
+        || (GetBoxMonData(mon, MON_DATA_MARKINGS) & (1 << 3)))
+        return FALSE;
+    base = NationalPokedexNumToSpecies(gSpeciesInfo[species].natDexNum);
+    if (gSpeciesInfo[species].isRestrictedLegendary
+        || gSpeciesInfo[species].isSubLegendary
+        || gSpeciesInfo[species].isMythical
+        || gSpeciesInfo[base].isRestrictedLegendary
+        || gSpeciesInfo[base].isSubLegendary
+        || gSpeciesInfo[base].isMythical)
+        return FALSE;
+    held = GetBoxMonData(mon, MON_DATA_HELD_ITEM);
+    if (ItemIsMail(held)
+        || (held != ITEM_NONE && (GetItemPocket(held) == POCKET_KEY_ITEMS
+            || (held >= ITEM_HM01 && held <= ITEM_HM08))))
+        return FALSE;
+    if (GetBoxMonData(mon, MON_DATA_KNOWN_MOVES, (u8 *)protectedMoves))
+        return FALSE;
+    return TRUE;
+}
+
+static u32 R8ReleaseComputeFingerprint(void)
+{
+    u32 index;
+    u32 digest = 2166136261U;
+    for (index = 0; index < R8_RELEASE_SLOTS; index++)
+    {
+        struct BoxPokemon *mon;
+        const u8 *bytes;
+        u32 j;
+        if (!R8ReleaseMaskHas(index))
+            continue;
+        mon = XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT, index % IN_BOX_COUNT);
+        if (mon == NULL)
+            return 0;
+        bytes = (const u8 *)mon;
+        digest = (digest ^ index) * 16777619U;
+        for (j = 0; j < sizeof(*mon); j++)
+            digest = (digest ^ bytes[j]) * 16777619U;
+    }
+    return digest;
+}
+
+void XgbaA2GameCancelGlobalRelease(void)
+{
+    memset(sR8ReleaseMask, 0, sizeof(sR8ReleaseMask));
+    sR8ReleaseCount = 0;
+    sR8ReleaseFingerprint = 0;
+    sR8ReleasePlanActive = FALSE;
+}
+
+u16 XgbaA2GamePlannedReleaseCount(void)
+{
+    return sR8ReleasePlanActive ? sR8ReleaseCount : 0;
+}
+
+u16 XgbaA2GamePlanGlobalRelease(u8 scope, u16 globalBox, u32 localMask)
+{
+    u32 occupied, limit, index;
+    u32 firstBox, lastBox;
+
+    XgbaA2GameCancelGlobalRelease();
+    if (!XgbaA2GameCollectionReady() || sA2GlobalTransfer.active
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT
+        || scope > XGBA_R8_RELEASE_SINGLE)
+        return 0;
+    occupied = CountPartyNonEggMons() + CountStorageNonEggMons();
+    limit = occupied > 3 ? occupied - 3 : 0;
+    if (limit == 0)
+        return 0;
+
+    firstBox = scope == XGBA_R8_RELEASE_ALL ? 0
+             : scope == XGBA_R8_RELEASE_GROUP ? (globalBox / TOTAL_BOXES_COUNT) * TOTAL_BOXES_COUNT
+             : globalBox;
+    lastBox = scope == XGBA_R8_RELEASE_ALL ? XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT
+            : scope == XGBA_R8_RELEASE_GROUP ? firstBox + TOTAL_BOXES_COUNT
+            : firstBox + 1;
+    for (index = firstBox * IN_BOX_COUNT; index < lastBox * IN_BOX_COUNT; index++)
+    {
+        struct BoxPokemon *mon;
+        u8 localPosition = index % IN_BOX_COUNT;
+        if (sR8ReleaseCount >= limit)
+            break;
+        if (scope == XGBA_R8_RELEASE_LOCAL_MASK
+            && !(localMask & (1U << localPosition)))
+            continue;
+        if (scope == XGBA_R8_RELEASE_SINGLE
+            && !(localMask & (1U << localPosition)))
+            continue;
+        mon = XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT, localPosition);
+        if (!R8ReleaseEligible(mon))
+            continue;
+        R8ReleaseMaskAdd(index);
+        sR8ReleaseCount++;
+    }
+    if (sR8ReleaseCount == 0)
+        return 0;
+    sR8ReleaseFingerprint = R8ReleaseComputeFingerprint();
+    sR8ReleasePlanActive = sR8ReleaseFingerprint != 0;
+    return XgbaA2GamePlannedReleaseCount();
+}
+
+bool8 XgbaA2GameCommitGlobalRelease(void)
+{
+    struct Bag *rollback = (struct Bag *)(XGBA_R8_RAM_BASE + 0x50000U);
+    u32 occupied, index;
+    if (!sR8ReleasePlanActive || sR8ReleaseCount == 0
+        || !XgbaA2GameCollectionReady() || sA2GlobalTransfer.active
+        || R8ReleaseComputeFingerprint() != sR8ReleaseFingerprint)
+        return FALSE;
+    occupied = CountPartyNonEggMons() + CountStorageNonEggMons();
+    if (occupied < (u32)sR8ReleaseCount + 3)
+        return FALSE;
+    // Revalidate every source. No mutating operations happen before this.
+    for (index = 0; index < R8_RELEASE_SLOTS; index++)
+    {
+        if (R8ReleaseMaskHas(index)
+            && !R8ReleaseEligible(XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT,
+                                                           index % IN_BOX_COUNT)))
+            return FALSE;
+    }
+    // The bag is fixed ABI. Stage actual additions with a rollback copy;
+    // no Pokémon source is erased unless *every* held item fitted.
+    *rollback = gSaveBlock1Ptr->bag;
+    for (index = 0; index < R8_RELEASE_SLOTS; index++)
+    {
+        enum Item held;
+        if (!R8ReleaseMaskHas(index))
+            continue;
+        held = GetBoxMonData(XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT,
+                                                    index % IN_BOX_COUNT), MON_DATA_HELD_ITEM);
+        if (held != ITEM_NONE && !AddBagItem(held, 1))
+        {
+            gSaveBlock1Ptr->bag = *rollback;
+            return FALSE;
+        }
+    }
+    // All fallible work finished. Erase exactly the selected global slots.
+    for (index = 0; index < R8_RELEASE_SLOTS; index++)
+        if (R8ReleaseMaskHas(index))
+            ZeroBoxMonData(XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT,
+                                                  index % IN_BOX_COUNT));
+    XgbaA2GameCancelGlobalRelease();
+    return TRUE;
+}
+
+bool8 XgbaA2GameCanReleaseGlobalSingle(u16 globalBox, u8 slot)
+{
+    if (slot >= IN_BOX_COUNT)
+        return FALSE;
+    return XgbaA2GamePlanGlobalRelease(XGBA_R8_RELEASE_SINGLE, globalBox,
+                                         1U << slot) == 1;
+}
+
+bool8 XgbaA2GameReleaseGlobalSingle(u16 globalBox, u8 slot)
+{
+    if (!XgbaA2GameCanReleaseGlobalSingle(globalBox, slot))
+        return FALSE;
+    return XgbaA2GameCommitGlobalRelease();
+}
+
+bool8 XgbaA2GameTransferGlobalHeldItem(u16 fromBox, u8 fromPos,
+                                      u16 toBox, u8 toPos, bool8 allowSwap)
+{
+    struct BoxPokemon *from = XgbaA2GameGlobalBoxMon(fromBox, fromPos);
+    struct BoxPokemon *to = XgbaA2GameGlobalBoxMon(toBox, toPos);
+    enum Item moving, replaced;
+    if (sA2GlobalTransfer.active || sR8ReleasePlanActive || from == NULL
+        || to == NULL || from == to
+        || GetBoxMonData(from, MON_DATA_SPECIES) == SPECIES_NONE
+        || GetBoxMonData(to, MON_DATA_SPECIES) == SPECIES_NONE)
+        return FALSE;
+    moving = GetBoxMonData(from, MON_DATA_HELD_ITEM);
+    replaced = GetBoxMonData(to, MON_DATA_HELD_ITEM);
+    if (moving == ITEM_NONE || ItemIsMail(moving) || ItemIsMail(replaced)
+        || GetItemPocket(moving) == POCKET_KEY_ITEMS
+        || (moving >= ITEM_HM01 && moving <= ITEM_HM08)
+        || (replaced != ITEM_NONE && !allowSwap))
+        return FALSE;
+    if (replaced != ITEM_NONE && (GetItemPocket(replaced) == POCKET_KEY_ITEMS
+        || (replaced >= ITEM_HM01 && replaced <= ITEM_HM08)))
+        return FALSE;
+    SetBoxMonData(from, MON_DATA_HELD_ITEM, &replaced);
+    SetBoxMonData(to, MON_DATA_HELD_ITEM, &moving);
+    return TRUE;
 }
 
 // Direct party deposit: destination and party constraints are validated

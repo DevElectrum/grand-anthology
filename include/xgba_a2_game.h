@@ -41,6 +41,22 @@ bool8 XgbaA2GameGlobalTransferActive(void);
 void XgbaA2GameCancelGlobalTransfer(void);
 bool8 XgbaA2GameGlobalTransferTargetOccupied(u16 destinationBox, u8 position);
 bool8 XgbaA2GameCommitGlobalTransfer(u16 destinationBox, u8 position, bool8 allowSwap);
+// Shared C4 release transaction. Scope is explicitly chosen by the player;
+// a 3360-bit plan never changes Pokemon or the bag until checked commit.
+#define XGBA_R8_RELEASE_BOX 0
+#define XGBA_R8_RELEASE_GROUP 1
+#define XGBA_R8_RELEASE_ALL 2
+#define XGBA_R8_RELEASE_LOCAL_MASK 3
+#define XGBA_R8_RELEASE_SINGLE 4
+u16 XgbaA2GamePlanGlobalRelease(u8 scope, u16 globalBox, u32 localMask);
+u16 XgbaA2GamePlannedReleaseCount(void);
+void XgbaA2GameCancelGlobalRelease(void);
+bool8 XgbaA2GameCommitGlobalRelease(void);
+bool8 XgbaA2GameCanReleaseGlobalSingle(u16 globalBox, u8 slot);
+bool8 XgbaA2GameReleaseGlobalSingle(u16 globalBox, u8 slot);
+// Move or swap the held items of two boxed Pokemon with no bag involvement.
+bool8 XgbaA2GameTransferGlobalHeldItem(u16 fromBox, u8 fromPos,
+                                      u16 toBox, u8 toPos, bool8 allowSwap);
 // Checked party-to-global deposit. Returns FALSE without mutation for
 // invalid/full destination, mail, empty slot or last usable party Pokémon.
 bool8 XgbaA2GameDepositPartyMonGlobal(u8 partyPosition, u16 globalBox,

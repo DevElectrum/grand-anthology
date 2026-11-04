@@ -1,3 +1,10 @@
+# C4 shared global release and held-item transaction backend staged (2026-11-04 UTC, unverified)
+
+- Shared R8-only 3360-slot bitset now plans Box/Group/All/explicit mask/Single selections. Blocks favorite mark bit3, eggs, legendary/sublegendary/mythical species and forms, mail/key-class holders and the four conservative field moves; preserves three non-egg owned Pokémon. Two-step UI confirmation still needs wiring. Commit rechecks all source records via fingerprint/eligibility, snapshots live bag, returns *all* held items or rolls bag back without deleting any Pokémon, then clears only selected records. Also exposes a checked global held-item Move/Swap backend.
+- This commit alone is **not** UI acceptance. Classic/SwSh integration and real controller/disk tests remain open. Keep frozen XGBA/main/Mosaic/user saves untouched.
+
+---
+
 # C3D2 large implementation candidate (2026-11-04 UTC, unverified)
 
 - Added R8-only source-anchored virtual carry in `src/save.c`: the chosen 80-byte boxed record stays in canonical RAM during global Jump/slot selection, and a checked Move/Swap commits only with exact source-byte revalidation. Classic and SwSh now expose `Transfer` in boxed-mon Move menu and use existing 112-box Jump to choose a destination box, then exact cursor slot; occupied target requires Yes/No confirmation. Cancel leaves source unmodified.
