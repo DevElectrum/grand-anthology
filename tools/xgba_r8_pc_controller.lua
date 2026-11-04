@@ -19,13 +19,15 @@ local action = os.getenv("R8_PC_ACTION") or "entry"
 assert(action == "entry" or action == "preview-cancel"
        or action == "jump-commit" or action == "jump-save"
        or action == "withdraw" or action == "roundtrip"
-       or action == "roundtrip-save")
+       or action == "roundtrip-save" or action == "transfer"
+       or action == "transfer-save")
 local chooserTraceAddr = action ~= "entry" and address("A2_R8_PC_CHOOSER_TRACE") or nil
-local saveMode = action == "jump-save" or action == "roundtrip-save"
+local transferMode = action == "transfer" or action == "transfer-save"
+local saveMode = action == "jump-save" or action == "roundtrip-save" or action == "transfer-save"
 local roundtripMode = action == "roundtrip" or action == "roundtrip-save"
 local withdrawMode = action == "withdraw" or roundtripMode
-local c3dTraceAddr = withdrawMode and address("A2_R8_PC_C3D_TRACE") or nil
-local depositDiagAddr = roundtripMode and address("A2_R8_PC_DEPOSIT_DIAG") or nil
+local c3dTraceAddr = (withdrawMode or transferMode) and address("A2_R8_PC_C3D_TRACE") or nil
+local depositDiagAddr = (roundtripMode or transferMode) and address("A2_R8_PC_DEPOSIT_DIAG") or nil
 local expectedMonMenuStage = engine == "classic" and 13 or 14
 local expectedDepositChooserStage = engine == "classic" and 15 or 16
 local saveCounterAddr = saveMode and address("A2_SAVE_COUNTER") or nil
@@ -283,8 +285,8 @@ callbacks:add("frame", function()
     end
     if stage == "preview-open-jump" then
         if drive() then
-            if not saveMode and not withdrawMode then verifyChooser(0) end
-            if saveMode or withdrawMode then
+            if not saveMode and not withdrawMode and not transferMode then verifyChooser(0) end
+            if saveMode or withdrawMode or transferMode then
                 -- Populated Save2 starts on global Box 30 (zero-index 29).
                 -- L switches to global Box 16, LEFT selects Box 15.
                 verifyChooser(29, 2)
@@ -364,6 +366,206 @@ callbacks:add("frame", function()
         return
     end
 
+    -- Dedicated C3D2 GUI route. Source stays in Box15 during the global
+    -- chooser; no party withdrawal or test-only mutation creates this move.
+    if stage == "transfer-down-from-title" then
+        if drive() then
+            local area, pos = cursorState()
+            if area ~= 0 or pos > 5 then
+                fail("transfer_source_not_in_first_row area=" .. area .. " pos=" .. pos)
+            end
+            local actions = {}
+            for i = pos + 1, 5 do
+                actions[#actions + 1] = {RIGHT, 2}
+                actions[#actions + 1] = {0, 55}
+            end
+            if #actions == 0 then actions = {{0, 20}} end
+            stage = "transfer-source-position"
+            schedule(actions)
+        end
+        return
+    end
+    if stage == "transfer-source-position" then
+        if drive() then
+            local area, pos = cursorState()
+            if area ~= 0 or pos ~= 5 then fail("transfer_wrong_source " .. area .. "," .. pos) end
+            stage = "transfer-source-menu"
+            schedule({{A, 2}, {0, 145}})
+        end
+        return
+    end
+    if stage == "transfer-source-menu" then
+        if drive() then
+            if emu:read32(uiTrace) ~= expectedMonMenuStage then
+                fail("transfer_source_menu_not_open")
+            end
+            -- Boxed Move, Transfer, Summary, Withdraw: the second action is Transfer.
+            stage = "transfer-open-global-chooser"
+            schedule({{DOWN, 2}, {0, 55}, {A, 2}, {0, 155}})
+        end
+        return
+    end
+    if stage == "transfer-open-global-chooser" then
+        if drive() then
+            verifyChooser(14, 1)
+            stage = "transfer-preview-group2"
+            schedule({{R, 2}, {0, 100}})
+        end
+        return
+    end
+    if stage == "transfer-preview-group2" then
+        if drive() then
+            verifyChooser(28, 1)
+            stage = "transfer-preview-group3"
+            schedule({{R, 2}, {0, 100}})
+        end
+        return
+    end
+    if stage == "transfer-preview-group3" then
+        if drive() then
+            verifyChooser(42, 1)
+            stage = "transfer-select-global-box"
+            schedule({{A, 2}, {0, 220}})
+        end
+        return
+    end
+    if stage == "transfer-select-global-box" then
+        if drive() then
+            commitStarted = frame
+            stage = "transfer-await-global-box"
+        end
+        return
+    end
+    if stage == "transfer-await-global-box" then
+        emu:setKeys(0)
+        local marker = emu:read32(chooserTraceAddr)
+        if emu:read32(uiTrace) == expectedStage
+           and (marker & 0x40000000) ~= 0
+           and ((marker >> 16) & 0xFF) == 3 and (marker & 0xFFFF) == 0 then
+            report("R8_PC_CONTROLLER_TRANSFER_BOX_READY global_box=43")
+            stage = "transfer-to-slot"
+            schedule({{0, 45}})
+        elseif frame - commitStarted > 2800 then
+            fail("transfer_destination_box_not_reopened")
+        end
+        return
+    end
+    if stage == "transfer-to-slot" then
+        if drive() then
+            local area, pos = cursorState()
+            if area == 2 then
+                schedule({{DOWN, 2}, {0, 105}})
+            elseif area == 0 and pos <= 5 then
+                if pos == 1 then
+                    stage = "transfer-commit-slot"
+                    schedule({{A, 2}, {0, 240}})
+                else
+                    local key = pos < 1 and RIGHT or LEFT
+                    schedule({{key, 2}, {0, 95}})
+                end
+            else
+                fail("transfer_destination_slot_inaccessible area=" .. area .. " pos=" .. pos)
+            end
+        end
+        return
+    end
+    if stage == "transfer-commit-slot" then
+        if drive() then
+            commitStarted = frame
+            stage = "transfer-await-commit"
+        end
+        return
+    end
+    if stage == "transfer-await-commit" then
+        emu:setKeys(0)
+        local marker = emu:read32(chooserTraceAddr)
+        if frame - commitStarted > 250 and emu:read32(uiTrace) == expectedStage
+           and (marker & 0x40000000) ~= 0
+           and ((marker >> 16) & 0xFF) == 3 and (marker & 0xFFFF) == 0 then
+            -- Return through the genuine global Jump UI. The preexisting
+            -- test-only record witness is checked once Box15 is resident.
+            stage = "transfer-return-to-title"
+            schedule({{0, 45}})
+        elseif frame - commitStarted > 3200 then
+            fail("transfer_slot_commit_never_returned_to_gui")
+        end
+        return
+    end
+    if stage == "transfer-return-to-title" then
+        if drive() then
+            local area = cursorState()
+            if area == 0 then
+                schedule({{UP, 2}, {0, 110}})
+            elseif area == 2 then
+                stage = "transfer-return-open-options"
+                schedule({{A, 2}, {0, 115}})
+            else
+                fail("transfer_return_cursor_not_box_or_title area=" .. area)
+            end
+        end
+        return
+    end
+    if stage == "transfer-return-open-options" then
+        if drive() then
+            if emu:read32(uiTrace) ~= expectedOptionsStage then
+                fail("transfer_return_options_menu_not_open")
+            end
+            stage = "transfer-return-open-jump"
+            schedule({{A, 2}, {0, 130}})
+        end
+        return
+    end
+    if stage == "transfer-return-open-jump" then
+        if drive() then
+            verifyChooser(42, 3)
+            stage = "transfer-return-left1"
+            schedule({{L, 2}, {0, 95}})
+        end
+        return
+    end
+    if stage == "transfer-return-left1" then
+        if drive() then
+            verifyChooser(28, 3)
+            stage = "transfer-return-left2"
+            schedule({{L, 2}, {0, 95}})
+        end
+        return
+    end
+    if stage == "transfer-return-left2" then
+        if drive() then
+            verifyChooser(14, 3)
+            stage = "transfer-return-jump-commit"
+            schedule({{A, 2}, {0, 200}})
+        end
+        return
+    end
+    if stage == "transfer-return-jump-commit" then
+        if drive() then
+            commitStarted = frame
+            stage = "transfer-verify-record"
+        end
+        return
+    end
+    if stage == "transfer-verify-record" then
+        emu:setKeys(0)
+        local marker = emu:read32(chooserTraceAddr)
+        local proof = emu:read32(c3dTraceAddr)
+        if emu:read32(uiTrace) == expectedStage
+           and (marker & 0x40000000) ~= 0
+           and ((marker >> 16) & 0xFF) == 1 and (marker & 0xFFFF) == 0
+           and (proof & 0x40000000) ~= 0 then
+            report("R8_PC_CONTROLLER_TRANSFER_PASS source_box=15 destination_box=43")
+            if saveMode then
+                stage = "exit-storage-prompt"
+                schedule({{B, 2}, {0, 125}})
+            else
+                os.exit(0)
+            end
+        elseif frame - commitStarted > 3500 then
+            fail("transfer_record_proof_missing")
+        end
+        return
+    end
     if stage == "withdraw-down-from-title" then
         if drive() then
             local area, pos, partyCount = cursorState()
@@ -725,7 +927,9 @@ callbacks:add("frame", function()
                 fail("third_save_not_settled")
             end
             checkSavedBox15()
-            if roundtripMode then
+            if transferMode then
+                report("R8_PC_CONTROLLER_TRANSFER_SAVE3_PASS source_box=15 destination_box=43 counter=3")
+            elseif roundtripMode then
                 report("R8_PC_CONTROLLER_ROUNDTRIP_SAVE3_PASS source_box=15 destination_box=43 counter=3")
             else
                 report("R8_PC_CONTROLLER_JUMP_SAVE3_PASS global_box=15 counter=3")
@@ -746,6 +950,11 @@ callbacks:add("frame", function()
                      .. " local_box=" .. localBox)
             end
             report("R8_PC_CONTROLLER_JUMP_COMMIT_PASS global_box=15 resident_page=1 local_box=0")
+            if transferMode then
+                stage = "transfer-down-from-title"
+                schedule({{DOWN, 2}, {0, 115}})
+                return
+            end
             if withdrawMode then
                 stage = "withdraw-down-from-title"
                 schedule({{DOWN, 2}, {0, 115}})
