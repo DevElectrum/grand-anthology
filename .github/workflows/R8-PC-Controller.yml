@@ -10,6 +10,10 @@ on:
       - 'src/pokemon_storage_system.c'
       - 'src/swsh_storage_system.c'
       - 'src/xgba_r8_runtime_test.c'
+      - 'src/save.c'
+      - 'src/load_save.c'
+      - 'src/xgba_a2_pager.c'
+      - 'include/xgba_a2_game.h'
       - 'src/field_specials.c'
       - 'include/xgba_r8_runtime_test.h'
   workflow_dispatch:
