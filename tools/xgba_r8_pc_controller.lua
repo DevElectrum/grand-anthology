@@ -18,12 +18,14 @@ local expectedChooserStage = engine == "classic" and 9 or 10
 local action = os.getenv("R8_PC_ACTION") or "entry"
 assert(action == "entry" or action == "preview-cancel"
        or action == "jump-commit" or action == "jump-save"
-       or action == "withdraw")
+       or action == "withdraw" or action == "roundtrip")
 local chooserTraceAddr = action ~= "entry" and address("A2_R8_PC_CHOOSER_TRACE") or nil
 local saveMode = action == "jump-save"
-local withdrawMode = action == "withdraw"
+local roundtripMode = action == "roundtrip"
+local withdrawMode = action == "withdraw" or roundtripMode
 local c3dTraceAddr = withdrawMode and address("A2_R8_PC_C3D_TRACE") or nil
 local expectedMonMenuStage = engine == "classic" and 13 or 14
+local expectedDepositChooserStage = engine == "classic" and 15 or 16
 local saveCounterAddr = saveMode and address("A2_SAVE_COUNTER") or nil
 local gameSaveTraceAddr = saveMode and address("A2_GAME_SAVE_TRACE") or nil
 local saveDialogTraceAddr = saveMode and address("A2_SAVE_DIALOG_TRACE") or nil
@@ -123,6 +125,18 @@ end
 local function cursorState()
     local trace = emu:read32(c3dTraceAddr)
     return (trace >> 16) & 0xFF, (trace >> 8) & 0xFF, trace & 0xFF
+end
+local function assertDepositChooser(expectedGlobal)
+    if emu:read32(uiTrace) ~= expectedDepositChooserStage then
+        fail("deposit_chooser_not_live")
+    end
+    local marker = emu:read32(chooserTraceAddr)
+    local preview = marker & 0xFFFF
+    local active = (marker >> 16) & 0xFF
+    if (marker & 0x80000000) == 0 or active ~= 1 or preview ~= expectedGlobal then
+        fail("deposit_chooser_mismatch expected=" .. expectedGlobal
+             .. " actual=" .. preview .. " page=" .. active)
+    end
 end
 local function checkSavedBox15()
     local marker = emu:read32(chooserTraceAddr)
@@ -397,9 +411,123 @@ callbacks:add("frame", function()
         if (trace & 0x80000000) ~= 0 and emu:read32(uiTrace) == expectedStage then
             local area, pos, partyCount = cursorState()
             report("R8_PC_CONTROLLER_WITHDRAW_PASS global_box=15 source_slot=5 party_count=" .. partyCount)
+            if roundtripMode then
+                stage = "roundtrip-to-party"
+                if engine == "classic" then
+                    schedule({{UP, 2}, {0, 85}, {UP, 2}, {0, 85}, {A, 2}, {0, 180}})
+                else
+                    schedule({{RIGHT, 2}, {0, 100}})
+                end
+                return
+            end
             os.exit(0)
         end
         if frame - withdrawStarted > 4000 then fail("real_graphical_withdraw_never_verified") end
+        return
+    end
+    if stage == "roundtrip-to-party" then
+        if drive() then
+            local area, pos, partyCount = cursorState()
+            if area ~= 1 or partyCount < 2 or partyCount > 5 or pos >= partyCount then
+                fail("roundtrip_party_cursor_invalid area=" .. area .. " pos=" .. pos
+                     .. " party=" .. partyCount)
+            end
+            local last = partyCount - 1
+            local actions = {}
+            local key = pos < last and DOWN or UP
+            for i = 1, math.abs(last - pos) do
+                actions[#actions + 1] = {key, 2}
+                actions[#actions + 1] = {0, 55}
+            end
+            if #actions == 0 then actions = {{0, 20}} end
+            stage = "roundtrip-select-party"
+            schedule(actions)
+        end
+        return
+    end
+    if stage == "roundtrip-select-party" then
+        if drive() then
+            local area, pos, partyCount = cursorState()
+            if area ~= 1 or pos ~= partyCount - 1 then
+                fail("roundtrip_selected_wrong_party_member")
+            end
+            stage = "roundtrip-open-store-menu"
+            schedule({{A, 2}, {0, 150}})
+        end
+        return
+    end
+    if stage == "roundtrip-open-store-menu" then
+        if drive() then
+            if emu:read32(uiTrace) ~= expectedMonMenuStage then
+                fail("roundtrip_party_store_menu_not_open")
+            end
+            stage = "roundtrip-first-chooser"
+            schedule({{DOWN, 2}, {0, 45}, {DOWN, 2}, {0, 45}, {A, 2}, {0, 155}})
+        end
+        return
+    end
+    if stage == "roundtrip-first-chooser" then
+        if drive() then
+            assertDepositChooser(14)
+            stage = "roundtrip-cancel"
+            schedule({{B, 2}, {0, 155}})
+        end
+        return
+    end
+    if stage == "roundtrip-cancel" then
+        if drive() then
+            local proof = emu:read32(c3dTraceAddr)
+            if emu:read32(uiTrace) ~= expectedStage
+               or (proof & 0x80000000) == 0 or (proof & 0x40000000) ~= 0 then
+                fail("roundtrip_cancel_mutated_party_or_storage")
+            end
+            report("R8_PC_CONTROLLER_DEPOSIT_CANCEL_PASS")
+            stage = "roundtrip-reopen-menu"
+            schedule({{A, 2}, {0, 150}})
+        end
+        return
+    end
+    if stage == "roundtrip-reopen-menu" then
+        if drive() then
+            if emu:read32(uiTrace) ~= expectedMonMenuStage then
+                fail("roundtrip_store_menu_not_reopened")
+            end
+            stage = "roundtrip-second-chooser"
+            schedule({{DOWN, 2}, {0, 45}, {DOWN, 2}, {0, 45}, {A, 2}, {0, 155}})
+        end
+        return
+    end
+    if stage == "roundtrip-second-chooser" then
+        if drive() then
+            assertDepositChooser(14)
+            stage = "roundtrip-remote-preview"
+            schedule({{R, 2}, {0, 85}, {R, 2}, {0, 85}})
+        end
+        return
+    end
+    if stage == "roundtrip-remote-preview" then
+        if drive() then
+            assertDepositChooser(42)
+            stage = "roundtrip-commit-deposit"
+            schedule({{A, 2}, {0, 120}})
+        end
+        return
+    end
+    if stage == "roundtrip-commit-deposit" then
+        if drive() then
+            withdrawStarted = frame
+            stage = "roundtrip-await-deposit"
+        end
+        return
+    end
+    if stage == "roundtrip-await-deposit" then
+        emu:setKeys(0)
+        local proof = emu:read32(c3dTraceAddr)
+        if emu:read32(uiTrace) == expectedStage and (proof & 0x40000000) ~= 0 then
+            report("R8_PC_CONTROLLER_ROUNDTRIP_PASS source_box=15 destination_box=43")
+            os.exit(0)
+        end
+        if frame - withdrawStarted > 4000 then fail("remote_deposit_never_verified") end
         return
     end
     -- Storage B opens Continue? (Yes/No); a second B selects No, which

@@ -189,6 +189,25 @@ jobs:
           grep -q 'R8_PC_CONTROLLER_WITHDRAW_PASS global_box=15 source_slot=5' /tmp/r8-pc-withdraw.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav > /tmp/r8-pc-withdraw-audit.txt
           diff -u /tmp/r8-pc-save2-audit.txt /tmp/r8-pc-withdraw-audit.txt
+      - name: C3D cancel-and-commit real controller distant deposit roundtrip
+        env:
+          R8_PC_ACTION: roundtrip
+        run: |
+          set -e
+          test -n "$A2_R8_PC_C3D_TRACE"
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_r8_pc_controller.lua \
+            build/r8-ci/test.gba > /tmp/r8-pc-roundtrip.log 2>&1 || {
+              grep -E 'R8_PC_CONTROLLER_|A2_XGBA_E6_SAVE_BOUND' /tmp/r8-pc-roundtrip.log | tail -n 160 || true
+              tail -n 30 /tmp/r8-pc-roundtrip.log
+              exit 1
+            }
+          grep -q 'R8_PC_CONTROLLER_DEPOSIT_CANCEL_PASS' /tmp/r8-pc-roundtrip.log
+          grep -q 'R8_PC_CONTROLLER_ROUNDTRIP_PASS source_box=15 destination_box=43' /tmp/r8-pc-roundtrip.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav > /tmp/r8-pc-roundtrip-audit.txt
+          diff -u /tmp/r8-pc-save2-audit.txt /tmp/r8-pc-roundtrip-audit.txt
       - name: Controller Jump from Box30 to Box15 and actual Save3
         env:
           R8_PC_ACTION: jump-save

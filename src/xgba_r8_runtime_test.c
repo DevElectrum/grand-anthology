@@ -40,6 +40,26 @@ bool8 XgbaR8C3DWithdrawProof(void)
     return matches == 1;
 }
 
+bool8 XgbaR8C3DRemoteDepositProof(void)
+{
+    struct BoxPokemon *oldSource = XgbaA2GameGlobalBoxMon(14, 5);
+    struct BoxPokemon *remote = XgbaA2GameGlobalBoxMon(42, 1);
+    u8 position;
+
+    if (oldSource == NULL || remote == NULL
+        || GetBoxMonData(oldSource, MON_DATA_SPECIES) != SPECIES_NONE
+        || GetBoxMonData(remote, MON_DATA_SPECIES) != SPECIES_SQUIRTLE
+        || GetBoxMonData(remote, MON_DATA_PERSONALITY) != 0x3456789AU
+        || GetBoxMonData(remote, MON_DATA_HELD_ITEM) != ITEM_POTION
+        || (GetBoxMonData(remote, MON_DATA_MARKINGS) & 8) == 0)
+        return FALSE;
+
+    for (position = 0; position < PARTY_SIZE; position++)
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][position], MON_DATA_SPECIES) == SPECIES_SQUIRTLE)
+            return FALSE;
+    return TRUE;
+}
+
 static int R8FixtureFail(u32 stage)
 {
     gXgbaR8FixtureStage = stage;

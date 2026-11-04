@@ -19,10 +19,16 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn('action == "withdraw"', script)
         self.assertIn("real_mon_menu_not_active", script)
         self.assertIn("R8_PC_CONTROLLER_WITHDRAW_PASS", script)
+        self.assertIn("R8_PC_CONTROLLER_DEPOSIT_CANCEL_PASS", script)
+        self.assertIn("R8_PC_CONTROLLER_ROUNDTRIP_PASS", script)
+        self.assertIn("assertDepositChooser(42)", script)
         self.assertIn("C3D real controller withdraw", workflow)
+        self.assertIn("C3D cancel-and-commit real controller distant deposit roundtrip", workflow)
+        self.assertIn("diff -u /tmp/r8-pc-save2-audit.txt /tmp/r8-pc-roundtrip-audit.txt", workflow)
         self.assertIn("diff -u /tmp/r8-pc-save2-audit.txt /tmp/r8-pc-withdraw-audit.txt", workflow)
         for frontend in (CLASSIC, SWSH):
             self.assertIn("XgbaR8C3DWithdrawProof()", frontend)
+            self.assertIn("XgbaR8C3DRemoteDepositProof()", frontend)
             self.assertIn("gXgbaR8PcC3DTrace |= 0x80000000U", frontend)
 
     def test_classic_reopen_allocation_failure_is_safe(self):
