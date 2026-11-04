@@ -278,7 +278,7 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("memcmp(source, &sA2GlobalTransfer.identity", backend)
         self.assertIn("R8_RELEASE_MASK_BYTES", backend)
         self.assertIn("gSaveBlock1Ptr->bag = *rollback;", backend)
-        self.assertIn("XgbaA2GameCancelGlobalRelease()", header)
+        self.assertIn("XgbaA2GameCancelGlobalRelease(void);", header)
         self.assertIn("Move, Transfer, Summary, Withdraw", controller)
         self.assertIn("{DOWN, 2}, {0, 45}, {A, 2}, {0, 120}", controller)
 
