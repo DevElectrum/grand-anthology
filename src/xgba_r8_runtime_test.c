@@ -75,7 +75,7 @@ static int VerifyOne(struct BoxPokemon *mon, enum Species species,
         && (GetBoxMonData(mon, MON_DATA_MARKINGS) & 8) != 0;
 }
 
-static int VerifyTestPokemonRecords(void)
+static int VerifyTestPokemonRecordsAt(bool8 depositedRemotely)
 {
     struct BoxPokemon *old14 = XgbaA2GameGlobalBoxMon(13, 4);
     struct BoxPokemon *old28 = XgbaA2GameGlobalBoxMon(27, 7);
@@ -83,7 +83,8 @@ static int VerifyTestPokemonRecords(void)
                      0x12345678U, ITEM_POTION)
         && VerifyOne(XgbaA2GameGlobalBoxMon(111, 29), SPECIES_CHARMANDER,
                      0x23456789U, ITEM_SUPER_POTION)
-        && VerifyOne(XgbaA2GameGlobalBoxMon(14, 5), SPECIES_SQUIRTLE,
+        && VerifyOne(XgbaA2GameGlobalBoxMon(depositedRemotely ? 42 : 14,
+                                          depositedRemotely ? 1 : 5), SPECIES_SQUIRTLE,
                      0x3456789AU, ITEM_POTION)
         && VerifyOne(XgbaA2GameGlobalBoxMon(28, 8), SPECIES_PIDGEY,
                      0x456789ABU, ITEM_SUPER_POTION)
@@ -92,14 +93,24 @@ static int VerifyTestPokemonRecords(void)
         && GetBoxMonData(old28, MON_DATA_SPECIES) == SPECIES_NONE
         && XgbaA2GameCountGlobalBoxMons(0) == 1
         && XgbaA2GameCountGlobalBoxMons(13) == 0
-        && XgbaA2GameCountGlobalBoxMons(14) == 1
+        && XgbaA2GameCountGlobalBoxMons(14) == (depositedRemotely ? 0 : 1)
         && XgbaA2GameCountGlobalBoxMons(27) == 0
         && XgbaA2GameCountGlobalBoxMons(28) == 1
         && XgbaA2GameCountGlobalBoxMons(111) == 1
         && XgbaA2GameCountGlobalBoxMons(112) == -1
         && XgbaA2GameGlobalBoxName(14) != NULL
         && VerifyOne(XgbaA2GameGlobalBoxMon(42, 0), SPECIES_EEVEE,
-                     0x56789ABCU, ITEM_POTION);
+                     0x56789ABCU, ITEM_POTION)
+        && XgbaA2GameCountGlobalBoxMons(42) == (depositedRemotely ? 2 : 1)
+        && XgbaA2GameGlobalBoxMon(depositedRemotely ? 14 : 42,
+                                   depositedRemotely ? 5 : 1) != NULL
+        && GetBoxMonData(XgbaA2GameGlobalBoxMon(depositedRemotely ? 14 : 42,
+                          depositedRemotely ? 5 : 1), MON_DATA_SPECIES) == SPECIES_NONE;
+}
+
+static int VerifyTestPokemonRecords(void)
+{
+    return VerifyTestPokemonRecordsAt(FALSE);
 }
 
 int XgbaR8CreateTestPokemon(void)
@@ -313,15 +324,15 @@ int XgbaR8VerifyTestPokemon(void)
 }
 
 // Save2 is the established 112-box backend checkpoint (Box 30 selected).
-// Save3 is only reached by C3C's actual graphical Jump into Box 15.
-// The load-time verifier checks the full test-record set on both commits
-// and rejects missing/wrong selected groups rather than falling back.
+// Save3 has two separate disposable controller acceptance flows: Jump-only
+// (unchanged records) and Box15-to-Box43 deposit. Require a fully matching
+// record constellation and exact selected page for either, never partial data.
 int XgbaR8VerifyTestPokemonAtCounter(u32 counter)
 {
     if (counter == 2)
         return XgbaR8VerifyTestPokemon();
     if (counter == 3)
-        return VerifyTestPokemonRecords()
+        return (VerifyTestPokemonRecords() || VerifyTestPokemonRecordsAt(TRUE))
             && XgbaA2GamePage() == 1
             && StorageGetCurrentBox() == 0;
     return FALSE;

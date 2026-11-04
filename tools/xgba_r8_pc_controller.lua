@@ -18,10 +18,11 @@ local expectedChooserStage = engine == "classic" and 9 or 10
 local action = os.getenv("R8_PC_ACTION") or "entry"
 assert(action == "entry" or action == "preview-cancel"
        or action == "jump-commit" or action == "jump-save"
-       or action == "withdraw" or action == "roundtrip")
+       or action == "withdraw" or action == "roundtrip"
+       or action == "roundtrip-save")
 local chooserTraceAddr = action ~= "entry" and address("A2_R8_PC_CHOOSER_TRACE") or nil
-local saveMode = action == "jump-save"
-local roundtripMode = action == "roundtrip"
+local saveMode = action == "jump-save" or action == "roundtrip-save"
+local roundtripMode = action == "roundtrip" or action == "roundtrip-save"
 local withdrawMode = action == "withdraw" or roundtripMode
 local c3dTraceAddr = withdrawMode and address("A2_R8_PC_C3D_TRACE") or nil
 local expectedMonMenuStage = engine == "classic" and 13 or 14
@@ -42,7 +43,7 @@ local queue, index, remaining = {}, 1, 0
 local moveX, moveY, retries, clicks = 0, 0, 0, 0
 local lastUiTrace = nil
 local commitStarted = 0
-local withdrawStarted = 0
+local withdrawStarted, partyRouteSteps = 0, 0
 local exitStarted, saveStarted, attempts, menuAttempts = 0, 0, 0, 0
 -- Actual Region Hub collision map: y=8 is a wall east of x=8,
 -- and y=9 is a counter east of x=6. Go around the west end,
@@ -412,12 +413,12 @@ callbacks:add("frame", function()
             local area, pos, partyCount = cursorState()
             report("R8_PC_CONTROLLER_WITHDRAW_PASS global_box=15 source_slot=5 party_count=" .. partyCount)
             if roundtripMode then
+                -- Do not guess a key sequence from the post-withdraw cursor.
+                -- Classic must use the bottom Party button; SwSh crosses the
+                -- left edge of the box. Route from the observed live state.
+                partyRouteSteps = 0
                 stage = "roundtrip-to-party"
-                if engine == "classic" then
-                    schedule({{UP, 2}, {0, 85}, {UP, 2}, {0, 85}, {UP, 2}, {0, 85}, {A, 2}, {0, 180}})
-                else
-                    schedule({{LEFT, 2}, {0, 100}})
-                end
+                schedule({{0, 40}})
                 return
             end
             os.exit(0)
@@ -427,21 +428,57 @@ callbacks:add("frame", function()
     end
     if stage == "roundtrip-to-party" then
         if drive() then
+            if emu:read32(uiTrace) ~= expectedStage then
+                fail("party_route_not_in_main_input")
+            end
             local area, pos, partyCount = cursorState()
-            if area ~= 1 or partyCount < 2 or partyCount > 5 or pos >= 6 then
-                fail("roundtrip_party_cursor_invalid area=" .. area .. " pos=" .. pos
-                     .. " party=" .. partyCount)
+            if partyCount < 2 or partyCount > 5 then
+                fail("party_route_bad_party_count=" .. partyCount)
             end
-            local last = partyCount - 1
-            local actions = {}
-            local key = pos < last and DOWN or UP
-            for i = 1, math.abs(last - pos) do
-                actions[#actions + 1] = {key, 2}
-                actions[#actions + 1] = {0, 55}
+            if area == 1 then
+                local last = partyCount - 1
+                local actions = {}
+                local key = pos < last and DOWN or UP
+                for i = 1, math.abs(last - pos) do
+                    actions[#actions + 1] = {key, 2}
+                    actions[#actions + 1] = {0, 70}
+                end
+                if #actions == 0 then actions = {{0, 30}} end
+                stage = "roundtrip-select-party"
+                schedule(actions)
+                return
             end
-            if #actions == 0 then actions = {{0, 20}} end
-            stage = "roundtrip-select-party"
-            schedule(actions)
+
+            partyRouteSteps = partyRouteSteps + 1
+            if partyRouteSteps > 12 then
+                fail("party_route_exceeded_budget area=" .. area .. " pos=" .. pos)
+            end
+            local key, keyName
+            if engine == "classic" then
+                if area == 0 and pos < 30 then
+                    -- Box positions 24..29 go DOWN to bottom buttons.
+                    key, keyName = DOWN, "down"
+                elseif area == 2 then
+                    key, keyName = DOWN, "down-from-title"
+                elseif area == 3 and pos == 1 then
+                    key, keyName = LEFT, "select-party-button"
+                elseif area == 3 and pos == 0 then
+                    key, keyName = A, "open-party"
+                end
+            else
+                if area == 0 and pos < 30 then
+                    -- Only column zero crosses into SwSh's party panel.
+                    key, keyName = LEFT, "move-left-toward-party"
+                elseif area == 2 then
+                    key, keyName = DOWN, "down-from-title"
+                end
+            end
+            if not key then
+                fail("party_route_invalid_state area=" .. area .. " pos=" .. pos)
+            end
+            report("R8_PC_CONTROLLER_PARTY_ROUTE step=" .. partyRouteSteps
+                   .. " area=" .. area .. " pos=" .. pos .. " action=" .. keyName)
+            schedule({{key, 2}, {0, key == A and 200 or 95}})
         end
         return
     end
@@ -525,7 +562,12 @@ callbacks:add("frame", function()
         local proof = emu:read32(c3dTraceAddr)
         if emu:read32(uiTrace) == expectedStage and (proof & 0x40000000) ~= 0 then
             report("R8_PC_CONTROLLER_ROUNDTRIP_PASS source_box=15 destination_box=43")
-            os.exit(0)
+            if saveMode then
+                stage = "exit-storage-prompt"
+                schedule({{B, 2}, {0, 125}})
+            else
+                os.exit(0)
+            end
         end
         if frame - withdrawStarted > 4000 then fail("remote_deposit_never_verified") end
         return
@@ -648,7 +690,11 @@ callbacks:add("frame", function()
                 fail("third_save_not_settled")
             end
             checkSavedBox15()
-            report("R8_PC_CONTROLLER_JUMP_SAVE3_PASS global_box=15 counter=3")
+            if roundtripMode then
+                report("R8_PC_CONTROLLER_ROUNDTRIP_SAVE3_PASS source_box=15 destination_box=43 counter=3")
+            else
+                report("R8_PC_CONTROLLER_JUMP_SAVE3_PASS global_box=15 counter=3")
+            end
             os.exit(0)
         end
         return

@@ -199,5 +199,28 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("SetPokeStorageTask(Task_A2ReopenPage)", SWSH)
 
 
+    def test_c3d_controller_routes_from_observed_state_and_saves_real_roundtrip(self):
+        controller = (ROOT / "tools" / "xgba_r8_pc_controller.lua").read_text()
+        workflow = (ROOT / ".github" / "workflows" / "R8-PC-Controller.yml").read_text()
+        auditor = (ROOT / "tools" / "xgba_a2_storage.py").read_text()
+        runtime = (ROOT / "src" / "xgba_r8_runtime_test.c").read_text()
+        self.assertIn('action == "roundtrip-save"', controller)
+        self.assertIn('stage == "roundtrip-to-party"', controller)
+        self.assertIn('if engine == "classic" then', controller)
+        self.assertIn('area == 3 and pos == 0', controller)
+        self.assertIn('key, keyName = A, "open-party"', controller)
+        self.assertIn('key, keyName = LEFT, "move-left-toward-party"', controller)
+        self.assertIn('partyRouteSteps > 12', controller)
+        self.assertNotIn('schedule({{UP, 2}, {0, 85}, {UP, 2}', controller)
+        self.assertIn("R8_PC_CONTROLLER_ROUNDTRIP_SAVE3_PASS", controller)
+        self.assertIn("R8_PC_ACTION: roundtrip-save", workflow)
+        self.assertIn("A2_E6_SAVE_PATH: build/r8-ci/roundtrip.sav", workflow)
+        self.assertIn("audit-roundtrip build/r8-ci/test.sav build/r8-ci/roundtrip.sav", workflow)
+        self.assertIn("A2_ACTION: resume", workflow)
+        self.assertIn('def audit_roundtrip(before_path, after_path):', auditor)
+        self.assertIn("updated != bytes(expected)", auditor)
+        self.assertIn("VerifyTestPokemonRecordsAt(TRUE)", runtime)
+
+
 if __name__ == "__main__":
     unittest.main()

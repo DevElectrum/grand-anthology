@@ -1,3 +1,14 @@
+# C3D1 consolidated controller, save and audit batch (2026-11-04 UTC; pending CI)
+
+- Requested engineering reset: coherent feature/verification batches, no speculative one-commit CI loops. Sinnoh is next project AFTER Grand Anthology R8.4 stabilization, not part of this batch.
+- Experimental branch baseline before this batch: `884985e3df300183777d9d37bcefea927dd8a04c`; pinned XGBA R8 remains `4e0f59185e2c7d7ed5333d8adc20e8d3ad94d05c`.
+- Controller C3D1 failed in box area after withdrawal (Classic area=0,pos=24; SwSh area=0,pos=4). Correct path differs: Classic via bottom Party button, SwSh across box's left edge. Proposed state-aware loop reads live cursor and checks a bounded action budget, no direct game-function shortcuts.
+- A second isolated roundtrip-save CI exercise clones audited Save2, performs actual graphical withdraw/cancel/deposit, real Save3, fresh emulator cold Continue and independent CRC-pinned exact-record comparison across all 3,360 boxed slots. Existing Jump Save3 runs on the original sidecar.
+- Test-only Save3 verification must accept only the original genuine Jump cohort or the exact Box15->Box43 deposit cohort, while preserving all other fixture records. Source checks are NOT release acceptance.
+- CI acceptance pending. Do not repeat XGBA 16/16 or other frozen baselines without a dependency change. Next gated phase after C3D1: checked cross-group carry, bulk/item transactional safety and release matrix.
+
+---
+
 # R8.4 ACTIVE INTEGRATION CHECKPOINT (Nov 2, 2026 UTC)
 
 **C3A adversarial fix:** Classic global chooser returns 0..111; when selecting a target on the *current* page, normalize to 0..13 before calling legacy TryStorePartyMonInBox. Without this, a same-page deposit on group>0 could index outside native boxes. Regression assertion added. CI pending.

@@ -240,6 +240,67 @@ def audit(path):
     raise A2Error("No coherent native save slot and referenced PC-page generation")
 
 
+
+def verified_collection_box_bytes(path, report):
+    """Read only the cohort's selected CRC-verified PC page generations."""
+    image = bytearray()
+    with Path(path).open("rb") as stream:
+        for page in range(PC_PAGES):
+            generation = report["page_generations"][page]
+            payload = None
+            for copy in (0, 1):
+                record = candidate(stream, page_offset(page, copy),
+                                   PAGE_MAGIC, page, PC_BYTES)
+                if record is not None and record[0] == generation:
+                    payload = record[1]
+                    break
+            if payload is None:
+                raise A2Error(f"Page {page} is missing committed generation {generation}")
+            image.extend(payload[BOX_REGION_START:BOX_REGION_END])
+    return bytes(image)
+
+
+def audit_roundtrip(before_path, after_path):
+    """Independently prove the graphical Box 15 -> Box 43 save-3 transfer.
+
+    Exact 80-byte encrypted records and all unrelated 3,358 slots are
+    compared against the committed Save2 cohort, never against volatile RAM.
+    """
+    before_report = audit(before_path)
+    after_report = audit(after_path)
+    if (before_report["counter"] != 2 or after_report["counter"] != 3
+            or before_report["active_page"] != 3 or after_report["active_page"] != 2):
+        raise A2Error("Roundtrip requires coherent Save2 Box30 -> Save3 Box15")
+    original = verified_collection_box_bytes(before_path, before_report)
+    updated = verified_collection_box_bytes(after_path, after_report)
+    width = 80
+    source = (14 * BOX_SLOTS + 5) * width
+    destination = (42 * BOX_SLOTS + 1) * width
+    empty = bytes(width)
+    squirtle = original[source:source + width]
+    if squirtle == empty:
+        raise A2Error("Source Squirtle is absent from committed Save2")
+    if original[destination:destination + width] != empty:
+        raise A2Error("Destination Box43 slot2 is occupied in Save2")
+    expected = bytearray(original)
+    expected[source:source + width] = empty
+    expected[destination:destination + width] = squirtle
+    if updated != bytes(expected):
+        mismatch = next((i for i, (a, b) in enumerate(zip(updated, expected))
+                         if a != b), None)
+        raise A2Error(f"Committed collection differs from exact expected transfer at byte {mismatch}")
+    if before_report["collection_boxes_sha256"] == after_report["collection_boxes_sha256"]:
+        raise A2Error("Collection digest remained unchanged despite transfer")
+    return {
+        "roundtrip": "verified exact 80-byte Box15/slot6 -> Box43/slot2",
+        "unchanged_other_slots": PC_PAGES * BOXES_PER_PAGE * BOX_SLOTS - 2,
+        "before_counter": before_report["counter"],
+        "after_counter": after_report["counter"],
+        "source_cleared": True,
+        "destination_matches_source": True,
+    }
+
+
 def empty_page_template(source_pc):
     """Preserve valid GBA-encoded box names and wallpaper, clear all Mons."""
     if len(source_pc) != PC_BYTES:
@@ -365,6 +426,9 @@ def main():
     blank_check.add_argument("save")
     check = sub.add_parser("audit", help="Verify E6 headers and protected A2 PC records")
     check.add_argument("save")
+    transfer = sub.add_parser("audit-roundtrip", help="Verify exact committed C3D Box15 -> Box43 transfer")
+    transfer.add_argument("before")
+    transfer.add_argument("after")
     sub.add_parser("layout", help="Print reserved A2 collection-storage geometry")
     args = parser.parse_args()
     try:
@@ -378,6 +442,8 @@ def main():
             result = verify_blank(args.save)
         elif args.command == "audit":
             result = audit(args.save)
+        elif args.command == "audit-roundtrip":
+            result = audit_roundtrip(args.before, args.after)
         else:
             result = {
                 "e6_bytes": SAVE_BYTES, "native_bytes": NATIVE_BYTES,

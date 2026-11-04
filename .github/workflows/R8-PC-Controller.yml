@@ -212,6 +212,49 @@ jobs:
           grep -q 'R8_PC_CONTROLLER_ROUNDTRIP_PASS source_box=15 destination_box=43' /tmp/r8-pc-roundtrip.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav > /tmp/r8-pc-roundtrip-audit.txt
           diff -u /tmp/r8-pc-save2-audit.txt /tmp/r8-pc-roundtrip-audit.txt
+      - name: C3D graphical roundtrip real Save3 and offline exact-record audit
+        env:
+          R8_PC_ACTION: roundtrip-save
+          A2_E6_SAVE_PATH: build/r8-ci/roundtrip.sav
+        run: |
+          set -e
+          test ! -e build/r8-ci/roundtrip.sav
+          cp build/r8-ci/test.sav build/r8-ci/roundtrip.sav
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_r8_pc_controller.lua \
+            build/r8-ci/test.gba > /tmp/r8-pc-roundtrip-save.log 2>&1 || {
+              grep -E 'R8_PC_CONTROLLER_|A2_XGBA_E6_SAVE_BOUND' /tmp/r8-pc-roundtrip-save.log | tail -n 180 || true
+              tail -n 30 /tmp/r8-pc-roundtrip-save.log
+              exit 1
+            }
+          grep -q 'R8_PC_CONTROLLER_DEPOSIT_CANCEL_PASS' /tmp/r8-pc-roundtrip-save.log
+          grep -q 'R8_PC_CONTROLLER_ROUNDTRIP_SAVE3_PASS source_box=15 destination_box=43 counter=3' /tmp/r8-pc-roundtrip-save.log
+          grep -q 'R8_PC_CONTROLLER_REAL_SAVE3_COMMITTED counter=3 stage=8' /tmp/r8-pc-roundtrip-save.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/roundtrip.sav | tee /tmp/r8-pc-transfer-save3-audit.txt
+          grep -q '^counter: 3$' /tmp/r8-pc-transfer-save3-audit.txt
+          python3 tools/xgba_a2_storage.py audit-roundtrip build/r8-ci/test.sav build/r8-ci/roundtrip.sav
+      - name: C3D cold Continue verifies deposited records from separate Save3
+        env:
+          A2_ACTION: resume
+          A2_EXPECTED_SAVE_COUNTER: '3'
+          A2_E6_SAVE_PATH: build/r8-ci/roundtrip.sav
+        run: |
+          set -e
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/test.gba > /tmp/r8-pc-transfer-cold3.log 2>&1 || {
+              grep -E 'A2_XGBA_(COLD|DIAG|GAME_SAVE)' /tmp/r8-pc-transfer-cold3.log | tail -n 100 || true
+              tail -n 25 /tmp/r8-pc-transfer-cold3.log
+              exit 1
+            }
+          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=3' /tmp/r8-pc-transfer-cold3.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/roundtrip.sav | tee /tmp/r8-pc-transfer-cold3-audit.txt
+          diff -u /tmp/r8-pc-transfer-save3-audit.txt /tmp/r8-pc-transfer-cold3-audit.txt
+          python3 tools/xgba_a2_storage.py audit-roundtrip build/r8-ci/test.sav build/r8-ci/roundtrip.sav
       - name: Controller Jump from Box30 to Box15 and actual Save3
         env:
           R8_PC_ACTION: jump-save
@@ -261,5 +304,5 @@ jobs:
       - name: Delete disposable ROM and save on success or failure
         if: always()
         run: |
-          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav
+          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav build/r8-ci/roundtrip.sav
           echo 'No gameplay ROM or save published.'
