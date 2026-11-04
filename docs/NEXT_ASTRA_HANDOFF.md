@@ -1,3 +1,13 @@
+# R8.4 C3D1 FINAL ACCEPTANCE (2026-11-04 UTC)
+
+**Accepted code SHA:** `33169f0df32062e2164925ad01e57eb65cdddd59` on `xgba/a2-collection-lab`. The SwSh wrong-deposit root cause was shared cursor aliasing: chooser grid changed `sCursorPosition` into a box tile while remote deposit treated it as party slot. Production R8 now checks and uses `sChooseBoxMenu->savedCursorPosition` for both move and sprite cleanup. Classic unchanged. Source regression added.
+
+**Proof:** [dual Classic/SwSh controller run 41811066427](https://github.com/DevElectrum/grand-anthology/actions/runs/41811066427) SUCCESS in both jobs. Each completed real controller withdraw, cancel, distant deposit Box15 slot6 → Box43 slot2, in-game Save3, independent CRC-pinned exact 80-byte record audit (all 3,360 slots; only source/destination may differ), separate fresh-process cold Continue, and existing Jump Save3/cold regression. [R8 RAM source 41811066499](https://github.com/DevElectrum/grand-anthology/actions/runs/41811066499), [real Pokémon cold 41811066784](https://github.com/DevElectrum/grand-anthology/actions/runs/41811066784), [A2 storage/native contract 41811066591](https://github.com/DevElectrum/grand-anthology/actions/runs/41811066591) also GREEN. No main/Mosaic/frozen emulator/real-save writes. This is C3D1 acceptance **only**, not R8.4 release acceptance.
+
+**Next grouped passes:** C3D2 remote box-to-box carry/swap with source-owned rollback through UI teardown; C4 destructive item/bulk safety and fail-closed invalid/full states; C5 journal interrupted-write recovery, cross-region global collection and bounded performance; one compact user gameplay gate then freeze R8.4 and start Sinnoh. Keep each pass substantive and test once per candidate. Do not reopen already accepted E7/E6 or C3D1 tests without a dependency change.
+
+---
+
 # C3D1 SwSh production bug identified and corrected, acceptance pending (2026-11-04 UTC)
 
 - At experiment `e5ff77f5`, C3D1 Classic graphical roundtrip/Save3/cold audit passed. SwSh deposited Zigzagoon, not Squirtle; diagnostic `deposit_diag=97 (0x61)` showed source clear, Squirtle still in party and Zigzagoon in Box43. No evidence of E6 journal corruption.

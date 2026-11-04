@@ -1,3 +1,9 @@
+# R8.4 C3D1 ACCEPTED (2026-11-04 UTC)
+
+The SwSh graphical remote deposit bug is fixed at code commit `33169f0d`: its box chooser changes the shared cursor into a *destination tile*, so the source party index must come from the chooser's saved party slot. Fail-closed source validation and matching icon cleanup are in production R8 source. Both Classic and SwSh passed actual controller withdraw/cancel/Box15-to-Box43 deposit, real Save3, independent 3,360-slot exact-record audit, and new-process cold Continue in [run 41811066427](https://github.com/DevElectrum/grand-anthology/actions/runs/41811066427). RAM source regression `41811066499`, real-Pokémon cold persistence `41811066784`, and A2 storage/native compatibility `41811066591` are also GREEN. **C3D1 is accepted; R8.4 as a whole is NOT.** Keep pinned XGBA R8, main, Mosaic, live saves and frozen E7 unchanged. Next: cross-group carry; then destructive/item safety; then one consolidated recovery/cross-region acceptance before Sinnoh. Do not relitigate or rerun accepted C3D1 unless dependent production code changes.
+
+---
+
 # R8.4 C3C exact whole-collection proof (2026-11-03)
 A follow-up to Save3 controller matrix adds a canonical SHA-256 digest over all 3,360 encrypted BoxPokemon slots from the independently audited eight-page E6 cohort. Demand bit-identical Save2 vs Save3 regardless of selected current box. Save3 already requires a fresh real XGBA cold Continue and record identity checks. This remains experimental; check latest CI before declaring accepted.
 
