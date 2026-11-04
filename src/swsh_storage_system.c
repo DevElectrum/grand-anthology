@@ -3349,47 +3349,24 @@ static void Task_BulkRelease(u8 taskId)
             sBulkReleaseCount = 0;
 #if defined(XGBA_R8) && XGBA_R8
             {
-                // R8-owned scratch. SaveBlock1 bag is fixed ABI and must never
-                // be enlarged or partially updated by a failed bulk return.
-                struct Bag *snapshot = (struct Bag *)(XGBA_R8_RAM_BASE + 0x50000U);
-                bool8 allItemsReturned = TRUE;
-
-                if (!XgbaA2GameCollectionReady())
-                    allItemsReturned = FALSE;
-                else
+                // Manual 30-slot selection shares C4's global eligibility,
+                // 3360-bit plan and all-or-nothing bag-return transaction.
+                u16 globalBox = (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT
+                                    + StorageGetCurrentBox();
+                u16 planned = XgbaA2GamePlanGlobalRelease(
+                    XGBA_R8_RELEASE_LOCAL_MASK, globalBox, sBulkReleaseMask);
+                if (planned == 0 || !XgbaA2GameCommitGlobalRelease())
                 {
-                    *snapshot = gSaveBlock1Ptr->bag;
-                    for (i = 0; i < IN_BOX_COUNT; i++)
-                    {
-                        if (sBulkReleaseMask & (1u << i))
-                        {
-                            enum Item held = GetBoxMonDataAt(StorageGetCurrentBox(), i, MON_DATA_HELD_ITEM);
-                            if (held != ITEM_NONE && !AddBagItem(held, 1))
-                            {
-                                allItemsReturned = FALSE;
-                                break;
-                            }
-                        }
-                    }
-                    if (!allItemsReturned)
-                        gSaveBlock1Ptr->bag = *snapshot;
-                }
-                if (!allItemsReturned)
-                {
+                    XgbaA2GameCancelGlobalRelease();
                     PrintMessage(MSG_BAG_FULL);
                     sStorage->state = 6;
                     break;
                 }
-                // Every item transfer succeeded. Only now delete Pokémon.
-                for (i = 0; i < IN_BOX_COUNT; i++)
-                {
-                    if (sBulkReleaseMask & (1u << i))
-                    {
-                        DestroyBoxMonIconAtPosition(i);
-                        ZeroBoxMonAt(StorageGetCurrentBox(), i);
-                        sBulkReleaseCount++;
-                    }
-                }
+                // Rebuild every icon from canonical storage, not a partial
+                // local selection mask or stale sprite array.
+                sBulkReleaseMask = 0;
+                SetPokeStorageTask(Task_A2ReopenPage);
+                return;
             }
 #else
             for (i = 0; i < IN_BOX_COUNT; i++)

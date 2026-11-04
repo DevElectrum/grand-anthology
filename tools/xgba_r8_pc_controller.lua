@@ -397,8 +397,10 @@ callbacks:add("frame", function()
                 fail("real_mon_menu_not_active")
             end
             stage = "withdraw-menu-choose"
-            -- Move, Summary, Withdraw is the verified MOVE_MONS menu order.
-            schedule({{DOWN, 2}, {0, 45}, {DOWN, 2}, {0, 45}, {A, 2}, {0, 120}})
+            -- C3D2 added Transfer between Move and Summary in BOX menus.
+            -- Move, Transfer, Summary, Withdraw: choose the fourth entry.
+            schedule({{DOWN, 2}, {0, 45}, {DOWN, 2}, {0, 45},
+                      {DOWN, 2}, {0, 45}, {A, 2}, {0, 120}})
         end
         return
     end

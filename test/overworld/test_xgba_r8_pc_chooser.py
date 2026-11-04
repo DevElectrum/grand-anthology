@@ -260,5 +260,28 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertNotIn("XgbaA2GameDepositPartyMonGlobal(sCursorPosition", commit)
         self.assertNotIn("sStorage->partySprites[sCursorPosition]", commit)
 
+    def test_c3d2_c4_shared_ownership_and_no_partial_bulk(self):
+        backend = (ROOT / "src" / "save.c").read_text()
+        controller = (ROOT / "tools" / "xgba_r8_pc_controller.lua").read_text()
+        header = (ROOT / "include" / "xgba_a2_game.h").read_text()
+        for frontend in (CLASSIC, SWSH):
+            self.assertIn("case MENU_TRANSFER:", frontend)
+            self.assertIn("XgbaA2GameBeginGlobalTransfer(", frontend)
+            self.assertIn("XgbaA2GameGlobalTransferActive()", frontend)
+            self.assertIn("XgbaA2GameCommitGlobalTransfer(", frontend)
+            self.assertIn("case MENU_R8_CLEAR_GROUP:", frontend)
+            self.assertIn("case MENU_R8_CLEAR_ALL:", frontend)
+            self.assertIn("Task_R8GlobalClear", frontend)
+            self.assertIn("XgbaA2GameCanReleaseGlobalSingle", frontend)
+        self.assertIn("XgbaA2GamePlanGlobalRelease(", SWSH)
+        self.assertIn("XgbaA2GameCommitGlobalRelease()", SWSH)
+        self.assertIn("memcmp(source, &sA2GlobalTransfer.identity", backend)
+        self.assertIn("R8_RELEASE_MASK_BYTES", backend)
+        self.assertIn("gSaveBlock1Ptr->bag = *rollback;", backend)
+        self.assertIn("XgbaA2GameCancelGlobalRelease()", header)
+        self.assertIn("Move, Transfer, Summary, Withdraw", controller)
+        self.assertIn("{DOWN, 2}, {0, 45}, {A, 2}, {0, 120}", controller)
+
+
 if __name__ == "__main__":
     unittest.main()
