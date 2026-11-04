@@ -1015,6 +1015,73 @@ bool8 XgbaA2GameMoveGlobalBoxMon(u16 sourceBox, u8 sourcePos,
     return TRUE;
 }
 
+// C3D2 volatile virtual carry. Source stays canonical until successful commit.
+EWRAM_DATA static struct
+{
+    struct BoxPokemon identity;
+    u16 box;
+    u8 slot;
+    bool8 active;
+} sA2GlobalTransfer;
+
+bool8 XgbaA2GameBeginGlobalTransfer(u16 sourceBox, u8 sourcePosition)
+{
+    struct BoxPokemon *source = XgbaA2GameGlobalBoxMon(sourceBox, sourcePosition);
+    if (sA2GlobalTransfer.active || source == NULL
+        || GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE
+        || ItemIsMail(GetBoxMonData(source, MON_DATA_HELD_ITEM)))
+        return FALSE;
+    memcpy(&sA2GlobalTransfer.identity, source, sizeof(*source));
+    sA2GlobalTransfer.box = sourceBox;
+    sA2GlobalTransfer.slot = sourcePosition;
+    sA2GlobalTransfer.active = TRUE;
+    return TRUE;
+}
+
+bool8 XgbaA2GameGlobalTransferActive(void)
+{
+    return sA2GlobalTransfer.active;
+}
+
+void XgbaA2GameCancelGlobalTransfer(void)
+{
+    memset(&sA2GlobalTransfer, 0, sizeof(sA2GlobalTransfer));
+}
+
+bool8 XgbaA2GameGlobalTransferTargetOccupied(u16 destinationBox, u8 position)
+{
+    struct BoxPokemon *dest;
+    if (!sA2GlobalTransfer.active)
+        return FALSE;
+    dest = XgbaA2GameGlobalBoxMon(destinationBox, position);
+    return dest != NULL && GetBoxMonData(dest, MON_DATA_SPECIES) != SPECIES_NONE;
+}
+
+bool8 XgbaA2GameCommitGlobalTransfer(u16 destinationBox, u8 position, bool8 allowSwap)
+{
+    struct BoxPokemon *source, *dest;
+    bool8 success;
+    if (!sA2GlobalTransfer.active || !XgbaA2GameCollectionReady())
+        return FALSE;
+    source = XgbaA2GameGlobalBoxMon(sA2GlobalTransfer.box, sA2GlobalTransfer.slot);
+    dest = XgbaA2GameGlobalBoxMon(destinationBox, position);
+    if (source == NULL || dest == NULL || source == dest
+        || memcmp(source, &sA2GlobalTransfer.identity, sizeof(*source)) != 0
+        || GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE)
+        return FALSE;
+    if (GetBoxMonData(dest, MON_DATA_SPECIES) == SPECIES_NONE)
+        success = XgbaA2GameMoveGlobalBoxMon(sA2GlobalTransfer.box,
+            sA2GlobalTransfer.slot, destinationBox, position);
+    else if (allowSwap && !ItemIsMail(GetBoxMonData(dest, MON_DATA_HELD_ITEM)))
+        success = XgbaA2GameSwapGlobalBoxMons(sA2GlobalTransfer.box,
+            sA2GlobalTransfer.slot, destinationBox, position);
+    else
+        return FALSE;
+    if (success)
+        XgbaA2GameCancelGlobalTransfer();
+    return success;
+}
+
 // Direct party deposit: destination and party constraints are validated
 // before either source or destination changes. No Flash, journal or page
 // switching occurs while depositing. The UI compacts party icons afterward.

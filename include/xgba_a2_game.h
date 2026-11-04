@@ -35,6 +35,12 @@ bool8 XgbaA2GameMoveGlobalBoxMon(u16 sourceBox, u8 sourcePos,
                                  u16 destinationBox, u8 destinationPos);
 bool8 XgbaA2GameSwapGlobalBoxMons(u16 firstBox, u8 firstPos,
                                   u16 secondBox, u8 secondPos);
+// Non-destructive R8 cross-group move/swap, independent of box UI pointers.
+bool8 XgbaA2GameBeginGlobalTransfer(u16 sourceBox, u8 sourcePosition);
+bool8 XgbaA2GameGlobalTransferActive(void);
+void XgbaA2GameCancelGlobalTransfer(void);
+bool8 XgbaA2GameGlobalTransferTargetOccupied(u16 destinationBox, u8 position);
+bool8 XgbaA2GameCommitGlobalTransfer(u16 destinationBox, u8 position, bool8 allowSwap);
 // Checked party-to-global deposit. Returns FALSE without mutation for
 // invalid/full destination, mail, empty slot or last usable party Pokémon.
 bool8 XgbaA2GameDepositPartyMonGlobal(u8 partyPosition, u16 globalBox,

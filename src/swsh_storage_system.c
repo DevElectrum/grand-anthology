@@ -114,6 +114,7 @@ enum {
     MSG_BULK_CONFIRM,
     MSG_BULK_DONE,
     MSG_BULK_NONE,
+    MSG_R8_SWAP_CONFIRM,
 };
 
 // IDs for how to resolve variables in the above messages
@@ -136,6 +137,7 @@ enum {
     MENU_STORE,
     MENU_WITHDRAW,
     MENU_MOVE,
+    MENU_TRANSFER,
     MENU_SHIFT,
     MENU_PLACE,
     MENU_SUMMARY,
@@ -605,6 +607,10 @@ EWRAM_DATA static s8 sCursorArea = 0;
 EWRAM_DATA static s8 sCursorPosition = 0;
 EWRAM_DATA static u8 sLastBoxColumn = 0;
 EWRAM_DATA static bool8 sIsMonBeingMoved = 0;
+#if defined(XGBA_R8) && XGBA_R8
+EWRAM_DATA static u16 sR8TransferDestinationBox;
+EWRAM_DATA static u8 sR8TransferDestinationSlot;
+#endif
 EWRAM_DATA static u8 sMovingMonOrigBoxId = 0;
 EWRAM_DATA static u8 sMovingMonOrigBoxPos = 0;
 EWRAM_DATA static u8 sCursorMode = 0;
@@ -650,6 +656,9 @@ static void BulkReleaseFinish(void);
 static void Task_ReshowPokeStorage(u8);
 static void Task_PokeStorageMain(u8);
 static void Task_JumpBox(u8);
+#if defined(XGBA_R8) && XGBA_R8
+static void Task_R8ConfirmGlobalSwap(u8);
+#endif
 static void Task_MakeDefaultBox(u8);
 static void Task_HandleWallpapers(u8);
 static void Task_NameBox(u8);
@@ -2195,6 +2204,42 @@ static void Task_PokeStorageMain(u8 taskId)
         }
     }
 #endif
+#if defined(XGBA_R8) && XGBA_R8
+    // Source remains canonical while navigation or a page rebuild occurs.
+    if (sStorage->state == MSTATE_HANDLE_INPUT && XgbaA2GameGlobalTransferActive())
+    {
+        if (!XgbaA2GameCollectionReady() || JOY_NEW(B_BUTTON))
+        {
+            XgbaA2GameCancelGlobalTransfer();
+            PlaySE(SE_SELECT);
+            return;
+        }
+        if (JOY_NEW(A_BUTTON))
+        {
+            u16 destinationBox;
+            if (sCursorArea != CURSOR_AREA_IN_BOX || sCursorPosition >= IN_BOX_COUNT)
+            {
+                PlaySE(SE_FAILURE);
+                return;
+            }
+            destinationBox = (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox();
+            if (XgbaA2GameGlobalTransferTargetOccupied(destinationBox, sCursorPosition))
+            {
+                sR8TransferDestinationBox = destinationBox;
+                sR8TransferDestinationSlot = sCursorPosition;
+                SetPokeStorageTask(Task_R8ConfirmGlobalSwap);
+            }
+            else if (XgbaA2GameCommitGlobalTransfer(destinationBox, sCursorPosition, FALSE))
+            {
+                PlaySE(SE_SELECT);
+                SetPokeStorageTask(Task_A2ReopenPage);
+            }
+            else
+                PlaySE(SE_FAILURE);
+            return;
+        }
+    }
+#endif
     switch (sStorage->state)
     {
     case MSTATE_HANDLE_INPUT:
@@ -2581,6 +2626,26 @@ static void Task_OnSelectedMon(u8 taskId)
             ClearBottomWindow();
             SetPokeStorageTask(Task_PokeStorageMain);
             break;
+#if defined(XGBA_R8) && XGBA_R8
+        case MENU_TRANSFER:
+            if (sStorage->boxOption == OPTION_MOVE_MONS
+                && sCursorArea == CURSOR_AREA_IN_BOX && !sIsMonBeingMoved
+                && XgbaA2GameBeginGlobalTransfer(
+                    (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
+                    sCursorPosition))
+            {
+                PlaySE(SE_SELECT);
+                ClearBottomWindow();
+                SetPokeStorageTask(Task_JumpBox);
+            }
+            else
+            {
+                PlaySE(SE_FAILURE);
+                ClearBottomWindow();
+                SetPokeStorageTask(Task_PokeStorageMain);
+            }
+            break;
+#endif
         case MENU_MOVE:
             if (IsRemovingLastPartyMon())
             {
@@ -4017,6 +4082,45 @@ static void Task_WallpaperChange(u8 taskId)
     }
 }
 
+#if defined(XGBA_R8) && XGBA_R8
+static void Task_R8ConfirmGlobalSwap(u8 taskId)
+{
+    (void)taskId;
+    switch (sStorage->state)
+    {
+    case 0:
+        PrintMessage(MSG_R8_SWAP_CONFIRM);
+        ShowYesNoWindow(1);
+        sStorage->state = 1;
+        break;
+    case 1:
+        switch (Menu_ProcessInputNoWrapClearOnChoose())
+        {
+        case MENU_B_PRESSED:
+        case 1:
+            ClearBottomWindow();
+            SetPokeStorageTask(Task_PokeStorageMain);
+            break;
+        case 0:
+            ClearBottomWindow();
+            if (XgbaA2GameCommitGlobalTransfer(sR8TransferDestinationBox,
+                                                sR8TransferDestinationSlot, TRUE))
+            {
+                PlaySE(SE_SELECT);
+                SetPokeStorageTask(Task_A2ReopenPage);
+            }
+            else
+            {
+                PlaySE(SE_FAILURE);
+                SetPokeStorageTask(Task_PokeStorageMain);
+            }
+            break;
+        }
+        break;
+    }
+}
+#endif
+
 static void Task_JumpBox(u8 taskId)
 {
     switch (sStorage->state)
@@ -4053,6 +4157,10 @@ static void Task_JumpBox(u8 taskId)
         default:
             if (sStorage->newCurrBoxId != BOXID_CANCELED)
                 PlaySE(SE_SELECT);
+#if defined(XGBA_R8) && XGBA_R8
+            if (sStorage->newCurrBoxId == BOXID_CANCELED)
+                XgbaA2GameCancelGlobalTransfer();
+#endif
             ClearBottomWindow();
             ChooseBox_DestroySprites();
             FreeChooseBox();
@@ -8600,7 +8708,13 @@ static bool8 SetMenuTexts_Mon(void)
         else
         {
             if (species != SPECIES_NONE)
+            {
                 SetMenuText(MENU_MOVE);
+#if defined(XGBA_R8) && XGBA_R8
+                if (sCursorArea == CURSOR_AREA_IN_BOX && XgbaA2GameCollectionReady())
+                    SetMenuText(MENU_TRANSFER);
+#endif
+            }
             else
                 return FALSE;
         }

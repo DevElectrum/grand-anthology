@@ -1,3 +1,10 @@
+# C3D2 large implementation candidate (2026-11-04 UTC, unverified)
+
+- Added R8-only source-anchored virtual carry in `src/save.c`: the chosen 80-byte boxed record stays in canonical RAM during global Jump/slot selection, and a checked Move/Swap commits only with exact source-byte revalidation. Classic and SwSh now expose `Transfer` in boxed-mon Move menu and use existing 112-box Jump to choose a destination box, then exact cursor slot; occupied target requires Yes/No confirmation. Cancel leaves source unmodified.
+- This is production source, not an acceptance claim. Test both frontends in real XGBA, verify Save/cold replay and independent exact 3,360-record delta. C4 still to implement. No main/Mosaic/emulator/save-format/player-save changes.
+
+---
+
 # R8.4 C3D2 + C4 large-batch execution blueprint (2026-11-04, DESIGN ONLY)
 
 - [Read the full implementation and adversarial acceptance plan](docs/ANTHOLOGY_R8_4_C3D2_C4_EXECUTION_PLAN.md). Approved C3D1 is unchanged. Two large steps: (1) one source-anchored Move/Swap transaction using all 112 boxes, with single Classic/SwSh GUI controller matrix; (2) one collection-wide destructive and item-return engine shared across both PC UIs, with all-or-nothing bag updates and a combined Save/cold-audit matrix. C5 remains the separate last recovery and cross-region gate before Sinnoh.

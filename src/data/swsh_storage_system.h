@@ -218,6 +218,7 @@ static const u8 *const sMenuTexts[] =
     [MENU_STORE]      = COMPOUND_STRING("Store"),
     [MENU_WITHDRAW]   = COMPOUND_STRING("Withdraw"),
     [MENU_MOVE]       = COMPOUND_STRING("Move"),
+    [MENU_TRANSFER]   = COMPOUND_STRING("Transfer"),
     [MENU_SHIFT]      = COMPOUND_STRING("Shift"),
     [MENU_PLACE]      = COMPOUND_STRING("Place"),
     [MENU_SUMMARY]    = COMPOUND_STRING("Summary"),
@@ -288,6 +289,7 @@ static const struct StorageMessage sMessages[] =
     [MSG_BULK_CONFIRM]        = {COMPOUND_STRING("Release {DYNAMIC 0} Pokémon?\n{DYNAMIC 1} will remain."), MSG_VAR_BULK_REVIEW},
     [MSG_BULK_DONE]           = {COMPOUND_STRING("{DYNAMIC 0} released.\n{DYNAMIC 1} remain."), MSG_VAR_BULK_REVIEW},
     [MSG_BULK_NONE]           = {COMPOUND_STRING("No Pokémon selected or eligible."), MSG_VAR_NONE},
+    [MSG_R8_SWAP_CONFIRM]     = {COMPOUND_STRING("Swap these Pokémon?"), MSG_VAR_NONE},
 };
 
 // ============================================================================
