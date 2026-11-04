@@ -1,3 +1,11 @@
+# R8.4 C3D2 + C4 large-batch execution blueprint (2026-11-04, DESIGN ONLY)
+
+- [Read the full implementation and adversarial acceptance plan](docs/ANTHOLOGY_R8_4_C3D2_C4_EXECUTION_PLAN.md). Approved C3D1 is unchanged. Two large steps: (1) one source-anchored Move/Swap transaction using all 112 boxes, with single Classic/SwSh GUI controller matrix; (2) one collection-wide destructive and item-return engine shared across both PC UIs, with all-or-nothing bag updates and a combined Save/cold-audit matrix. C5 remains the separate last recovery and cross-region gate before Sinnoh.
+- Confirmed source hazards: legacy grab immediately removes source, UI cannot survive page teardown; SwSh bulk selection is only current 30 slots and has `u8` count; single release scans only native 14 and ignores failed held-item bag insertion. Checked global count helpers sometimes return zero when collection unavailable. Use typed failure instead; no silent partial deletion.
+- **No gameplay code changed or acceptance claimed by this blueprint.** Implementation requires an explicit continue/begin instruction. Keep `xgba/a2-collection-lab` isolated, pinned XGBA R8 `4e0f5918`, and game main, Mosaic, frozen E7 and all real saves untouched.
+
+---
+
 # R8.4 C3D1 FINAL ACCEPTANCE (2026-11-04 UTC)
 
 **Accepted code SHA:** `33169f0df32062e2164925ad01e57eb65cdddd59` on `xgba/a2-collection-lab`. The SwSh wrong-deposit root cause was shared cursor aliasing: chooser grid changed `sCursorPosition` into a box tile while remote deposit treated it as party slot. Production R8 now checks and uses `sChooseBoxMenu->savedCursorPosition` for both move and sprite cleanup. Classic unchanged. Source regression added.
