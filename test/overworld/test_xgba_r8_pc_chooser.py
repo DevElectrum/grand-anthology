@@ -12,6 +12,19 @@ HEADER = (ROOT / "include" / "xgba_a2_game.h").read_text()
 
 
 class R8PcChooserSourceTests(unittest.TestCase):
+    def test_c3d_withdraw_pilot_is_controller_only(self):
+        from pathlib import Path
+        script = (ROOT / "tools" / "xgba_r8_pc_controller.lua").read_text()
+        workflow = (ROOT / ".github" / "workflows" / "R8-PC-Controller.yml").read_text()
+        self.assertIn('action == "withdraw"', script)
+        self.assertIn("real_mon_menu_not_active", script)
+        self.assertIn("R8_PC_CONTROLLER_WITHDRAW_PASS", script)
+        self.assertIn("C3D real controller withdraw", workflow)
+        self.assertIn("diff -u /tmp/r8-pc-save2-audit.txt /tmp/r8-pc-withdraw-audit.txt", workflow)
+        for frontend in (CLASSIC, SWSH):
+            self.assertIn("XgbaR8C3DWithdrawProof()", frontend)
+            self.assertIn("gXgbaR8PcC3DTrace |= 0x80000000U", frontend)
+
     def test_classic_reopen_allocation_failure_is_safe(self):
         start = CLASSIC.index("static void CB2_ReturnToPokeStorage(void)\n{")
         end = CLASSIC.index("static void ResetAllBgCoords(void)", start)

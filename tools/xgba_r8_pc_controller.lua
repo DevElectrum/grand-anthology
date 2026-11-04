@@ -17,9 +17,13 @@ local expectedOptionsStage = engine == "classic" and 7 or 8
 local expectedChooserStage = engine == "classic" and 9 or 10
 local action = os.getenv("R8_PC_ACTION") or "entry"
 assert(action == "entry" or action == "preview-cancel"
-       or action == "jump-commit" or action == "jump-save")
+       or action == "jump-commit" or action == "jump-save"
+       or action == "withdraw")
 local chooserTraceAddr = action ~= "entry" and address("A2_R8_PC_CHOOSER_TRACE") or nil
 local saveMode = action == "jump-save"
+local withdrawMode = action == "withdraw"
+local c3dTraceAddr = withdrawMode and address("A2_R8_PC_C3D_TRACE") or nil
+local expectedMonMenuStage = engine == "classic" and 13 or 14
 local saveCounterAddr = saveMode and address("A2_SAVE_COUNTER") or nil
 local gameSaveTraceAddr = saveMode and address("A2_GAME_SAVE_TRACE") or nil
 local saveDialogTraceAddr = saveMode and address("A2_SAVE_DIALOG_TRACE") or nil
@@ -36,6 +40,7 @@ local queue, index, remaining = {}, 1, 0
 local moveX, moveY, retries, clicks = 0, 0, 0, 0
 local lastUiTrace = nil
 local commitStarted = 0
+local withdrawStarted = 0
 local exitStarted, saveStarted, attempts, menuAttempts = 0, 0, 0, 0
 -- Actual Region Hub collision map: y=8 is a wall east of x=8,
 -- and y=9 is a counter east of x=6. Go around the west end,
@@ -114,6 +119,10 @@ local function readSelectedSaveIcon()
     local absolute = emu:read8(p + 5) + emu:read8(p + 10)
     if count < 1 or count > 12 or absolute >= count then return nil end
     return emu:read8(p + 11 + absolute)
+end
+local function cursorState()
+    local trace = emu:read32(c3dTraceAddr)
+    return (trace >> 16) & 0xFF, (trace >> 8) & 0xFF, trace & 0xFF
 end
 local function checkSavedBox15()
     local marker = emu:read32(chooserTraceAddr)
@@ -256,8 +265,8 @@ callbacks:add("frame", function()
     end
     if stage == "preview-open-jump" then
         if drive() then
-            if action ~= "jump-save" then verifyChooser(0) end
-            if action == "jump-save" then
+            if not saveMode and not withdrawMode then verifyChooser(0) end
+            if saveMode or withdrawMode then
                 -- Populated Save2 starts on global Box 30 (zero-index 29).
                 -- L switches to global Box 16, LEFT selects Box 15.
                 verifyChooser(29, 2)
@@ -337,6 +346,62 @@ callbacks:add("frame", function()
         return
     end
 
+    if stage == "withdraw-down-from-title" then
+        if drive() then
+            local area, pos, partyCount = cursorState()
+            if area ~= 0 or pos > 5 or partyCount >= 6 then
+                fail("withdraw_cursor_not_in_first_row area=" .. area .. " pos=" .. pos
+                     .. " party_count=" .. partyCount)
+            end
+            local actions = {}
+            for i = pos + 1, 5 do
+                actions[#actions + 1] = {RIGHT, 2}
+                actions[#actions + 1] = {0, 55}
+            end
+            if #actions == 0 then actions = {{0, 15}} end
+            stage = "withdraw-select-mon"
+            schedule(actions)
+        end
+        return
+    end
+    if stage == "withdraw-select-mon" then
+        if drive() then
+            local area, pos = cursorState()
+            if area ~= 0 or pos ~= 5 then fail("withdraw_wrong_source_cursor " .. area .. "," .. pos) end
+            stage = "withdraw-open-menu"
+            schedule({{A, 2}, {0, 145}})
+        end
+        return
+    end
+    if stage == "withdraw-open-menu" then
+        if drive() then
+            if emu:read32(uiTrace) ~= expectedMonMenuStage then
+                fail("real_mon_menu_not_active")
+            end
+            stage = "withdraw-menu-choose"
+            -- Move, Summary, Withdraw is the verified MOVE_MONS menu order.
+            schedule({{DOWN, 2}, {0, 45}, {DOWN, 2}, {0, 45}, {A, 2}, {0, 120}})
+        end
+        return
+    end
+    if stage == "withdraw-menu-choose" then
+        if drive() then
+            withdrawStarted = frame
+            stage = "withdraw-await"
+        end
+        return
+    end
+    if stage == "withdraw-await" then
+        emu:setKeys(0)
+        local trace = emu:read32(c3dTraceAddr)
+        if (trace & 0x80000000) ~= 0 and emu:read32(uiTrace) == expectedStage then
+            local area, pos, partyCount = cursorState()
+            report("R8_PC_CONTROLLER_WITHDRAW_PASS global_box=15 source_slot=5 party_count=" .. partyCount)
+            os.exit(0)
+        end
+        if frame - withdrawStarted > 4000 then fail("real_graphical_withdraw_never_verified") end
+        return
+    end
     -- Storage B opens Continue? (Yes/No); a second B selects No, which
     -- closes the screen without picking up or modifying any Pokémon.
     if stage == "exit-storage-prompt" then
@@ -472,6 +537,11 @@ callbacks:add("frame", function()
                      .. " local_box=" .. localBox)
             end
             report("R8_PC_CONTROLLER_JUMP_COMMIT_PASS global_box=15 resident_page=1 local_box=0")
+            if withdrawMode then
+                stage = "withdraw-down-from-title"
+                schedule({{DOWN, 2}, {0, 115}})
+                return
+            end
             if not saveMode then
                 os.exit(0)
             end

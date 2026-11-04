@@ -2412,6 +2412,11 @@ static void Task_PokeStorageMain(u8 taskId)
         gXgbaR8PcUiTrace = 4;
         gXgbaR8PcChooserTrace = 0x40000000U
             | ((u32)XgbaA2GamePage() << 16) | StorageGetCurrentBox();
+        gXgbaR8PcC3DTrace = ((u32)(u8)sCursorArea << 16)
+            | ((u32)(u8)sCursorPosition << 8) | CalculatePlayerPartyCount();
+        if (XgbaA2GamePage() == 1 && StorageGetCurrentBox() == 0
+            && XgbaR8C3DWithdrawProof())
+            gXgbaR8PcC3DTrace |= 0x80000000U;
     }
 #endif
     switch (sStorage->state)
@@ -2781,6 +2786,9 @@ static void Task_OnSelectedMon(u8 taskId)
             sStorage->state = 2;
         break;
     case 2:
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 13;
+#endif
         switch (HandleMenuInput())
         {
         case MENU_B_PRESSED:

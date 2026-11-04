@@ -13,6 +13,33 @@ EWRAM_DATA volatile u32 gXgbaR8PcUiTrace = 0;
 // Low 16 bits: preview global box or resident local box.
 // Bits 16..23: resident page. Never read this instrumentation in production.
 EWRAM_DATA volatile u32 gXgbaR8PcChooserTrace = 0;
+// Test-only status for a controller-driven withdrawal from global Box 15.
+// Area and position are sampled by the real PC callbacks, not Lua pokes.
+EWRAM_DATA volatile u32 gXgbaR8PcC3DTrace = 0;
+
+bool8 XgbaR8C3DWithdrawProof(void)
+{
+    struct BoxPokemon *source = XgbaA2GameGlobalBoxMon(14, 5);
+    u8 matches = 0;
+    u8 position;
+
+    if (source == NULL || GetBoxMonData(source, MON_DATA_SPECIES) != SPECIES_NONE)
+        return FALSE;
+
+    for (position = 0; position < PARTY_SIZE; position++)
+    {
+        struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][position];
+        if (GetMonData(mon, MON_DATA_SPECIES) != SPECIES_SQUIRTLE
+            || GetMonData(mon, MON_DATA_PERSONALITY) != 0x3456789AU)
+            continue;
+        if (GetMonData(mon, MON_DATA_HELD_ITEM) != ITEM_POTION
+            || (GetMonData(mon, MON_DATA_MARKINGS) & 8) == 0)
+            return FALSE;
+        matches++;
+    }
+    return matches == 1;
+}
+
 static int R8FixtureFail(u32 stage)
 {
     gXgbaR8FixtureStage = stage;
