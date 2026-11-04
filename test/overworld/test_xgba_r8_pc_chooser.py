@@ -222,5 +222,24 @@ class R8PcChooserSourceTests(unittest.TestCase):
         self.assertIn("VerifyTestPokemonRecordsAt(TRUE)", runtime)
 
 
+    def test_c3d_cancel_source_identity_and_saved_exit_are_state_checked(self):
+        controller = (ROOT / "tools" / "xgba_r8_pc_controller.lua").read_text()
+        fixture = (ROOT / "src" / "xgba_r8_runtime_test.c").read_text()
+        header = (ROOT / "include" / "xgba_r8_runtime_test.h").read_text()
+        symbols = (ROOT / "tools" / "xgba_a2_symbol_env.py").read_text()
+        for frontend in (CLASSIC, SWSH):
+            self.assertIn("gXgbaR8PcC3DTrace |= 0x20000000U;", frontend)
+            self.assertIn("MON_DATA_PERSONALITY) == 0x3456789AU", frontend)
+        self.assertIn("gXgbaR8PcC3DDepositDiagnostic", fixture)
+        self.assertIn("gXgbaR8PcC3DDepositDiagnostic", header)
+        self.assertIn("A2_R8_PC_DEPOSIT_DIAG", symbols)
+        self.assertIn("roundtrip_cancel_mutated_source_or_cursor_identity", controller)
+        self.assertIn("stage == \"exit-ensure-box\"", controller)
+        self.assertIn("exitRouteSteps > 3", controller)
+        self.assertIn("engine == \"classic\" and B or RIGHT", controller)
+        self.assertIn("R8_PC_CONTROLLER_PARTY_EXIT_PASS", controller)
+        self.assertIn("deposit_diag=", controller)
+
+
 if __name__ == "__main__":
     unittest.main()

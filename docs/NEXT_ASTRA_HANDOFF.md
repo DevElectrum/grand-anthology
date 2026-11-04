@@ -1,3 +1,13 @@
+# C3D1 two-engine evidence review and consolidated correction (2026-11-04 UTC; CI pending)
+
+- Source branch `xgba/a2-collection-lab`, prior candidate `e43d9699`. CI source regression, A2 storage contract, native A1, boot probe and real Pokémon cold persistence were GREEN. Controller run 41805373480 failed both frontends at later stages than previous runs.
+- Classic: real withdrawal, party-route navigation, deposit chooser cancel and remote Box43 commit all passed (`R8_PC_CONTROLLER_ROUNDTRIP_PASS`). Separate Save3 flow failed in `storage_screen_did_not_return_to_pc_main_menu` because cursor remained in Classic party pane; B must first hide party before exiting storage.
+- SwSh: genuine party entry and chooser cancellation passed; remote deposit chooser reached global Box43 but final post-commit record proof did not pass. Do NOT assume corruption or wrong PID without evidence; new test-only diagnostic exposes source-clear, destination species/PID/item/mark, and whether Squirtle remained in party or Zigzagoon was deposited.
+- One coherent corrective candidate: test-only selected-Squirtle cursor proof before and after cancel, explicit diagnostic telemetry, and state-aware return to box before real Save3 PC exit. No production save/backend changes. The original Jump Save3 and independent exact 3,360-slot auditor remain strict.
+- Await complete dual-engine controller CI before any further corrective change. Don't mark C3D1 accepted until both GUI paths and true cold persistence are verified. Next milestone stays R8.4 cross-group carry and destructive-operation safety.
+
+---
+
 # C3D1 consolidated controller, save and audit batch (2026-11-04 UTC; pending CI)
 
 - Requested engineering reset: coherent feature/verification batches, no speculative one-commit CI loops. Sinnoh is next project AFTER Grand Anthology R8.4 stabilization, not part of this batch.

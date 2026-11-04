@@ -6,6 +6,7 @@ extern volatile u32 gXgbaR8FixtureStage;
 extern volatile u32 gXgbaR8PcUiTrace;
 extern volatile u32 gXgbaR8PcChooserTrace;
 extern volatile u32 gXgbaR8PcC3DTrace;
+extern volatile u32 gXgbaR8PcC3DDepositDiagnostic;
 bool8 XgbaR8C3DWithdrawProof(void);
 bool8 XgbaR8C3DRemoteDepositProof(void);
 int XgbaR8CreateTestPokemon(void);

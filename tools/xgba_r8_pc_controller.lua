@@ -25,6 +25,7 @@ local saveMode = action == "jump-save" or action == "roundtrip-save"
 local roundtripMode = action == "roundtrip" or action == "roundtrip-save"
 local withdrawMode = action == "withdraw" or roundtripMode
 local c3dTraceAddr = withdrawMode and address("A2_R8_PC_C3D_TRACE") or nil
+local depositDiagAddr = roundtripMode and address("A2_R8_PC_DEPOSIT_DIAG") or nil
 local expectedMonMenuStage = engine == "classic" and 13 or 14
 local expectedDepositChooserStage = engine == "classic" and 15 or 16
 local saveCounterAddr = saveMode and address("A2_SAVE_COUNTER") or nil
@@ -43,7 +44,7 @@ local queue, index, remaining = {}, 1, 0
 local moveX, moveY, retries, clicks = 0, 0, 0, 0
 local lastUiTrace = nil
 local commitStarted = 0
-local withdrawStarted, partyRouteSteps = 0, 0
+local withdrawStarted, partyRouteSteps, exitRouteSteps = 0, 0, 0
 local exitStarted, saveStarted, attempts, menuAttempts = 0, 0, 0, 0
 -- Actual Region Hub collision map: y=8 is a wall east of x=8,
 -- and y=9 is a counter east of x=6. Go around the west end,
@@ -60,7 +61,9 @@ local function fail(reason)
     report("R8_PC_CONTROLLER_FAIL " .. reason .. " ui_trace=" .. emu:read32(uiTrace)
            .. " chooser_trace=" .. (chooserTraceAddr and emu:read32(chooserTraceAddr) or "none")
            .. " native_counter=" .. (saveCounterAddr and emu:read32(saveCounterAddr) or "none")
-           .. " game_save_trace=" .. (gameSaveTraceAddr and emu:read32(gameSaveTraceAddr) or "none"))
+           .. " game_save_trace=" .. (gameSaveTraceAddr and emu:read32(gameSaveTraceAddr) or "none")
+           .. " c3d_trace=" .. (c3dTraceAddr and emu:read32(c3dTraceAddr) or "none")
+           .. " deposit_diag=" .. (depositDiagAddr and emu:read32(depositDiagAddr) or "none"))
     os.exit(3)
 end
 local function schedule(a)
@@ -485,8 +488,9 @@ callbacks:add("frame", function()
     if stage == "roundtrip-select-party" then
         if drive() then
             local area, pos, partyCount = cursorState()
-            if area ~= 1 or pos ~= partyCount - 1 then
-                fail("roundtrip_selected_wrong_party_member")
+            if area ~= 1 or pos ~= partyCount - 1
+               or (emu:read32(c3dTraceAddr) & 0x20000000) == 0 then
+                fail("roundtrip_selected_wrong_party_member_or_identity")
             end
             stage = "roundtrip-open-store-menu"
             schedule({{A, 2}, {0, 150}})
@@ -515,8 +519,9 @@ callbacks:add("frame", function()
         if drive() then
             local proof = emu:read32(c3dTraceAddr)
             if emu:read32(uiTrace) ~= expectedStage
-               or (proof & 0x80000000) == 0 or (proof & 0x40000000) ~= 0 then
-                fail("roundtrip_cancel_mutated_party_or_storage")
+               or (proof & 0x80000000) == 0 or (proof & 0x40000000) ~= 0
+               or (proof & 0x20000000) == 0 then
+                fail("roundtrip_cancel_mutated_source_or_cursor_identity")
             end
             report("R8_PC_CONTROLLER_DEPOSIT_CANCEL_PASS")
             stage = "roundtrip-reopen-menu"
@@ -563,13 +568,41 @@ callbacks:add("frame", function()
         if emu:read32(uiTrace) == expectedStage and (proof & 0x40000000) ~= 0 then
             report("R8_PC_CONTROLLER_ROUNDTRIP_PASS source_box=15 destination_box=43")
             if saveMode then
-                stage = "exit-storage-prompt"
-                schedule({{B, 2}, {0, 125}})
+                -- The transfer leaves the cursor over the party. Exit the
+                -- party pane first; only then run the proven B/B PC exit.
+                exitRouteSteps = 0
+                stage = "exit-ensure-box"
+                schedule({{0, 40}})
             else
                 os.exit(0)
             end
         end
         if frame - withdrawStarted > 4000 then fail("remote_deposit_never_verified") end
+        return
+    end
+    if stage == "exit-ensure-box" then
+        if drive() then
+            if emu:read32(uiTrace) ~= expectedStage then
+                fail("exit_party_not_in_storage_input")
+            end
+            local area, pos = cursorState()
+            if area == 0 then
+                report("R8_PC_CONTROLLER_PARTY_EXIT_PASS pos=" .. pos)
+                stage = "exit-storage-prompt"
+                schedule({{B, 2}, {0, 125}})
+                return
+            end
+            exitRouteSteps = exitRouteSteps + 1
+            if area ~= 1 or exitRouteSteps > 3 then
+                fail("exit_party_invalid_cursor area=" .. area .. " pos=" .. pos)
+            end
+            -- Classic B invokes Task_HidePartyPokemon; SwSh RIGHT moves
+            -- the live cursor back to the box. Both are real UI actions.
+            local key = engine == "classic" and B or RIGHT
+            report("R8_PC_CONTROLLER_EXIT_PARTY area=" .. area
+                   .. " pos=" .. pos .. " action=" .. (engine == "classic" and "hide" or "right"))
+            schedule({{key, 2}, {0, 250}})
+        end
         return
     end
     -- Storage B opens Continue? (Yes/No); a second B selects No, which

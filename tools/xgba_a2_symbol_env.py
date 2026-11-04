@@ -27,6 +27,7 @@ OPTIONAL_SYMBOLS = {
     "gXgbaR8PcUiTrace": "A2_R8_PC_UI_TRACE",
     "gXgbaR8PcChooserTrace": "A2_R8_PC_CHOOSER_TRACE",
     "gXgbaR8PcC3DTrace": "A2_R8_PC_C3D_TRACE",
+    "gXgbaR8PcC3DDepositDiagnostic": "A2_R8_PC_DEPOSIT_DIAG",
 }
 
 

@@ -2414,6 +2414,12 @@ static void Task_PokeStorageMain(u8 taskId)
             | ((u32)XgbaA2GamePage() << 16) | StorageGetCurrentBox();
         gXgbaR8PcC3DTrace = ((u32)(u8)sCursorArea << 16)
             | ((u32)(u8)sCursorPosition << 8) | CalculatePlayerPartyCount();
+        // Test-only witness: the cursor points to the exact game-created
+        // Squirtle, not merely to the last occupied party slot.
+        if (sCursorArea == CURSOR_AREA_IN_PARTY && sCursorPosition < PARTY_SIZE
+            && GetMonData(&gParties[B_TRAINER_PLAYER][sCursorPosition], MON_DATA_SPECIES) == SPECIES_SQUIRTLE
+            && GetMonData(&gParties[B_TRAINER_PLAYER][sCursorPosition], MON_DATA_PERSONALITY) == 0x3456789AU)
+            gXgbaR8PcC3DTrace |= 0x20000000U;
         if (XgbaA2GamePage() == 1 && StorageGetCurrentBox() == 0)
         {
             if (XgbaR8C3DWithdrawProof())

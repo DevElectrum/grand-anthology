@@ -16,6 +16,10 @@ EWRAM_DATA volatile u32 gXgbaR8PcChooserTrace = 0;
 // Test-only status for a controller-driven withdrawal from global Box 15.
 // Area and position are sampled by the real PC callbacks, not Lua pokes.
 EWRAM_DATA volatile u32 gXgbaR8PcC3DTrace = 0;
+// Diagnostic-only evidence of the exact committed remote-deposit fields.
+// Bit 0: old source cleared; 1-4: dest species/PID/item/marking correct;
+// bit 5: Squirtle still in party; bit 6: Zigzagoon accidentally deposited.
+EWRAM_DATA volatile u32 gXgbaR8PcC3DDepositDiagnostic = 0;
 
 bool8 XgbaR8C3DWithdrawProof(void)
 {
@@ -44,20 +48,34 @@ bool8 XgbaR8C3DRemoteDepositProof(void)
 {
     struct BoxPokemon *oldSource = XgbaA2GameGlobalBoxMon(14, 5);
     struct BoxPokemon *remote = XgbaA2GameGlobalBoxMon(42, 1);
+    u32 evidence = 0;
     u8 position;
 
-    if (oldSource == NULL || remote == NULL
-        || GetBoxMonData(oldSource, MON_DATA_SPECIES) != SPECIES_NONE
-        || GetBoxMonData(remote, MON_DATA_SPECIES) != SPECIES_SQUIRTLE
-        || GetBoxMonData(remote, MON_DATA_PERSONALITY) != 0x3456789AU
-        || GetBoxMonData(remote, MON_DATA_HELD_ITEM) != ITEM_POTION
-        || (GetBoxMonData(remote, MON_DATA_MARKINGS) & 8) == 0)
-        return FALSE;
-
+    if (oldSource != NULL && GetBoxMonData(oldSource, MON_DATA_SPECIES) == SPECIES_NONE)
+        evidence |= 1u << 0;
+    if (remote != NULL)
+    {
+        if (GetBoxMonData(remote, MON_DATA_SPECIES) == SPECIES_SQUIRTLE)
+            evidence |= 1u << 1;
+        if (GetBoxMonData(remote, MON_DATA_PERSONALITY) == 0x3456789AU)
+            evidence |= 1u << 2;
+        if (GetBoxMonData(remote, MON_DATA_HELD_ITEM) == ITEM_POTION)
+            evidence |= 1u << 3;
+        if ((GetBoxMonData(remote, MON_DATA_MARKINGS) & 8) != 0)
+            evidence |= 1u << 4;
+        if (GetBoxMonData(remote, MON_DATA_SPECIES) == SPECIES_ZIGZAGOON)
+            evidence |= 1u << 6;
+    }
     for (position = 0; position < PARTY_SIZE; position++)
+    {
         if (GetMonData(&gParties[B_TRAINER_PLAYER][position], MON_DATA_SPECIES) == SPECIES_SQUIRTLE)
-            return FALSE;
-    return TRUE;
+        {
+            evidence |= 1u << 5;
+            break;
+        }
+    }
+    gXgbaR8PcC3DDepositDiagnostic = evidence;
+    return (evidence & 0x1FU) == 0x1FU && (evidence & (1u << 5)) == 0;
 }
 
 static int R8FixtureFail(u32 stage)
