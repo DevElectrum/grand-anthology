@@ -1,3 +1,22 @@
+# CURRENT: SINNOH FULL CONTENT IMPORT DESIGN READY (2026-11-05)
+
+**Planning-only update; no implementation authorized or performed.** The maintainer requested a complete source import plan and updated handoffs. Read first:
+1. [Full Sinnoh import execution plan v1.0](SINNOH_FULL_IMPORT_EXECUTION_PLAN.md), canonical proposed architecture, dependency closure, I0–I5 substantial milestones, failure gates and full-story scope.
+2. [Pinned upstream 93-map and source asset inventory v1.0](SINNOH_UPSTREAM_CONTENT_MANIFEST.md), all 13 map groups, map/script skeleton classification, source-only primary/secondary tileset directories, 60 wild records/20 maps and 191 MIDI candidates.
+3. [Old Sinnoh kickoff v0.1](SINNOH_ARCHITECTURE_KICKOFF.md), still useful for region-save risks but **superseded** on primary source choice. Older `pret/pokeplatinum` DS geometry conversion is not the preferred import route.
+
+**Pinned source state at the audit:** Grand Anthology `main@6061928f0a20d67b00b676e41c1d1d53f3c3b44c` after R8.4 merges and documentation; `sinnoh-remakes/pokeemerald-platinum@c79120fbab7d62c66785c90b491e6a370249d5db`. Import plan/manifest docs have been added to this repository after the audit; use latest `main` for docs and preserve pinned content source SHAs for reproducibility. XGBA R8 is already merged, no emulator expansion project to repeat.
+
+**New direction:** Source is a GBA `pokeemerald-expansion`-derived Sinnoh demake. Reuse only its Sinnoh-specific world data: 93 maps / 13 groups, 64 new layouts, 23 primary and 44 secondary source-only tileset directories, overworld/trainer art, trainers, encounters, dialogue, MIDI + required samples, scripts and targeted field helpers. Import at source/file/symbol dependency granularity, never merge upstream generic battle/Pokémon/save implementation. Its footprint reaches Eterna but 21 scripts are mere skeletons, including Eterna Galactic 1F–4F; later Platinum maps/quest chain require original work. Source-only file counts are *candidates*, not approved asset transfers or a ROM budget.
+
+**Existing-engine hazards verified:** `REGION_SINNOH` is enum-only. `src/event_data.c` falls back to Hoenn for unseen region flags/vars/badges; `src/story_progress.c`, `src/region_switch.c`, `include/regions.h` and `src/region_map.c` hardcode three regions. Roark/Gardenia source scripts set native Hoenn `FLAG_BADGE01_GET/02_GET`. Append groups after existing 101, do not renumber 1,194 maps. Saving new regional state requires proven SaveBlock2/3 space, version migration, checksum and selected A2/E6 generation coherence. Existing global PC/112 boxes, party/bag/Dex and all former regional state remain authoritative.
+
+**Execution is not started.** After an explicit implementation order, work in large adversarially planned batches I0–I5: signed-off source ID/asset/permission/ROM/save-ABI manifest; region registry/progress; bulk imported content; full early two-badge storyline including Galactic floor completion; complete missing six gyms/late Galactic/Giratina/League; bounded end-to-end real XGBA and corruption/migration qualification. No automatic code, data, save edits, release, website publication or Mosaic changes. Do not repeat already accepted R8.4 suites without a relevant dependency change. Upstream's audited root has credits but no top-level LICENSE; public availability does not equal redistribution permission.
+
+**Legacy closeout remains unchanged:** R8.4 C3D2/C4/C5 and companion XGBA master are merged, with accepted 112-box and three-region cold-save/region-travel evidence. Previous R8.4 blockers and pre-merge instructions below are archival.
+
+---
+
 # CURRENT: R8.4 RELEASE MERGED, SINNOH NEXT (2026-11-05)
 
 > **New Sinnoh design entrypoint:** [Sinnoh architecture kickoff v0.1](SINNOH_ARCHITECTURE_KICKOFF.md). This is a planning-only source-grounded proposal; no Sinnoh gameplay code is approved or written.
