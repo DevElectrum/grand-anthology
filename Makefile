@@ -174,6 +174,14 @@ XGBA_A1 ?= 0
 XGBA_A2 ?= 0
 XGBA_R8 ?= 0
 XGBA_R8_TEST ?= 0
+# CI-only eligible C4 graphical release cohort; cannot build a player ROM.
+XGBA_R8_C4_GUI_TEST ?= 0
+ifeq ($(XGBA_R8_C4_GUI_TEST),1)
+  ifneq ($(XGBA_R8_TEST),1)
+    $(error C4 GUI fixture requires isolated R8 test cartridge)
+  endif
+  CPPFLAGS += -DXGBA_R8_C4_GUI_TEST=1
+endif
 ifeq ($(XGBA_R8_TEST),1)
   ifneq ($(XGBA_R8),1)
     $(error R8 test cartridge requires R8)

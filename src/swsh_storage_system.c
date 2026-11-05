@@ -4143,6 +4143,11 @@ static void Task_R8GlobalClear(u8 taskId)
         }
         else
         {
+#if defined(XGBA_R8_C4_GUI_TEST) && XGBA_R8_C4_GUI_TEST
+            // Proof of the actual GUI reaching a positive release plan.
+            if (sR8ClearScope == XGBA_R8_RELEASE_ALL)
+                gXgbaR8PcUiTrace = 23;
+#endif
             PrintMessage(MSG_R8_CLEAR_CONFIRM);
             ShowYesNoWindow(1);
             sStorage->state = 1;
@@ -4188,6 +4193,10 @@ static void Task_R8GlobalClear(u8 taskId)
     case 3:
         if (XgbaA2GameCommitGlobalRelease())
         {
+#if defined(XGBA_R8_C4_GUI_TEST) && XGBA_R8_C4_GUI_TEST
+            // Sticky success witness, set only from real UI confirmation.
+            gXgbaR8FixtureStage = 0xC4000004U;
+#endif
             PlaySE(SE_SELECT);
             SetPokeStorageTask(Task_A2ReopenPage);
         }

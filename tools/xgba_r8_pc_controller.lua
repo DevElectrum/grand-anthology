@@ -20,11 +20,13 @@ assert(action == "entry" or action == "preview-cancel"
        or action == "jump-commit" or action == "jump-save"
        or action == "withdraw" or action == "roundtrip"
        or action == "roundtrip-save" or action == "transfer"
-       or action == "transfer-save" or action == "clear-all")
+       or action == "transfer-save" or action == "clear-all"
+       or action == "clear-all-success")
 local chooserTraceAddr = action ~= "entry" and address("A2_R8_PC_CHOOSER_TRACE") or nil
-local c4PlannerAddr = action == "clear-all" and address("A2_R8_C4_PROOF") or nil
+local clearSuccessMode = action == "clear-all-success"
+local c4PlannerAddr = (action == "clear-all" or clearSuccessMode) and address("A2_R8_C4_PROOF") or nil
 local transferMode = action == "transfer" or action == "transfer-save"
-local saveMode = action == "jump-save" or action == "roundtrip-save" or action == "transfer-save"
+local saveMode = action == "jump-save" or action == "roundtrip-save" or action == "transfer-save" or clearSuccessMode
 local roundtripMode = action == "roundtrip" or action == "roundtrip-save"
 local withdrawMode = action == "withdraw" or roundtripMode
 local c3dTraceAddr = (withdrawMode or transferMode) and address("A2_R8_PC_C3D_TRACE") or nil
@@ -147,6 +149,14 @@ local function assertDepositChooser(expectedGlobal)
 end
 local function checkSavedBox15()
     local marker = emu:read32(chooserTraceAddr)
+    if clearSuccessMode then
+        -- Destructive release intentionally leaves original Save2 Box30 selected.
+        if (marker & 0x40000000) == 0 or ((marker >> 16) & 0xFF) ~= 2
+           or (marker & 0xFFFF) ~= 1 then
+            fail("C4_save_selection_changed_from_box30")
+        end
+        return
+    end
     if (marker & 0x40000000) == 0 or ((marker >> 16) & 0xFF) ~= 1
        or (marker & 0xFFFF) ~= 0 then
         fail("post_jump_resident_page_or_box_changed")
@@ -279,7 +289,7 @@ callbacks:add("frame", function()
             if emu:read32(uiTrace) ~= expectedOptionsStage then
                 fail("box_title_options_menu_not_entered")
             end
-            if action == "clear-all" then
+            if action == "clear-all" or clearSuccessMode then
                 -- Both menus begin with Jump, Wallpaper, Name.
                 -- Classic Clear All is index 5; SwSh has Make Default
                 -- and Bulk Release, so Clear All is index 7.
@@ -306,9 +316,45 @@ callbacks:add("frame", function()
                 fail("C4_global_clear_not_reached marker="
                      .. tostring(emu:read32(c4PlannerAddr)))
             end
-            report("R8_C4_GUI_PROTECTED_CLEAR_PASS scope=all no_eligible=1")
-            emu:setKeys(0)
-            os.exit(0)
+            if clearSuccessMode then
+                if emu:read32(uiTrace) ~= 23 then
+                    fail("C4_positive_gui_planner_not_observed")
+                end
+                report("R8_C4_GUI_POSITIVE_PLAN_PASS")
+                stage = "clear-all-confirm"
+                -- Actual two separate Yes answers, not a direct backend call.
+                schedule({{A, 2}, {0, 140}, {A, 2}, {0, 340}})
+            else
+                report("R8_C4_GUI_PROTECTED_CLEAR_PASS scope=all no_eligible=1")
+                emu:setKeys(0)
+                os.exit(0)
+            end
+        end
+        return
+    end
+    if stage == "clear-all-confirm" then
+        if drive() then
+            commitStarted = frame
+            stage = "clear-all-await-commit"
+        end
+        return
+    end
+    if stage == "clear-all-await-commit" then
+        emu:setKeys(0)
+        if emu:read32(c4PlannerAddr) == 0xC4000004
+           and emu:read32(uiTrace) == expectedStage then
+            -- The genuine unmarked Box56 slot4 must now be all zero.
+            local pos = 0x20000000 + 3 * 34144 + 4 + 13 * 30 * 80 + 3 * 80
+            for i = 0, 79 do
+                if emu:read8(pos + i) ~= 0 then
+                    fail("C4_released_record_not_erased_byte_" .. i)
+                end
+            end
+            report("R8_C4_GUI_DESTRUCTIVE_COMMIT_PASS box=56 slot=4")
+            stage = "exit-storage-prompt"
+            schedule({{B, 2}, {0, 125}})
+        elseif frame - commitStarted > 3200 then
+            fail("C4_graphical_commit_or_ui_reopen_timeout")
         end
         return
     end
@@ -956,7 +1002,9 @@ callbacks:add("frame", function()
                 fail("third_save_not_settled")
             end
             checkSavedBox15()
-            if transferMode then
+            if clearSuccessMode then
+                report("R8_C4_GUI_SUCCESS_SAVE3_PASS box=56 slot=4 counter=3")
+            elseif transferMode then
                 report("R8_PC_CONTROLLER_TRANSFER_SAVE3_PASS source_box=15 destination_box=43 counter=3")
             elseif roundtripMode then
                 report("R8_PC_CONTROLLER_ROUNDTRIP_SAVE3_PASS source_box=15 destination_box=43 counter=3")

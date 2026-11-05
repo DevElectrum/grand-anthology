@@ -230,6 +230,11 @@ static int R8C4SafetyProof(void)
     memcpy(a, &sR8C4OriginalA, sizeof(*a));
     memcpy(b, &sR8C4OriginalB, sizeof(*b));
     ZeroBoxMonData(extra);
+#if defined(XGBA_R8_C4_GUI_TEST) && XGBA_R8_C4_GUI_TEST
+    // This disposable build alone retains one genuine, unmarked Box56 Pidgey
+    // holding a Potion for controller-driven graphical Clear All acceptance.
+    memcpy(extra, &sR8C4ExtraImage, sizeof(*extra));
+#endif
     XgbaA2GameCancelGlobalRelease();
     if (memcmp(&gSaveBlock1Ptr->bag, &sR8C4OriginalBag, sizeof(struct Bag)) != 0
         || memcmp(a, &sR8C4OriginalA, sizeof(*a)) != 0
@@ -462,9 +467,20 @@ int XgbaR8VerifyTestPokemonAtCounter(u32 counter)
     if (counter == 2)
         return XgbaR8VerifyTestPokemon();
     if (counter == 3)
+    {
+#if defined(XGBA_R8_C4_GUI_TEST) && XGBA_R8_C4_GUI_TEST
+        struct BoxPokemon *released = XgbaA2GameGlobalBoxMon(55, 3);
+        return VerifyTestPokemonRecords()
+            && released != NULL
+            && GetBoxMonData(released, MON_DATA_SPECIES) == SPECIES_NONE
+            && XgbaA2GamePage() == 2
+            && StorageGetCurrentBox() == 1;
+#else
         return (VerifyTestPokemonRecords() || VerifyTestPokemonRecordsAt(TRUE))
             && XgbaA2GamePage() == 1
             && StorageGetCurrentBox() == 0;
+#endif
+    }
     return FALSE;
 }
 #endif

@@ -367,8 +367,88 @@ jobs:
           grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=3' /tmp/r8-pc-cold3.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-cold3-audit.txt
           diff -u /tmp/r8-pc-save3-audit.txt /tmp/r8-pc-cold3-audit.txt
+      - name: Build isolated C4 eligible graphical fixture
+        run: |
+          set -e
+          # No player build: different CPPFLAGS, new disposable build directory.
+          rm -rf build/xgba-r8-test-release
+          make release -j4 XGBA_A1=1 XGBA_A2=1 XGBA_R8=1 XGBA_R8_TEST=1 \
+            XGBA_R8_C4_GUI_TEST=1 BUILD_NAME=xgba-r8-test \
+            FILE_NAME=xgba-anthology-r8-c4-native-release
+          python3 tools/xgba_a2_symbol_env.py xgba-anthology-r8-c4-native-release.elf --github-env "$GITHUB_ENV"
+          python3 tools/xgba_a1_assets.py pack \
+            --native xgba-anthology-r8-c4-native-release.gba \
+            --manifest build/xgba-r8-test-release/a1-manifest.json \
+            --output build/r8-ci/c4-layout.gba
+          python3 tools/xgba_a2_rom.py tag --r8 build/r8-ci/c4-layout.gba build/r8-ci/c4-test.gba
+          python3 tools/xgba_a2_rom.py verify --r8 build/r8-ci/c4-test.gba
+          python3 tools/xgba_a2_storage.py blank build/r8-ci/c4-base.sav
+      - name: C4 eligible fixture actual Save1 and Save2
+        env:
+          A2_E6_SAVE_PATH: build/r8-ci/c4-base.sav
+        run: |
+          set -e
+          A2_ACTION=save timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/c4-test.gba > /tmp/r8-c4-first.log 2>&1 || {
+              tail -n 80 /tmp/r8-c4-first.log; exit 1;
+            }
+          grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/r8-c4-first.log
+          A2_ACTION=save-again A2_EXPECTED_SAVE_COUNTER=1 \
+            timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/c4-test.gba > /tmp/r8-c4-second.log 2>&1 || {
+              tail -n 100 /tmp/r8-c4-second.log; exit 1;
+            }
+          grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/r8-c4-second.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/c4-base.sav | tee /tmp/r8-c4-base-audit.txt
+          grep -q '^counter: 2$' /tmp/r8-c4-base-audit.txt
+      - name: C4 both real graphical Yes confirmations and Save3
+        env:
+          R8_PC_ACTION: clear-all-success
+          A2_E6_SAVE_PATH: build/r8-ci/c4-release.sav
+        run: |
+          set -e
+          test ! -e build/r8-ci/c4-release.sav
+          cp build/r8-ci/c4-base.sav build/r8-ci/c4-release.sav
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_r8_pc_controller.lua \
+            build/r8-ci/c4-test.gba > /tmp/r8-c4-commit.log 2>&1 || {
+              grep -E 'R8_C4_GUI_|R8_PC_CONTROLLER_' /tmp/r8-c4-commit.log | tail -n 100 || true
+              tail -n 50 /tmp/r8-c4-commit.log; exit 1;
+            }
+          grep -q 'R8_C4_GUI_POSITIVE_PLAN_PASS' /tmp/r8-c4-commit.log
+          grep -q 'R8_C4_GUI_DESTRUCTIVE_COMMIT_PASS box=56 slot=4' /tmp/r8-c4-commit.log
+          grep -q 'R8_C4_GUI_SUCCESS_SAVE3_PASS box=56 slot=4 counter=3' /tmp/r8-c4-commit.log
+          python3 tools/xgba_r8_c4_gui_audit.py build/r8-ci/c4-base.sav build/r8-ci/c4-release.sav
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/c4-release.sav > /tmp/r8-c4-save3-audit.txt
+      - name: C4 fresh XGBA cold Continue proves exact post-release state
+        env:
+          A2_E6_SAVE_PATH: build/r8-ci/c4-release.sav
+          A2_ACTION: resume
+          A2_EXPECTED_SAVE_COUNTER: '3'
+        run: |
+          set -e
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/c4-test.gba > /tmp/r8-c4-cold3.log 2>&1 || {
+              tail -n 100 /tmp/r8-c4-cold3.log; exit 1;
+            }
+          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=3' /tmp/r8-c4-cold3.log
+          python3 tools/xgba_r8_c4_gui_audit.py build/r8-ci/c4-base.sav build/r8-ci/c4-release.sav
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/c4-release.sav > /tmp/r8-c4-cold3-audit.txt
+          diff -u /tmp/r8-c4-save3-audit.txt /tmp/r8-c4-cold3-audit.txt
       - name: Delete disposable ROM and save on success or failure
         if: always()
         run: |
           rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav build/r8-ci/roundtrip.sav build/r8-ci/c3d2-transfer.sav build/r8-ci/c4-protected.sav
+          rm -f build/r8-ci/c4-layout.gba build/r8-ci/c4-test.gba build/r8-ci/c4-base.sav build/r8-ci/c4-release.sav
           echo 'No gameplay ROM or save published.'
