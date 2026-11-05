@@ -10,7 +10,7 @@ MANIFEST = Path(__file__).with_name("pinned_source_inventory.json")
 
 
 def git_blob_sha(data):
-    header = ("blob " + str(len(data)) + "\\0").encode("ascii")
+    header = ("blob " + str(len(data))).encode("ascii") + bytes([0])
     return hashlib.sha1(header + data).hexdigest()
 
 
