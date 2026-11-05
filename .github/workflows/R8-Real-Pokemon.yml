@@ -170,51 +170,7 @@ jobs:
               }
             grep -q "R8_C5_REGION_SAVE3_PASS counter=3.*target=${region}" "/tmp/r8-c5-save3-${region}.log"
             python3 tools/xgba_a2_storage.py audit "$save" > "/tmp/r8-c5-audit-${region}.txt"
-            grep -q '^counter: 3
-        run: |
-          python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-page.sav torn-page7
-          python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-meta.sav torn-metadata
-          python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-both.sav both-metadata
-          python3 test/overworld/test_xgba_r8_c4c5.py -v
-      - name: C5 fresh XGBA process rolls torn page7 back to Save1
-        env:
-          A2_E6_SAVE_PATH: build/r8-ci/c5-page.sav
-          A2_ACTION: resume
-          A2_EXPECTED_SAVE_COUNTER: '1'
-        run: |
-          timeout --signal=INT --kill-after=5s 360s \
-            build/r8-ci/runner/mgba-headless \
-            --script tools/xgba_a2_bind_save.lua \
-            --script tools/xgba_a2_runtime_save.lua \
-            build/r8-ci/test.gba > /tmp/r8-c5-page.log 2>&1 || {
-              tail -n 100 /tmp/r8-c5-page.log
-              exit 1
-            }
-          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=1' /tmp/r8-c5-page.log
-          python3 tools/xgba_a2_storage.py audit build/r8-ci/c5-page.sav | grep -q '^counter: 1$'
-      - name: C5 fresh XGBA process rolls torn metadata back to Save1
-        env:
-          A2_E6_SAVE_PATH: build/r8-ci/c5-meta.sav
-          A2_ACTION: resume
-          A2_EXPECTED_SAVE_COUNTER: '1'
-        run: |
-          timeout --signal=INT --kill-after=5s 360s \
-            build/r8-ci/runner/mgba-headless \
-            --script tools/xgba_a2_bind_save.lua \
-            --script tools/xgba_a2_runtime_save.lua \
-            build/r8-ci/test.gba > /tmp/r8-c5-meta.log 2>&1 || {
-              tail -n 100 /tmp/r8-c5-meta.log
-              exit 1
-            }
-          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=1' /tmp/r8-c5-meta.log
-          python3 tools/xgba_a2_storage.py audit build/r8-ci/c5-meta.sav | grep -q '^counter: 1$'
-      - name: Erase disposable ROM and save fixtures
-        if: always()
-        run: |
-          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav \
-            build/r8-ci/c5-page.sav build/r8-ci/c5-meta.sav build/r8-ci/c5-both.sav
-          echo "No game ROMs or saves published."
- "/tmp/r8-c5-audit-${region}.txt"
+            grep -q '^counter: 3$' "/tmp/r8-c5-audit-${region}.txt"
             diff -u \
               <(grep '^collection_boxes_sha256:' /tmp/r8-c5-save2-audit.txt) \
               <(grep '^collection_boxes_sha256:' "/tmp/r8-c5-audit-${region}.txt")
