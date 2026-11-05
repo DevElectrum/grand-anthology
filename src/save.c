@@ -22,6 +22,9 @@
 #include "xgba_r8_memory.h"
 #include "data.h"
 #include "item.h"
+#include "event_data.h"
+#include "battle_pyramid.h"
+#include "constants/flags.h"
 #include "constants/items.h"
 #include "constants/moves.h"
 #if defined(XGBA_R8_TEST) && XGBA_R8_TEST
@@ -1142,9 +1145,97 @@ bool8 XgbaA2GameCommitGlobalItemTransfer(u16 destBox, u8 destSlot, bool8 allowSw
 #define R8_RELEASE_MASK_BYTES ((R8_RELEASE_SLOTS + 7) / 8)
 EWRAM_DATA static u8 sR8ReleaseMask[R8_RELEASE_MASK_BYTES];
 EWRAM_DATA static u16 sR8ReleaseCount;
-EWRAM_DATA static u32 sR8ReleaseFingerprint;
+// A separate 80-byte snapshot of every eligible planned slot is kept in the
+// opt-in R8 arena. A 32-bit digest alone is not a deletion authorization.
 EWRAM_DATA static bool8 sR8ReleasePlanActive;
-STATIC_ASSERT(0x50000U + sizeof(struct Bag) < XGBA_R8_RAM_BYTES, R8ReleaseBagRollbackFits);
+#define R8_BAG_STAGE_OFFSET 0x50000U
+#define R8_RELEASE_IDENTITY_OFFSET 0x60000U
+STATIC_ASSERT(R8_BAG_STAGE_OFFSET + sizeof(struct Bag) <= R8_RELEASE_IDENTITY_OFFSET, R8ReleaseScratchDisjoint);
+STATIC_ASSERT(R8_RELEASE_IDENTITY_OFFSET + R8_RELEASE_SLOTS * sizeof(struct BoxPokemon) <= XGBA_R8_RAM_BYTES, R8ReleaseIdentityFits);
+
+static struct BoxPokemon *R8ReleaseSnapshot(u32 index)
+{
+    return (struct BoxPokemon *)(XGBA_R8_RAM_BASE + R8_RELEASE_IDENTITY_OFFSET
+                                 + index * sizeof(struct BoxPokemon));
+}
+
+// Reject nonstandard item inventories and stale pocket pointers before any
+// bag operation. AddBagItem otherwise routes Pyramid items elsewhere, which
+// would not be covered by the ordinary SaveBlock1 rollback.
+static bool8 R8BagContextValid(void)
+{
+    if (!XgbaA2GameCollectionReady() || gSaveBlock1Ptr == NULL
+        || CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE
+        || FlagGet(FLAG_STORING_ITEMS_IN_PYRAMID_BAG))
+        return FALSE;
+    return gBagPockets[POCKET_ITEMS].itemSlots == gSaveBlock1Ptr->bag.items
+        && gBagPockets[POCKET_ITEMS].capacity == BAG_ITEMS_COUNT
+        && gBagPockets[POCKET_KEY_ITEMS].itemSlots == gSaveBlock1Ptr->bag.keyItems
+        && gBagPockets[POCKET_KEY_ITEMS].capacity == BAG_KEYITEMS_COUNT
+        && gBagPockets[POCKET_POKE_BALLS].itemSlots == gSaveBlock1Ptr->bag.pokeBalls
+        && gBagPockets[POCKET_POKE_BALLS].capacity == BAG_POKEBALLS_COUNT
+        && gBagPockets[POCKET_TM_HM].itemSlots == gSaveBlock1Ptr->bag.TMsHMs
+        && gBagPockets[POCKET_TM_HM].capacity == BAG_TMHM_COUNT
+        && gBagPockets[POCKET_BERRIES].itemSlots == gSaveBlock1Ptr->bag.berries
+        && gBagPockets[POCKET_BERRIES].capacity == BAG_BERRIES_COUNT;
+}
+
+// Only pointers are temporarily redirected, never pocket sizes or IDs.
+// All additions go into a private bag image, so failure leaves the actual
+// inventory untouched. Restore the live bindings on every exit path.
+static void R8BindBagSlots(struct Bag *bag)
+{
+    gBagPockets[POCKET_ITEMS].itemSlots = bag->items;
+    gBagPockets[POCKET_KEY_ITEMS].itemSlots = bag->keyItems;
+    gBagPockets[POCKET_POKE_BALLS].itemSlots = bag->pokeBalls;
+    gBagPockets[POCKET_TM_HM].itemSlots = bag->TMsHMs;
+    gBagPockets[POCKET_BERRIES].itemSlots = bag->berries;
+}
+
+static bool8 R8StageReleaseBag(const u8 *mask)
+{
+    struct Bag *stage = (struct Bag *)(XGBA_R8_RAM_BASE + R8_BAG_STAGE_OFFSET);
+    u32 index;
+    bool8 success = TRUE;
+    if (!R8BagContextValid())
+        return FALSE;
+    *stage = gSaveBlock1Ptr->bag;
+    R8BindBagSlots(stage);
+    for (index = 0; index < R8_RELEASE_SLOTS; index++)
+    {
+        enum Item held;
+        if (!(mask[index / 8] & (1U << (index % 8))))
+            continue;
+        held = GetBoxMonData(XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT,
+                                                    index % IN_BOX_COUNT), MON_DATA_HELD_ITEM);
+        if (held != ITEM_NONE && !AddBagItem(held, 1))
+        {
+            success = FALSE;
+            break;
+        }
+    }
+    R8BindBagSlots(&gSaveBlock1Ptr->bag);
+    if (success)
+        gSaveBlock1Ptr->bag = *stage;
+    return success;
+}
+
+static bool8 R8StagePartyHeldItem(enum Item held)
+{
+    struct Bag *stage = (struct Bag *)(XGBA_R8_RAM_BASE + R8_BAG_STAGE_OFFSET);
+    bool8 success;
+    if (!R8BagContextValid())
+        return FALSE;
+    if (held == ITEM_NONE)
+        return TRUE;
+    *stage = gSaveBlock1Ptr->bag;
+    R8BindBagSlots(stage);
+    success = AddBagItem(held, 1);
+    R8BindBagSlots(&gSaveBlock1Ptr->bag);
+    if (success)
+        gSaveBlock1Ptr->bag = *stage;
+    return success;
+}
 
 static bool8 R8ReleaseMaskHas(u32 index)
 {
@@ -1190,33 +1281,26 @@ static bool8 R8ReleaseEligible(struct BoxPokemon *mon)
     return TRUE;
 }
 
-static u32 R8ReleaseComputeFingerprint(void)
+static bool8 R8ReleaseSourcesUnchanged(void)
 {
     u32 index;
-    u32 digest = 2166136261U;
     for (index = 0; index < R8_RELEASE_SLOTS; index++)
     {
-        struct BoxPokemon *mon;
-        const u8 *bytes;
-        u32 j;
+        struct BoxPokemon *source;
         if (!R8ReleaseMaskHas(index))
             continue;
-        mon = XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT, index % IN_BOX_COUNT);
-        if (mon == NULL)
-            return 0;
-        bytes = (const u8 *)mon;
-        digest = (digest ^ index) * 16777619U;
-        for (j = 0; j < sizeof(*mon); j++)
-            digest = (digest ^ bytes[j]) * 16777619U;
+        source = XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT, index % IN_BOX_COUNT);
+        if (source == NULL
+            || memcmp(source, R8ReleaseSnapshot(index), sizeof(*source)) != 0)
+            return FALSE;
     }
-    return digest;
+    return TRUE;
 }
 
 void XgbaA2GameCancelGlobalRelease(void)
 {
     memset(sR8ReleaseMask, 0, sizeof(sR8ReleaseMask));
     sR8ReleaseCount = 0;
-    sR8ReleaseFingerprint = 0;
     sR8ReleasePlanActive = FALSE;
 }
 
@@ -1261,28 +1345,26 @@ u16 XgbaA2GamePlanGlobalRelease(u8 scope, u16 globalBox, u32 localMask)
         mon = XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT, localPosition);
         if (!R8ReleaseEligible(mon))
             continue;
+        memcpy(R8ReleaseSnapshot(index), mon, sizeof(*mon));
         R8ReleaseMaskAdd(index);
         sR8ReleaseCount++;
     }
     if (sR8ReleaseCount == 0)
         return 0;
-    sR8ReleaseFingerprint = R8ReleaseComputeFingerprint();
-    sR8ReleasePlanActive = sR8ReleaseFingerprint != 0;
+    sR8ReleasePlanActive = TRUE;
     return XgbaA2GamePlannedReleaseCount();
 }
 
 bool8 XgbaA2GameCommitGlobalRelease(void)
 {
-    struct Bag *rollback = (struct Bag *)(XGBA_R8_RAM_BASE + 0x50000U);
     u32 occupied, index;
     if (!sR8ReleasePlanActive || sR8ReleaseCount == 0
         || !XgbaA2GameCollectionReady() || sA2GlobalTransfer.active
-        || R8ReleaseComputeFingerprint() != sR8ReleaseFingerprint)
+        || !R8BagContextValid() || !R8ReleaseSourcesUnchanged())
         return FALSE;
     occupied = CountPartyNonEggMons() + CountStorageNonEggMons();
     if (occupied < (u32)sR8ReleaseCount + 3)
         return FALSE;
-    // Revalidate every source. No mutating operations happen before this.
     for (index = 0; index < R8_RELEASE_SLOTS; index++)
     {
         if (R8ReleaseMaskHas(index)
@@ -1290,23 +1372,10 @@ bool8 XgbaA2GameCommitGlobalRelease(void)
                                                            index % IN_BOX_COUNT)))
             return FALSE;
     }
-    // The bag is fixed ABI. Stage actual additions with a rollback copy;
-    // no Pokémon source is erased unless *every* held item fitted.
-    *rollback = gSaveBlock1Ptr->bag;
-    for (index = 0; index < R8_RELEASE_SLOTS; index++)
-    {
-        enum Item held;
-        if (!R8ReleaseMaskHas(index))
-            continue;
-        held = GetBoxMonData(XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT,
-                                                    index % IN_BOX_COUNT), MON_DATA_HELD_ITEM);
-        if (held != ITEM_NONE && !AddBagItem(held, 1))
-        {
-            gSaveBlock1Ptr->bag = *rollback;
-            return FALSE;
-        }
-    }
-    // All fallible work finished. Erase exactly the selected global slots.
+    // Stage every returned item in the non-live bag before deleting a record.
+    // This path has no fallible writes after successful bag publication.
+    if (!R8StageReleaseBag(sR8ReleaseMask))
+        return FALSE;
     for (index = 0; index < R8_RELEASE_SLOTS; index++)
         if (R8ReleaseMaskHas(index))
             ZeroBoxMonData(XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT,
@@ -1330,6 +1399,22 @@ bool8 XgbaA2GameCanReleasePartySingle(u8 slot)
     return CountPartyNonEggMons() + CountStorageNonEggMons() >= 4
         && CountPartyAliveNonEggMonsExcept(slot) != 0
         && R8ReleaseEligible(&gParties[B_TRAINER_PLAYER][slot].box);
+}
+
+// Exact same staged-bag policy for the R8 party release path. The frontend
+// handles sprites and compaction, never the record or returned held item.
+bool8 XgbaA2GameReleasePartySingle(u8 slot)
+{
+    enum Item held;
+    if (!XgbaA2GameCanReleasePartySingle(slot))
+        return FALSE;
+    held = (OW_PC_RELEASE_ITEM >= GEN_8)
+        ? GetMonData(&gParties[B_TRAINER_PLAYER][slot], MON_DATA_HELD_ITEM)
+        : ITEM_NONE;
+    if (!R8StagePartyHeldItem(held))
+        return FALSE;
+    ZeroMonData(&gParties[B_TRAINER_PLAYER][slot]);
+    return TRUE;
 }
 
 bool8 XgbaA2GameReleaseGlobalSingle(u16 globalBox, u8 slot)
