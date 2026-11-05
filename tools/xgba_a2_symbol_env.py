@@ -30,6 +30,7 @@ OPTIONAL_SYMBOLS = {
     "gXgbaR8PcChooserTrace": "A2_R8_PC_CHOOSER_TRACE",
     "gXgbaR8PcC3DTrace": "A2_R8_PC_C3D_TRACE",
     "gXgbaR8PcC3DDepositDiagnostic": "A2_R8_PC_DEPOSIT_DIAG",
+    "gXgbaR8FixtureStage": "A2_R8_C4_PROOF",
 }
 
 
