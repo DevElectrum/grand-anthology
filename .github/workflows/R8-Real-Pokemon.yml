@@ -16,6 +16,8 @@ on:
       - 'tools/xgba_a2_rom.py'
       - 'Makefile'
       - 'tools/xgba_r8_c5_inject.py'
+      - 'tools/xgba_r8_region_controller.lua'
+      - 'tools/xgba_a2_symbol_env.py'
       - 'test/overworld/test_xgba_r8_c4c5.py'
   workflow_dispatch:
 permissions:
@@ -127,6 +129,26 @@ jobs:
             }
           grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=2' /tmp/r8-cold.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav
+      - name: C5 real regional travel preserves party and all 3360 boxed records
+        run: |
+          set -e
+          for region in kanto johto hoenn; do
+            save="build/r8-ci/c5-region-${region}.sav"
+            test ! -e "$save"
+            cp build/r8-ci/test.sav "$save"
+            R8_C5_REGION="$region" A2_E6_SAVE_PATH="$save" \
+              timeout --signal=INT --kill-after=5s 360s \
+              build/r8-ci/runner/mgba-headless \
+              --script tools/xgba_a2_bind_save.lua \
+              --script tools/xgba_r8_region_controller.lua \
+              build/r8-ci/test.gba > "/tmp/r8-c5-region-${region}.log" 2>&1 || {
+                tail -n 100 "/tmp/r8-c5-region-${region}.log"
+                exit 1
+              }
+            grep -q "R8_C5_REGION_TRANSIT_PASS.*target=${region}" "/tmp/r8-c5-region-${region}.log"
+            cmp -s build/r8-ci/test.sav "$save"
+            rm -f "$save"
+          done
       - name: C5 create-only faults on audited real Save2
         run: |
           python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-page.sav torn-page7
