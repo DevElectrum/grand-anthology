@@ -192,8 +192,7 @@ def merge_midi_config(upstream, target, records):
     if append:
         target_cfg.write_text(
             original.rstrip("\n")
-            + "\n\n# Pinned Sinnoh-only MIDI recipes; existing entries preserved.\n"
-            + "\n".join(append) + "\n",
+            + "\n" + "\n".join(append) + "\n",
             encoding="utf-8",
         )
     return len(append)
