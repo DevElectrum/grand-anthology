@@ -79,8 +79,16 @@ def check_source(upstream, inventory, assets):
         if path.is_symlink() or not path.is_file():
             raise ValueError("Missing or linked source: " + record["path"])
         content = path.read_bytes()
-        if len(content) != record["bytes"] or blob_hash(content) != record["git_blob"]:
-            raise ValueError("Source hash mismatch: " + record["path"])
+        if blob_hash(content) != record["git_blob"]:
+            # Git attributes convert .pal/.ps1 to CRLF in the checkout. Hash
+            # the canonical, clean-filtered blob, not the worktree bytes.
+            check = subprocess.run(
+                ["git", "-C", str(upstream), "hash-object",
+                 "--path=" + record["path"], "--", record["path"]],
+                capture_output=True, text=True, check=True,
+            )
+            if check.stdout.strip() != record["git_blob"]:
+                raise ValueError("Source hash mismatch: " + record["path"])
     return records
 
 def map_summary(inventory):
