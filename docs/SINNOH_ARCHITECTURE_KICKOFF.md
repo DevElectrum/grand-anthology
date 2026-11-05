@@ -1,3 +1,7 @@
+> **SUPERSEDED PRIMARY CONTENT SOURCE (2026-11-05):** This v0.1 kickoff was drafted before discovering the GBA `sinnoh-remakes/pokeemerald-platinum` demake. Do **not** begin a DS-to-GBA map conversion from `pret/pokeplatinum` as the main implementation path. The canonical plan is now [Sinnoh full import execution plan v1.0](SINNOH_FULL_IMPORT_EXECUTION_PLAN.md) and the [pinned 93-map source manifest](SINNOH_UPSTREAM_CONTENT_MANIFEST.md). Reuse GBA-native map/layout/tileset/script/trainer/audio content wherever compatible; preserve this older document only for still-valid Grand Anthology region/state/save risk analysis. The upstream GBA demake is incomplete after Eterna, so full Sinnoh also requires new later-game content. **Planning only; no runtime code imported.**
+
+---
+
 # Sinnoh architecture kickoff v0.1 (PLANNING ONLY)
 
 **Date:** 2026-11-05. **Status:** design discovery, not approved gameplay implementation. **Base:** Grand Anthology main after R8.4 merge and handoff update, `5efa0e1`; companion XGBA master after merge and handoff update, `e9e6378`.
