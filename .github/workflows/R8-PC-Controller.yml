@@ -177,6 +177,26 @@ jobs:
           grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/r8-pc-save2.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-save2-audit.txt
           grep -q '^counter: 2$' /tmp/r8-pc-save2-audit.txt
+      - name: C4 real graphical protected Clear All refuses safely
+        env:
+          R8_PC_ACTION: clear-all
+          A2_E6_SAVE_PATH: build/r8-ci/c4-protected.sav
+        run: |
+          set -e
+          test ! -e build/r8-ci/c4-protected.sav
+          cp build/r8-ci/test.sav build/r8-ci/c4-protected.sav
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_r8_pc_controller.lua \
+            build/r8-ci/test.gba > /tmp/r8-c4-protected.log 2>&1 || {
+              grep -E 'R8_C4_GUI_|R8_PC_CONTROLLER_' /tmp/r8-c4-protected.log | tail -n 100 || true
+              tail -n 40 /tmp/r8-c4-protected.log
+              exit 1
+            }
+          grep -q 'R8_C4_GUI_PROTECTED_CLEAR_PASS scope=all no_eligible=1' /tmp/r8-c4-protected.log
+          cmp build/r8-ci/test.sav build/r8-ci/c4-protected.sav
+          rm -f build/r8-ci/c4-protected.sav
       - name: C3D real controller withdraw from distant populated Box 15
         env:
           R8_PC_ACTION: withdraw
@@ -350,5 +370,5 @@ jobs:
       - name: Delete disposable ROM and save on success or failure
         if: always()
         run: |
-          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav build/r8-ci/roundtrip.sav build/r8-ci/c3d2-transfer.sav
+          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav build/r8-ci/roundtrip.sav build/r8-ci/c3d2-transfer.sav build/r8-ci/c4-protected.sav
           echo 'No gameplay ROM or save published.'
