@@ -143,7 +143,7 @@ callbacks:add("frame", function()
         if drive() then
             if not isHub() then fail("left_hub_during_intro") end
             local x,y=coords()
-            if x~=16 or y~=7 then fail("unexpected_save2_position_"..x.."_"..y) end
+            if x~=16 or (y~=4 and y~=7) then fail("unexpected_save2_position_"..x.."_"..y) end
             state="navigate"
         end
         return
