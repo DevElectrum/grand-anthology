@@ -1,6 +1,6 @@
 # Grand Anthology R8.4 final release qualification (experimental)
 
-Status: **NOT FROZEN, NOT MERGED**. This is a release-gate ledger, not a claim of user acceptance.
+Status: **ALL AUTOMATED C4/C5 FINAL RELEASE GATES GREEN; NOT FROZEN, NOT MERGED.** Owner release-freeze approval remains outstanding. This is a release-gate ledger, not a claim of a shipped player ROM.
 
 ## Immutable compatibility baseline
 
@@ -12,9 +12,10 @@ Status: **NOT FROZEN, NOT MERGED**. This is a release-gate ledger, not a claim o
 ## Current acceptance evidence (2026-11-05 UTC)
 
 - **C5 regional Save3 and fresh-process cold Continue: PASSED**, [Actions #41975048607](https://github.com/DevElectrum/grand-anthology/actions/runs/41975048607) on game commit `5f48d539367bd00cf269d7a3667123bd09841e12`. The real regional travel, regional Save3+cold step, independent storage audit, torn page7 rollback and torn metadata rollback all completed successfully.
-- **C4 successful destructive GUI and Save3: PENDING**, controller fix at `9b997a0ab2884d785bc47543388e5a4cde6e3868`; [Actions #41975676730](https://github.com/DevElectrum/grand-anthology/actions/runs/41975676730) not yet accepted. The first run confirmed a test-harness error: both PC Yes/No dialogs initialize with **No** highlighted. Their production safety behavior was correct. The updated controller explicitly presses Up then A at each confirmation.
+- **C4 successful destructive GUI and Save3: PASSED**, [Actions #41975676730](https://github.com/DevElectrum/grand-anthology/actions/runs/41975676730) at code commit `9b997a0ab2884d785bc47543388e5a4cde6e3868`. **Both Classic and SwSh matrix jobs are green.** Each passed the positive graphical Clear All planner, two explicit Yes confirmations, an actual destructive global release, exact Save2->Save3 full-collection audit (one changed record, 3,359 unchanged), and fresh-XGBA cold Continue. The first attempt confirmed a test-harness error, not a game safety failure: both real dialogs default to **No**. The fixed controller explicitly selects Yes twice.
 - **Native A1 and A2 storage-format compatibility: PASSED**, [Actions #41974502402](https://github.com/DevElectrum/grand-anthology/actions/runs/41974502402).
 - **Emulator core: PASSED**, [XGBA Actions #41439796163](https://github.com/DevElectrum/xgba/actions/runs/41439796163), 16/16 tests.
+- **Performance/compatibility source review: COMPLETE**. Page switching uses two 34,144-byte RAM copies without E6 I/O; test-only 18,000-frame travel bound, completed native A1/A2 jobs and XGBA CPU/DMA/rewind/bounds checks. This does not imply a measured device FPS or smartphone performance benchmark.
 
 ## Final release gates (never infer a green check from an implementation commit)
 
