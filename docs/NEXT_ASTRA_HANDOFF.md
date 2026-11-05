@@ -1,3 +1,11 @@
+# R8.4 C4+C5 latest exact-head evidence (Nov 5 UTC)
+
+C5 cross-region and crash-recovery workflow **GREEN** at `782368cd`: [run 41965619045](https://github.com/DevElectrum/grand-anthology/actions/runs/41965619045) passed real Region Hub attendant travel in Kanto, Johto and Hoenn on three separate audited Save2 clones, bit-identical 600-byte party and all 3360 boxed 80-byte records, no E6 disk mutation during travel, multi-page torn-page/torn-metadata offline recovery and fresh emulator cold Continue to Save1. Earlier first regional attempt failed on a **test harness starting-coordinate assumption**, not on game data; fixed to accept observed Save2 Hub position (16,4), keeping the walkable route.
+
+C4 real ARM destructive backend and bag tests GREEN [run 41963633232](https://github.com/DevElectrum/grand-anthology/actions/runs/41963633232); additional exact-head controller matrix for both PC engines now includes a protected global Clear All menu refusal with a test-only, fixture-reset backend witness and byte-identical unchanged sidecar. **Inspect latest R8-PC-Controller workflow before declaring C4 graphical accepted.** R8 collection source and C5 synthetic matrix GREEN [run 41964169847](https://github.com/DevElectrum/grand-anthology/actions/runs/41964169847). Keep XGBA R8 pinned `4e0f5918`; game main, Mosaic, E7, existing user saves all untouched. No release merge or Sinnoh feature work until outstanding graphical C4 acceptance is green. No extra save format change is necessary.
+
+---
+
 # R8.4 C4 + C5 combined execution checkpoint (2026-11-04 local / 2026-11-05 UTC)
 
 **Experimental only. Latest production changes are not release accepted.** Starting C3D2 baseline: `bbef4519`, dual Classic/SwSh Save3 + cold controller run [41949338286](https://github.com/DevElectrum/grand-anthology/actions/runs/41949338286) SUCCESS. Keep XGBA pinned to `4e0f5918`, game `main`, Mosaic, E7 and all player saves unchanged.
