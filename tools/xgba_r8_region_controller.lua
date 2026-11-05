@@ -21,6 +21,12 @@ local regionInfo = {
     hoenn = {id=3, x=21},
 }
 local target = assert(regionInfo[wanted], "Unsupported region " .. wanted)
+local mode = os.getenv("R8_C5_ACTION") or "transit"
+assert(mode == "transit" or mode == "save" or mode == "cold")
+local usmTrace = mode == "save" and address("A2_USM_TRACE") or nil
+local usmState = mode == "save" and address("A2_USM_STATE_PTR") or nil
+local saveDialog = mode == "save" and address("A2_SAVE_DIALOG_TRACE") or nil
+local gameSave = mode == "save" and address("A2_GAME_SAVE_TRACE") or nil
 local A = 1 << C.GBA_KEY.A
 local B = 1 << C.GBA_KEY.B
 local UP = 1 << C.GBA_KEY.UP
@@ -32,7 +38,8 @@ local queue, queueIndex, remaining = {}, 1, 0
 local expectedX, expectedY = 0, 0
 local wp = 1
 local route = {{16,6}, {target.x,6}, {target.x,3}}
-local beforeParty, beforeCollection, initialCounter
+local beforeParty, beforeCollection, initialCounter, transitStart
+local menuAttempts, iconAttempts, saveStart = 0, 0, 0
 
 local function report(msg)
     print(msg .. " target=" .. wanted .. " frame=" .. frame)
@@ -108,6 +115,16 @@ local function snapshotCollection()
     end
     return hash
 end
+-- Only trust Save icon 7 when the actual graphical Start-menu task is active.
+local function selectedSaveIcon()
+    if mode ~= "save" or (emu:read32(usmTrace) & 3) ~= 3 then return nil end
+    local p = emu:read32(usmState)
+    if p < 0x02000000 or p >= 0x02040000 then return nil end
+    local count = emu:read8(p + 23)
+    local absolute = emu:read8(p + 5) + emu:read8(p + 10)
+    if count < 1 or count > 12 or absolute >= count then return nil end
+    return emu:read8(p + 11 + absolute)
+end
 local function move(key, dx, dy)
     local x,y=coords()
     expectedX, expectedY=x+dx,y+dy
@@ -117,11 +134,29 @@ end
 
 callbacks:add("frame", function()
     frame=frame+1
-    if frame>45000 then fail("bounded_timeout") end
+    if frame > (mode == "transit" and 45000 or 100000) then fail("bounded_timeout") end
+    if mode == "cold" then
+        -- New XGBA process: real Continue must restore counter3 and target.
+        if frame % 30 == 0
+           and (emu:read32(main + 4) & 0xFFFFFFFE) == overworld
+           and emu:read32(counterAddr) == 3
+           and mapgroup() ~= 100 and region() == target.id then
+            report("R8_C5_REGION_COLD_SAVE3_PASS counter=3 party_hash="
+                   .. checksum(party, 600) .. " boxes_hash=" .. snapshotCollection())
+            emu:setKeys(0)
+            os.exit(0)
+        end
+        local tick = (frame - 1) % 30
+        if tick < 3 then emu:setKeys(A)
+        elseif tick >= 15 and tick < 17 then emu:setKeys(1 << C.GBA_KEY.START)
+        else emu:setKeys(0) end
+        return
+    end
     if state=="boot" then
         if frame%30==0 and isHub() and emu:read32(counterAddr)==2 then
             report("R8_C5_REGION_HUB_SAVE2_READY")
             initialCounter=emu:read32(counterAddr)
+            transitStart=frame
             beforeParty=checksum(party,600)
             beforeCollection=snapshotCollection()
             local actions={{0,240}}
@@ -219,7 +254,85 @@ callbacks:add("frame", function()
             if emu:read32(counterAddr)~=initialCounter then
                 fail("travel_committed_unexpected_save")
             end
-            report("R8_C5_REGION_TRANSIT_PASS party_and_3360_box_records_bit_identical=1")
+            local travelFrames = frame - transitStart
+            if travelFrames > 18000 then fail("travel_frame_budget_exceeded_" .. travelFrames) end
+            report("R8_C5_REGION_TRANSIT_FRAMES count=" .. travelFrames)
+            report("R8_C5_REGION_TRANSIT_PASS party_and_3360_box_records_bit_identical=1"
+                   .. " party_hash=" .. beforeParty .. " boxes_hash=" .. beforeCollection)
+            if mode == "transit" then emu:setKeys(0); os.exit(0) end
+            state = "save-open"
+            run({{0, 240}, {1 << C.GBA_KEY.START, 2}, {0, 115}})
+        end
+        return
+    end
+    if state == "save-open" then
+        if drive() then state = "save-seek" end
+        return
+    end
+    if state == "save-seek" then
+        if region() ~= target.id or mapgroup() == 100 then fail("save_menu_left_target_region") end
+        local icon = selectedSaveIcon()
+        if icon == nil then
+            menuAttempts = menuAttempts + 1
+            if menuAttempts > 24 then fail("destination_start_menu_never_verified") end
+            local seq = {{B, 2}, {0, 90}}
+            if menuAttempts > 6 then
+                seq[#seq + 1] = {A, 2}
+                seq[#seq + 1] = {0, 135}
+            end
+            seq[#seq + 1] = {1 << C.GBA_KEY.START, 2}
+            seq[#seq + 1] = {0, 100}
+            state = "save-open"
+            run(seq)
+            return
+        end
+        if icon ~= 7 then
+            iconAttempts = iconAttempts + 1
+            if iconAttempts > 12 then fail("destination_save_icon_not_found") end
+            state = "save-open"
+            run({{RIGHT, 2}, {0, 30}})
+            return
+        end
+        report("R8_C5_REGION_REAL_SAVE_ICON_SELECTED")
+        local seq = {}
+        for i = 1, 9 do
+            seq[#seq + 1] = {A, 2}
+            seq[#seq + 1] = {0, 120}
+        end
+        state, saveStart = "save-confirm", frame
+        run(seq)
+        return
+    end
+    if state == "save-confirm" or state == "save-await" then
+        local counter = emu:read32(counterAddr)
+        local saveStage = emu:read32(gameSave) >> 24
+        if saveStage >= 0xE0 then fail("journal_error_stage_" .. saveStage) end
+        if counter == 3 and saveStage == 8 then
+            report("R8_C5_REGION_REAL_SAVE3_COMMITTED counter=3 stage=8")
+            state = "save-settle"
+            run({{0, 240}})
+            return
+        end
+        if frame - saveStart > 12000 then fail("destination_save3_timeout") end
+        if state == "save-await" then emu:setKeys(0); return end
+        if (emu:read32(saveDialog) & 256) ~= 0 then
+            state = "save-await"
+            emu:setKeys(0)
+            return
+        end
+        if drive() then fail("destination_save_dialog_not_entered") end
+        return
+    end
+    if state == "save-settle" then
+        if drive() then
+            if region() ~= target.id or mapgroup() == 100
+                or emu:read32(counterAddr) ~= 3
+                or checksum(party, 600) ~= beforeParty
+                or snapshotCollection() ~= beforeCollection then
+                fail("post_save3_destination_or_collection_changed")
+            end
+            report("R8_C5_REGION_SAVE3_PASS counter=3 party_hash="
+                   .. beforeParty .. " boxes_hash=" .. beforeCollection)
             emu:setKeys(0)
             os.exit(0)
         end
