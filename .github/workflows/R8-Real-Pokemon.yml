@@ -127,13 +127,13 @@ jobs:
             }
           grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=2' /tmp/r8-cold.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav
-      - name: C5 create-only faults on the audited real Save2
+      - name: C5 create-only faults on audited real Save2
         run: |
           python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-page.sav torn-page7
           python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-meta.sav torn-metadata
           python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-both.sav both-metadata
           python3 test/overworld/test_xgba_r8_c4c5.py -v
-      - name: C5 real cold process rolls torn distant page back to Save1
+      - name: C5 fresh XGBA process rolls torn page7 back to Save1
         env:
           A2_E6_SAVE_PATH: build/r8-ci/c5-page.sav
           A2_ACTION: resume
@@ -148,14 +148,8 @@ jobs:
               exit 1
             }
           grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=1' /tmp/r8-c5-page.log
-          python3 tools/xgba_a2_storage.py audit build/r8-ci/c5-page.sav | grep -q '^counter: 1
-        if: always()
-        run: |
-          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav \
-            build/r8-ci/c5-page.sav build/r8-ci/c5-meta.sav build/r8-ci/c5-both.sav
-          echo "No game ROMs or saves published."
-
-      - name: C5 real cold process rolls torn metadata back to Save1
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/c5-page.sav | grep -q '^counter: 1$'
+      - name: C5 fresh XGBA process rolls torn metadata back to Save1
         env:
           A2_E6_SAVE_PATH: build/r8-ci/c5-meta.sav
           A2_ACTION: resume
@@ -170,14 +164,10 @@ jobs:
               exit 1
             }
           grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=1' /tmp/r8-c5-meta.log
-          python3 tools/xgba_a2_storage.py audit build/r8-ci/c5-meta.sav | grep -q '^counter: 1
-        if: always()
-        run: |
-          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav
-          echo "No game ROMs or saves published."
-
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/c5-meta.sav | grep -q '^counter: 1$'
       - name: Erase disposable ROM and save fixtures
         if: always()
         run: |
-          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav
+          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav \
+            build/r8-ci/c5-page.sav build/r8-ci/c5-meta.sav build/r8-ci/c5-both.sav
           echo "No game ROMs or saves published."
