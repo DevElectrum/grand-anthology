@@ -20,8 +20,9 @@ assert(action == "entry" or action == "preview-cancel"
        or action == "jump-commit" or action == "jump-save"
        or action == "withdraw" or action == "roundtrip"
        or action == "roundtrip-save" or action == "transfer"
-       or action == "transfer-save")
+       or action == "transfer-save" or action == "clear-all")
 local chooserTraceAddr = action ~= "entry" and address("A2_R8_PC_CHOOSER_TRACE") or nil
+local c4PlannerAddr = action == "clear-all" and address("A2_R8_C4_PROOF") or nil
 local transferMode = action == "transfer" or action == "transfer-save"
 local saveMode = action == "jump-save" or action == "roundtrip-save" or action == "transfer-save"
 local roundtripMode = action == "roundtrip" or action == "roundtrip-save"
@@ -278,8 +279,36 @@ callbacks:add("frame", function()
             if emu:read32(uiTrace) ~= expectedOptionsStage then
                 fail("box_title_options_menu_not_entered")
             end
-            stage = "preview-open-jump"
-            schedule({{A, 2}, {0, 115}})
+            if action == "clear-all" then
+                -- Both menus begin with Jump, Wallpaper, Name.
+                -- Classic Clear All is index 5; SwSh has Make Default
+                -- and Bulk Release, so Clear All is index 7.
+                local selection = engine == "classic" and 5 or 7
+                local actions = {}
+                for i = 1, selection do
+                    actions[#actions + 1] = {DOWN, 2}
+                    actions[#actions + 1] = {0, 48}
+                end
+                actions[#actions + 1] = {A, 2}
+                actions[#actions + 1] = {0, 250}
+                stage = "clear-all-select"
+                schedule(actions)
+            else
+                stage = "preview-open-jump"
+                schedule({{A, 2}, {0, 115}})
+            end
+        end
+        return
+    end
+    if stage == "clear-all-select" then
+        if drive() then
+            if emu:read32(c4PlannerAddr) ~= 0xC4000002 then
+                fail("C4_global_clear_not_reached marker="
+                     .. tostring(emu:read32(c4PlannerAddr)))
+            end
+            report("R8_C4_GUI_PROTECTED_CLEAR_PASS scope=all no_eligible=1")
+            emu:setKeys(0)
+            os.exit(0)
         end
         return
     end
