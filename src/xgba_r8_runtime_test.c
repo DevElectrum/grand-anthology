@@ -235,6 +235,8 @@ static int R8C4SafetyProof(void)
         || memcmp(a, &sR8C4OriginalA, sizeof(*a)) != 0
         || memcmp(b, &sR8C4OriginalB, sizeof(*b)) != 0)
         return R8FixtureFail(112);
+    // Do not leave a stale all-box planner witness from the setup fixture.
+    gXgbaR8FixtureStage = 0;
     return TRUE;
 }
 
