@@ -1,6 +1,7 @@
 #include "global.h"
 #include "pokemon.h"
 #include "pokemon_storage_system.h"
+#include "item.h"
 #include "xgba_a2_game.h"
 #include "xgba_r8_runtime_test.h"
 
@@ -129,6 +130,112 @@ static int VerifyTestPokemonRecordsAt(bool8 depositedRemotely)
 static int VerifyTestPokemonRecords(void)
 {
     return VerifyTestPokemonRecordsAt(FALSE);
+}
+
+// Disposable real-ARM C4 proof, run before Save2 and restored in full.
+// The existing 5 marked fixtures and Zigzagoon are left byte-identical.
+EWRAM_DATA static struct Bag sR8C4OriginalBag;
+EWRAM_DATA static struct Bag sR8C4FullBag;
+EWRAM_DATA static struct BoxPokemon sR8C4OriginalA;
+EWRAM_DATA static struct BoxPokemon sR8C4OriginalB;
+EWRAM_DATA static struct BoxPokemon sR8C4ExtraImage;
+
+static int R8C4SafetyProof(void)
+{
+    struct BoxPokemon *extra = XgbaA2GameGlobalBoxMon(55, 3);
+    struct BoxPokemon *a = XgbaA2GameGlobalBoxMon(0, 0);
+    struct BoxPokemon *b = XgbaA2GameGlobalBoxMon(111, 29);
+    struct Pokemon temp;
+    enum Item item = ITEM_POTION;
+    u8 friendship;
+    u32 i;
+
+    if (extra == NULL || a == NULL || b == NULL
+        || GetBoxMonData(extra, MON_DATA_SPECIES) != SPECIES_NONE)
+        return R8FixtureFail(101);
+    sR8C4OriginalBag = gSaveBlock1Ptr->bag;
+    memcpy(&sR8C4OriginalA, a, sizeof(*a));
+    memcpy(&sR8C4OriginalB, b, sizeof(*b));
+
+    // All five existing boxed fixtures have favorite marks: a global purge
+    // must refuse them and only select this one disposable unmarked record.
+    CreateMon(&temp, SPECIES_PIDGEY, 20, 0xABCDEF01U, OTID_STRUCT_PLAYER_ID);
+    memcpy(extra, &temp.box, sizeof(*extra));
+    SetBoxMonData(extra, MON_DATA_HELD_ITEM, &item);
+    memcpy(&sR8C4ExtraImage, extra, sizeof(*extra));
+    if (XgbaA2GamePlanGlobalRelease(XGBA_R8_RELEASE_ALL, 0, 0) != 1)
+        return R8FixtureFail(102);
+    XgbaA2GameCancelGlobalRelease();
+    if (XgbaA2GameCanReleaseGlobalSingle(0, 0))
+        return R8FixtureFail(103);
+
+    if (XgbaA2GamePlanGlobalRelease(XGBA_R8_RELEASE_SINGLE, 55, 1U << 3) != 1)
+        return R8FixtureFail(104);
+
+    // Same eligible species, different record bytes: reject before any bag
+    // writes, even if the source was legitimately edited during a dialog.
+    friendship = (u8)GetBoxMonData(extra, MON_DATA_FRIENDSHIP);
+    friendship++;
+    SetBoxMonData(extra, MON_DATA_FRIENDSHIP, &friendship);
+    if (XgbaA2GameCommitGlobalRelease()
+        || memcmp(&gSaveBlock1Ptr->bag, &sR8C4OriginalBag, sizeof(struct Bag)) != 0)
+        return R8FixtureFail(105);
+    memcpy(extra, &sR8C4ExtraImage, sizeof(*extra));
+
+    // Redirect one bag pointer: the transaction must fail closed without
+    // purging the source. No staged bag writes should have happened.
+    {
+        struct ItemSlot *saved = gBagPockets[POCKET_ITEMS].itemSlots;
+        gBagPockets[POCKET_ITEMS].itemSlots = NULL;
+        if (XgbaA2GameCommitGlobalRelease())
+            return R8FixtureFail(106);
+        gBagPockets[POCKET_ITEMS].itemSlots = saved;
+    }
+    if (memcmp(extra, &sR8C4ExtraImage, sizeof(*extra)) != 0)
+        return R8FixtureFail(107);
+
+    // Fill every ordinary-items stack. A Potion held by the candidate
+    // cannot be returned; no Pokémon or item may be partially removed.
+    for (i = 0; i < BAG_ITEMS_COUNT; i++)
+        BagPocket_SetSlotItemIdAndCount(&gBagPockets[POCKET_ITEMS], i,
+                                       ITEM_POTION, MAX_BAG_ITEM_CAPACITY);
+    sR8C4FullBag = gSaveBlock1Ptr->bag;
+    if (XgbaA2GameCommitGlobalRelease()
+        || memcmp(extra, &sR8C4ExtraImage, sizeof(*extra)) != 0
+        || memcmp(&gSaveBlock1Ptr->bag, &sR8C4FullBag, sizeof(struct Bag)) != 0)
+        return R8FixtureFail(108);
+    gSaveBlock1Ptr->bag = sR8C4OriginalBag;
+
+    // Successful transactional release returns exactly one held Potion.
+    if (!XgbaA2GameCommitGlobalRelease()
+        || GetBoxMonData(extra, MON_DATA_SPECIES) != SPECIES_NONE)
+        return R8FixtureFail(109);
+    memcpy(extra, &sR8C4ExtraImage, sizeof(*extra));
+    gSaveBlock1Ptr->bag = sR8C4OriginalBag;
+
+    // A pending cross-box item swap must reject occupied targets without
+    // confirmation, then permit explicit swap, preserving both full records
+    // when the operation is reversed.
+    if (!XgbaA2GameBeginGlobalItemTransfer(0, 0)
+        || XgbaA2GameCommitGlobalItemTransfer(111, 29, FALSE)
+        || !XgbaA2GameCommitGlobalItemTransfer(111, 29, TRUE)
+        || GetBoxMonData(a, MON_DATA_HELD_ITEM) != ITEM_SUPER_POTION
+        || GetBoxMonData(b, MON_DATA_HELD_ITEM) != ITEM_POTION)
+        return R8FixtureFail(110);
+    if (!XgbaA2GameBeginGlobalItemTransfer(0, 0)
+        || !XgbaA2GameCommitGlobalItemTransfer(111, 29, TRUE))
+        return R8FixtureFail(111);
+
+    // Restore the exact fixture bytes, including checksum/marking metadata.
+    memcpy(a, &sR8C4OriginalA, sizeof(*a));
+    memcpy(b, &sR8C4OriginalB, sizeof(*b));
+    ZeroBoxMonData(extra);
+    XgbaA2GameCancelGlobalRelease();
+    if (memcmp(&gSaveBlock1Ptr->bag, &sR8C4OriginalBag, sizeof(struct Bag)) != 0
+        || memcmp(a, &sR8C4OriginalA, sizeof(*a)) != 0
+        || memcmp(b, &sR8C4OriginalB, sizeof(*b)) != 0)
+        return R8FixtureFail(112);
+    return TRUE;
 }
 
 int XgbaR8CreateTestPokemon(void)
@@ -311,6 +418,9 @@ int XgbaR8CreateTestPokemon(void)
                 return R8FixtureFail(89);
         }
     }
+
+    if (!R8C4SafetyProof())
+        return FALSE;
 
     // Traverse each of the 112 global box IDs, checking the selected
     // group/local index and both distant real Pokemon after each change.
