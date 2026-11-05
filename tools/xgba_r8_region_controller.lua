@@ -134,9 +134,16 @@ end
 
 callbacks:add("frame", function()
     frame=frame+1
-    if frame > (mode == "transit" and 45000 or 100000) then fail("bounded_timeout") end
+    if frame > (mode == "transit" and 45000 or 100000) then
+        fail("bounded_timeout_state_" .. state .. "_counter_" .. emu:read32(counterAddr))
+    end
     if mode == "cold" then
         -- New XGBA process: real Continue must restore counter3 and target.
+        if frame % 6000 == 0 then
+            report("R8_C5_REGION_COLD_DIAG current_region=" .. region()
+                   .. " group=" .. mapgroup()
+                   .. " counter=" .. emu:read32(counterAddr))
+        end
         if frame % 30 == 0
            and (emu:read32(main + 4) & 0xFFFFFFFE) == overworld
            and emu:read32(counterAddr) == 3

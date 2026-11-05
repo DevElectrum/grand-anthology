@@ -476,6 +476,17 @@ int XgbaR8VerifyTestPokemonAtCounter(u32 counter)
             && XgbaA2GamePage() == 2
             && StorageGetCurrentBox() == 1;
 #else
+        // C5's separately saved *destination-region* Save3 remains on
+        // Box30, unlike the two real PC-controller Save3 flows in the Hub.
+        // Do not relax the Hub's strict Box15 verifier or allow a fallback
+        // for invalid regional saves. This check is test-ROM-only.
+        if (gSaveBlock1Ptr != NULL && gSaveBlock2Ptr != NULL
+            && gSaveBlock1Ptr->location.mapGroup != 100
+            && gSaveBlock2Ptr->currentRegion >= REGION_KANTO
+            && gSaveBlock2Ptr->currentRegion <= REGION_HOENN)
+            return VerifyTestPokemonRecords()
+                && XgbaA2GamePage() == 2
+                && StorageGetCurrentBox() == 1;
         return (VerifyTestPokemonRecords() || VerifyTestPokemonRecordsAt(TRUE))
             && XgbaA2GamePage() == 1
             && StorageGetCurrentBox() == 0;
