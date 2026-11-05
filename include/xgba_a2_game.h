@@ -57,6 +57,8 @@ void XgbaA2GameCancelGlobalRelease(void);
 bool8 XgbaA2GameCommitGlobalRelease(void);
 bool8 XgbaA2GameCanReleaseGlobalSingle(u16 globalBox, u8 slot);
 bool8 XgbaA2GameCanReleasePartySingle(u8 slot);
+// Same C4 staged-bag/no-partial-deletion semantics for party releases.
+bool8 XgbaA2GameReleasePartySingle(u8 slot);
 bool8 XgbaA2GameReleaseGlobalSingle(u16 globalBox, u8 slot);
 // Move or swap the held items of two boxed Pokemon with no bag involvement.
 bool8 XgbaA2GameTransferGlobalHeldItem(u16 fromBox, u8 fromPos,
