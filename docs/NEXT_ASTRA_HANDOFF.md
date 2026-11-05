@@ -1,3 +1,17 @@
+# CURRENT AUTHORIZED EXECUTION: SINNOH FULL IMPORT (2026-11-05, DEV BRANCH)
+
+**Maintainer order:** "Alr do a full import of everything we need." This explicitly supersedes the previous planning-only pause. **Do not stop after an inventory or progress report.** Work on \`sinnoh/full-import\` until a real integration blocker, successful qualification, or a new maintainer instruction. Never merge to \`main\` without qualification.
+
+**Current exact branch checkpoint:** \`cd4d1739a5d43b493c5e5f85aa5e25e9dd1b40b3\` (plus later handoff update), based on \`main@c78d81264c211882dcd0ecbe34102ba3018e8501\`. **No playable Sinnoh import is accepted.** The upstream source is pinned at \`sinnoh-remakes/pokeemerald-platinum@c79120fbab7d62c66785c90b491e6a370249d5db\`. Pinned 2,763-entry candidate inventory in \`tools/sinnoh/pinned_source_inventory.json\`: all 93 maps, all 93 map scripts, 128 layout binaries, 2,444 source-only asset candidates, five helper/data source references. The new \`import_source.py\` hashes source, checks legacy map/layout IDs, stages files and generates append-only registry **proposals**. \`dependency_audit.py\` checks map/script references. Import files are staged on an **ephemeral runner**, not activated in the target game.
+
+**Verified:** [pinned source audit #41995500653](https://github.com/DevElectrum/grand-anthology/actions/runs/41995500653) PASS at \`b9f7179\`, including Python safety self-test, exact upstream checkout, canonical Git-blob hash check (CRLF palette filters handled), source staging and symbol audit. Earlier run #41995161274 failed from an importer hashing bug and is superseded. **The subsequent \`src/event_data.c\` region-fence commit \`cd4d173\` is NOT yet compiler/gameplay qualified**. It rejects unsupported region flags/vars/badges rather than silently aliasing Hoenn, while retaining \`REGION_NONE\` compatibility.
+
+**Next meaningful work:** (1) use generated symbol report to design and apply full FLAG/VAR/TRAINER/MAPSEC/OBJ_GFX/MUS mapping, (2) implement versioned isolated Sinnoh region progress and cold-save migration, (3) install **dependency-closed** 93-map/layout/art/script/trainer/music content with a qualified branch build, and (4) only after that compare the integrated game with Platinum \`.nds\` for gaps. Preserve old 101 groups/1,194 maps, XGBA A2/R8/112 boxes and all old saves. **No copying whole engines** or overriding existing shared files. Assets, music and dialogue have unresolved upstream rights/provenance; do not publish unreviewed content or a ROM.
+
+**Engineering priority:** substantial coherent batches, direct evidence, targeted retesting only, no recurring loops around green R8.4 acceptance. This top note supersedes the outdated "no Sinnoh implementation authorized" lines preserved below for history.
+
+---
+
 # CURRENT: SINNOH FULL CONTENT IMPORT DESIGN READY (2026-11-05)
 
 **Planning-only update; no implementation authorized or performed.** The maintainer requested a complete source import plan and updated handoffs. Read first:

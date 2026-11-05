@@ -1,3 +1,9 @@
+# CURRENT EXECUTION PROMPT: SINNOH FULL IMPORT AUTHORIZED
+
+The maintainer authorized execution of the full import on November 5, 2026. Continue \`sinnoh/full-import\`, not the old documentation-only pause. Work in substantial batches and do not stop at the inventory. The CI [pinned-source staging audit #41995500653](https://github.com/DevElectrum/grand-anthology/actions/runs/41995500653) passed; map/content activation and regional persistence are not implemented. \`src/event_data.c\` fail-closed region fence exists on the branch but still needs build qualification. Follow the latest \`AGENTS.md\` and \`NEXT_ASTRA_HANDOFF.md\` top entries, and the canonical I0–I5 plan. Do not merge \`main\`, publish unlicensed assets/ROMs, or modify user saves.
+
+---
+
 # CURRENT ASTRA RESTART PROMPT: GRAND ANTHOLOGY SINNOH (2026-11-05)
 
 The historical prompt below is from **October 24** and is **not the current task**. Do not resume its P0 Hoenn encounter batch or treat it as higher precedence than current handoffs.

@@ -65,8 +65,14 @@ def run(upstream, target, all_files):
         source_path = upstream / path
         assert source_path.is_file(), "Missing source " + str(path)
         raw = source_path.read_bytes()
-        assert len(raw) == record["bytes"], "File size changed: " + str(path)
-        assert git_blob_sha(raw) == record["git_blob"], "Blob changed: " + str(path)
+        if git_blob_sha(raw) != record["git_blob"]:
+            # .gitattributes may normalize CRLF palettes on checkout.
+            normalized = subprocess.run(
+                ["git", "-C", str(upstream), "hash-object",
+                 "--path=" + str(path), "--", str(path)],
+                capture_output=True, text=True, check=True,
+            )
+            assert normalized.stdout.strip() == record["git_blob"], "Blob changed: " + str(path)
         verified += 1
     print("PASS: pinned Sinnoh inventory, legacy IDs, and", verified, "source blobs")
     print("Nothing was copied or modified.")
