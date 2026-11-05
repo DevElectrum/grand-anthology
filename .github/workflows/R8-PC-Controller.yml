@@ -279,58 +279,7 @@ jobs:
           grep -q 'R8_PC_CONTROLLER_TRANSFER_SAVE3_PASS source_box=15 destination_box=43 counter=3' /tmp/r8-c3d2-transfer.log
           grep -q 'R8_PC_CONTROLLER_REAL_SAVE3_COMMITTED counter=3 stage=8' /tmp/r8-c3d2-transfer.log
           python3 tools/xgba_a2_storage.py audit build/r8-ci/c3d2-transfer.sav > /tmp/r8-c3d2-transfer-save3-audit.txt
-          grep -q '^counter: 3
-        env:
-          R8_PC_ACTION: jump-save
-        run: |
-          set -e
-          test -n "$A2_R8_PC_CHOOSER_TRACE"
-          test -n "$A2_SAVE_COUNTER"
-          test -n "$A2_USM_STATE_PTR"
-          timeout --signal=INT --kill-after=5s 360s \
-            build/r8-ci/runner/mgba-headless \
-            --script tools/xgba_a2_bind_save.lua \
-            --script tools/xgba_r8_pc_controller.lua \
-            build/r8-ci/test.gba > /tmp/r8-pc-save3.log 2>&1 || {
-              grep -E 'R8_PC_CONTROLLER_|A2_XGBA_E6_SAVE_BOUND' /tmp/r8-pc-save3.log | tail -n 130 || true
-              tail -n 25 /tmp/r8-pc-save3.log
-              exit 1
-            }
-          grep -q 'R8_PC_CONTROLLER_JUMP_SAVE3_PASS global_box=15 counter=3' /tmp/r8-pc-save3.log
-          grep -q 'R8_PC_CONTROLLER_REAL_SAVE3_COMMITTED counter=3 stage=8' /tmp/r8-pc-save3.log
-          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-save3-audit.txt
-          grep -q '^counter: 3$' /tmp/r8-pc-save3-audit.txt
-          # Audit resolves the entire committed eight-page cohort, not a
-          # guessed active-page buffer. No 80-byte BoxPokemon may change.
-          grep '^collection_boxes_sha256:' /tmp/r8-pc-save2-audit.txt > /tmp/r8-pc-boxes-save2.txt
-          grep '^collection_boxes_sha256:' /tmp/r8-pc-save3-audit.txt > /tmp/r8-pc-boxes-save3.txt
-          test -s /tmp/r8-pc-boxes-save2.txt
-          test -s /tmp/r8-pc-boxes-save3.txt
-          diff -u /tmp/r8-pc-boxes-save2.txt /tmp/r8-pc-boxes-save3.txt
-      - name: Cold Continue rejects missing records and wrong Box15 selection
-        env:
-          A2_ACTION: resume
-          A2_EXPECTED_SAVE_COUNTER: '3'
-        run: |
-          set -e
-          timeout --signal=INT --kill-after=5s 360s \
-            build/r8-ci/runner/mgba-headless \
-            --script tools/xgba_a2_bind_save.lua \
-            --script tools/xgba_a2_runtime_save.lua \
-            build/r8-ci/test.gba > /tmp/r8-pc-cold3.log 2>&1 || {
-              grep -E 'A2_XGBA_(COLD|DIAG|GAME_SAVE)' /tmp/r8-pc-cold3.log | tail -n 100 || true
-              tail -n 25 /tmp/r8-pc-cold3.log
-              exit 1
-            }
-          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=3' /tmp/r8-pc-cold3.log
-          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-pc-cold3-audit.txt
-          diff -u /tmp/r8-pc-save3-audit.txt /tmp/r8-pc-cold3-audit.txt
-      - name: Delete disposable ROM and save on success or failure
-        if: always()
-        run: |
-          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav build/r8-ci/roundtrip.sav build/r8-ci/c3d2-transfer.sav
-          echo 'No gameplay ROM or save published.'
- /tmp/r8-c3d2-transfer-save3-audit.txt
+          grep -q '^counter: 3$' /tmp/r8-c3d2-transfer-save3-audit.txt
           python3 tools/xgba_a2_storage.py audit-roundtrip build/r8-ci/test.sav build/r8-ci/c3d2-transfer.sav
       - name: C3D2 cold Continue proves global Transfer survived a fresh process
         env:
@@ -401,5 +350,5 @@ jobs:
       - name: Delete disposable ROM and save on success or failure
         if: always()
         run: |
-          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav build/r8-ci/roundtrip.sav
+          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav build/r8-ci/roundtrip.sav build/r8-ci/c3d2-transfer.sav
           echo 'No gameplay ROM or save published.'
