@@ -1,4 +1,7 @@
 #include "global.h"
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+#include "xgba_r8_runtime_test.h"
+#endif
 #include "malloc.h"
 #include "bg.h"
 #include "data.h"
@@ -47,6 +50,9 @@
 #include "constants/songs.h"
 #include "constants/pokemon_icon.h"
 #include "swsh_storage_system.h"
+#if defined(XGBA_A2) && XGBA_A2
+#include "xgba_a2_game.h"
+#endif
 
 /*
     NOTE: This file is large. Some general groups of functions have
@@ -110,6 +116,13 @@ enum {
     MSG_ITEM_IS_HELD,
     MSG_CHANGED_TO_ITEM,
     MSG_CANT_STORE_MAIL,
+    MSG_R8_SWAP_CONFIRM,
+    MSG_R8_CLEAR_CONFIRM,
+    MSG_R8_CLEAR_FINAL,
+    MSG_R8_CLEAR_NONE,
+    MSG_R8_CLEAR_FAIL,
+    MSG_R8_PROTECTED,
+    MSG_R8_ITEM_SWAP,
 };
 
 // IDs for how to resolve variables in the above messages
@@ -122,6 +135,7 @@ enum {
     MSG_VAR_RELEASE_MON_2, // Unused
     MSG_VAR_RELEASE_MON_3,
     MSG_VAR_ITEM_NAME,
+    MSG_VAR_R8_COUNT,
 };
 
 // IDs for menu selection items. See SetMenuText, HandleMenuInput, etc
@@ -130,6 +144,11 @@ enum {
     MENU_STORE,
     MENU_WITHDRAW,
     MENU_MOVE,
+    MENU_TRANSFER,
+    MENU_TRANSFER_ITEM,
+    MENU_R8_CLEAR_BOX,
+    MENU_R8_CLEAR_GROUP,
+    MENU_R8_CLEAR_ALL,
     MENU_SHIFT,
     MENU_PLACE,
     MENU_SUMMARY,
@@ -388,6 +407,9 @@ struct ChooseBoxMenu
     u16 paletteTag;
     u8 curBox;
     u8 subpriority;
+#if defined(XGBA_R8) && XGBA_R8
+    bool8 globalMode;
+#endif
 };
 
 struct ItemIcon
@@ -553,6 +575,11 @@ EWRAM_DATA static struct Pokemon sSavedMovingMon = {0};
 EWRAM_DATA static s8 sCursorArea = 0;
 EWRAM_DATA static s8 sCursorPosition = 0;
 EWRAM_DATA static bool8 sIsMonBeingMoved = 0;
+#if defined(XGBA_R8) && XGBA_R8
+EWRAM_DATA static u16 sR8TransferDestinationBox;
+EWRAM_DATA static u8 sR8TransferDestinationSlot;
+EWRAM_DATA static u8 sR8ClearScope;
+#endif
 EWRAM_DATA static u8 sMovingMonOrigBoxId = 0;
 EWRAM_DATA static u8 sMovingMonOrigBoxPos = 0;
 EWRAM_DATA static bool8 sAutoActionOn = 0;
@@ -590,6 +617,10 @@ static void Task_ReleaseMon(u8);
 static void Task_ReshowPokeStorage(u8);
 static void Task_PokeStorageMain(u8);
 static void Task_JumpBox(u8);
+#if defined(XGBA_R8) && XGBA_R8
+static void Task_R8ConfirmGlobalSwap(u8);
+static void Task_R8GlobalClear(u8);
+#endif
 static void Task_HandleWallpapers(u8);
 static void Task_NameBox(u8);
 static void Task_PrintCantStoreMail(u8);
@@ -633,6 +664,7 @@ static u8 GetNumPartySpritesCompacting(void);
 static void MovePartySpriteToNextSlot(struct Sprite *, u16);
 static void SpriteCB_MovePartyMonToNextSlot(struct Sprite *);
 static void MovePartySprites(s16);
+static void DestroyPartyMonIcon(u8 partyId);
 static void DestroyAllPartyMonIcons(void);
 static void ReshowReleaseMon(void);
 static bool8 ResetReleaseMonSpritePtr(void);
@@ -654,7 +686,7 @@ static void ResetSelectionAfterDeposit(void);
 static void InitReleaseMon(void);
 static bool8 TryHideReleaseMon(void);
 static void InitCanReleaseMonVars(void);
-static void ReleaseMon(void);
+static bool8 ReleaseMon(void);
 static bool32 AtLeastThreeUsableMons(void);
 static s8 RunCanReleaseMon(void);
 static void SaveMovingMon(void);
@@ -1083,6 +1115,13 @@ static const struct StorageMessage sMessages[] =
     [MSG_ITEM_IS_HELD]         = {COMPOUND_STRING("{DYNAMIC 0} is now held."),   MSG_VAR_ITEM_NAME},
     [MSG_CHANGED_TO_ITEM]      = {COMPOUND_STRING("Changed to {DYNAMIC 0}."),    MSG_VAR_ITEM_NAME},
     [MSG_CANT_STORE_MAIL]      = {COMPOUND_STRING("MAIL can't be stored!"),      MSG_VAR_NONE},
+    [MSG_R8_SWAP_CONFIRM]     = {COMPOUND_STRING("Swap these POKéMON?"),        MSG_VAR_NONE},
+    [MSG_R8_CLEAR_CONFIRM]    = {COMPOUND_STRING("Release {DYNAMIC 0} POKéMON?"), MSG_VAR_R8_COUNT},
+    [MSG_R8_CLEAR_FINAL]      = {COMPOUND_STRING("Final check: release them?"), MSG_VAR_NONE},
+    [MSG_R8_CLEAR_NONE]       = {COMPOUND_STRING("No eligible POKéMON."), MSG_VAR_NONE},
+    [MSG_R8_CLEAR_FAIL]       = {COMPOUND_STRING("BAG full or storage changed."), MSG_VAR_NONE},
+    [MSG_R8_PROTECTED]        = {COMPOUND_STRING("This POKéMON is protected."), MSG_VAR_NONE},
+    [MSG_R8_ITEM_SWAP]        = {COMPOUND_STRING("Swap the held items?"), MSG_VAR_NONE},
 };
 
 static const struct WindowTemplate sYesNoWindowTemplate =
@@ -1532,6 +1571,10 @@ static void Task_PCMainMenu(u8 taskId)
             task->tState++;
         break;
     case STATE_HANDLE_INPUT:
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        // This is the actual post-storage PC menu, not a guessed timeout.
+        gXgbaR8PcUiTrace = 11;
+#endif
         task->tInput = Menu_ProcessInput();
         switch (task->tInput)
         {
@@ -1625,6 +1668,10 @@ static void Task_PCMainMenu(u8 taskId)
 
 void ShowPokemonStorageSystemPC(void)
 {
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    // The live field event is the only trigger for this probe.
+    gXgbaR8PcUiTrace = 1;
+#endif
     if (SWSH_STORAGE_SYSTEM)
     {
         ShowPokemonStorageSystemPC_SwSh();
@@ -1812,6 +1859,9 @@ static void LoadChooseBoxMenuGfx(struct ChooseBoxMenu *menu, u16 tileTag, u16 pa
 
     LoadSpriteSheets(sheets);
     sChooseBoxMenu = menu;
+#if defined(XGBA_R8) && XGBA_R8
+    menu->globalMode = FALSE;
+#endif
     menu->tileTag = tileTag;
     menu->paletteTag = palTag;
     menu->subpriority = subpriority;
@@ -1849,6 +1899,24 @@ static u8 HandleChooseBoxMenuInput(void)
         PlaySE(SE_SELECT);
         return sChooseBoxMenu->curBox;
     }
+#if defined(XGBA_R8) && XGBA_R8
+    // Jump by a whole 14-box group without altering resident storage.
+    // The D-pad remains a one-box control; L/R reaches Box 112 quickly.
+    if (sChooseBoxMenu->globalMode && JOY_NEW(L_BUTTON | R_BUTTON))
+    {
+        u16 next = sChooseBoxMenu->curBox;
+        if (JOY_NEW(R_BUTTON))
+            next = (next + TOTAL_BOXES_COUNT)
+                % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+        else
+            next = (next + (XGBA_A2_PC_PAGES - 1) * TOTAL_BOXES_COUNT)
+                % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+        sChooseBoxMenu->curBox = next;
+        PlaySE(SE_SELECT);
+        ChooseBoxMenu_PrintInfo();
+        return BOXID_NONE_CHOSEN;
+    }
+#endif
     if (JOY_NEW(DPAD_LEFT))
     {
         PlaySE(SE_SELECT);
@@ -1875,6 +1943,10 @@ static void ChooseBoxMenu_CreateSprites(u8 curBox)
     };
 
     sChooseBoxMenu->curBox = curBox;
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+        sChooseBoxMenu->curBox = (u8)(XgbaA2GamePage() * TOTAL_BOXES_COUNT + curBox);
+#endif
     template.tileTag = sChooseBoxMenu->tileTag;
     template.paletteTag = sChooseBoxMenu->paletteTag;
 
@@ -1941,14 +2013,25 @@ static void ChooseBoxMenu_DestroySprites(void)
 
 static void ChooseBoxMenu_MoveRight(void)
 {
-    if (++sChooseBoxMenu->curBox >= TOTAL_BOXES_COUNT)
+    u8 limit = TOTAL_BOXES_COUNT;
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+        limit = XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT;
+#endif
+    if (++sChooseBoxMenu->curBox >= limit)
         sChooseBoxMenu->curBox = 0;
     ChooseBoxMenu_PrintInfo();
 }
 
 static void ChooseBoxMenu_MoveLeft(void)
 {
-    sChooseBoxMenu->curBox = (sChooseBoxMenu->curBox == 0 ? TOTAL_BOXES_COUNT - 1 : sChooseBoxMenu->curBox - 1);
+    u8 limit = TOTAL_BOXES_COUNT;
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+        limit = XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT;
+#endif
+    sChooseBoxMenu->curBox = sChooseBoxMenu->curBox == 0
+        ? limit - 1 : sChooseBoxMenu->curBox - 1;
     ChooseBoxMenu_PrintInfo();
 }
 
@@ -1957,9 +2040,19 @@ static void ChooseBoxMenu_PrintInfo(void)
     u8 numBoxMonsText[16];
     struct WindowTemplate template;
     u8 windowId;
-    u8 *boxName = GetBoxNamePtr(sChooseBoxMenu->curBox);
-    u8 numInBox = CountMonsInBox(sChooseBoxMenu->curBox);
+    u8 *boxName = GetBoxNamePtr(sChooseBoxMenu->curBox % TOTAL_BOXES_COUNT);
+    u8 numInBox = CountMonsInBox(sChooseBoxMenu->curBox % TOTAL_BOXES_COUNT);
     u32 winTileData;
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+    {
+        s16 count = XgbaA2GameCountGlobalBoxMons(sChooseBoxMenu->curBox);
+        boxName = XgbaA2GameGlobalBoxName(sChooseBoxMenu->curBox);
+        if (boxName == NULL || count < 0)
+            return;
+        numInBox = count;
+    }
+#endif
     s32 center;
 
     memset(&template, 0, sizeof(template));
@@ -1976,6 +2069,15 @@ static void ChooseBoxMenu_PrintInfo(void)
     // Print #/30 for number of Pokémon in the box
     ConvertIntToDecimalStringN(numBoxMonsText, numInBox, STR_CONV_MODE_RIGHT_ALIGN, 2);
     StringAppend(numBoxMonsText, sText_OutOf30);
+#if defined(XGBA_R8) && XGBA_R8
+    if (sChooseBoxMenu->globalMode)
+    {
+        u8 *end = numBoxMonsText + StringLength(numBoxMonsText);
+        *end++ = CHAR_SPACE;
+        ConvertIntToDecimalStringN(end, sChooseBoxMenu->curBox + 1,
+                                   STR_CONV_MODE_LEFT_ALIGN, 3);
+    }
+#endif
     center = GetStringCenterAlignXOffset(FONT_NORMAL, numBoxMonsText, 64);
     AddTextPrinterParameterized3(windowId, FONT_NORMAL, center, 17, sChooseBoxMenu_TextColors, TEXT_SKIP_DRAW, numBoxMonsText);
 
@@ -2052,6 +2154,9 @@ static void EnterPokeStorage(u8 boxOption)
         sStorage->taskId = CreateTask(Task_InitPokeStorage, 3);
         sLastUsedBox = StorageGetCurrentBox();
         SetMainCallback2(CB2_PokeStorage);
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 2;
+#endif
     }
 }
 
@@ -2061,7 +2166,8 @@ static void CB2_ReturnToPokeStorage(void)
     sStorage = Alloc(sizeof(*sStorage));
     if (sStorage == NULL)
     {
-        if (sStorage->boxOption == OPTION_SELECT_MON)
+        // Reopen may fail after an R8 group change. Do not read NULL.
+        if (sCurrentBoxOption == OPTION_SELECT_MON)
             SetMainCallback2(CB2_ReturnToFieldContinueScript);
         else
             SetMainCallback2(CB2_ExitPokeStorage);
@@ -2289,6 +2395,28 @@ static void Task_ReshowPokeStorage(u8 taskId)
     }
 }
 
+#if defined(XGBA_R8) && XGBA_R8
+static void Task_R8ReopenBox(u8 taskId)
+{
+    (void)taskId;
+    switch (sStorage->state)
+    {
+    case 0:
+        BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
+        sStorage->state++;
+        break;
+    case 1:
+        if (!UpdatePaletteFade())
+        {
+            sWhichToReshow = 0xFF;
+            FreePokeStorageData();
+            CB2_ReturnToPokeStorage();
+        }
+        break;
+    }
+}
+#endif
+
 // States for the outer switch in Task_PokeStorageMain
 enum {
     MSTATE_HANDLE_INPUT,
@@ -2307,6 +2435,67 @@ enum {
 
 static void Task_PokeStorageMain(u8 taskId)
 {
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    if (sStorage->state == MSTATE_HANDLE_INPUT)
+    {
+        gXgbaR8PcUiTrace = 4;
+        gXgbaR8PcChooserTrace = 0x40000000U
+            | ((u32)XgbaA2GamePage() << 16) | StorageGetCurrentBox();
+        gXgbaR8PcC3DTrace = ((u32)(u8)sCursorArea << 16)
+            | ((u32)(u8)sCursorPosition << 8) | CalculatePlayerPartyCount();
+        // Test-only witness: the cursor points to the exact game-created
+        // Squirtle, not merely to the last occupied party slot.
+        if (sCursorArea == CURSOR_AREA_IN_PARTY && sCursorPosition < PARTY_SIZE
+            && GetMonData(&gParties[B_TRAINER_PLAYER][sCursorPosition], MON_DATA_SPECIES) == SPECIES_SQUIRTLE
+            && GetMonData(&gParties[B_TRAINER_PLAYER][sCursorPosition], MON_DATA_PERSONALITY) == 0x3456789AU)
+            gXgbaR8PcC3DTrace |= 0x20000000U;
+        if (XgbaA2GamePage() == 1 && StorageGetCurrentBox() == 0)
+        {
+            if (XgbaR8C3DWithdrawProof())
+                gXgbaR8PcC3DTrace |= 0x80000000U;
+            if (XgbaR8C3DRemoteDepositProof())
+                gXgbaR8PcC3DTrace |= 0x40000000U;
+        }
+    }
+#endif
+#if defined(XGBA_R8) && XGBA_R8
+    // Source remains canonical while navigation or a page rebuild occurs.
+    if (sStorage->state == MSTATE_HANDLE_INPUT && XgbaA2GameGlobalTransferActive())
+    {
+        if (!XgbaA2GameCollectionReady() || JOY_NEW(B_BUTTON))
+        {
+            XgbaA2GameCancelGlobalTransfer();
+            PlaySE(SE_SELECT);
+            return;
+        }
+        if (JOY_NEW(A_BUTTON))
+        {
+            u16 destinationBox;
+            if (sCursorArea != CURSOR_AREA_IN_BOX || sCursorPosition >= IN_BOX_COUNT)
+            {
+                PlaySE(SE_FAILURE);
+                return;
+            }
+            destinationBox = (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox();
+            if (XgbaA2GameGlobalTransferTargetOccupied(destinationBox, sCursorPosition))
+            {
+                sR8TransferDestinationBox = destinationBox;
+                sR8TransferDestinationSlot = sCursorPosition;
+                SetPokeStorageTask(Task_R8ConfirmGlobalSwap);
+            }
+            else if ((XgbaA2GameGlobalItemTransferActive()
+                      ? XgbaA2GameCommitGlobalItemTransfer(destinationBox, sCursorPosition, FALSE)
+                      : XgbaA2GameCommitGlobalTransfer(destinationBox, sCursorPosition, FALSE)))
+            {
+                PlaySE(SE_SELECT);
+                SetPokeStorageTask(Task_R8ReopenBox);
+            }
+            else
+                PlaySE(SE_FAILURE);
+            return;
+        }
+    }
+#endif
     switch (sStorage->state)
     {
     case MSTATE_HANDLE_INPUT:
@@ -2355,6 +2544,23 @@ static void Task_PokeStorageMain(u8 taskId)
             SetPokeStorageTask(Task_OnSelectedMon);
             break;
         case INPUT_SCROLL_RIGHT:
+#if defined(XGBA_R8) && XGBA_R8
+            if (StorageGetCurrentBox() == TOTAL_BOXES_COUNT - 1)
+            {
+                u16 next = ((u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT
+                    + TOTAL_BOXES_COUNT) % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+                if (sStorage->boxOption != OPTION_SELECT_MON && !IsMonBeingMoved()
+                    && !IsMovingItem() && XgbaA2GameSelectGlobalBox(next))
+                {
+                    PlaySE(SE_SELECT);
+                    SetPokeStorageTask(Task_R8ReopenBox);
+                }
+                else
+                    PlaySE(SE_FAILURE);
+                break;
+            }
+#endif
+
             PlaySE(SE_SELECT);
             sStorage->newCurrBoxId = StorageGetCurrentBox() + 1;
             if (sStorage->newCurrBoxId >= TOTAL_BOXES_COUNT)
@@ -2371,6 +2577,24 @@ static void Task_PokeStorageMain(u8 taskId)
             }
             break;
         case INPUT_SCROLL_LEFT:
+#if defined(XGBA_R8) && XGBA_R8
+            if (StorageGetCurrentBox() == 0)
+            {
+                u16 next = ((u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT
+                    + XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT - 1)
+                    % (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT);
+                if (sStorage->boxOption != OPTION_SELECT_MON && !IsMonBeingMoved()
+                    && !IsMovingItem() && XgbaA2GameSelectGlobalBox(next))
+                {
+                    PlaySE(SE_SELECT);
+                    SetPokeStorageTask(Task_R8ReopenBox);
+                }
+                else
+                    PlaySE(SE_FAILURE);
+                break;
+            }
+#endif
+
             PlaySE(SE_SELECT);
             sStorage->newCurrBoxId = StorageGetCurrentBox() - 1;
             if (sStorage->newCurrBoxId < 0)
@@ -2639,6 +2863,9 @@ static void Task_OnSelectedMon(u8 taskId)
             sStorage->state = 2;
         break;
     case 2:
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 13;
+#endif
         switch (HandleMenuInput())
         {
         case MENU_B_PRESSED:
@@ -2646,6 +2873,44 @@ static void Task_OnSelectedMon(u8 taskId)
             ClearBottomWindow();
             SetPokeStorageTask(Task_PokeStorageMain);
             break;
+#if defined(XGBA_R8) && XGBA_R8
+        case MENU_TRANSFER_ITEM:
+            if (sStorage->boxOption == OPTION_MOVE_ITEMS && !IsMovingItem()
+                && sCursorArea == CURSOR_AREA_IN_BOX
+                && XgbaA2GameBeginGlobalItemTransfer(
+                    (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
+                    sCursorPosition))
+            {
+                PlaySE(SE_SELECT);
+                ClearBottomWindow();
+                SetPokeStorageTask(Task_JumpBox);
+            }
+            else
+            {
+                PlaySE(SE_FAILURE);
+                ClearBottomWindow();
+                SetPokeStorageTask(Task_PokeStorageMain);
+            }
+            break;
+        case MENU_TRANSFER:
+            if (sStorage->boxOption == OPTION_MOVE_MONS
+                && sCursorArea == CURSOR_AREA_IN_BOX && !sIsMonBeingMoved
+                && XgbaA2GameBeginGlobalTransfer(
+                    (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
+                    sCursorPosition))
+            {
+                PlaySE(SE_SELECT);
+                ClearBottomWindow();
+                SetPokeStorageTask(Task_JumpBox);
+            }
+            else
+            {
+                PlaySE(SE_FAILURE);
+                ClearBottomWindow();
+                SetPokeStorageTask(Task_PokeStorageMain);
+            }
+            break;
+#endif
         case MENU_MOVE:
             if (IsRemovingLastPartyMon())
             {
@@ -2697,6 +2962,21 @@ static void Task_OnSelectedMon(u8 taskId)
             }
             break;
         case MENU_RELEASE:
+#if defined(XGBA_R8) && XGBA_R8
+            if (sIsMonBeingMoved
+                || (sCursorArea == CURSOR_AREA_IN_PARTY
+                    && !XgbaA2GameCanReleasePartySingle(sCursorPosition))
+                || (sCursorArea == CURSOR_AREA_IN_BOX
+                    && !XgbaA2GameCanReleaseGlobalSingle(
+                        (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
+                        sCursorPosition)))
+            {
+                PlaySE(SE_FAILURE);
+                PrintMessage(MSG_R8_PROTECTED);
+                sStorage->state = 6;
+                break;
+            }
+#endif
             if (IsRemovingLastPartyMon())
             {
                 sStorage->state = 3;
@@ -2911,10 +3191,21 @@ static void Task_DepositMenu(u8 taskId)
     case 0:
         PrintMessage(MSG_DEPOSIT_IN_WHICH_BOX);
         LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_MENU, PALTAG_MISC_1, 3, FALSE);
+#if defined(XGBA_R8) && XGBA_R8
+        // Keep the in-hand Pokémon on the existing 14-box path until the
+        // complete carry/undo state can survive cross-page UI rebuilding.
+        sChooseBoxMenu->globalMode = XgbaA2GameCollectionReady() && !sIsMonBeingMoved;
+#endif
         CreateChooseBoxMenuSprites(sDepositBoxId);
         sStorage->state++;
         break;
     case 1:
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 15;
+        if (sChooseBoxMenu != NULL && sChooseBoxMenu->globalMode)
+            gXgbaR8PcChooserTrace = 0x80000000U
+                | ((u32)XgbaA2GamePage() << 16) | sChooseBoxMenu->curBox;
+#endif
         boxId = HandleChooseBoxMenuInput();
         switch (boxId)
         {
@@ -2927,6 +3218,38 @@ static void Task_DepositMenu(u8 taskId)
             SetPokeStorageTask(Task_PokeStorageMain);
             break;
         default:
+#if defined(XGBA_R8) && XGBA_R8
+            if (XgbaA2GameCollectionReady() && !sIsMonBeingMoved
+                && boxId / TOTAL_BOXES_COUNT != XgbaA2GamePage())
+            {
+                u8 slot;
+                if (XgbaA2GameDepositPartyMonGlobal(sCursorPosition, boxId, &slot))
+                {
+                    // The party-to-storage move has already committed.
+                    // No native-page switch and no borrowed UI pointer.
+                    sDepositBoxId = boxId % TOTAL_BOXES_COUNT;
+                    DestroyPartyMonIcon(sCursorPosition);
+                    StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_STILL);
+                    ClearBottomWindow();
+                    DestroyChooseBoxMenuSprites();
+                    FreeChooseBoxMenu();
+                    sStorage->state = 2;
+                }
+                else
+                {
+                    PlaySE(SE_FAILURE);
+                    PrintMessage(MSG_BOX_IS_FULL);
+                    sStorage->state = 4;
+                }
+                break;
+            }
+#endif
+#if defined(XGBA_R8) && XGBA_R8
+            // Global chooser returns 0..111 even for the *active* page.
+            // The native 14-box API must never see a global index.
+            if (XgbaA2GameCollectionReady() && !sIsMonBeingMoved)
+                boxId %= TOTAL_BOXES_COUNT;
+#endif
             if (TryStorePartyMonInBox(boxId))
             {
                 sDepositBoxId = boxId;
@@ -3013,7 +3336,13 @@ static void Task_ReleaseMon(u8 taskId)
         }
         break;
     case 3:
-        ReleaseMon();
+        if (!ReleaseMon())
+        {
+            PlaySE(SE_FAILURE);
+            PrintMessage(MSG_R8_CLEAR_FAIL);
+            sStorage->state = 7;
+            break;
+        }
         RefreshDisplayMonData();
         PrintMessage(MSG_WAS_RELEASED);
         sStorage->state++;
@@ -3448,6 +3777,9 @@ static void Task_HandleBoxOptions(u8 taskId)
             return;
         sStorage->state++;
     case 2:
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 7;
+#endif
         switch (HandleMenuInput())
         {
         case MENU_B_PRESSED:
@@ -3465,6 +3797,20 @@ static void Task_HandleBoxOptions(u8 taskId)
             ClearBottomWindow();
             SetPokeStorageTask(Task_HandleWallpapers);
             break;
+#if defined(XGBA_R8) && XGBA_R8
+        case MENU_R8_CLEAR_BOX:
+            sR8ClearScope = XGBA_R8_RELEASE_BOX;
+            SetPokeStorageTask(Task_R8GlobalClear);
+            break;
+        case MENU_R8_CLEAR_GROUP:
+            sR8ClearScope = XGBA_R8_RELEASE_GROUP;
+            SetPokeStorageTask(Task_R8GlobalClear);
+            break;
+        case MENU_R8_CLEAR_ALL:
+            sR8ClearScope = XGBA_R8_RELEASE_ALL;
+            SetPokeStorageTask(Task_R8GlobalClear);
+            break;
+#endif
         case MENU_JUMP:
             PlaySE(SE_SELECT);
             ClearBottomWindow();
@@ -3560,6 +3906,146 @@ static void Task_HandleWallpapers(u8 taskId)
     }
 }
 
+#if defined(XGBA_R8) && XGBA_R8
+static void Task_R8GlobalClear(u8 taskId)
+{
+    u16 globalBox = (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox();
+    (void)taskId;
+    switch (sStorage->state)
+    {
+    case 0:
+        if (XgbaA2GamePlanGlobalRelease(sR8ClearScope, globalBox, 0) == 0)
+        {
+            PlaySE(SE_FAILURE);
+            PrintMessage(MSG_R8_CLEAR_NONE);
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+            // The genuine Clear All GUI reached shared protection planning.
+            if (sR8ClearScope == XGBA_R8_RELEASE_ALL)
+                gXgbaR8PcUiTrace = 22;
+#endif
+            sStorage->state = 4;
+        }
+        else
+        {
+#if defined(XGBA_R8_C4_GUI_TEST) && XGBA_R8_C4_GUI_TEST
+            // Proof of the actual GUI reaching a positive release plan.
+            if (sR8ClearScope == XGBA_R8_RELEASE_ALL)
+                gXgbaR8PcUiTrace = 23;
+#endif
+            PrintMessage(MSG_R8_CLEAR_CONFIRM);
+            ShowYesNoWindow(1);
+            sStorage->state = 1;
+        }
+        break;
+    case 1:
+        switch (Menu_ProcessInputNoWrapClearOnChoose())
+        {
+        case MENU_B_PRESSED:
+        case 1:
+            XgbaA2GameCancelGlobalRelease();
+            ClearBottomWindow();
+            SetPokeStorageTask(Task_PokeStorageMain);
+            break;
+        case 0:
+            ClearBottomWindow();
+            if (sR8ClearScope == XGBA_R8_RELEASE_BOX)
+                sStorage->state = 3;
+            else
+            {
+                PrintMessage(MSG_R8_CLEAR_FINAL);
+                ShowYesNoWindow(1);
+                sStorage->state = 2;
+            }
+            break;
+        }
+        break;
+    case 2:
+        switch (Menu_ProcessInputNoWrapClearOnChoose())
+        {
+        case MENU_B_PRESSED:
+        case 1:
+            XgbaA2GameCancelGlobalRelease();
+            ClearBottomWindow();
+            SetPokeStorageTask(Task_PokeStorageMain);
+            break;
+        case 0:
+            ClearBottomWindow();
+            sStorage->state = 3;
+            break;
+        }
+        break;
+    case 3:
+        if (XgbaA2GameCommitGlobalRelease())
+        {
+#if defined(XGBA_R8_C4_GUI_TEST) && XGBA_R8_C4_GUI_TEST
+            // Sticky success witness, set only from real UI confirmation.
+            gXgbaR8FixtureStage = 0xC4000004U;
+#endif
+            PlaySE(SE_SELECT);
+            SetPokeStorageTask(Task_R8ReopenBox);
+        }
+        else
+        {
+            XgbaA2GameCancelGlobalRelease();
+            PlaySE(SE_FAILURE);
+            PrintMessage(MSG_R8_CLEAR_FAIL);
+            sStorage->state = 4;
+        }
+        break;
+    case 4:
+        if (JOY_NEW(A_BUTTON | B_BUTTON | START_BUTTON | DPAD_ANY))
+        {
+            ClearBottomWindow();
+            SetPokeStorageTask(Task_PokeStorageMain);
+        }
+        break;
+    }
+}
+#endif
+
+#if defined(XGBA_R8) && XGBA_R8
+static void Task_R8ConfirmGlobalSwap(u8 taskId)
+{
+    (void)taskId;
+    switch (sStorage->state)
+    {
+    case 0:
+        PrintMessage(XgbaA2GameGlobalItemTransferActive()
+                         ? MSG_R8_ITEM_SWAP : MSG_R8_SWAP_CONFIRM);
+        ShowYesNoWindow(1);
+        sStorage->state = 1;
+        break;
+    case 1:
+        switch (Menu_ProcessInputNoWrapClearOnChoose())
+        {
+        case MENU_B_PRESSED:
+        case 1:
+            ClearBottomWindow();
+            SetPokeStorageTask(Task_PokeStorageMain);
+            break;
+        case 0:
+            ClearBottomWindow();
+            if ((XgbaA2GameGlobalItemTransferActive()
+                 ? XgbaA2GameCommitGlobalItemTransfer(sR8TransferDestinationBox,
+                                                       sR8TransferDestinationSlot, TRUE)
+                 : XgbaA2GameCommitGlobalTransfer(sR8TransferDestinationBox,
+                                                   sR8TransferDestinationSlot, TRUE)))
+            {
+                PlaySE(SE_SELECT);
+                SetPokeStorageTask(Task_R8ReopenBox);
+            }
+            else
+            {
+                PlaySE(SE_FAILURE);
+                SetPokeStorageTask(Task_PokeStorageMain);
+            }
+            break;
+        }
+        break;
+    }
+}
+#endif
+
 static void Task_JumpBox(u8 taskId)
 {
     switch (sStorage->state)
@@ -3567,19 +4053,55 @@ static void Task_JumpBox(u8 taskId)
     case 0:
         PrintMessage(MSG_JUMP_TO_WHICH_BOX);
         LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_MENU, PALTAG_MISC_1, 3, FALSE);
+#if defined(XGBA_R8) && XGBA_R8
+        sChooseBoxMenu->globalMode = XgbaA2GameCollectionReady();
+#endif
         CreateChooseBoxMenuSprites(StorageGetCurrentBox());
         sStorage->state++;
         break;
     case 1:
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+        gXgbaR8PcUiTrace = 9;
+        if (sChooseBoxMenu != NULL && sChooseBoxMenu->globalMode)
+            gXgbaR8PcChooserTrace = 0x80000000U
+                | ((u32)XgbaA2GamePage() << 16) | sChooseBoxMenu->curBox;
+        else
+            gXgbaR8PcChooserTrace = 0;
+#endif
         sStorage->newCurrBoxId = HandleChooseBoxMenuInput();
         switch (sStorage->newCurrBoxId)
         {
         case BOXID_NONE_CHOSEN:
             break;
         default:
+#if defined(XGBA_R8) && XGBA_R8
+            if (sStorage->newCurrBoxId == BOXID_CANCELED)
+                XgbaA2GameCancelGlobalTransfer();
+#endif
             ClearBottomWindow();
             DestroyChooseBoxMenuSprites();
             FreeChooseBoxMenu();
+#if defined(XGBA_R8) && XGBA_R8
+            if (sStorage->newCurrBoxId != BOXID_CANCELED
+                && XgbaA2GameCollectionReady())
+            {
+                u16 globalBox = sStorage->newCurrBoxId;
+                if (globalBox / TOTAL_BOXES_COUNT != XgbaA2GamePage())
+                {
+                    // Tear down old box icons before exposing the new group.
+                    if (!IsMonBeingMoved() && !IsMovingItem()
+                        && XgbaA2GameSelectGlobalBox(globalBox))
+                        SetPokeStorageTask(Task_R8ReopenBox);
+                    else
+                    {
+                        PlaySE(SE_FAILURE);
+                        SetPokeStorageTask(Task_PokeStorageMain);
+                    }
+                    break;
+                }
+                sStorage->newCurrBoxId = globalBox % TOTAL_BOXES_COUNT;
+            }
+#endif
             if (sStorage->newCurrBoxId == BOXID_CANCELED || sStorage->newCurrBoxId == StorageGetCurrentBox())
             {
                 AnimateBoxScrollArrows(TRUE);
@@ -4363,6 +4885,12 @@ static void PrintMessage(u8 id)
     switch (sMessages[id].format)
     {
     case MSG_VAR_NONE:
+        break;
+    case MSG_VAR_R8_COUNT:
+#if defined(XGBA_R8) && XGBA_R8
+        ConvertIntToDecimalStringN(gStringVar1, XgbaA2GamePlannedReleaseCount(), STR_CONV_MODE_LEFT_ALIGN, 4);
+        DynamicPlaceholderTextUtil_SetPlaceholderPtr(0, gStringVar1);
+#endif
         break;
     case MSG_VAR_MON_NAME_1:
     case MSG_VAR_MON_NAME_2:
@@ -6611,8 +7139,34 @@ static bool8 TryHideReleaseMon(void)
     }
 }
 
-static void ReleaseMon(void)
+static bool8 ReleaseMon(void)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    // The old single-release path may discard held items when AddBagItem
+    // rejects them. Shared C4 commit handles box releases atomically.
+    // No R8 capability means no destructive fallback to the 14-box UI.
+    if (!XgbaA2GameCollectionReady() || sIsMonBeingMoved)
+        return FALSE;
+    if (sCursorArea == CURSOR_AREA_IN_PARTY)
+    {
+        if (!XgbaA2GameReleasePartySingle(sCursorPosition))
+            return FALSE;
+        DestroyReleaseMonIcon();
+        TryRefreshDisplayMon();
+        return TRUE;
+    }
+    if (!sIsMonBeingMoved && sCursorArea == CURSOR_AREA_IN_BOX
+        && XgbaA2GameCollectionReady())
+    {
+        if (!XgbaA2GameReleaseGlobalSingle(
+            (u16)XgbaA2GamePage() * TOTAL_BOXES_COUNT + StorageGetCurrentBox(),
+            sCursorPosition))
+            return FALSE;
+        DestroyReleaseMonIcon();
+        TryRefreshDisplayMon();
+        return TRUE;
+    }
+#endif
     u8 boxId;
     enum Item item = ITEM_NONE;
 
@@ -6641,6 +7195,7 @@ static void ReleaseMon(void)
             AddBagItem(item, 1);
     }
     TryRefreshDisplayMon();
+    return TRUE;
 }
 
 static void TrySetCursorFistAnim(void)
@@ -6737,6 +7292,13 @@ static void InitCanReleaseMonVars(void)
 
 static bool32 AtLeastThreeUsableMons(void)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    if (XgbaA2GameCollectionReady())
+        return CountPartyNonEggMons() + CountStorageNonEggMons()
+            + (sIsMonBeingMoved ? 1 : 0) >= 3;
+    if (!XgbaA2GameFreshUncommitted())
+        return FALSE;
+#endif
     s32 i, j;
     s32 count = (sIsMonBeingMoved != FALSE);
 
@@ -7808,6 +8370,15 @@ static void AddBoxOptionsMenu(void)
     SetMenuText(MENU_JUMP);
     SetMenuText(MENU_WALLPAPER);
     SetMenuText(MENU_NAME);
+#if defined(XGBA_R8) && XGBA_R8
+    if (sStorage->boxOption == OPTION_MOVE_MONS && !IsMonBeingMoved()
+        && XgbaA2GameCollectionReady())
+    {
+        SetMenuText(MENU_R8_CLEAR_BOX);
+        SetMenuText(MENU_R8_CLEAR_GROUP);
+        SetMenuText(MENU_R8_CLEAR_ALL);
+    }
+#endif
     SetMenuText(MENU_CANCEL);
 }
 
@@ -7849,7 +8420,13 @@ static bool8 SetMenuTexts_Mon(void)
         else
         {
             if (species != SPECIES_NONE)
+            {
                 SetMenuText(MENU_MOVE);
+#if defined(XGBA_R8) && XGBA_R8
+                if (sCursorArea == CURSOR_AREA_IN_BOX && XgbaA2GameCollectionReady())
+                    SetMenuText(MENU_TRANSFER);
+#endif
+            }
             else
                 return FALSE;
         }
@@ -7901,6 +8478,10 @@ static bool8 SetMenuTexts_Item(void)
             {
                 SetMenuText(MENU_TAKE);
                 SetMenuText(MENU_BAG);
+#if defined(XGBA_R8) && XGBA_R8
+                if (sCursorArea == CURSOR_AREA_IN_BOX && XgbaA2GameCollectionReady())
+                    SetMenuText(MENU_TRANSFER_ITEM);
+#endif
             }
             SetMenuText(MENU_INFO);
         }
@@ -8141,6 +8722,11 @@ static const u8 *const sMenuTexts[] =
     [MENU_STORE]      = COMPOUND_STRING("Store"),
     [MENU_WITHDRAW]   = COMPOUND_STRING("Withdraw"),
     [MENU_MOVE]       = COMPOUND_STRING("Move"),
+    [MENU_TRANSFER]   = COMPOUND_STRING("Transfer"),
+    [MENU_TRANSFER_ITEM] = COMPOUND_STRING("Transfer Item"),
+    [MENU_R8_CLEAR_BOX]   = COMPOUND_STRING("Clear Box"),
+    [MENU_R8_CLEAR_GROUP] = COMPOUND_STRING("Clear Group"),
+    [MENU_R8_CLEAR_ALL]   = COMPOUND_STRING("Clear All"),
     [MENU_SHIFT]      = COMPOUND_STRING("Shift"),
     [MENU_PLACE]      = COMPOUND_STRING("Place"),
     [MENU_SUMMARY]    = COMPOUND_STRING("Summary"),
@@ -9757,6 +10343,13 @@ bool8 CheckFreePokemonStorageSpace(void)
         }
     }
 
+#if defined(XGBA_A2) && XGBA_A2
+    {
+        u8 otherPage;
+        if (XgbaA2GameFindFreePage(&otherPage))
+            return TRUE;
+    }
+#endif
     return FALSE;
 }
 
@@ -9774,6 +10367,28 @@ bool32 CheckBoxMonSanityAt(u32 boxId, u32 boxPosition)
 
 u32 CountStorageNonEggMons(void)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    {
+
+    u32 count = 0;
+    u16 globalBox;
+    u8 pos;
+    if (XgbaA2GameCollectionReady())
+    {
+    for (globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
+        for (pos = 0; pos < IN_BOX_COUNT; pos++)
+        {
+            struct BoxPokemon *mon = XgbaA2GameGlobalBoxMon(globalBox, pos);
+            if (GetBoxMonData(mon, MON_DATA_SANITY_HAS_SPECIES) && !GetBoxMonData(mon, MON_DATA_SANITY_IS_EGG))
+                count++;
+        }
+    return count;
+    }
+    if (!XgbaA2GameFreshUncommitted())
+        return 0;
+    }
+#endif
+
     s32 i, j;
     u32 count = 0;
 
@@ -9788,10 +10403,33 @@ u32 CountStorageNonEggMons(void)
     }
 
     return count;
+
 }
 
 u32 CountAllStorageMons(void)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    {
+
+    u32 count = 0;
+    u16 globalBox;
+    u8 pos;
+    if (XgbaA2GameCollectionReady())
+    {
+    for (globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
+        for (pos = 0; pos < IN_BOX_COUNT; pos++)
+        {
+            struct BoxPokemon *mon = XgbaA2GameGlobalBoxMon(globalBox, pos);
+            if (GetBoxMonData(mon, MON_DATA_SANITY_HAS_SPECIES) || GetBoxMonData(mon, MON_DATA_SANITY_IS_EGG))
+                count++;
+        }
+    return count;
+    }
+    if (!XgbaA2GameFreshUncommitted())
+        return 0;
+    }
+#endif
+
     s32 i, j;
     u32 count = 0;
 
@@ -9806,10 +10444,33 @@ u32 CountAllStorageMons(void)
     }
 
     return count;
+
 }
 
 bool32 AnyStorageMonWithMove(enum Move move)
 {
+#if defined(XGBA_R8) && XGBA_R8
+    {
+
+    enum Move moves[] = {move, MOVES_COUNT};
+    u16 globalBox;
+    u8 pos;
+    if (XgbaA2GameCollectionReady())
+    {
+    for (globalBox = 0; globalBox < XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT; globalBox++)
+        for (pos = 0; pos < IN_BOX_COUNT; pos++)
+        {
+            struct BoxPokemon *mon = XgbaA2GameGlobalBoxMon(globalBox, pos);
+            if (GetBoxMonData(mon, MON_DATA_SANITY_HAS_SPECIES) && !GetBoxMonData(mon, MON_DATA_SANITY_IS_EGG) && GetBoxMonData(mon, MON_DATA_KNOWN_MOVES, (u8 *)moves))
+                return TRUE;
+        }
+    return FALSE;
+    }
+    if (!XgbaA2GameFreshUncommitted())
+        return FALSE;
+    }
+#endif
+
     enum Move moves[] = {move, MOVES_COUNT};
     s32 i, j;
 
@@ -9825,6 +10486,7 @@ bool32 AnyStorageMonWithMove(enum Move move)
     }
 
     return FALSE;
+
 }
 
 

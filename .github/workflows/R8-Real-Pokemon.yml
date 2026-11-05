@@ -1,0 +1,238 @@
+name: R8.4 real Pokémon cold-persistence gate
+on:
+  push:
+    branches:
+      - xgba/a2-collection-lab
+    paths:
+      - '.github/workflows/R8-Real-Pokemon.yml'
+      - 'src/save.c'
+      - 'src/pokemon_storage_system.c'
+      - 'src/swsh_storage_system.c'
+      - 'include/xgba_a2_game.h'
+      - 'test/overworld/test_xgba_r8_pc_chooser.py'
+      - 'src/xgba_r8_runtime_test.c'
+      - 'src/xgba_r8_memory.c'
+      - 'src/xgba_a2_pager.c'
+      - 'tools/xgba_a2_rom.py'
+      - 'Makefile'
+      - 'tools/xgba_r8_c5_inject.py'
+      - 'tools/xgba_r8_region_controller.lua'
+      - 'tools/xgba_a2_symbol_env.py'
+      - 'test/overworld/test_xgba_r8_c4c5.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-r8-pokemon:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    env:
+      A2_E6_SAVE_PATH: build/r8-ci/test.sav
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: DevElectrum/xgba
+          ref: 4e0f59185e2c7d7ed5333d8adc20e8d3ad94d05c
+          path: build/r8-ci/xgba
+          persist-credentials: false
+      - name: Install native ARM and headless emulator toolchains
+        run: |
+          set -e
+          for source in /etc/apt/sources.list.d/*; do
+            if [ -f "$source" ] && grep -q packages.microsoft.com "$source"; then
+              sudo mv "$source" "$source.disabled"
+            fi
+          done
+          sudo apt-get update -o Acquire::Retries=5
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev libelf1 python3 build-essential cmake ninja-build \
+            pkg-config zlib1g-dev libcmocka-dev libsdl2-dev liblua5.4-dev
+      - name: Check R8 global chooser source invariants
+        run: python3 test/overworld/test_xgba_r8_pc_chooser.py
+      - name: Compile disposable R8 game with test-only Pokémon fixtures
+        run: |
+          set -e
+          make release -j4 XGBA_A1=1 XGBA_A2=1 XGBA_R8=1 XGBA_R8_TEST=1 \
+            BUILD_NAME=xgba-r8-test FILE_NAME=xgba-anthology-r8-test-native-release
+          test -s xgba-anthology-r8-test-native-release.elf
+          python3 tools/xgba_a2_symbol_env.py xgba-anthology-r8-test-native-release.elf --github-env "$GITHUB_ENV"
+      - name: Produce disposable R8 256 MiB ROM and 16 MiB E6 save
+        run: |
+          set -e
+          mkdir -p build/r8-ci
+          python3 tools/xgba_a1_assets.py pack \
+            --native xgba-anthology-r8-test-native-release.gba \
+            --manifest build/xgba-r8-test-release/a1-manifest.json \
+            --output build/r8-ci/layout.gba
+          python3 tools/xgba_a2_rom.py tag --r8 build/r8-ci/layout.gba build/r8-ci/test.gba
+          python3 tools/xgba_a2_rom.py verify --r8 build/r8-ci/test.gba
+          python3 tools/xgba_a2_storage.py blank build/r8-ci/test.sav
+          python3 tools/xgba_a2_storage.py audit-blank build/r8-ci/test.sav
+      - name: Build pinned R8 emulator with Lua scripting
+        run: |
+          cmake -S build/r8-ci/xgba -B build/r8-ci/runner -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DM_CORE_GBA=ON -DM_CORE_GB=OFF \
+            -DBUILD_QT=OFF -DBUILD_SDL=OFF -DBUILD_HEADLESS=ON \
+            -DBUILD_SUITE=OFF -DENABLE_SCRIPTING=ON -DUSE_LUA=5.4 \
+            -DUSE_JSON_C=OFF -DUSE_FFMPEG=OFF -DUSE_EDITLINE=OFF
+          cmake --build build/r8-ci/runner --target mgba-headless --parallel 2
+      - name: First real Save and native-plus-E6 audit
+        env:
+          A2_ACTION: save
+        run: |
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/test.gba > /tmp/r8-first.log 2>&1 || {
+              tail -n 100 /tmp/r8-first.log
+              exit 1
+            }
+          grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/r8-first.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-first-audit.txt
+          grep -q '^counter: 1$' /tmp/r8-first-audit.txt
+      - name: Second Save exercises real global moves, swaps and 112 boxes
+        env:
+          A2_ACTION: save-again
+          A2_EXPECTED_SAVE_COUNTER: 1
+        run: |
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/test.gba > /tmp/r8-second.log 2>&1 || {
+              tail -n 100 /tmp/r8-second.log
+              exit 1
+            }
+          grep -q 'A2_XGBA_SAVE_INPUT_SEQUENCE_FINISHED_AUDIT_REQUIRED' /tmp/r8-second.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav | tee /tmp/r8-second-audit.txt
+          grep -q '^counter: 2$' /tmp/r8-second-audit.txt
+          # Full 112-box navigation changes each group's native currentBox.
+          # All eight page generations advance exactly once on Save2.
+          grep -Fq 'page_generations: [3, 3, 3, 3, 3, 3, 3, 3]' /tmp/r8-second-audit.txt
+      - name: Cold Continue verifies game-generated Pokémon and global transfers
+        env:
+          A2_ACTION: resume
+          A2_EXPECTED_SAVE_COUNTER: 2
+        run: |
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/test.gba > /tmp/r8-cold.log 2>&1 || {
+              tail -n 100 /tmp/r8-cold.log
+              exit 1
+            }
+          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=2' /tmp/r8-cold.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav
+      - name: C5 real regional travel preserves party and all 3360 boxed records
+        run: |
+          set -e
+          for region in kanto johto hoenn; do
+            save="build/r8-ci/c5-region-${region}.sav"
+            test ! -e "$save"
+            cp build/r8-ci/test.sav "$save"
+            R8_C5_REGION="$region" A2_E6_SAVE_PATH="$save" \
+              timeout --signal=INT --kill-after=5s 360s \
+              build/r8-ci/runner/mgba-headless \
+              --script tools/xgba_a2_bind_save.lua \
+              --script tools/xgba_r8_region_controller.lua \
+              build/r8-ci/test.gba > "/tmp/r8-c5-region-${region}.log" 2>&1 || {
+                tail -n 100 "/tmp/r8-c5-region-${region}.log"
+                exit 1
+              }
+            grep -q "R8_C5_REGION_TRANSIT_PASS.*target=${region}" "/tmp/r8-c5-region-${region}.log"
+            cmp -s build/r8-ci/test.sav "$save"
+            rm -f "$save"
+          done
+      - name: C5 real regional Save3 and fresh-XGBA cold Continue
+        run: |
+          set -e
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/test.sav > /tmp/r8-c5-save2-audit.txt
+          grep -q '^counter: 2$' /tmp/r8-c5-save2-audit.txt
+          for region in kanto johto hoenn; do
+            save="build/r8-ci/c5-save3-${region}.sav"
+            test ! -e "$save"
+            cp build/r8-ci/test.sav "$save"
+            R8_C5_REGION="$region" R8_C5_ACTION=save A2_E6_SAVE_PATH="$save" \
+              timeout --signal=INT --kill-after=5s 360s \
+              build/r8-ci/runner/mgba-headless \
+              --script tools/xgba_a2_bind_save.lua \
+              --script tools/xgba_r8_region_controller.lua \
+              build/r8-ci/test.gba > "/tmp/r8-c5-save3-${region}.log" 2>&1 || {
+                grep 'R8_C5_REGION_' "/tmp/r8-c5-save3-${region}.log" | tail -n 50 || true
+                tail -n 50 "/tmp/r8-c5-save3-${region}.log"
+                exit 1
+              }
+            grep -q "R8_C5_REGION_SAVE3_PASS counter=3.*target=${region}" "/tmp/r8-c5-save3-${region}.log"
+            python3 tools/xgba_a2_storage.py audit "$save" > "/tmp/r8-c5-audit-${region}.txt"
+            grep -q '^counter: 3$' "/tmp/r8-c5-audit-${region}.txt"
+            diff -u \
+              <(grep '^collection_boxes_sha256:' /tmp/r8-c5-save2-audit.txt) \
+              <(grep '^collection_boxes_sha256:' "/tmp/r8-c5-audit-${region}.txt")
+            R8_C5_REGION="$region" R8_C5_ACTION=cold A2_E6_SAVE_PATH="$save" \
+              timeout --signal=INT --kill-after=5s 360s \
+              build/r8-ci/runner/mgba-headless \
+              --script tools/xgba_a2_bind_save.lua \
+              --script tools/xgba_r8_region_controller.lua \
+              build/r8-ci/test.gba > "/tmp/r8-c5-cold-${region}.log" 2>&1 || {
+                grep 'R8_C5_REGION_' "/tmp/r8-c5-cold-${region}.log" | tail -n 50 || true
+                tail -n 50 "/tmp/r8-c5-cold-${region}.log"
+                exit 1
+              }
+            grep -q "R8_C5_REGION_COLD_SAVE3_PASS counter=3.*target=${region}" "/tmp/r8-c5-cold-${region}.log"
+            saved_party=$(grep 'R8_C5_REGION_SAVE3_PASS counter=3' "/tmp/r8-c5-save3-${region}.log" | grep -o 'party_hash=[0-9]*' | cut -d= -f2)
+            loaded_party=$(grep 'R8_C5_REGION_COLD_SAVE3_PASS counter=3' "/tmp/r8-c5-cold-${region}.log" | grep -o 'party_hash=[0-9]*' | cut -d= -f2)
+            test -n "$saved_party" && test "$saved_party" = "$loaded_party"
+            python3 tools/xgba_a2_storage.py audit "$save" > "/tmp/r8-c5-cold-audit-${region}.txt"
+            diff -u "/tmp/r8-c5-audit-${region}.txt" "/tmp/r8-c5-cold-audit-${region}.txt"
+            rm -f "$save"
+          done
+      - name: C5 create-only faults on audited real Save2
+        run: |
+          python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-page.sav torn-page7
+          python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-meta.sav torn-metadata
+          python3 tools/xgba_r8_c5_inject.py build/r8-ci/test.sav build/r8-ci/c5-both.sav both-metadata
+          python3 test/overworld/test_xgba_r8_c4c5.py -v
+      - name: C5 fresh XGBA process rolls torn page7 back to Save1
+        env:
+          A2_E6_SAVE_PATH: build/r8-ci/c5-page.sav
+          A2_ACTION: resume
+          A2_EXPECTED_SAVE_COUNTER: '1'
+        run: |
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/test.gba > /tmp/r8-c5-page.log 2>&1 || {
+              tail -n 100 /tmp/r8-c5-page.log
+              exit 1
+            }
+          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=1' /tmp/r8-c5-page.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/c5-page.sav | grep -q '^counter: 1$'
+      - name: C5 fresh XGBA process rolls torn metadata back to Save1
+        env:
+          A2_E6_SAVE_PATH: build/r8-ci/c5-meta.sav
+          A2_ACTION: resume
+          A2_EXPECTED_SAVE_COUNTER: '1'
+        run: |
+          timeout --signal=INT --kill-after=5s 360s \
+            build/r8-ci/runner/mgba-headless \
+            --script tools/xgba_a2_bind_save.lua \
+            --script tools/xgba_a2_runtime_save.lua \
+            build/r8-ci/test.gba > /tmp/r8-c5-meta.log 2>&1 || {
+              tail -n 100 /tmp/r8-c5-meta.log
+              exit 1
+            }
+          grep -q 'A2_XGBA_COLD_RESUME_HUB_PASS counter=1' /tmp/r8-c5-meta.log
+          python3 tools/xgba_a2_storage.py audit build/r8-ci/c5-meta.sav | grep -q '^counter: 1$'
+      - name: Erase disposable ROM and save fixtures
+        if: always()
+        run: |
+          rm -f build/r8-ci/layout.gba build/r8-ci/test.gba build/r8-ci/test.sav \
+            build/r8-ci/c5-page.sav build/r8-ci/c5-meta.sav build/r8-ci/c5-both.sav
+          echo "No game ROMs or saves published."

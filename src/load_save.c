@@ -10,6 +10,9 @@
 #include "overworld.h"
 #include "pokemon.h"
 #include "pokemon_storage_system.h"
+#if defined(XGBA_A2) && XGBA_A2
+#include "xgba_a2_game.h"
+#endif
 #include "random.h"
 #include "save_location.h"
 #include "script_pokemon_util.h"
@@ -672,6 +675,11 @@ void MoveSaveBlocks_ResetHeap(void)
     *gSaveBlock2Ptr = *saveBlock2Copy;
     *gSaveBlock1Ptr = *saveBlock1Copy;
     *gPokemonStoragePtr = *pokemonStorageCopy;
+#if defined(XGBA_A2) && XGBA_A2
+    // The A2 pager's resident PC must follow this completed ASLR copy.
+    // Never rebind before the new buffer contains the copied Pokemon.
+    XgbaA2GameRebindRelocatedPc();
+#endif
 
     // heap was destroyed in the copying process, so reset it
     InitHeap(gHeap, HEAP_SIZE);

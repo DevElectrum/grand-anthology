@@ -1,0 +1,74 @@
+name: A1 XGBA Anthology Native 256 MiB
+
+on:
+  push:
+    branches:
+      - xgba/expansion-lab
+    paths-ignore:
+      - "**/*.md"
+      - "AGENTS.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xgba-anthology-a1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify every source map asset and A1 safety invariant
+        run: |
+          python3 -m unittest discover -s test/overworld -p 'test_xgba_a1*.py' -v
+          python3 -m py_compile tools/xgba_a1_assets.py
+
+  native-256mib:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install native ARM7TDMI build toolchain
+        timeout-minutes: 20
+        run: |
+          set -e
+          for source in /etc/apt/sources.list.d/*; do
+            if [ -f "$source" ] && grep -q 'packages.microsoft.com' "$source"; then
+              sudo mv "$source" "$source.disabled"
+            fi
+          done
+          sudo apt-get update -o Acquire::Retries=5
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev libelf1 python3
+      - name: Build exact 256 MiB XGBA-only Anthology
+        shell: bash
+        run: |
+          set -o pipefail
+          make xgba-a1 > "${RUNNER_TEMP}/a1-build.log" 2>&1 || {
+            grep -n -E 'Error:|error:|Error |undefined reference|overflowed|ROM:|No rule|collect2:|unknown opcode|invalid operands|Traceback|ValueError' "${RUNNER_TEMP}/a1-build.log" | tail -n 160 || true
+            tail -n 110 "${RUNNER_TEMP}/a1-build.log"
+            exit 1
+          }
+          tail -n 35 "${RUNNER_TEMP}/a1-build.log"
+          test "$(stat -c%s xgba-anthology-a1.gba)" -eq 268435456
+      - name: Independently verify packed assets and ROM-only native Flash revision
+        run: |
+          python3 tools/xgba_a1_assets.py check-symbols \
+            --elf xgba-anthology-a1-native-release.elf \
+            --manifest build/xgba-a1-release/a1-manifest.json
+          python3 tools/xgba_a1_assets.py verify \
+            --native xgba-anthology-a1-native-release.gba \
+            --manifest build/xgba-a1-release/a1-manifest.json \
+            --output xgba-anthology-a1.gba
+          python3 test/overworld/ValidatePartyContinuity.py
+          python3 test/overworld/SavePatch.py --check
+      # This workflow intentionally never uploads copyrighted ROM/save binaries.

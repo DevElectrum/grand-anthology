@@ -1,0 +1,171 @@
+name: A2 XGBA Collection Storage Contract
+on:
+  push:
+    branches:
+      - xgba/a2-collection-lab
+    paths:
+      - '.github/workflows/A2-XGBA-Collection.yml'
+      - 'tools/xgba_a2_storage.py'
+      - 'tools/xgba_a2_rom.py'
+      - 'test/overworld/test_xgba_a2_rom.py'
+      - 'src/xgba_a2_journal.c'
+      - 'src/xgba_a2_guest_bus.c'
+      - 'src/xgba_a2_pager.c'
+      - 'src/xgba_r8_memory.c'
+      - 'include/xgba_r8_memory.h'
+      - 'test/overworld/xgba_a2_journal_harness.c'
+      - 'src/xgba_a2_fingerprint.c'
+      - 'src/xgba_a2_cohort.c'
+      - 'src/xgba_a2_transaction.c'
+      - 'src/xgba_a2_bootstrap.c'
+      - 'include/xgba_a2_bootstrap.h'
+      - 'src/save.c'
+      - 'src/load_save.c'
+      - 'include/xgba_a2_game.h'
+      - 'src/unbound_start_menu.c'
+      - 'src/save_dialog.c'
+      - 'src/save_failed_screen.c'
+      - 'src/trade.c'
+      - 'src/new_game.c'
+      - 'src/swsh_storage_system.c'
+      - 'src/pokemon.c'
+      - 'src/pokemon_storage_system.c'
+      - 'include/xgba_a2_game.h'
+      - 'Makefile'
+      - 'tools/xgba_select_map_layout.py'
+      - 'data/maps.s'
+      - 'map_data_rules.mk'
+      - 'include/xgba_a2_transaction.h'
+      - 'include/xgba_a2_cohort.h'
+      - 'test/overworld/xgba_a2_cohort_harness.c'
+      - 'include/xgba_a2_fingerprint.h'
+      - 'test/overworld/xgba_a2_fingerprint_harness.c'
+      - 'include/xgba_a2_pager.h'
+      - 'include/xgba_a2_guest_bus.h'
+      - 'include/xgba_a2_journal.h'
+      - 'test/overworld/xgba_a2_journal_harness.c'
+      - 'include/xgba_a2_storage_format.h'
+      - 'test/overworld/test_xgba_a2_storage.py'
+      - 'test/overworld/test_xgba_a2_menu_probe.py'
+      - 'test/overworld/test_xgba_a2_save_dialog_trace.py'
+      - 'test/overworld/test_xgba_a2_pc_rebase.py'
+      - 'test/overworld/test_xgba_a2_headless_save_binding.py'
+      - 'test/overworld/test_xgba_map_source.py'
+      - 'test/overworld/test_xgba_a2_save_fail_screen.py'
+      - 'test/overworld/test_xgba_a2_legacy_link.py'
+      - 'test/overworld/test_xgba_a2_transactions.py'
+      - 'test/overworld/SavePatch.py'
+      - 'test/save.c'
+      - 'include/save.h'
+      - 'include/constants/global.h'
+      - 'include/pokemon_storage_system.h'
+  workflow_dispatch:
+permissions:
+  contents: read
+
+concurrency:
+  group: anthology-a2-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  storage-format:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify native Flash and save schema pins
+        run: python3 test/overworld/SavePatch.py --check
+      - name: Validate A2 E6 layout and fail-closed migration
+        run: python3 -m unittest discover -s test/overworld -p 'test_xgba_a2_*.py' -v
+      - name: Verify preprocessor-safe XGBA map source selection
+        run: python3 -m unittest discover -s test/overworld -p 'test_xgba_map_*.py' -v
+      - name: Compile and execute standalone A2 C journal corruption tests
+        run: |
+          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_journal.c src/xgba_a2_guest_bus.c src/xgba_a2_pager.c test/overworld/xgba_a2_journal_harness.c -o /tmp/xgba-a2-journal-test
+          /tmp/xgba-a2-journal-test
+      - name: Validate on-cartridge SHA-256 native-slot anchors
+        run: |
+          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_fingerprint.c test/overworld/xgba_a2_fingerprint_harness.c -o /tmp/xgba-a2-fingerprint-test
+          /tmp/xgba-a2-fingerprint-test
+      - name: Verify coherent native and extended PC save cohort selector
+        run: |
+          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_cohort.c src/xgba_a2_bootstrap.c src/xgba_a2_transaction.c src/xgba_a2_pager.c src/xgba_a2_journal.c src/xgba_a2_fingerprint.c test/overworld/xgba_a2_cohort_harness.c -o /tmp/xgba-a2-cohort-test
+          /tmp/xgba-a2-cohort-test
+      - name: Print storage geometry
+        run: python3 tools/xgba_a2_storage.py layout
+
+
+  native-a1-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install native ARM7TDMI toolchain
+        timeout-minutes: 20
+        run: |
+          set -e
+          for source in /etc/apt/sources.list.d/*; do
+            if [ -f "$source" ] && grep -q 'packages.microsoft.com' "$source"; then
+              sudo mv "$source" "$source.disabled"
+            fi
+          done
+          sudo apt-get update -o Acquire::Retries=5
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev libelf1 python3
+      - name: Verify whole Anthology ARM ROM still links under A1 budget
+        shell: bash
+        run: |
+          set -o pipefail
+          make xgba-a1 > /tmp/a2-rom.log 2>&1 || {
+            grep -n -E 'Error:|error:|undefined reference|overflowed|ROM:|No rule|Traceback' /tmp/a2-rom.log | tail -n 100 || true
+            tail -n 100 /tmp/a2-rom.log
+            exit 1
+          }
+          tail -n 24 /tmp/a2-rom.log
+          test "$(stat -c%s xgba-anthology-a1.gba)" -eq 268435456
+      - name: Verify original A1 extended ROM and native-only Flash revision
+        run: |
+          python3 tools/xgba_a1_assets.py verify \
+            --native xgba-anthology-a1-native-release.gba \
+            --manifest build/xgba-a1-release/a1-manifest.json \
+            --output xgba-anthology-a1.gba
+          python3 tools/xgba_a1_assets.py check-symbols \
+            --elf xgba-anthology-a1-native-release.elf \
+            --manifest build/xgba-a1-release/a1-manifest.json
+          python3 -c "f=open('xgba-anthology-a1.gba','rb'); f.seek(0xBC); assert f.read(1)==bytes([0]); f.close()"
+      - name: Shadow-compile guarded A2 save integration (do not publish)
+        shell: bash
+        run: |
+          set -o pipefail
+          # FULL, isolated A2 rebuild. Never reuse A1 objects: CPPFLAGS are
+          # not part of Makefile's normal dependency fingerprint.
+          make release -j4 XGBA_A1=1 XGBA_A2=1 BUILD_NAME=xgba-a2 \
+            FILE_NAME=xgba-anthology-a2-native-release > /tmp/a2-shadow.log 2>&1 || {
+            grep -n -E 'error:|undefined reference|overflowed|Error:|collect2:' /tmp/a2-shadow.log | tail -n 90 || true
+            tail -n 80 /tmp/a2-shadow.log
+            exit 1
+          }
+          test -s xgba-anthology-a2-native-release.elf
+          test -s build/xgba-a2-release/a1-manifest.json
+          echo "A2 fully isolated ARM build linked; no A2 ROM published."
+      - name: Verify separate E6 development cartridge header (never publish)
+        shell: bash
+        run: |
+          set -e
+          # Inputs come from the macro-enabled shadow ELF just compiled.
+          # Reuse A1's tested high-ROM geometry layout, but opt in to E6.
+          python3 tools/xgba_a1_assets.py pack \
+            --native xgba-anthology-a2-native-release.gba \
+            --manifest build/xgba-a2-release/a1-manifest.json \
+            --output /tmp/xgba-a2-shadow-layout.gba
+          python3 tools/xgba_a2_rom.py tag \
+            /tmp/xgba-a2-shadow-layout.gba /tmp/xgba-a2-dev-e6.gba
+          python3 tools/xgba_a2_rom.py verify /tmp/xgba-a2-dev-e6.gba
+          test "$(stat -c%s /tmp/xgba-a2-dev-e6.gba)" -eq 268435456
+          rm -f /tmp/xgba-a2-shadow-layout.gba /tmp/xgba-a2-dev-e6.gba
+          echo "E6 developer header/geometry verified. No A2 ROM published."
+
+
+      # No ROM binaries or user saves are uploaded.

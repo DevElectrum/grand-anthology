@@ -218,6 +218,11 @@ static const u8 *const sMenuTexts[] =
     [MENU_STORE]      = COMPOUND_STRING("Store"),
     [MENU_WITHDRAW]   = COMPOUND_STRING("Withdraw"),
     [MENU_MOVE]       = COMPOUND_STRING("Move"),
+    [MENU_TRANSFER]   = COMPOUND_STRING("Transfer"),
+    [MENU_TRANSFER_ITEM] = COMPOUND_STRING("Transfer Item"),
+    [MENU_R8_CLEAR_BOX]   = COMPOUND_STRING("Clear Box"),
+    [MENU_R8_CLEAR_GROUP] = COMPOUND_STRING("Clear Group"),
+    [MENU_R8_CLEAR_ALL]   = COMPOUND_STRING("Clear All"),
     [MENU_SHIFT]      = COMPOUND_STRING("Shift"),
     [MENU_PLACE]      = COMPOUND_STRING("Place"),
     [MENU_SUMMARY]    = COMPOUND_STRING("Summary"),
@@ -288,6 +293,13 @@ static const struct StorageMessage sMessages[] =
     [MSG_BULK_CONFIRM]        = {COMPOUND_STRING("Release {DYNAMIC 0} Pokémon?\n{DYNAMIC 1} will remain."), MSG_VAR_BULK_REVIEW},
     [MSG_BULK_DONE]           = {COMPOUND_STRING("{DYNAMIC 0} released.\n{DYNAMIC 1} remain."), MSG_VAR_BULK_REVIEW},
     [MSG_BULK_NONE]           = {COMPOUND_STRING("No Pokémon selected or eligible."), MSG_VAR_NONE},
+    [MSG_R8_SWAP_CONFIRM]     = {COMPOUND_STRING("Swap these Pokémon?"), MSG_VAR_NONE},
+    [MSG_R8_CLEAR_CONFIRM]    = {COMPOUND_STRING("Release {DYNAMIC 0} Pokémon?"), MSG_VAR_R8_COUNT},
+    [MSG_R8_CLEAR_FINAL]      = {COMPOUND_STRING("Final check: release them?"), MSG_VAR_NONE},
+    [MSG_R8_CLEAR_NONE]       = {COMPOUND_STRING("No eligible Pokémon."), MSG_VAR_NONE},
+    [MSG_R8_CLEAR_FAIL]       = {COMPOUND_STRING("Bag full or storage changed."), MSG_VAR_NONE},
+    [MSG_R8_PROTECTED]        = {COMPOUND_STRING("This Pokémon is protected."), MSG_VAR_NONE},
+    [MSG_R8_ITEM_SWAP]        = {COMPOUND_STRING("Swap the held items?"), MSG_VAR_NONE},
 };
 
 // ============================================================================

@@ -13,6 +13,29 @@
 #include "link.h"
 #include "constants/game_stat.h"
 
+#if defined(XGBA_A2) && XGBA_A2
+#include "xgba_a2_guest_bus.h"
+#include "xgba_a2_transaction.h"
+#include "xgba_a2_bootstrap.h"
+#include "xgba_a2_game.h"
+#if defined(XGBA_R8) && XGBA_R8
+#include "xgba_r8_memory.h"
+#include "data.h"
+#include "item.h"
+#include "event_data.h"
+#include "battle_pyramid.h"
+#include "constants/flags.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+#include "xgba_r8_runtime_test.h"
+#endif
+#endif
+#include "pokemon.h"
+#include "mail.h"
+#include "constants/form_change_types.h"
+#endif
+
 static u16 CalculateChecksum(void *, u16);
 static bool8 ReadFlashSector(u8, struct SaveSector *);
 static u8 GetSaveValidStatus(const struct SaveSectorLocation *);
@@ -22,6 +45,15 @@ static u8 HandleWriteSector(u16, const struct SaveSectorLocation *);
 static u8 HandleReplaceSector(u16, const struct SaveSectorLocation *);
 static void CopyToSaveBlock3(u32, struct SaveSector *);
 static void CopyFromSaveBlock3(u32, struct SaveSector *);
+
+#if defined(XGBA_A2) && XGBA_A2
+static int A2NativeRead(void *context, uint8_t physical, uint8_t *buffer);
+static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
+                         const void *pc, uint32_t bytes);
+static bool8 A2ChooseLoad(void);
+static bool8 A2FinishLoad(void);
+static u8 A2Save(u8 saveType);
+#endif
 
 // Divide save blocks into individual chunks to be written to flash sectors
 
@@ -97,8 +129,34 @@ COMMON_DATA u8 gSaveVersionRefusal = 0; // SAVE_VERSION_REFUSAL_*; set by LoadGa
 
 EWRAM_DATA struct SaveSector gSaveDataBuffer = {0}; // Buffer used for reading/writing sectors
 
+#if defined(XGBA_A2) && XGBA_A2
+// Temporary opt-in, NOT enabled by xgba-a1 or normal releases.
+// The existing 4 KiB gSaveDataBuffer is reused for SHA and CRC inspection.
+EWRAM_DATA static struct XgbaA2GuestBus sA2Bus;
+EWRAM_DATA static struct XgbaA2JournalIo sA2Io;
+EWRAM_DATA static struct XgbaA2Cohort sA2Committed;
+EWRAM_DATA static struct XgbaA2Pager sA2Pager;
+EWRAM_DATA static bool8 sA2Ready = FALSE;
+EWRAM_DATA static bool8 sA2FreshSaveArmed = FALSE;
+// Read-only disposable E6 runtime diagnostics, never part of any saved block.
+// Upper byte is the stage; low 24 bits hold the stage-specific result/flags.
+EWRAM_DATA volatile u32 gXgbaA2GameSaveTrace = 0;
+EWRAM_DATA volatile u32 gXgbaA2PagerTrace = 0;
+EWRAM_DATA volatile u32 gXgbaA2TransactionTrace = 0;
+EWRAM_DATA volatile u32 gXgbaA2NativeWriteTrace = 0;
+EWRAM_DATA volatile u32 gXgbaA2FlashWriteTrace = 0;
+#define A2_NATIVE_TRACE(stage, detail) (gXgbaA2NativeWriteTrace = ((u32)(stage) << 24) | ((u32)(detail) & 0xFFFFFF))
+#define A2_FLASH_TRACE(stage, detail) (gXgbaA2FlashWriteTrace = ((u32)(stage) << 24) | ((u32)(detail) & 0xFFFFFF))
+#define A2_SAVE_TRACE(stage, detail) (gXgbaA2GameSaveTrace = ((u32)(stage) << 24) | ((u32)(detail) & 0xFFFFFF))
+#endif
+
 void ClearSaveData(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // No new-game bootstrap exists yet for the 16 MiB journal. Refuse to
+    // destroy the old native slots while metadata still references them.
+    return;
+#else
     u16 i;
 
     // Clear the full save two sectors at a time
@@ -107,10 +165,15 @@ void ClearSaveData(void)
         EraseFlashSector(i);
         EraseFlashSector(i + SECTORS_COUNT / 2);
     }
+#endif
 }
 
 void Save_ResetSaveCounters(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    sA2Ready = FALSE;
+    sA2FreshSaveArmed = FALSE;
+#endif
     gSaveCounter = 0;
     gLastWrittenSector = 0;
     gDamagedSaveSectors = 0;
@@ -232,7 +295,14 @@ static u8 HandleWriteSectorNBytes(u8 sectorId, u8 *data, u16 size)
 
 static u8 TryWriteSector(u8 sector, u8 *data)
 {
-    if (ProgramFlashSectorAndVerify(sector, data)) // is damaged?
+    u32 flashStatus = ProgramFlashSectorAndVerify(sector, data);
+
+#if defined(XGBA_A2) && XGBA_A2
+    if (flashStatus)
+        A2_FLASH_TRACE(0xE0 | (sector / NUM_SECTORS_PER_SLOT),
+                       ((u32)sector << 16) | (flashStatus & 0xFFFF));
+#endif
+    if (flashStatus) // is damaged?
     {
         // Failed
         SetDamagedSectorBits(ENABLE, sector);
@@ -480,8 +550,20 @@ static u8 TryLoadSaveSlot(u16 sectorId, struct SaveSectorLocation *locations)
     }
     else
     {
+#if defined(XGBA_A2) && XGBA_A2
+        // Choose the globally committed native+PC cohort FIRST, not the
+        // newest physical Flash counter. A newer native slot may be an
+        // uncommitted/aborted save despite having valid legacy checksums.
+        if (!A2ChooseLoad())
+            return SAVE_STATUS_CORRUPT;
+        CopySaveSlotData(FULL_SAVE_SLOT, locations);
+        if (!A2FinishLoad())
+            return SAVE_STATUS_CORRUPT;
+        status = SAVE_STATUS_OK;
+#else
         status = GetSaveValidStatus(locations);
         CopySaveSlotData(FULL_SAVE_SLOT, locations);
+#endif
     }
 
     return status;
@@ -717,8 +799,1047 @@ static void UpdateSaveAddresses(void)
     }
 }
 
+#if defined(XGBA_A2) && XGBA_A2
+static int A2NativeRead(void *context, uint8_t physical, uint8_t *buffer)
+{
+    (void)context;
+    if (physical >= SECTORS_COUNT
+        || gFlashMemoryPresent != TRUE)
+        return 0;
+    ReadFlash(physical, 0, buffer, SECTOR_SIZE);
+    return 1;
+}
+
+static bool8 A2ChooseLoad(void)
+{
+    struct XgbaA2Cohort selection;
+
+#if defined(XGBA_R8) && XGBA_R8
+    // Probe before touching any native/E6 save. Old E7 cannot run R8 games.
+    if (!XgbaR8MemoryReady())
+        return FALSE;
+#endif
+    sA2Ready = FALSE;
+    sA2FreshSaveArmed = FALSE;
+    if (!XgbaA2GuestBusBind(&sA2Bus, (volatile uint8_t *)0x0F000000))
+        return FALSE;
+    XgbaA2GuestBusCreateIo(&sA2Bus, &sA2Io);
+
+    if (XgbaA2CohortSelect(&sA2Io, A2NativeRead, NULL,
+                            (uint8_t *)&gSaveDataBuffer, &selection)
+        != XGBA_A2_JOURNAL_OK)
+        return FALSE;
+    sA2Committed = selection;
+    gSaveCounter = selection.nativeCounter;
+    return TRUE;
+}
+
+static bool8 A2FinishLoad(void)
+{
+    if (XgbaA2PagerInit(&sA2Pager, &sA2Io,
+                         gPokemonStoragePtr, sA2Committed.activePage,
+                         sA2Committed.pages) != XGBA_A2_JOURNAL_OK)
+        return FALSE;
+#if defined(XGBA_R8) && XGBA_R8
+    if (XgbaA2PagerEnableRam(&sA2Pager, (void *)XGBA_R8_RAM_BASE,
+            XGBA_A2_PC_BYTES * XGBA_A2_PC_PAGES) != XGBA_A2_JOURNAL_OK)
+        return FALSE;
+#endif
+    sA2Ready = TRUE;
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    // Real game records must survive a full R8 save and cold restart.
+    if (sA2Committed.nativeCounter >= 2
+        && !XgbaR8VerifyTestPokemonAtCounter(sA2Committed.nativeCounter))
+    {
+        sA2Ready = FALSE;
+        return FALSE;
+    }
+#endif
+    return TRUE;
+}
+
+static int A2NativeWrite(void *context, uint8_t slot, uint32_t counter,
+                         const void *pc, uint32_t bytes)
+{
+    u8 result;
+    (void)context;
+
+    A2_NATIVE_TRACE(1, ((u32)slot << 16) | (counter & 0xFFFF));
+    if (slot >= NUM_SAVE_SLOTS)
+    {
+        A2_NATIVE_TRACE(0xE1, slot);
+        return 0;
+    }
+    if (bytes != sizeof(struct PokemonStorage))
+    {
+        A2_NATIVE_TRACE(0xE2, bytes);
+        return 0;
+    }
+    if (pc != gPokemonStoragePtr)
+    {
+        A2_NATIVE_TRACE(0xE3, 0);
+        return 0;
+    }
+    if (counter != gSaveCounter + 1)
+    {
+        A2_NATIVE_TRACE(0xE4, gSaveCounter);
+        return 0;
+    }
+    if (slot != (counter % NUM_SAVE_SLOTS))
+    {
+        A2_NATIVE_TRACE(0xE5, slot);
+        return 0;
+    }
+
+    A2_NATIVE_TRACE(2, gSaveCounter);
+    A2_SAVE_TRACE(0x10, (slot << 16) | (counter & 0xFFFF));
+    result = WriteSaveSectorOrSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);
+    A2_SAVE_TRACE(0x11, ((u32)result << 16) | (gSaveCounter & 0xFFFF));
+    if (result != SAVE_STATUS_OK)
+    {
+        A2_NATIVE_TRACE(0xE6, result);
+        return 0;
+    }
+    if (gDamagedSaveSectors)
+    {
+        A2_NATIVE_TRACE(0xE7, gDamagedSaveSectors);
+        return 0;
+    }
+    if (gSaveCounter != counter)
+    {
+        A2_NATIVE_TRACE(0xE8, gSaveCounter);
+        return 0;
+    }
+    A2_NATIVE_TRACE(3, counter);
+    return 1;
+}
+
+#if defined(XGBA_R8) && XGBA_R8
+bool8 XgbaA2GameFreshUncommitted(void)
+{
+    return sA2FreshSaveArmed && !sA2Ready;
+}
+
+bool8 XgbaA2GameCollectionReady(void)
+{
+    return sA2Ready && sA2Pager.ready && !sA2Pager.fatal
+        && sA2Pager.ramPages != NULL;
+}
+
+struct BoxPokemon *XgbaA2GameGlobalBoxMon(u16 globalBox, u8 position)
+{
+    struct PokemonStorage *storage;
+    u8 page;
+    u8 box;
+
+    if (!XgbaA2GameCollectionReady()
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT
+        || position >= IN_BOX_COUNT)
+        return NULL;
+    page = globalBox / TOTAL_BOXES_COUNT;
+    box = globalBox % TOTAL_BOXES_COUNT;
+    if (page == sA2Pager.activePage)
+        storage = gPokemonStoragePtr;
+    else
+        storage = (struct PokemonStorage *)(sA2Pager.ramPages
+            + (u32)page * XGBA_A2_PC_BYTES);
+    return &storage->boxes[box][position];
+}
+
+bool8 XgbaA2GameSelectGlobalBox(u16 globalBox)
+{
+    u8 page;
+    u8 box;
+
+    if (!XgbaA2GameCollectionReady()
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT)
+        return FALSE;
+    page = globalBox / TOTAL_BOXES_COUNT;
+    box = globalBox % TOTAL_BOXES_COUNT;
+    if (!XgbaA2GameSwitchPage(page))
+        return FALSE;
+    gPokemonStoragePtr->currentBox = box;
+    return TRUE;
+}
+
+// Read-only, all-RAM box chooser preview. Invalid IDs fail closed.
+u8 *XgbaA2GameGlobalBoxName(u16 globalBox)
+{
+    struct PokemonStorage *storage;
+    u8 page;
+    if (!XgbaA2GameCollectionReady()
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT)
+        return NULL;
+    page = globalBox / TOTAL_BOXES_COUNT;
+    if (page == sA2Pager.activePage)
+        storage = gPokemonStoragePtr;
+    else
+        storage = (struct PokemonStorage *)(sA2Pager.ramPages
+            + (u32)page * XGBA_A2_PC_BYTES);
+    return storage->boxNames[globalBox % TOTAL_BOXES_COUNT];
+}
+
+s16 XgbaA2GameCountGlobalBoxMons(u16 globalBox)
+{
+    u8 position;
+    s16 count = 0;
+    if (!XgbaA2GameCollectionReady()
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT)
+        return -1;
+    for (position = 0; position < IN_BOX_COUNT; position++)
+    {
+        struct BoxPokemon *mon = XgbaA2GameGlobalBoxMon(globalBox, position);
+        if (mon == NULL)
+            return -1;
+        if (GetBoxMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE)
+            count++;
+    }
+    return count;
+}
+
+// The UI must only request a transfer after it has resolved both global
+// locations. Validation happens before the first write: a rejected move
+// leaves source, destination, held item and every save generation unchanged.
+// This operation never touches E6, changes the selected box or stores a
+// pointer into the resident native window.
+bool8 XgbaA2GameMoveGlobalBoxMon(u16 sourceBox, u8 sourcePos,
+                                 u16 destinationBox, u8 destinationPos)
+{
+    struct BoxPokemon *source = XgbaA2GameGlobalBoxMon(sourceBox, sourcePos);
+    struct BoxPokemon *destination =
+        XgbaA2GameGlobalBoxMon(destinationBox, destinationPos);
+
+    if (source == NULL || destination == NULL || source == destination)
+        return FALSE;
+    if (GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE
+        || GetBoxMonData(destination, MON_DATA_SPECIES) != SPECIES_NONE)
+        return FALSE;
+
+    // Exactly one complete 80-byte encrypted record is transferred.
+    // Any uncommitted operation is still recoverable from the old cohort.
+    memcpy(destination, source, sizeof(*destination));
+    memset(source, 0, sizeof(*source));
+    return TRUE;
+}
+
+// C3D2 volatile virtual carry. Source stays canonical until successful commit.
+EWRAM_DATA static struct
+{
+    struct BoxPokemon identity;
+    u16 box;
+    u8 slot;
+    bool8 active;
+    bool8 itemMode;
+} sA2GlobalTransfer;
+
+bool8 XgbaA2GameBeginGlobalTransfer(u16 sourceBox, u8 sourcePosition)
+{
+    struct BoxPokemon *source = XgbaA2GameGlobalBoxMon(sourceBox, sourcePosition);
+    if (sA2GlobalTransfer.active || source == NULL
+        || GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE
+        || ItemIsMail(GetBoxMonData(source, MON_DATA_HELD_ITEM)))
+        return FALSE;
+    memcpy(&sA2GlobalTransfer.identity, source, sizeof(*source));
+    sA2GlobalTransfer.box = sourceBox;
+    sA2GlobalTransfer.slot = sourcePosition;
+    sA2GlobalTransfer.active = TRUE;
+    sA2GlobalTransfer.itemMode = FALSE;
+    return TRUE;
+}
+
+bool8 XgbaA2GameBeginGlobalItemTransfer(u16 box, u8 slot)
+{
+    struct BoxPokemon *source = XgbaA2GameGlobalBoxMon(box, slot);
+    enum Item item;
+    if (sA2GlobalTransfer.active || source == NULL
+        || GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE)
+        return FALSE;
+    item = GetBoxMonData(source, MON_DATA_HELD_ITEM);
+    if (item == ITEM_NONE || ItemIsMail(item) || GetItemPocket(item) == POCKET_KEY_ITEMS
+        || (item >= ITEM_HM01 && item <= ITEM_HM08))
+        return FALSE;
+    memcpy(&sA2GlobalTransfer.identity, source, sizeof(*source));
+    sA2GlobalTransfer.box = box;
+    sA2GlobalTransfer.slot = slot;
+    sA2GlobalTransfer.active = TRUE;
+    sA2GlobalTransfer.itemMode = TRUE;
+    return TRUE;
+}
+
+bool8 XgbaA2GameGlobalItemTransferActive(void)
+{
+    return sA2GlobalTransfer.active && sA2GlobalTransfer.itemMode;
+}
+
+bool8 XgbaA2GameGlobalTransferActive(void)
+{
+    return sA2GlobalTransfer.active;
+}
+
+void XgbaA2GameCancelGlobalTransfer(void)
+{
+    memset(&sA2GlobalTransfer, 0, sizeof(sA2GlobalTransfer));
+}
+
+bool8 XgbaA2GameGlobalTransferTargetOccupied(u16 destinationBox, u8 position)
+{
+    struct BoxPokemon *dest;
+    if (!sA2GlobalTransfer.active)
+        return FALSE;
+    dest = XgbaA2GameGlobalBoxMon(destinationBox, position);
+    if (dest == NULL)
+        return FALSE;
+    if (sA2GlobalTransfer.itemMode)
+        return GetBoxMonData(dest, MON_DATA_HELD_ITEM) != ITEM_NONE;
+    return GetBoxMonData(dest, MON_DATA_SPECIES) != SPECIES_NONE;
+}
+
+bool8 XgbaA2GameCommitGlobalTransfer(u16 destinationBox, u8 position, bool8 allowSwap)
+{
+    struct BoxPokemon *source, *dest;
+    bool8 success;
+    if (!sA2GlobalTransfer.active || sA2GlobalTransfer.itemMode
+        || !XgbaA2GameCollectionReady())
+        return FALSE;
+    source = XgbaA2GameGlobalBoxMon(sA2GlobalTransfer.box, sA2GlobalTransfer.slot);
+    dest = XgbaA2GameGlobalBoxMon(destinationBox, position);
+    if (source == NULL || dest == NULL || source == dest
+        || memcmp(source, &sA2GlobalTransfer.identity, sizeof(*source)) != 0
+        || GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE)
+        return FALSE;
+    if (GetBoxMonData(dest, MON_DATA_SPECIES) == SPECIES_NONE)
+        success = XgbaA2GameMoveGlobalBoxMon(sA2GlobalTransfer.box,
+            sA2GlobalTransfer.slot, destinationBox, position);
+    else if (allowSwap && !ItemIsMail(GetBoxMonData(dest, MON_DATA_HELD_ITEM)))
+        success = XgbaA2GameSwapGlobalBoxMons(sA2GlobalTransfer.box,
+            sA2GlobalTransfer.slot, destinationBox, position);
+    else
+        return FALSE;
+    if (success)
+        XgbaA2GameCancelGlobalTransfer();
+    return success;
+}
+
+bool8 XgbaA2GameCommitGlobalItemTransfer(u16 destBox, u8 destSlot, bool8 allowSwap)
+{
+    struct BoxPokemon *source, *dest;
+    if (!sA2GlobalTransfer.active || !sA2GlobalTransfer.itemMode
+        || !XgbaA2GameCollectionReady())
+        return FALSE;
+    source = XgbaA2GameGlobalBoxMon(sA2GlobalTransfer.box, sA2GlobalTransfer.slot);
+    dest = XgbaA2GameGlobalBoxMon(destBox, destSlot);
+    if (source == NULL || dest == NULL || source == dest
+        || memcmp(source, &sA2GlobalTransfer.identity, sizeof(*source)) != 0)
+        return FALSE;
+    if (!XgbaA2GameTransferGlobalHeldItem(sA2GlobalTransfer.box, sA2GlobalTransfer.slot,
+                                           destBox, destSlot, allowSwap))
+        return FALSE;
+    XgbaA2GameCancelGlobalTransfer();
+    return TRUE;
+}
+
+// C4 collection-level selection and all-or-nothing item/record deletion.
+// The 420-byte mask indexes all 3360 global box positions. Only the
+// existing A2 full-game Save persists these changes, never this scratch.
+#define R8_RELEASE_SLOTS (XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT * IN_BOX_COUNT)
+#define R8_RELEASE_MASK_BYTES ((R8_RELEASE_SLOTS + 7) / 8)
+EWRAM_DATA static u8 sR8ReleaseMask[R8_RELEASE_MASK_BYTES];
+EWRAM_DATA static u16 sR8ReleaseCount;
+// A separate 80-byte snapshot of every eligible planned slot is kept in the
+// opt-in R8 arena. A 32-bit digest alone is not a deletion authorization.
+EWRAM_DATA static bool8 sR8ReleasePlanActive;
+#define R8_BAG_STAGE_OFFSET 0x50000U
+#define R8_RELEASE_IDENTITY_OFFSET 0x60000U
+STATIC_ASSERT(R8_BAG_STAGE_OFFSET + sizeof(struct Bag) <= R8_RELEASE_IDENTITY_OFFSET, R8ReleaseScratchDisjoint);
+STATIC_ASSERT(R8_RELEASE_IDENTITY_OFFSET + R8_RELEASE_SLOTS * sizeof(struct BoxPokemon) <= XGBA_R8_RAM_BYTES, R8ReleaseIdentityFits);
+
+static struct BoxPokemon *R8ReleaseSnapshot(u32 index)
+{
+    return (struct BoxPokemon *)(XGBA_R8_RAM_BASE + R8_RELEASE_IDENTITY_OFFSET
+                                 + index * sizeof(struct BoxPokemon));
+}
+
+// Reject nonstandard item inventories and stale pocket pointers before any
+// bag operation. AddBagItem otherwise routes Pyramid items elsewhere, which
+// would not be covered by the ordinary SaveBlock1 rollback.
+static bool8 R8BagContextValid(void)
+{
+    if (!XgbaA2GameCollectionReady() || gSaveBlock1Ptr == NULL
+        || CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE
+        || FlagGet(FLAG_STORING_ITEMS_IN_PYRAMID_BAG))
+        return FALSE;
+    return gBagPockets[POCKET_ITEMS].itemSlots == gSaveBlock1Ptr->bag.items
+        && gBagPockets[POCKET_ITEMS].capacity == BAG_ITEMS_COUNT
+        && gBagPockets[POCKET_KEY_ITEMS].itemSlots == gSaveBlock1Ptr->bag.keyItems
+        && gBagPockets[POCKET_KEY_ITEMS].capacity == BAG_KEYITEMS_COUNT
+        && gBagPockets[POCKET_POKE_BALLS].itemSlots == gSaveBlock1Ptr->bag.pokeBalls
+        && gBagPockets[POCKET_POKE_BALLS].capacity == BAG_POKEBALLS_COUNT
+        && gBagPockets[POCKET_TM_HM].itemSlots == gSaveBlock1Ptr->bag.TMsHMs
+        && gBagPockets[POCKET_TM_HM].capacity == BAG_TMHM_COUNT
+        && gBagPockets[POCKET_BERRIES].itemSlots == gSaveBlock1Ptr->bag.berries
+        && gBagPockets[POCKET_BERRIES].capacity == BAG_BERRIES_COUNT;
+}
+
+// Only pointers are temporarily redirected, never pocket sizes or IDs.
+// All additions go into a private bag image, so failure leaves the actual
+// inventory untouched. Restore the live bindings on every exit path.
+static void R8BindBagSlots(struct Bag *bag)
+{
+    gBagPockets[POCKET_ITEMS].itemSlots = bag->items;
+    gBagPockets[POCKET_KEY_ITEMS].itemSlots = bag->keyItems;
+    gBagPockets[POCKET_POKE_BALLS].itemSlots = bag->pokeBalls;
+    gBagPockets[POCKET_TM_HM].itemSlots = bag->TMsHMs;
+    gBagPockets[POCKET_BERRIES].itemSlots = bag->berries;
+}
+
+static bool8 R8StageReleaseBag(const u8 *mask)
+{
+    struct Bag *stage = (struct Bag *)(XGBA_R8_RAM_BASE + R8_BAG_STAGE_OFFSET);
+    u32 index;
+    bool8 success = TRUE;
+    if (!R8BagContextValid())
+        return FALSE;
+    *stage = gSaveBlock1Ptr->bag;
+    R8BindBagSlots(stage);
+    for (index = 0; index < R8_RELEASE_SLOTS; index++)
+    {
+        enum Item held;
+        if (!(mask[index / 8] & (1U << (index % 8))))
+            continue;
+        held = GetBoxMonData(XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT,
+                                                    index % IN_BOX_COUNT), MON_DATA_HELD_ITEM);
+        if (held != ITEM_NONE && !AddBagItem(held, 1))
+        {
+            success = FALSE;
+            break;
+        }
+    }
+    R8BindBagSlots(&gSaveBlock1Ptr->bag);
+    if (success)
+        gSaveBlock1Ptr->bag = *stage;
+    return success;
+}
+
+static bool8 R8StagePartyHeldItem(enum Item held)
+{
+    struct Bag *stage = (struct Bag *)(XGBA_R8_RAM_BASE + R8_BAG_STAGE_OFFSET);
+    bool8 success;
+    if (!R8BagContextValid())
+        return FALSE;
+    if (held == ITEM_NONE)
+        return TRUE;
+    *stage = gSaveBlock1Ptr->bag;
+    R8BindBagSlots(stage);
+    success = AddBagItem(held, 1);
+    R8BindBagSlots(&gSaveBlock1Ptr->bag);
+    if (success)
+        gSaveBlock1Ptr->bag = *stage;
+    return success;
+}
+
+static bool8 R8ReleaseMaskHas(u32 index)
+{
+    return (sR8ReleaseMask[index / 8] & (1U << (index % 8))) != 0;
+}
+
+static void R8ReleaseMaskAdd(u32 index)
+{
+    sR8ReleaseMask[index / 8] |= (1U << (index % 8));
+}
+
+static bool8 R8ReleaseEligible(struct BoxPokemon *mon)
+{
+    enum Species species;
+    enum Species base;
+    enum Item held;
+    // Conservative during R8: these field moves are never removed in a
+    // collection-wide destructive operation, even when other users exist.
+    u16 protectedMoves[] = {MOVE_SURF, MOVE_DIVE, MOVE_STRENGTH,
+                            MOVE_ROCK_SMASH, MOVES_COUNT};
+
+    if (mon == NULL)
+        return FALSE;
+    species = GetBoxMonData(mon, MON_DATA_SPECIES);
+    if (species == SPECIES_NONE || GetBoxMonData(mon, MON_DATA_IS_EGG)
+        || (GetBoxMonData(mon, MON_DATA_MARKINGS) & (1 << 3)))
+        return FALSE;
+    base = NationalPokedexNumToSpecies(gSpeciesInfo[species].natDexNum);
+    if (gSpeciesInfo[species].isRestrictedLegendary
+        || gSpeciesInfo[species].isSubLegendary
+        || gSpeciesInfo[species].isMythical
+        || gSpeciesInfo[base].isRestrictedLegendary
+        || gSpeciesInfo[base].isSubLegendary
+        || gSpeciesInfo[base].isMythical)
+        return FALSE;
+    held = GetBoxMonData(mon, MON_DATA_HELD_ITEM);
+    if (ItemIsMail(held)
+        || (held != ITEM_NONE && (GetItemPocket(held) == POCKET_KEY_ITEMS
+            || (held >= ITEM_HM01 && held <= ITEM_HM08))))
+        return FALSE;
+    if (GetBoxMonData(mon, MON_DATA_KNOWN_MOVES, (u8 *)protectedMoves))
+        return FALSE;
+    return TRUE;
+}
+
+static bool8 R8ReleaseSourcesUnchanged(void)
+{
+    u32 index;
+    for (index = 0; index < R8_RELEASE_SLOTS; index++)
+    {
+        struct BoxPokemon *source;
+        if (!R8ReleaseMaskHas(index))
+            continue;
+        source = XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT, index % IN_BOX_COUNT);
+        if (source == NULL
+            || memcmp(source, R8ReleaseSnapshot(index), sizeof(*source)) != 0)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+void XgbaA2GameCancelGlobalRelease(void)
+{
+    memset(sR8ReleaseMask, 0, sizeof(sR8ReleaseMask));
+    sR8ReleaseCount = 0;
+    sR8ReleasePlanActive = FALSE;
+}
+
+u16 XgbaA2GamePlannedReleaseCount(void)
+{
+    return sR8ReleasePlanActive ? sR8ReleaseCount : 0;
+}
+
+u16 XgbaA2GamePlanGlobalRelease(u8 scope, u16 globalBox, u32 localMask)
+{
+    u32 occupied, limit, index;
+    u32 firstBox, lastBox;
+
+    XgbaA2GameCancelGlobalRelease();
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    // Test-only witness of a request reaching the shared global planner.
+    // The fixture clears this witness before the graphical controller test.
+    if (scope == XGBA_R8_RELEASE_ALL)
+        gXgbaR8FixtureStage = 0xC4000002U;
+#endif
+    if (!XgbaA2GameCollectionReady() || sA2GlobalTransfer.active
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT
+        || scope > XGBA_R8_RELEASE_SINGLE)
+        return 0;
+    occupied = CountPartyNonEggMons() + CountStorageNonEggMons();
+    limit = occupied > 3 ? occupied - 3 : 0;
+    if (limit == 0)
+        return 0;
+
+    firstBox = scope == XGBA_R8_RELEASE_ALL ? 0
+             : scope == XGBA_R8_RELEASE_GROUP ? (globalBox / TOTAL_BOXES_COUNT) * TOTAL_BOXES_COUNT
+             : globalBox;
+    lastBox = scope == XGBA_R8_RELEASE_ALL ? XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT
+            : scope == XGBA_R8_RELEASE_GROUP ? firstBox + TOTAL_BOXES_COUNT
+            : firstBox + 1;
+    for (index = firstBox * IN_BOX_COUNT; index < lastBox * IN_BOX_COUNT; index++)
+    {
+        struct BoxPokemon *mon;
+        u8 localPosition = index % IN_BOX_COUNT;
+        if (sR8ReleaseCount >= limit)
+            break;
+        if (scope == XGBA_R8_RELEASE_LOCAL_MASK
+            && !(localMask & (1U << localPosition)))
+            continue;
+        if (scope == XGBA_R8_RELEASE_SINGLE
+            && !(localMask & (1U << localPosition)))
+            continue;
+        mon = XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT, localPosition);
+        if (!R8ReleaseEligible(mon))
+            continue;
+        memcpy(R8ReleaseSnapshot(index), mon, sizeof(*mon));
+        R8ReleaseMaskAdd(index);
+        sR8ReleaseCount++;
+    }
+    if (sR8ReleaseCount == 0)
+        return 0;
+    sR8ReleasePlanActive = TRUE;
+    return XgbaA2GamePlannedReleaseCount();
+}
+
+bool8 XgbaA2GameCommitGlobalRelease(void)
+{
+    u32 occupied, index;
+    if (!sR8ReleasePlanActive || sR8ReleaseCount == 0
+        || !XgbaA2GameCollectionReady() || sA2GlobalTransfer.active
+        || !R8BagContextValid() || !R8ReleaseSourcesUnchanged())
+        return FALSE;
+    occupied = CountPartyNonEggMons() + CountStorageNonEggMons();
+    if (occupied < (u32)sR8ReleaseCount + 3)
+        return FALSE;
+    for (index = 0; index < R8_RELEASE_SLOTS; index++)
+    {
+        if (R8ReleaseMaskHas(index)
+            && !R8ReleaseEligible(XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT,
+                                                           index % IN_BOX_COUNT)))
+            return FALSE;
+    }
+    // Stage every returned item in the non-live bag before deleting a record.
+    // This path has no fallible writes after successful bag publication.
+    if (!R8StageReleaseBag(sR8ReleaseMask))
+        return FALSE;
+    for (index = 0; index < R8_RELEASE_SLOTS; index++)
+        if (R8ReleaseMaskHas(index))
+            ZeroBoxMonData(XgbaA2GameGlobalBoxMon(index / IN_BOX_COUNT,
+                                                  index % IN_BOX_COUNT));
+    XgbaA2GameCancelGlobalRelease();
+    return TRUE;
+}
+
+bool8 XgbaA2GameCanReleaseGlobalSingle(u16 globalBox, u8 slot)
+{
+    if (slot >= IN_BOX_COUNT)
+        return FALSE;
+    return XgbaA2GamePlanGlobalRelease(XGBA_R8_RELEASE_SINGLE, globalBox,
+                                         1U << slot) == 1;
+}
+
+bool8 XgbaA2GameCanReleasePartySingle(u8 slot)
+{
+    if (!XgbaA2GameCollectionReady() || slot >= PARTY_SIZE)
+        return FALSE;
+    return CountPartyNonEggMons() + CountStorageNonEggMons() >= 4
+        && CountPartyAliveNonEggMonsExcept(slot) != 0
+        && R8ReleaseEligible(&gParties[B_TRAINER_PLAYER][slot].box);
+}
+
+// Exact same staged-bag policy for the R8 party release path. The frontend
+// handles sprites and compaction, never the record or returned held item.
+bool8 XgbaA2GameReleasePartySingle(u8 slot)
+{
+    enum Item held;
+    if (!XgbaA2GameCanReleasePartySingle(slot))
+        return FALSE;
+    held = (OW_PC_RELEASE_ITEM >= GEN_8)
+        ? GetMonData(&gParties[B_TRAINER_PLAYER][slot], MON_DATA_HELD_ITEM)
+        : ITEM_NONE;
+    if (!R8StagePartyHeldItem(held))
+        return FALSE;
+    ZeroMonData(&gParties[B_TRAINER_PLAYER][slot]);
+    return TRUE;
+}
+
+bool8 XgbaA2GameReleaseGlobalSingle(u16 globalBox, u8 slot)
+{
+    if (!XgbaA2GameCanReleaseGlobalSingle(globalBox, slot))
+        return FALSE;
+    return XgbaA2GameCommitGlobalRelease();
+}
+
+bool8 XgbaA2GameTransferGlobalHeldItem(u16 fromBox, u8 fromPos,
+                                      u16 toBox, u8 toPos, bool8 allowSwap)
+{
+    struct BoxPokemon *from = XgbaA2GameGlobalBoxMon(fromBox, fromPos);
+    struct BoxPokemon *to = XgbaA2GameGlobalBoxMon(toBox, toPos);
+    enum Item moving, replaced;
+    if ((sA2GlobalTransfer.active && !sA2GlobalTransfer.itemMode)
+        || sR8ReleasePlanActive || from == NULL
+        || to == NULL || from == to
+        || GetBoxMonData(from, MON_DATA_SPECIES) == SPECIES_NONE
+        || GetBoxMonData(to, MON_DATA_SPECIES) == SPECIES_NONE)
+        return FALSE;
+    moving = GetBoxMonData(from, MON_DATA_HELD_ITEM);
+    replaced = GetBoxMonData(to, MON_DATA_HELD_ITEM);
+    if (moving == ITEM_NONE || ItemIsMail(moving) || ItemIsMail(replaced)
+        || GetItemPocket(moving) == POCKET_KEY_ITEMS
+        || (moving >= ITEM_HM01 && moving <= ITEM_HM08)
+        || (replaced != ITEM_NONE && !allowSwap))
+        return FALSE;
+    if (replaced != ITEM_NONE && (GetItemPocket(replaced) == POCKET_KEY_ITEMS
+        || (replaced >= ITEM_HM01 && replaced <= ITEM_HM08)))
+        return FALSE;
+    SetBoxMonData(from, MON_DATA_HELD_ITEM, &replaced);
+    SetBoxMonData(to, MON_DATA_HELD_ITEM, &moving);
+    TryBoxMonFormChange(from, FORM_CHANGE_ITEM_HOLD);
+    TryBoxMonFormChange(to, FORM_CHANGE_ITEM_HOLD);
+    return TRUE;
+}
+
+// Direct party deposit: destination and party constraints are validated
+// before either source or destination changes. No Flash, journal or page
+// switching occurs while depositing. The UI compacts party icons afterward.
+bool8 XgbaA2GameDepositPartyMonGlobal(u8 partyPosition, u16 globalBox,
+                                     u8 *placedPosition)
+{
+    struct Pokemon *party;
+    struct Pokemon deposited;
+    struct BoxPokemon *target = NULL;
+    u8 position;
+
+    if (!XgbaA2GameCollectionReady() || partyPosition >= PARTY_SIZE
+        || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT)
+        return FALSE;
+    party = &gParties[B_TRAINER_PLAYER][partyPosition];
+    if (GetMonData(party, MON_DATA_SPECIES) == SPECIES_NONE
+        || CountPartyAliveNonEggMonsExcept(partyPosition) == 0
+        || ItemIsMail(GetMonData(party, MON_DATA_HELD_ITEM)))
+        return FALSE;
+
+    for (position = 0; position < IN_BOX_COUNT; position++)
+    {
+        target = XgbaA2GameGlobalBoxMon(globalBox, position);
+        if (target == NULL)
+            return FALSE;
+        if (GetBoxMonData(target, MON_DATA_SPECIES) == SPECIES_NONE)
+            break;
+    }
+    if (position == IN_BOX_COUNT)
+        return FALSE;
+
+    deposited = *party;
+    if (OW_PC_HEAL <= GEN_7)
+        HealPokemon(&deposited);
+    memcpy(target, &deposited.box, sizeof(*target));
+    TryBoxMonFormChange(target, FORM_CHANGE_DEPOSIT);
+    // Party compaction can change the follower's lead; reset its stride
+    // counter even when the deposited Pokémon was not at party slot zero.
+    gFollowerSteps = 0;
+    ZeroMonData(party);
+    if (placedPosition != NULL)
+        *placedPosition = position;
+    return TRUE;
+}
+
+// C3B: withdraw from any of 112 boxes without changing the resident page.
+// Convert a private copy so decoding cannot mutate a borrowed source pointer.
+// Check the entire destination tail before writing: unexpected party holes
+// must fail closed instead of silently overwriting a later occupied slot.
+bool8 XgbaA2GameWithdrawGlobalBoxMon(u16 globalBox, u8 sourcePosition,
+                                     u8 *placedPartyPosition)
+{
+    struct BoxPokemon *source = XgbaA2GameGlobalBoxMon(globalBox, sourcePosition);
+    struct BoxPokemon snapshot;
+    struct Pokemon withdrawn;
+    u8 partyCount;
+    u8 position;
+
+    if (source == NULL
+        || GetBoxMonData(source, MON_DATA_SPECIES) == SPECIES_NONE
+        || ItemIsMail(GetBoxMonData(source, MON_DATA_HELD_ITEM)))
+        return FALSE;
+
+    partyCount = CalculatePlayerPartyCount();
+    if (partyCount >= PARTY_SIZE)
+        return FALSE;
+    for (position = partyCount; position < PARTY_SIZE; position++)
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][position], MON_DATA_SPECIES) != SPECIES_NONE)
+            return FALSE;
+
+    memcpy(&snapshot, source, sizeof(snapshot));
+    BoxMonToMon(&snapshot, &withdrawn);
+    if (GetMonData(&withdrawn, MON_DATA_SPECIES) == SPECIES_NONE
+        || memcmp(&withdrawn.box, &snapshot, sizeof(snapshot)) != 0)
+        return FALSE;
+
+    gParties[B_TRAINER_PLAYER][partyCount] = withdrawn;
+    ZeroBoxMonData(source);
+    gPartiesCount[B_TRAINER_PLAYER] = partyCount + 1;
+    if (placedPartyPosition != NULL)
+        *placedPartyPosition = partyCount;
+    return TRUE;
+}
+
+// Swap is likewise preflighted and all-RAM, even across distinct groups.
+bool8 XgbaA2GameSwapGlobalBoxMons(u16 firstBox, u8 firstPos,
+                                  u16 secondBox, u8 secondPos)
+{
+    struct BoxPokemon *first = XgbaA2GameGlobalBoxMon(firstBox, firstPos);
+    struct BoxPokemon *second = XgbaA2GameGlobalBoxMon(secondBox, secondPos);
+    struct BoxPokemon temporary;
+
+    if (first == NULL || second == NULL || first == second)
+        return FALSE;
+    if (GetBoxMonData(first, MON_DATA_SPECIES) == SPECIES_NONE
+        || GetBoxMonData(second, MON_DATA_SPECIES) == SPECIES_NONE)
+        return FALSE;
+
+    memcpy(&temporary, first, sizeof(temporary));
+    memcpy(first, second, sizeof(temporary));
+    memcpy(second, &temporary, sizeof(temporary));
+    return TRUE;
+}
+#endif
+
+bool8 XgbaA2GameFindFreePage(u8 *foundPage)
+{
+    struct XgbaA2JournalInfo pageInfo;
+    struct BoxPokemon sample;
+    u8 offset;
+    if (!sA2Ready || sA2Pager.fatal || foundPage == NULL)
+        return FALSE;
+
+#if defined(XGBA_R8) && XGBA_R8
+    if (!XgbaA2GameCollectionReady())
+        return FALSE;
+    for (offset = 1; offset < XGBA_A2_PC_PAGES; offset++)
+    {
+        u8 page = (sA2Pager.activePage + offset) % XGBA_A2_PC_PAGES;
+        struct PokemonStorage *group = (struct PokemonStorage *)
+            (sA2Pager.ramPages + (u32)page * XGBA_A2_PC_BYTES);
+        u8 box;
+        for (box = 0; box < TOTAL_BOXES_COUNT; box++)
+        {
+            u8 pos;
+            for (pos = 0; pos < IN_BOX_COUNT; pos++)
+                if (GetBoxMonData(&group->boxes[box][pos], MON_DATA_SPECIES) == SPECIES_NONE)
+                {
+                    *foundPage = page;
+                    return TRUE;
+                }
+        }
+    }
+    return FALSE;
+#else
+    // Only called when all 420 slots on the resident page are full.
+    // Pages are CRC-checked ONCE before inspecting their box data.
+    // No 34 KiB temporary page, no 3,360-mon memory allocation.
+    for (offset = 1; offset < XGBA_A2_PC_PAGES; offset++)
+    {
+        u8 page = (sA2Pager.activePage + offset) % XGBA_A2_PC_PAGES;
+        u32 generation = sA2Pager.staged[page] != 0
+            ? sA2Pager.staged[page] : sA2Pager.committed[page];
+        u32 firstOffset;
+        u32 mon;
+        if (XgbaA2JournalFindPageGeneration(
+            &sA2Io, page, generation, &pageInfo) != XGBA_A2_JOURNAL_OK)
+        {
+            // Cannot establish the complete PC's capacity. Fail closed:
+            // never claim that a catch can safely be stored.
+            sA2Ready = FALSE;
+            return FALSE;
+        }
+        firstOffset = XGBA_A2_PC_BASE
+            + ((u32)page * 2 + pageInfo.slot) * XGBA_A2_PC_STRIDE
+            + XGBA_A2_RECORD_HEADER_BYTES
+            + offsetof(struct PokemonStorage, boxes);
+
+        for (mon = 0; mon < TOTAL_BOXES_COUNT * IN_BOX_COUNT; mon++)
+        {
+            if (!sA2Io.read(sA2Io.context,
+                            firstOffset + mon * sizeof(struct BoxPokemon),
+                            (u8 *)&sample, sizeof(sample)))
+            {
+                sA2Ready = FALSE;
+                return FALSE;
+            }
+            if (GetBoxMonData(&sample, MON_DATA_SPECIES) == SPECIES_NONE)
+            {
+                *foundPage = page;
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+#endif
+}
+
+// Only called when the player explicitly starts a new game.
+void XgbaA2GameArmFreshSave(void)
+{
+    A2_SAVE_TRACE(1, 1);
+    sA2FreshSaveArmed = TRUE;
+    sA2Ready = FALSE;
+}
+
+u8 XgbaA2GamePage(void)
+{
+    return sA2Ready ? sA2Pager.activePage : 0;
+}
+
+void XgbaA2GameRebindRelocatedPc(void)
+{
+    // MoveSaveBlocks_ResetHeap copies the live PC, then changes its ASLR
+    // address. A2's journal pager cannot keep using the previous address:
+    // it would compare and save stale memory or reject every later save.
+    // Rebind only after the new PokemonStorage has been fully restored.
+    // Preserve all staged generations and fatal/ready state unchanged.
+    if (!sA2Ready || !sA2Pager.ready || sA2Pager.fatal
+        || gPokemonStoragePtr == NULL || sA2Pager.resident == NULL)
+        return;
+    sA2Pager.resident = gPokemonStoragePtr;
+}
+
+bool8 XgbaA2GameSwitchPage(u8 page)
+{
+    if (!sA2Ready || sA2Pager.fatal || page >= XGBA_A2_PC_PAGES)
+        return FALSE;
+    if (page == sA2Pager.activePage)
+        return TRUE;
+    if (XgbaA2PagerSwitch(&sA2Pager, page) != XGBA_A2_JOURNAL_OK)
+    {
+        // A failed read may have partially replaced the resident PC.
+        // Refuse any subsequent save until a clean reload.
+        sA2Ready = FALSE;
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static u8 A2Save(u8 saveType)
+{
+    struct XgbaA2Cohort newCohort;
+    u32 savedCounter;
+    u16 savedSector;
+    u32 *backupVar;
+    int result;
+
+    A2_SAVE_TRACE(2, (saveType & 0xFF) | (sA2Ready ? 0x100 : 0) | (sA2FreshSaveArmed ? 0x200 : 0));
+
+    // All full-game save requests share the same native+PC transaction.
+    // The Hall of Fame archive lives in separate native sectors 28/29;
+    // write it only AFTER the game's global commit is independently valid.
+    if (saveType != SAVE_NORMAL && saveType != SAVE_LINK
+        && saveType != SAVE_EREADER && saveType != SAVE_HALL_OF_FAME
+        && saveType != SAVE_OVERWRITE_DIFFERENT_FILE)
+    {
+        A2_SAVE_TRACE(0xE1, saveType);
+        return SAVE_STATUS_ERROR;
+    }
+    if (saveType == SAVE_OVERWRITE_DIFFERENT_FILE && !sA2FreshSaveArmed)
+    {
+        A2_SAVE_TRACE(0xE2, saveType);
+        return SAVE_STATUS_ERROR;
+    }
+    if (!sA2Ready && !sA2FreshSaveArmed)
+    {
+        A2_SAVE_TRACE(0xE3, saveType);
+        return SAVE_STATUS_ERROR;
+    }
+    if (saveType == SAVE_HALL_OF_FAME && gHoFSaveBuffer == NULL)
+    {
+        A2_SAVE_TRACE(0xE4, saveType);
+        return SAVE_STATUS_ERROR;
+    }
+
+    backupVar = gTrainerHillVBlankCounter;
+    gTrainerHillVBlankCounter = NULL;
+    savedCounter = gSaveCounter;
+    savedSector = gLastWrittenSector;
+
+    UpdateSaveAddresses();
+    if (saveType == SAVE_HALL_OF_FAME
+        && GetGameStat(GAME_STAT_ENTERED_HOF) < 999)
+        IncrementGameStat(GAME_STAT_ENTERED_HOF);
+    CopyPartyAndObjectsToSave();
+
+    if (sA2FreshSaveArmed)
+    {
+#if defined(XGBA_R8) && XGBA_R8
+        if (!XgbaR8MemoryReady())
+            goto failed;
+#endif
+        // One-shot authorization: even an interrupted initial save cannot
+        // be retried in the same session without explicit new-game setup.
+        sA2FreshSaveArmed = FALSE;
+        A2_SAVE_TRACE(3, 1);
+        if (!XgbaA2GuestBusBind(&sA2Bus, (volatile uint8_t *)0x0F000000))
+        {
+            A2_SAVE_TRACE(0xE5, 0);
+            goto failed;
+        }
+        A2_SAVE_TRACE(4, 1);
+        XgbaA2GuestBusCreateIo(&sA2Bus, &sA2Io);
+        result = XgbaA2BootstrapCommit(
+            &sA2Io, A2NativeRead, A2NativeWrite, NULL,
+            (uint8_t *)&gSaveDataBuffer, gPokemonStoragePtr, &newCohort);
+        if (result != XGBA_A2_JOURNAL_OK)
+        {
+            A2_SAVE_TRACE(0xE6, result);
+            goto failed;
+        }
+        A2_SAVE_TRACE(5, 1);
+        if (XgbaA2PagerInit(&sA2Pager, &sA2Io, gPokemonStoragePtr,
+                             newCohort.activePage, newCohort.pages)
+            != XGBA_A2_JOURNAL_OK)
+        {
+            A2_SAVE_TRACE(0xE7, 0);
+            goto failed;
+        }
+#if defined(XGBA_R8) && XGBA_R8
+        if (XgbaA2PagerEnableRam(&sA2Pager, (void *)XGBA_R8_RAM_BASE,
+                XGBA_A2_PC_BYTES * XGBA_A2_PC_PAGES) != XGBA_A2_JOURNAL_OK)
+            goto failed;
+#endif
+        A2_SAVE_TRACE(6, newCohort.nativeCounter);
+        sA2Committed = newCohort;
+        sA2Ready = TRUE;
+        gTrainerHillVBlankCounter = backupVar;
+        return SAVE_STATUS_OK;
+    }
+
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    // Only the disposable CI cartridge inserts genuine BoxPokemon records.
+    // The metadata-pinned page groups are still committed by ordinary A2.
+    if (sA2Committed.nativeCounter == 1)
+    {
+        if (!XgbaR8CreateTestPokemon())
+        {
+            // Tell the headless Lua driver exactly which runtime assertion
+            // failed instead of spinning in a Save-dialog timeout.
+            A2_SAVE_TRACE(0xE9, gXgbaR8FixtureStage);
+            goto failed;
+        }
+        // The fixture also creates a usable Zigzagoon in the party. The
+        // ordinary save already copied the player party above, BEFORE the
+        // CI fixture populated it. Copy again so a real cold Continue gets
+        // that party member, and never relax the last-usable-mon guard.
+        CalculatePlayerPartyCount();
+        CopyPartyAndObjectsToSave();
+    }
+#endif
+    A2_SAVE_TRACE(7, sA2Committed.nativeCounter);
+    result = XgbaA2TransactionCommit(
+        &sA2Pager, &sA2Committed, A2NativeRead, A2NativeWrite,
+        NULL, (uint8_t *)&gSaveDataBuffer, &newCohort);
+    if (result != XGBA_A2_JOURNAL_OK)
+        A2_SAVE_TRACE(0xE8, result);
+    if (result == XGBA_A2_JOURNAL_OK)
+    {
+        A2_SAVE_TRACE(8, newCohort.nativeCounter);
+        sA2Committed = newCohort;
+
+        if (saveType == SAVE_HALL_OF_FAME)
+        {
+            u8 *hofData = (u8 *)gHoFSaveBuffer;
+            // These optional Hall of Fame archive sectors are NOT part of
+            // the collection commit. A failure is visible and forces reload,
+            // but cannot roll back or tear the already committed Pokemon data.
+            if (HandleWriteSectorNBytes(SECTOR_ID_HOF_1, hofData,
+                                        SECTOR_DATA_SIZE) != SAVE_STATUS_OK)
+                goto failed;
+            if (HandleWriteSectorNBytes(SECTOR_ID_HOF_2,
+                                        hofData + SECTOR_DATA_SIZE,
+                                        SECTOR_DATA_SIZE) != SAVE_STATUS_OK)
+                goto failed;
+        }
+
+        gTrainerHillVBlankCounter = backupVar;
+        return SAVE_STATUS_OK;
+    }
+
+failed:
+    // A failed initialization or transaction may have persisted the new
+    // native slot or even the commit marker. No speculative retry is safe.
+    sA2Ready = FALSE;
+    sA2FreshSaveArmed = FALSE;
+    gSaveCounter = savedCounter;
+    gLastWrittenSector = savedSector;
+    gTrainerHillVBlankCounter = backupVar;
+    return SAVE_STATUS_ERROR;
+}
+#endif
+
 u8 HandleSavingData(u8 saveType)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    // The only permitted gameplay save entrypoint in E6 mode. Every native
+    // save must also publish an exact 112-box generation vector.
+    return A2Save(saveType);
+#else
     u8 i;
     u32 *backupVar = gTrainerHillVBlankCounter;
 
@@ -780,6 +1901,7 @@ u8 HandleSavingData(u8 saveType)
     }
     gTrainerHillVBlankCounter = backupVar;
     return 0;
+#endif
 }
 
 u8 TrySavingData(u8 saveType)
@@ -790,7 +1912,16 @@ u8 TrySavingData(u8 saveType)
         return SAVE_STATUS_ERROR;
     }
 
+#if defined(XGBA_A2) && XGBA_A2
+    if (HandleSavingData(saveType) != SAVE_STATUS_OK)
+    {
+        gSaveAttemptStatus = SAVE_STATUS_ERROR;
+        DoSaveFailedScreen(saveType);
+        return SAVE_STATUS_ERROR;
+    }
+#else
     HandleSavingData(saveType);
+#endif
     if (!gDamagedSaveSectors)
     {
         gSaveAttemptStatus = SAVE_STATUS_OK;
@@ -804,8 +1935,25 @@ u8 TrySavingData(u8 saveType)
     }
 }
 
+#if defined(XGBA_A2) && XGBA_A2
+static bool8 A2RejectIncrementalSave(void)
+{
+    // Older trade/mixing paths use TRUE as "all sectors finished".
+    // Returning TRUE without a journal commit was silently losing data.
+    // Route to a visible fatal save error and force a clean cohort reload.
+    sA2Ready = FALSE;
+    sA2FreshSaveArmed = FALSE;
+    gSaveAttemptStatus = SAVE_STATUS_ERROR;
+    DoA2UnsupportedLinkScreen();
+    return TRUE;
+}
+#endif
+
 bool8 LinkFullSave_Init(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    return A2RejectIncrementalSave();
+#endif
     if (gFlashMemoryPresent != TRUE)
         return TRUE;
     UpdateSaveAddresses();
@@ -816,6 +1964,9 @@ bool8 LinkFullSave_Init(void)
 
 bool8 LinkFullSave_WriteSector(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    return A2RejectIncrementalSave();
+#endif
     u8 status = HandleWriteIncrementalSector(NUM_SECTORS_PER_SLOT, gRamSaveSectorLocations);
     if (gDamagedSaveSectors)
         DoSaveFailedScreen(SAVE_NORMAL);
@@ -831,6 +1982,9 @@ bool8 LinkFullSave_WriteSector(void)
 
 bool8 LinkFullSave_ReplaceLastSector(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    return A2RejectIncrementalSave();
+#endif
     HandleReplaceSectorAndVerify(NUM_SECTORS_PER_SLOT, gRamSaveSectorLocations);
     if (gDamagedSaveSectors)
         DoSaveFailedScreen(SAVE_NORMAL);
@@ -839,6 +1993,9 @@ bool8 LinkFullSave_ReplaceLastSector(void)
 
 bool8 LinkFullSave_SetLastSectorSignature(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    return A2RejectIncrementalSave();
+#endif
     CopySectorSignatureByte(NUM_SECTORS_PER_SLOT, gRamSaveSectorLocations);
     if (gDamagedSaveSectors)
         DoSaveFailedScreen(SAVE_NORMAL);
@@ -847,6 +2004,9 @@ bool8 LinkFullSave_SetLastSectorSignature(void)
 
 bool8 WriteSaveBlock2(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    return A2RejectIncrementalSave();
+#endif
     if (gFlashMemoryPresent != TRUE)
         return TRUE;
 
@@ -865,6 +2025,9 @@ bool8 WriteSaveBlock2(void)
 // It returns TRUE when finished.
 bool8 WriteSaveBlock1Sector(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    return A2RejectIncrementalSave();
+#endif
     bool32 finished = FALSE;
     u16 sectorId = ++gIncrementalSectorId; // Because WriteSaveBlock2 will have been called prior, this will be SECTOR_ID_SAVEBLOCK1_START
     if (sectorId <= SECTOR_ID_SAVEBLOCK1_END)
@@ -984,7 +2147,21 @@ u16 GetSaveBlocksPointersBaseOffset(void)
     if (gFlashMemoryPresent != TRUE)
         return 0;
     UpdateSaveAddresses();
+#if defined(XGBA_A2) && XGBA_A2
+    // On boot this is called BEFORE LoadGameSave: it determines the pointer
+    // relocation from SaveBlock2's trainer id. Resolve the globally coherent
+    // cohort here, before trusting ANY native save slot for those pointers.
+    // Returning 0 for all pre-load calls silently corrupts save-block layout.
+    // If new-game bootstrap is armed, do not touch its one-shot permission.
+    if (sA2FreshSaveArmed)
+        return 0;
+    if (sA2Ready)
+        gSaveCounter = sA2Committed.nativeCounter;
+    else if (!A2ChooseLoad())
+        return 0;
+#else
     GetSaveValidStatus(gRamSaveSectorLocations);
+#endif
     slotOffset = NUM_SECTORS_PER_SLOT * (gSaveCounter % NUM_SAVE_SLOTS);
     for (i = 0; i < NUM_SECTORS_PER_SLOT; i++)
     {

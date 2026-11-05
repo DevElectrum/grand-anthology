@@ -280,6 +280,19 @@ static const struct SpritePalette sSpritePalette_Icons = {.data = sIconPal, .tag
 static EWRAM_DATA bool32 (*sUsmMenuCallback)(u32) = NULL;
 static EWRAM_DATA struct Usm_Memory* sUsmMemory = NULL;
 static EWRAM_DATA struct Usm_State* sUsmState = NULL;
+
+#if defined(XGBA_A2) && XGBA_A2
+// Read-only external visibility for disposable XGBA runtime tests. The
+// source's static sUsmState can disappear from the release/LTO symbol table.
+// This pointer is written only on menu lifecycle changes and never used to
+// alter menu state. Standard/A1 builds have no additional data or behavior.
+EWRAM_DATA struct Usm_State * volatile gXgbaA2UsmStateProbe = NULL;
+// Bit trace for disposable A2 save-menu verification, never serialized.
+EWRAM_DATA volatile u32 gXgbaA2UsmTrace = 0;
+#define A2_USM_TRACE(n) (gXgbaA2UsmTrace |= (1u << (n)))
+#else
+#define A2_USM_TRACE(n) ((void)0)
+#endif
 static EWRAM_DATA u8 sUsmSavedIcon = 0;
 static EWRAM_DATA u8 sUsmSavedOffset = 0;
 
@@ -530,6 +543,7 @@ static bool32 UsmMenuCB_Quests(u32 state)
 
 static bool32 UsmMenuCB_Save(u32 state)
 {
+    A2_USM_TRACE(6);
     sUsmSavedIcon = 0;
     sUsmSavedOffset = 0;
     SaveDialog_InitSave();
@@ -670,6 +684,9 @@ void Usm_LoadIconPalette(void)
 
 void Usm_InitStartMenu(void)
 {
+#if defined(XGBA_A2) && XGBA_A2
+    gXgbaA2UsmTrace = 1u;
+#endif
     if (!IsOverworldLinkActive()) {
         FreezeObjectEvents();
         PlayerFreeze();
@@ -691,6 +708,9 @@ void Usm_InitStartMenu(void)
     }
 
     sUsmState = &sUsmMemory->state;
+#if defined(XGBA_A2) && XGBA_A2
+    gXgbaA2UsmStateProbe = sUsmState;
+#endif
 
     sUsmState->itemOffset = sUsmSavedOffset;
     sUsmState->selectedVisibleIdx = sUsmSavedIcon;
@@ -717,6 +737,7 @@ void Usm_InitStartMenu(void)
 
 static void Task_UsmMain(u8 taskId)
 {
+    A2_USM_TRACE(1);
     if (JOY_HELD(DPAD_ANY))
         sUsmState->dpadHeldFrames++;
     else
@@ -1148,6 +1169,9 @@ static void Usm_HandleMainInput(void)
     if (JOY_NEW(A_BUTTON))
     {
         u8 iconId = Usm_GetSelectedIconId();
+        A2_USM_TRACE(2);
+        if (iconId == USM_ICO_SAVE)
+            A2_USM_TRACE(3);
         PlaySE(SE_SELECT);
         sUsmMenuCallback = sUsmMenuItems[iconId].callback;
         sUsmSavedIcon = sUsmState->selectedVisibleIdx;
@@ -1186,6 +1210,7 @@ static void Usm_HandleMainInput(void)
 
 static void Usm_HandleSelection(void)
 {
+    A2_USM_TRACE(4);
     struct Task* task = &gTasks[sUsmState->mainTaskId];
     task->data[0] = 0;
     Usm_DeferCallback(NULL);
@@ -1292,6 +1317,7 @@ static void Usm_HandleDPadInput(void)
 
 static void Usm_RunMenuCallbackAndExit(u8 taskId)
 {
+    A2_USM_TRACE(5);
     if (!sUsmMenuCallback(gTasks[taskId].data[0]))
         gTasks[taskId].data[0]++;
     else
@@ -1379,6 +1405,10 @@ bool8 FieldCB_UsmReturnToField(void)
 
 static void Usm_ExitStartMenu(void)
 {
+    A2_USM_TRACE(7);
+#if defined(XGBA_A2) && XGBA_A2
+    gXgbaA2UsmStateProbe = NULL;
+#endif
     Usm_SaveItems();
     u8* buf = GetBgTilemapBuffer(0);
 

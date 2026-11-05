@@ -1,0 +1,39 @@
+name: R8.4 RAM collection source regression
+on:
+  push:
+    branches:
+      - xgba/a2-collection-lab
+    paths:
+      - 'src/xgba_a2_*.c'
+      - 'src/xgba_r8_*.c'
+      - 'src/pokemon_storage_system.c'
+      - 'src/swsh_storage_system.c'
+      - 'test/overworld/test_xgba_r8_pc_chooser.py'
+      - 'test/overworld/test_xgba_r8_c4c5.py'
+      - 'src/save.c'
+      - 'src/xgba_r8_runtime_test.c'
+      - 'include/xgba_a2_*.h'
+      - 'include/xgba_r8_*.h'
+      - 'test/overworld/xgba_a2_cohort_harness.c'
+      - 'test/overworld/xgba_a2_journal_harness.c'
+      - '.github/workflows/R8-XGBA-Integration.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ram-collection-regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check both PC chooser source safety invariants
+        run: python3 test/overworld/test_xgba_r8_pc_chooser.py
+      - name: C5 multi-page all-or-nothing metadata and crash matrix
+        run: python3 test/overworld/test_xgba_r8_c4c5.py -v
+      - name: Verify RAM pager and journal corruption suite
+        run: |
+          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_journal.c src/xgba_a2_guest_bus.c src/xgba_a2_pager.c test/overworld/xgba_a2_journal_harness.c -o /tmp/r8-pager-test
+          /tmp/r8-pager-test
+      - name: Verify two cached cohort transactions and cold reload
+        run: |
+          cc -O2 -std=c11 -Wall -Wextra -Werror -Iinclude src/xgba_a2_cohort.c src/xgba_a2_bootstrap.c src/xgba_a2_transaction.c src/xgba_a2_pager.c src/xgba_a2_journal.c src/xgba_a2_fingerprint.c test/overworld/xgba_a2_cohort_harness.c -o /tmp/r8-cohort-test
+          /tmp/r8-cohort-test
