@@ -1,3 +1,24 @@
+# CURRENT ASTRA RESTART PROMPT: GRAND ANTHOLOGY SINNOH (2026-11-05)
+
+The historical prompt below is from **October 24** and is **not the current task**. Do not resume its P0 Hoenn encounter batch or treat it as higher precedence than current handoffs.
+
+**Repository:** [DevElectrum/grand-anthology](https://github.com/DevElectrum/grand-anthology) `main`, with R8.4 and XGBA's 112-box integration already merged/accepted. `DevElectrum/pokemon-mosaic` is a separate project. No new Sinnoh code has been authorized or implemented.
+
+**Read in this order:**
+1. `AGENTS.md` newest 2026-11-05 Sinnoh override.
+2. `docs/NEXT_ASTRA_HANDOFF.md` newest 2026-11-05 entry.
+3. `docs/SINNOH_FULL_IMPORT_EXECUTION_PLAN.md` canonical I0-I5 design.
+4. `docs/SINNOH_UPSTREAM_CONTENT_MANIFEST.md` actual 93-map / 21-skeleton / tileset / audio inventory.
+5. `docs/SINNOH_ARCHITECTURE_KICKOFF.md` (historical region/save risks only) and `docs/ANTHOLOGY_R8_4_FINAL_QUALIFICATION.md`.
+
+**Primary upstream:** `sinnoh-remakes/pokeemerald-platinum@c79120fbab7d62c66785c90b491e6a370249d5db` (GBA demake). Import **Sinnoh content** and needed helper dependencies, not generic `pokeemerald-expansion` internals. The demake covers Twinleaf through Eterna with gaps; late Platinum geography and core story must be newly authored. All new flags/vars/trainer IDs and append-only map IDs must remain independent of existing Kanto/Johto/Hoenn, and native/A2/R8 save compatibility must hold.
+
+**Current authorization:** planning and documentation only. No speculative implementation, branches, builds, CI, merge or published assets until maintainer explicitly requests execution. On authorization, I0 is source manifest/ABI/legal/budget proof before bulk integration; then implement substantial batches and use bounded acceptance tests.
+
+---
+
+## ARCHIVED 2026-10-24 PROMPT BELOW (HISTORICAL ONLY)
+
 Astra, continue **Pokémon Grand Anthology**! 🎮
 
 **Canonical public repository:** `DevElectrum/grand-anthology`
