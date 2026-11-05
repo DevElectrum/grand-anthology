@@ -7533,21 +7533,14 @@ static bool8 ReleaseMon(void)
 #if defined(XGBA_R8) && XGBA_R8
     // The old single-release path may discard held items when AddBagItem
     // rejects them. Shared C4 commit handles box releases atomically.
-    if (XgbaA2GameCollectionReady() && sIsMonBeingMoved)
+    // No R8 capability means no destructive fallback to the 14-box UI.
+    if (!XgbaA2GameCollectionReady() || sIsMonBeingMoved)
         return FALSE;
-    if (XgbaA2GameCollectionReady() && !sIsMonBeingMoved
-        && sCursorArea == CURSOR_AREA_IN_PARTY)
+    if (sCursorArea == CURSOR_AREA_IN_PARTY)
     {
-        enum Item held;
-        if (!XgbaA2GameCanReleasePartySingle(sCursorPosition))
-            return FALSE;
-        held = (OW_PC_RELEASE_ITEM >= GEN_8)
-            ? GetMonData(&gParties[B_TRAINER_PLAYER][sCursorPosition], MON_DATA_HELD_ITEM)
-            : ITEM_NONE;
-        if (held != ITEM_NONE && !AddBagItem(held, 1))
+        if (!XgbaA2GameReleasePartySingle(sCursorPosition))
             return FALSE;
         DestroyReleaseMonIcon();
-        PurgeMonOrBoxMon(TOTAL_BOXES_COUNT, sCursorPosition);
         TryRefreshDisplayMon();
         return TRUE;
     }
