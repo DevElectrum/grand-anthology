@@ -322,8 +322,11 @@ callbacks:add("frame", function()
                 end
                 report("R8_C4_GUI_POSITIVE_PLAN_PASS")
                 stage = "clear-all-confirm"
-                -- Actual two separate Yes answers, not a direct backend call.
-                schedule({{A, 2}, {0, 140}, {A, 2}, {0, 340}})
+                -- Both frontends call ShowYesNoWindow(1): cursor starts at
+                -- NO! Select YES with UP at each independent confirmation.
+                -- Never make a destructive decision with default button A.
+                schedule({{UP, 2}, {0, 80}, {A, 2}, {0, 190},
+                          {UP, 2}, {0, 80}, {A, 2}, {0, 340}})
             else
                 report("R8_C4_GUI_PROTECTED_CLEAR_PASS scope=all no_eligible=1")
                 emu:setKeys(0)
