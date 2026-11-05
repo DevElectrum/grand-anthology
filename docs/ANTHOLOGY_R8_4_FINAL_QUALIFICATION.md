@@ -1,8 +1,15 @@
-# Grand Anthology R8.4 final release qualification (experimental)
+# Grand Anthology R8.4 qualification and merge closeout
 
-Status: **ALL AUTOMATED C4/C5 FINAL RELEASE GATES GREEN; NOT FROZEN, NOT MERGED.** Owner release-freeze approval remains outstanding. This is a release-gate ledger, not a claim of a shipped player ROM.
+Status: **MERGED AND ACCEPTED (2026-11-05).** This is the source-integration qualification ledger; no downloadable user ROM or individual save migration is claimed.
 
-## Immutable compatibility baseline
+## Merge closeout (supersedes historical restrictions below)
+
+- **Game `main` merged:** [PR #18](https://github.com/DevElectrum/grand-anthology/pull/18), commit `2cd6a86b06d8d8624d17c5675583f0d20631fa1e`.
+- **XGBA `master` merged:** [PR #5](https://github.com/DevElectrum/xgba/pull/5), commit `6ccf999b698d1cd42e8659af9ebc2e4afb9dc970`.
+- C4 final both graphical UIs and cold Save3 **PASS** [#41975676730](https://github.com/DevElectrum/grand-anthology/actions/runs/41975676730). C5 actual three-region travel, regional Save3/cold and interrupted-save recovery **PASS** [#41975048607](https://github.com/DevElectrum/grand-anthology/actions/runs/41975048607). Post-merge game CI **PASS** [build #41978044317](https://github.com/DevElectrum/grand-anthology/actions/runs/41978044317), [mGBA #41978044195](https://github.com/DevElectrum/grand-anthology/actions/runs/41978044195), [EXP/catch #41978044352](https://github.com/DevElectrum/grand-anthology/actions/runs/41978044352). XGBA [baseline #41977682790](https://github.com/DevElectrum/xgba/actions/runs/41977682790) **PASS**.
+- Earlier instructions in the sections below to keep `main` and `master` untouched or to await C4/merge approval are archived pre-merge instructions. R8.4 needs no further routine acceptance testing. **Sinnoh planning** is next, with no new game implementation yet. Preserve source-only policy and player-save safety.
+
+## Historical pre-merge compatibility baseline
 
 - Game worktree: `DevElectrum/grand-anthology@xgba/a2-collection-lab`. Never update `main`, Mosaic, or existing user ROMs/saves from this gate.
 - Emulator: `DevElectrum/xgba@xgba/r8-4mib-ram`, pinned to `4e0f59185e2c7d7ed5333d8adc20e8d3ad94d05c`. Frozen E7 and XGBA `master` stay untouched.
@@ -17,7 +24,7 @@ Status: **ALL AUTOMATED C4/C5 FINAL RELEASE GATES GREEN; NOT FROZEN, NOT MERGED.
 - **Emulator core: PASSED**, [XGBA Actions #41439796163](https://github.com/DevElectrum/xgba/actions/runs/41439796163), 16/16 tests.
 - **Performance/compatibility source review: COMPLETE**. Page switching uses two 34,144-byte RAM copies without E6 I/O; test-only 18,000-frame travel bound, completed native A1/A2 jobs and XGBA CPU/DMA/rewind/bounds checks. This does not imply a measured device FPS or smartphone performance benchmark.
 
-## Final release gates (never infer a green check from an implementation commit)
+## Historical final release gates (all passed)
 
 1. **C4 successful graphical destructive release**. Run Classic and SwSh UI on separate disposable saves. An isolated `XGBA_R8_C4_GUI_TEST=1` cartridge keeps one eligible, unmarked Pidgey holding a Potion in global Box56 slot4; the other five fixture species remain protected. Genuine controller input must reach the positive global planner and execute both Yes confirmations. The shared transaction erases exactly the target 80-byte record and returns its item to the bag atomically; an independently audited Save2->Save3 comparison must show exactly one changed slot and 3,359 byte-identical slots. A fresh XGBA process must Continue Save3 and verify the same committed cohort. The negative protected-refusal proof remains separately green. Any failed step blocks the release.
 2. **C5 regional Save3/cold Continue**. Start three independent game-generated, audited Save2 clones. Controller-driven transit must enter Kanto, Johto and Hoenn; actual graphical Start Save must commit native Save3 and A2 stage 8 *in the target region*, without altering any of 3,360 boxed records or the 600-byte party. A new XGBA process per region must resume counter 3 in the expected region, with the same party fingerprint and CRC-verified collection SHA-256. The ordinary cross-region RAM-only transit gate remains separate. Never weaken the Hub Box15 Save3 fixture to accept a regional Save3.
@@ -33,6 +40,6 @@ Status: **ALL AUTOMATED C4/C5 FINAL RELEASE GATES GREEN; NOT FROZEN, NOT MERGED.
 - `DevElectrum/xgba` R8 head [41439796163](https://github.com/DevElectrum/xgba/actions/runs/41439796163) passed 16/16 CPU, DMA, bounds, reset, E5/E6/E7, versioned full-state and rewind suites. That does not certify GUI framerate on the user's actual machine or phone.
 - Native A1 and A2 storage source and link compatibility is independently covered by the game `A2-XGBA-Integration.yml` workflow. For the current qualification branch, inspect exact-head results before freeze.
 
-## Release decision protocol
+## Historical pre-merge release decision protocol (satisfied)
 
 Record an exact **commit SHA + GitHub Actions run ID + job and step results** for every final gate. Any red, missing, or incomplete workflow is **pending/fail**, not accepted. CI must not publish a disposable ROM or user save. Do not merge to `main`, modify frozen XGBA, or start Sinnoh until all release-qualification checks pass and the human owner approves the release freeze. A single optional, focused personal menu-feel playtest may follow automated acceptance; player debugging is not a substitute for automation.
