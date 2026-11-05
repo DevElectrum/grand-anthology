@@ -1,0 +1,66 @@
+name: Sinnoh full import integration probe (ephemeral, no ROM upload)
+
+on:
+  push:
+    branches: ["sinnoh/full-import"]
+    paths:
+      - ".github/workflows/Sinnoh-Integration-Probe.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  import-and-link-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Obtain pinned GBA demake
+        run: |
+          git clone --no-checkout https://github.com/sinnoh-remakes/pokeemerald-platinum.git "$RUNNER_TEMP/pokeemerald-platinum"
+          git -C "$RUNNER_TEMP/pokeemerald-platinum" checkout --detach c79120fbab7d62c66785c90b491e6a370249d5db
+      - name: Import selected complete source set into disposable runner
+        run: |
+          python3 tools/sinnoh/import_source.py --upstream "$RUNNER_TEMP/pokeemerald-platinum" --mode stage --assets
+          python3 tools/sinnoh/import_source.py --upstream "$RUNNER_TEMP/pokeemerald-platinum" --mode install --assets
+          cp build/sinnoh-stage/_registry_proposal/map_groups.json data/maps/map_groups.json
+          cp build/sinnoh-stage/_registry_proposal/layouts.json data/layouts/layouts.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('tools/sinnoh/pinned_source_inventory.json').read_text())
+          for group in manifest['group_import']:
+              for name in group['maps']:
+                  path = Path('data/maps') / name / 'map.json'
+                  entry = json.loads(path.read_text())
+                  entry['region'] = 'REGION_SINNOH'
+                  path.write_text(json.dumps(entry, indent=2) + '\n')
+          print("Source imported ephemerally: 93 mapped Sinnoh regions, 114 total groups")
+          PY
+      - name: Install source-build tools
+        run: |
+          for source in /etc/apt/sources.list.d/*; do
+            if [ -f "$source" ] && grep -q packages.microsoft.com "$source"; then
+              sudo mv "$source" "$source.disabled"
+            fi
+          done
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=3 \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev libelf1 python3 g++
+      - name: Attempt full map generation and link, report precise missing dependencies
+        shell: bash
+        run: |
+          set -o pipefail
+          make release -j4 > "$RUNNER_TEMP/sinnoh-build.log" 2>&1 || {
+            echo "::error title=Sinnoh imported content is not yet link-ready::This probe reports missing dependencies, not a baseline regression"
+            grep -n -E 'Error:|error:|undefined reference|undefined symbol|No rule to make target|not found|Failed|error' "$RUNNER_TEMP/sinnoh-build.log" | tail -n 90 || true
+            tail -n 70 "$RUNNER_TEMP/sinnoh-build.log"
+            exit 1
+          }
+          echo "PASS: imported Sinnoh source generated and linked in isolated runner"
+          test -s pokemonworld-release.gba
+          # Never publish or upload temporary ROM output.
