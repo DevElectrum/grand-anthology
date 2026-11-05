@@ -5,6 +5,8 @@ on:
     branches: ["sinnoh/full-import"]
     paths:
       - ".github/workflows/Sinnoh-Integration-Probe.yml"
+      - "tools/sinnoh/import_source.py"
+      - "tools/sinnoh/test_import_source.py"
   workflow_dispatch:
 
 permissions:

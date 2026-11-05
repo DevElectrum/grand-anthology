@@ -65,7 +65,18 @@ def run():
         ])
         assert (added, same) == (1, 0)
         assert (root / "new.txt").read_text() == "new"
-    print("PASS: Sinnoh import hash, mapping, overwrite, traversal and import rules")
+        midi = Path("sound/songs/midi/midi.cfg")
+        (root / midi).parent.mkdir(parents=True)
+        (source / midi).parent.mkdir(parents=True)
+        (root / midi).write_text("legacy.mid: -E -V080\n")
+        (source / midi).write_text("legacy.mid: -E -V080\nsinnoh.mid: -E -G191 -V100\n")
+        records = [{"path": "sound/songs/midi/sinnoh.mid"}]
+        assert imp.merge_midi_config(source, root, records) == 1
+        assert imp.merge_midi_config(source, root, records) == 0
+        lines = (root / midi).read_text()
+        assert lines.count("sinnoh.mid:") == 1
+        assert "legacy.mid: -E -V080" in lines
+    print("PASS: Sinnoh import hash, mapping, overwrite, traversal and MIDI rules")
 
 if __name__ == "__main__":
     run()

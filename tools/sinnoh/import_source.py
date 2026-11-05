@@ -159,6 +159,45 @@ def write_registry_proposal(target, output, inventory, world, layouts):
     # The proposal must be reviewed with symbol, collision, map and resource audits.
     return len(groups["group_order"]), len(merged_layouts["layouts"])
 
+def merge_midi_config(upstream, target, records):
+    """Append source-only MIDI build recipes; never replace existing song recipes."""
+    source_cfg = safe_child(upstream, "sound/songs/midi/midi.cfg")
+    target_cfg = safe_child(target, "sound/songs/midi/midi.cfg")
+    source_lines = {}
+    target_lines = {}
+    for line in source_cfg.read_text(encoding="utf-8").splitlines():
+        if ":" in line and not line.lstrip().startswith("#"):
+            name = line.split(":", 1)[0].strip()
+            source_lines[name] = line
+    original = target_cfg.read_text(encoding="utf-8")
+    for line in original.splitlines():
+        if ":" in line and not line.lstrip().startswith("#"):
+            name = line.split(":", 1)[0].strip()
+            target_lines[name] = line
+    mids = sorted({
+        Path(record["path"]).name
+        for record in records
+        if record["path"].startswith("sound/songs/midi/")
+        and record["path"].endswith(".mid")
+    })
+    append = []
+    for name in mids:
+        if name not in source_lines:
+            raise ValueError("Missing upstream MIDI build recipe: " + name)
+        if name in target_lines:
+            if source_lines[name].split(":", 1)[1].split() != target_lines[name].split(":", 1)[1].split():
+                raise ValueError("Shared MIDI recipe collision: " + name)
+            continue
+        append.append(source_lines[name])
+    if append:
+        target_cfg.write_text(
+            original.rstrip("\n")
+            + "\n\n# Pinned Sinnoh-only MIDI recipes; existing entries preserved.\n"
+            + "\n".join(append) + "\n",
+            encoding="utf-8",
+        )
+    return len(append)
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--upstream", type=Path, required=True)
@@ -192,8 +231,9 @@ def main():
         # Deliberately DO NOT replace the target registry or the save/battle engine.
         # These files stay unregistered until symbol/graphics/state mapping is safe.
         created, already = install_files(upstream, target, records)
+        new_midi = merge_midi_config(upstream, target, records) if args.assets else 0
         report.update({"created": created, "already_identical": already,
-                       "activated": False})
+                       "new_midi_recipes": new_midi, "activated": False})
     print(json.dumps(report, indent=2, sort_keys=True))
 
 if __name__ == "__main__":
