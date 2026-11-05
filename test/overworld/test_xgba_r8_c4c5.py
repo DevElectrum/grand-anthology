@@ -55,7 +55,7 @@ class C5MultiGroupRecovery(unittest.TestCase):
 
     def committed(self):
         state = bytearray(self.staged)
-        atomic_partial(state, a2.meta_offset(0), self.meta, len(self.meta))
+        atomic_partial(state, a2.meta_offset(0), self.meta, len(self.meta) + 8)
         return state
 
     def test_two_distant_groups_publish_as_one_coherent_generation(self):
