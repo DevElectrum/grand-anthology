@@ -1,0 +1,47 @@
+name: Sinnoh pinned source import audit (development only)
+
+on:
+  push:
+    branches: ["sinnoh/full-import"]
+    paths:
+      - "tools/sinnoh/**"
+      - ".github/workflows/Sinnoh-Import-Audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-import-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Python importer safety self-test
+        run: python3 tools/sinnoh/test_import_source.py
+      - name: Fetch exact pinned open-source GBA demake source
+        run: |
+          git clone --no-checkout https://github.com/sinnoh-remakes/pokeemerald-platinum.git "$RUNNER_TEMP/pokeemerald-platinum"
+          git -C "$RUNNER_TEMP/pokeemerald-platinum" checkout --detach c79120fbab7d62c66785c90b491e6a370249d5db
+      - name: Verify exact pinned map, layout, image and sound candidate hashes
+        run: |
+          python3 tools/sinnoh/import_source.py --upstream "$RUNNER_TEMP/pokeemerald-platinum" --mode audit --assets
+      - name: Stage full source candidates without overwriting the game
+        run: |
+          python3 tools/sinnoh/import_source.py --upstream "$RUNNER_TEMP/pokeemerald-platinum" --mode stage --assets
+          test -f build/sinnoh-stage/data/maps/TwinleafTown/map.json
+          test -f build/sinnoh-stage/data/maps/EternaCity_Galactic_4F/scripts.inc
+          test -f build/sinnoh-stage/_registry_proposal/map_groups.json
+      - name: Audit event, trainer, flag, variable and art/audio symbol imports
+        run: |
+          python3 tools/sinnoh/dependency_audit.py --upstream "$RUNNER_TEMP/pokeemerald-platinum" --report "$RUNNER_TEMP/sinnoh-dependencies.json"
+          python3 - "$RUNNER_TEMP/sinnoh-dependencies.json" <<'PY'
+          import json
+          import sys
+          report = json.load(open(sys.argv[1]))
+          assert report["source_maps"] == 93
+          assert report["source_map_files"] == 186
+          print("PASS: reproducible Sinnoh source audit; no source data published")
+          PY
