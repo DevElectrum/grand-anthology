@@ -22,6 +22,8 @@ SYMBOLS = {
 # These may be hidden by release LTO. Do not guess if unavailable.
 OPTIONAL_SYMBOLS = {
     "gFlashMemoryPresent": "A2_FLASH_PRESENT",
+    "gParties": "A2_R8_PARTIES",
+    "gSaveBlock2Ptr": "A2_R8_SB2_PTR",
     "gSaveCounter": "A2_SAVE_COUNTER",
     "gSaveAttemptStatus": "A2_SAVE_ATTEMPT_STATUS",
     "gXgbaR8PcUiTrace": "A2_R8_PC_UI_TRACE",
