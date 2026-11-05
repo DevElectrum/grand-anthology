@@ -1315,6 +1315,12 @@ u16 XgbaA2GamePlanGlobalRelease(u8 scope, u16 globalBox, u32 localMask)
     u32 firstBox, lastBox;
 
     XgbaA2GameCancelGlobalRelease();
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+    // Test-only witness of a request reaching the shared global planner.
+    // The fixture clears this witness before the graphical controller test.
+    if (scope == XGBA_R8_RELEASE_ALL)
+        gXgbaR8FixtureStage = 0xC4000002U;
+#endif
     if (!XgbaA2GameCollectionReady() || sA2GlobalTransfer.active
         || globalBox >= XGBA_A2_PC_PAGES * TOTAL_BOXES_COUNT
         || scope > XGBA_R8_RELEASE_SINGLE)
