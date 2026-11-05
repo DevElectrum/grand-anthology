@@ -240,8 +240,12 @@ u16 *GetVarPointer(u16 id)
 // so Kanto/Johto/Hoenn pack contiguously. localId is the per-region var index (0..0x7F).
 u16 GetRegionVarBase(enum Region region)
 {
+    // REGION_NONE retains the historical Hub/Hoenn behavior. Future regions
+    // MUST fail closed until they have distinct versioned persistent banks.
+    if (region == REGION_NONE)
+        region = REGION_HOENN;
     if (region < REGION_KANTO || region > REGION_HOENN)
-        region = REGION_HOENN; // REGION_NONE (hub) — a raw subtract would compute a base outside the bank
+        return 0xF000; // invalid var namespace, GetVarPointer rejects it
     return REGION_VARS_START + (region - REGION_KANTO) * REGION_VAR_BANK_SIZE;
 }
 
@@ -368,7 +372,9 @@ u16 GetRegionFlagBase(enum Region region)
     {
     case REGION_KANTO: return FLAG_KANTO_BASE;
     case REGION_JOHTO: return FLAG_JOHTO_BASE;
-    default:           return 0; // Hoenn / native
+    case REGION_HOENN:
+    case REGION_NONE:  return 0; // preserve legacy Hub/Hoenn behavior
+    default:           return 0xF000; // no false Hoenn alias for Sinnoh/future regions
     }
 }
 
@@ -402,7 +408,9 @@ u16 GetBadgeFlag(enum Region region, u8 badgeIndex)
     {
     case REGION_KANTO: return FLAG_KANTO_BADGE(badgeIndex);
     case REGION_JOHTO: return FLAG_JOHTO_BADGE(badgeIndex); // NOT bank base — see region_flags.h
-    default:           return FLAG_BADGE01_GET + badgeIndex; // Hoenn / native
+    case REGION_HOENN:
+    case REGION_NONE:  return FLAG_BADGE01_GET + badgeIndex; // legacy Hub/Hoenn
+    default:           return 0; // unsupported regions have no earned badges
     }
 }
 
