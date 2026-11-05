@@ -3918,6 +3918,11 @@ static void Task_R8GlobalClear(u8 taskId)
         {
             PlaySE(SE_FAILURE);
             PrintMessage(MSG_R8_CLEAR_NONE);
+#if defined(XGBA_R8_TEST) && XGBA_R8_TEST
+            // The genuine Clear All GUI reached shared protection planning.
+            if (sR8ClearScope == XGBA_R8_RELEASE_ALL)
+                gXgbaR8PcUiTrace = 22;
+#endif
             sStorage->state = 4;
         }
         else
